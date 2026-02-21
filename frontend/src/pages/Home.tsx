@@ -1,81 +1,90 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Heart, Send, CreditCard, Sparkles, ArrowRight } from 'lucide-react'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { Heart, ArrowRight, ShieldCheck, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { TextSplit } from '@/components/animations/TextSplit'
 import { SectionReveal } from '@/components/animations/SectionReveal'
-import { ParallaxSection } from '@/components/animations/ParallaxSection'
 import { MagneticButton } from '@/components/animations/MagneticButton'
-import { CardTilt3D } from '@/components/animations/CardTilt3D'
+import { ScrollSection } from '@/components/layout/ScrollSection'
+import { HeroAnimation } from '@/components/animations/HeroAnimation'
+import { SiteAtmosphere } from '@/components/animations/SiteAtmosphere'
 
-const features = [
-  {
-    icon: Heart,
-    title: 'Mensagem com Amor',
-    description: 'Escreva uma mensagem única e especial para quem você admira.',
-  },
-  {
-    icon: CreditCard,
-    title: 'Pagamento Fácil',
-    description: 'Pague com Pix de forma rápida e segura via QR Code.',
-  },
-  {
-    icon: Send,
-    title: 'Entrega Digital',
-    description: 'Compartilhe o QR Code e o destinatário acessa sua carta elegante.',
-  },
-]
+// Import Sections
+import { ProblemSection } from '@/components/sections/ProblemSection'
+import { SocialProofSection } from '@/components/sections/SocialProofSection'
+import { HowItWorksSection } from '@/components/sections/HowItWorksSection'
+import { ProductPreviewSection } from '@/components/sections/ProductPreviewSection'
+import { FAQSection } from '@/components/sections/FAQSection'
+import { BackgroundField } from '@/components/animations/BackgroundField'
 
-export function Home() {
+// ── HERO SECTION ─────────────────────────────────────────────────
+// Uses the "tall container + sticky" pattern for scroll-driven video.
+// The section is 300vh tall. The inner div is sticky and stays on screen
+// while the user scrolls through the tall section. useScroll tracks
+// progress from 0→1, which drives the video and text animations.
+function HeroSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end end'],
+  })
+
+  // Text stays fully visible until ~18% scroll, then fades out by 42%
+  const textOpacity = useTransform(scrollYProgress, [0.18, 0.42], [1, 0])
+  const textY = useTransform(scrollYProgress, [0.18, 0.42], [0, -60])
+
   return (
-    <div className="overflow-hidden">
-      {/* Hero */}
-      <section className="min-h-screen flex items-center justify-center relative pt-24 pb-16 px-6">
-        {/* Background decorations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ scale: [1.2, 1, 1.2], rotate: [360, 180, 0] }}
-            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-40 -left-40 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"
-          />
-        </div>
+    <section ref={sectionRef} className="relative" style={{ height: '210vh' }}>
+      {/* Sticky container — stays on screen while section scrolls */}
+      <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
 
-        <div className="max-w-5xl mx-auto text-center relative z-10">
+        {/* SVG animation — scroll-driven airplane → love letter */}
+        <HeroAnimation scrollProgress={scrollYProgress} />
+
+
+        {/* Hero text content — fades out as you scroll */}
+        <motion.div
+          style={{ opacity: textOpacity, y: textY }}
+          className="max-w-5xl mx-auto text-center relative z-10 px-6"
+          data-no-ink="true"
+        >
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8"
+            transition={{ delay: 0.2 }}
+            className="flex items-center justify-center gap-4 mb-8"
           >
-            <Sparkles size={16} />
-            Projeto Escolar — Correio Elegante Digital
+            <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-text-light/70 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-100">
+              <ShieldCheck size={14} className="text-green-500" /> Seguro
+            </span>
+            <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-text-light/70 bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-100">
+              <Zap size={14} className="text-yellow-500" /> Rápido
+            </span>
           </motion.div>
 
           <TextSplit
             text="Diga o que sente com elegância"
-            className="justify-center mb-6"
-            charClassName="font-display text-5xl md:text-7xl font-bold text-text"
+            className="justify-center mb-6 gap-x-3 md:gap-x-4"
+            charClassName="font-display text-5xl md:text-7xl font-bold text-text leading-tight drop-shadow-sm"
+            animateOnMount
           />
 
-          <ScrollReveal delay={0.3}>
-            <p className="text-lg md:text-xl text-text-light max-w-2xl mx-auto mb-10 leading-relaxed">
+          <ScrollReveal delay={0.3} animateOnMount>
+            <p className="text-lg md:text-xl text-text-light max-w-2xl mx-auto mb-10 leading-relaxed drop-shadow-sm">
               Envie mensagens carinhosas, pague com Pix e surpreenda alguém especial
-              com um correio elegante digital. 💌
+              com um correio elegante digital que emociona. 💌
             </p>
           </ScrollReveal>
 
-          <ScrollReveal delay={0.5}>
+          <ScrollReveal delay={0.5} animateOnMount>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <MagneticButton>
                 <Link to="/create">
-                  <Button size="lg">
+                  <Button size="lg" className="shadow-xl shadow-primary/20 hover:shadow-primary/30">
                     Escreva Sua Mensagem
                     <ArrowRight size={18} />
                   </Button>
@@ -83,78 +92,96 @@ export function Home() {
               </MagneticButton>
               <MagneticButton>
                 <Link to="/contact">
-                  <Button variant="outline" size="lg">
+                  <Button variant="outline" size="lg" className="bg-white/60 backdrop-blur-md border-white/40 hover:bg-white/80">
                     Saiba Mais
                   </Button>
                 </Link>
               </MagneticButton>
             </div>
           </ScrollReveal>
-        </div>
-      </section>
+        </motion.div>
 
-      {/* Features */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
-                Como <span className="text-gradient">Funciona</span>
-              </h2>
-              <p className="text-text-light text-lg max-w-xl mx-auto">
-                Três passos simples para enviar seu correio elegante
-              </p>
-            </div>
-          </ScrollReveal>
+        {/* Scroll hint */}
+        <motion.div
+          style={{ opacity: textOpacity }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none z-20"
+        >
+          <span className="text-xs font-medium tracking-widest uppercase text-text-light/50">
+            Role para descobrir
+          </span>
+          <motion.div
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-px h-8 bg-gradient-to-b from-text-light/40 to-transparent"
+          />
+        </motion.div>
+      </div>
+    </section>
+  )
+}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <ScrollReveal key={index} delay={index * 0.15}>
-                <CardTilt3D>
-                  <Card glass hover className="text-center h-full">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-                      <feature.icon className="w-7 h-7 text-primary" />
-                    </div>
-                    <h3 className="font-display text-xl font-bold text-text mb-3">
-                      {feature.title}
-                    </h3>
-                    <p className="text-text-light text-sm leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </Card>
-                </CardTilt3D>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
+// ── HOME PAGE ────────────────────────────────────────────────────
+export function Home() {
+  return (
+    <div className="relative overflow-x-clip min-h-screen">
 
-      {/* CTA Section */}
-      <ParallaxSection speed={0.2}>
-        <section className="py-24 px-6">
-          <SectionReveal>
-            <div className="max-w-4xl mx-auto">
-              <Card glass className="text-center py-16 px-8">
-                <Heart className="w-12 h-12 text-primary fill-primary mx-auto mb-6" />
-                <h2 className="font-display text-3xl md:text-4xl font-bold text-text mb-4">
-                  Pronto para enviar seu correio?
+      {/* 0. DYNAMIC BACKGROUND */}
+      <BackgroundField />
+
+      {/* SITE-WIDE CLOUDS + STARS */}
+      <SiteAtmosphere />
+
+      {/* 1. HERO — Scroll-driven video */}
+      <HeroSection />
+
+      {/* 2. THE PROBLEM */}
+      <ProblemSection />
+
+      {/* 3. SOCIAL PROOF */}
+      <SocialProofSection />
+
+      {/* 4. HOW IT WORKS */}
+      <HowItWorksSection />
+
+      {/* 5. PRODUCT PREVIEW */}
+      <ProductPreviewSection />
+
+      {/* 6. FAQ */}
+      <FAQSection />
+
+      {/* 7. CTA SECTION */}
+      <ScrollSection id="cta-section">
+        <div className="max-w-4xl mx-auto px-6">
+          <Card className="relative overflow-hidden border-none shadow-2xl bg-gradient-to-tr from-primary to-secondary p-12 md:p-24 text-center rounded-3xl" data-cursor-light="true">
+            <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10 pointer-events-none" />
+
+            <div className="relative z-10 text-white" data-no-ink="true">
+              <SectionReveal scrollRange={[0.1, 0.35, 1.0, 1.0]}>
+                <Heart className="w-16 h-16 text-white/90 fill-white/20 mx-auto mb-6 animate-pulse" />
+                <h2 className="font-display text-4xl md:text-6xl font-bold mb-6">
+                  Pronto para surpreender?
                 </h2>
-                <p className="text-text-light text-lg mb-8 max-w-lg mx-auto">
-                  Cada mensagem é única e chega de uma forma especial. Faça alguém sorrir hoje!
+                <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
+                  Crie uma memória inesquecível em poucos cliques. O amor merece ser celebrado agora.
                 </p>
                 <MagneticButton>
                   <Link to="/create">
-                    <Button size="lg">
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="text-primary hover:bg-white/90 shadow-2xl text-lg px-10 py-5 h-auto border-none"
+                    >
                       Começar Agora
-                      <Heart size={18} className="fill-current" />
+                      <Heart size={20} className="fill-current" />
                     </Button>
                   </Link>
                 </MagneticButton>
-              </Card>
+              </SectionReveal>
             </div>
-          </SectionReveal>
-        </section>
-      </ParallaxSection>
+          </Card>
+        </div>
+      </ScrollSection>
+
     </div>
   )
 }

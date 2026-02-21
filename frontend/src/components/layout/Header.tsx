@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion'
 import { Heart, Menu, X, User } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { MagneticButton } from '@/components/animations/MagneticButton'
@@ -16,10 +16,37 @@ export function Header() {
   const location = useLocation()
   const { isAuthenticated } = useAuthStore()
 
+  // Scroll Progress Logic
+  const { scrollYProgress } = useScroll()
+
+  // Smooth out the progress
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  })
+
   return (
     <header className="fixed top-0 left-0 right-0 z-40">
-      <div className="glass mx-4 mt-4 rounded-2xl">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden glass">
+
+        {/* Scroll Progress Border */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-50 rounded-2xl">
+          <motion.rect
+            width="100%"
+            height="100%"
+            rx="16" // Matches rounded-2xl (16px)
+            ry="16"
+            fill="none"
+            strokeWidth="4"
+            className="stroke-primary/50" // Color of the border
+            style={{
+              pathLength: smoothProgress,
+            }}
+          />
+        </svg>
+
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between relative z-10">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <MagneticButton>
@@ -96,11 +123,10 @@ export function Header() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                    location.pathname === link.path
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-text-light hover:bg-black/5'
-                  }`}
+                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${location.pathname === link.path
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-text-light hover:bg-black/5'
+                    }`}
                 >
                   {link.label}
                 </Link>

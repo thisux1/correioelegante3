@@ -69,7 +69,7 @@ export function Create() {
   return (
     <div className="min-h-screen pt-28 pb-16 px-6">
       <div className="max-w-4xl mx-auto">
-        <ScrollReveal>
+        <ScrollReveal animateOnMount>
           <div className="text-center mb-12">
             <h1 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
               Escreva sua <span className="text-gradient">mensagem</span>
@@ -82,7 +82,7 @@ export function Create() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form */}
-          <ScrollReveal direction="left">
+          <ScrollReveal direction="left" animateOnMount>
             <Card glass className="h-full">
               <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
                 <Input
@@ -110,11 +110,10 @@ export function Create() {
                         key={theme.id}
                         type="button"
                         onClick={() => setSelectedTheme(theme.id)}
-                        className={`px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all ${
-                          selectedTheme === theme.id
+                        className={`px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all ${selectedTheme === theme.id
                             ? `${theme.color} ring-2 ring-primary/30`
                             : 'bg-white/50 border-gray-100 hover:border-gray-200'
-                        }`}
+                          }`}
                       >
                         {theme.name}
                       </button>
@@ -141,16 +140,15 @@ export function Create() {
           </ScrollReveal>
 
           {/* Preview */}
-          <ScrollReveal direction="right">
+          <ScrollReveal direction="right" animateOnMount>
             <Card glass className="h-full flex flex-col items-center justify-center min-h-[400px]">
               <div className="text-center mb-6">
                 <p className="text-sm text-text-muted mb-2">Pré-visualização</p>
               </div>
               <motion.div
                 layout
-                className={`w-full max-w-sm rounded-2xl p-8 shadow-xl border ${
-                  themes.find((t) => t.id === selectedTheme)?.color || 'bg-rose-50 border-rose-200'
-                }`}
+                className={`w-full max-w-sm rounded-2xl p-8 shadow-xl border ${themes.find((t) => t.id === selectedTheme)?.color || 'bg-rose-50 border-rose-200'
+                  }`}
               >
                 <Heart className="w-8 h-8 text-primary fill-primary mx-auto mb-4" />
                 <p className="text-sm text-text-light text-center mb-4 font-cursive">

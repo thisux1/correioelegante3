@@ -77,7 +77,7 @@ export function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-6">
-      <ScrollReveal>
+      <ScrollReveal animateOnMount>
         <Card glass className="w-full max-w-md">
           <div className="text-center mb-8">
             <Heart className="w-10 h-10 text-primary fill-primary mx-auto mb-4" />
@@ -97,11 +97,10 @@ export function Auth() {
               <button
                 key={tab}
                 onClick={() => { setMode(tab); setError('') }}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  mode === tab
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === tab
                     ? 'bg-white text-text shadow-sm'
                     : 'text-text-light hover:text-text'
-                }`}
+                  }`}
               >
                 {tab === 'login' ? 'Entrar' : 'Registrar'}
               </button>

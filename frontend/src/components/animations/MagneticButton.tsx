@@ -1,4 +1,4 @@
-import { useRef, ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 
 interface MagneticButtonProps {
@@ -36,6 +36,7 @@ export function MagneticButton({ children, className = '', strength = 0.3 }: Mag
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       className={`inline-block ${className}`}
+      data-magnetic-target="true"
     >
       {children}
     </motion.div>

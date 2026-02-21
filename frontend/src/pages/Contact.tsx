@@ -6,7 +6,7 @@ export function Contact() {
   return (
     <div className="min-h-screen pt-28 pb-16 px-6">
       <div className="max-w-3xl mx-auto">
-        <ScrollReveal>
+        <ScrollReveal animateOnMount>
           <div className="text-center mb-12">
             <h1 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
               Fale <span className="text-gradient">Conosco</span>
@@ -18,7 +18,7 @@ export function Contact() {
         </ScrollReveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ScrollReveal direction="left">
+          <ScrollReveal direction="left" animateOnMount>
             <Card glass hover className="h-full">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -37,7 +37,7 @@ export function Contact() {
             </Card>
           </ScrollReveal>
 
-          <ScrollReveal direction="right">
+          <ScrollReveal direction="right" animateOnMount>
             <Card glass hover className="h-full">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -55,7 +55,7 @@ export function Contact() {
             </Card>
           </ScrollReveal>
 
-          <ScrollReveal direction="left" delay={0.1}>
+          <ScrollReveal direction="left" delay={0.1} animateOnMount>
             <Card glass hover className="h-full">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -73,7 +73,7 @@ export function Contact() {
             </Card>
           </ScrollReveal>
 
-          <ScrollReveal direction="right" delay={0.1}>
+          <ScrollReveal direction="right" delay={0.1} animateOnMount>
             <Card glass hover className="h-full">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">

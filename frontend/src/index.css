@@ -32,6 +32,15 @@
 
   html {
     scroll-behavior: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari/Webkit */
   }
 
   body {
@@ -39,9 +48,19 @@
     color: var(--color-text);
     background: var(--color-background);
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Re-enable selection for form elements */
+  input,
+  textarea,
+  [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
   }
 
   ::selection {
@@ -63,16 +82,15 @@
     position: relative;
     overflow: hidden;
   }
+
   .shimmer::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%);
     transform: translateX(-100%);
     animation: shimmer 2s infinite;
   }
