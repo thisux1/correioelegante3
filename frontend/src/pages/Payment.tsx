@@ -9,19 +9,27 @@ import { Badge } from '@/components/ui/Badge'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { paymentService } from '@/services/messageService'
 
+interface PaymentData {
+  paymentId: string
+  qrCode: string
+  qrCodeBase64: string
+  status: 'pending' | 'paid'
+}
+
 export function Payment() {
   const { messageId } = useParams<{ messageId: string }>()
-  const [paymentData, setPaymentData] = useState<any>(null)
+  const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [status, setStatus] = useState<'pending' | 'paid'>('pending')
 
   useEffect(() => {
     if (!messageId) return
+    const currentMessageId: string = messageId
 
     async function createPayment() {
       try {
-        const response = await paymentService.create(messageId!)
+        const response = await paymentService.create(currentMessageId)
         setPaymentData(response.data)
       } catch (err) {
         console.error('Erro ao criar pagamento:', err)

@@ -18,7 +18,7 @@ export function CustomCursor() {
   const isTextRef = useRef(false)
   const isClickingRef = useRef(false)
   const rafRef = useRef<number>(0)
-  const lastMoveTimeRef = useRef(Date.now())
+  const lastMoveTimeRef = useRef(0)
   const cursorRotationRef = useRef(0)
   const heartAnimRef = useRef({ t: 0, active: false, startPos: { x: 0, y: 0 } })
   const magneticTargetRef = useRef<DOMRect | null>(null)
@@ -30,6 +30,7 @@ export function CustomCursor() {
     // Only show custom cursor on non-touch devices
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     if (isTouchDevice) return
+    lastMoveTimeRef.current = Date.now()
 
     // Hide native cursor globally
     document.body.style.cursor = 'none'

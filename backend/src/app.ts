@@ -9,11 +9,16 @@ import { paymentRouter } from './routes/payment.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
+  throw new Error('FRONTEND_URL é obrigatório em produção');
+}
 
 // Security
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: frontendUrl,
   credentials: true,
 }));
 app.use(rateLimit({
