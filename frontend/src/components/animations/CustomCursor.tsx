@@ -18,7 +18,6 @@ export function CustomCursor() {
   const isTextRef = useRef(false)
   const isClickingRef = useRef(false)
   const rafRef = useRef<number>(0)
-  const idleTimerRef = useRef<number>(0)
   const lastMoveTimeRef = useRef(Date.now())
   const cursorRotationRef = useRef(0)
   const heartAnimRef = useRef({ t: 0, active: false, startPos: { x: 0, y: 0 } })
