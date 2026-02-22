@@ -138,7 +138,7 @@ export function BackgroundField() {
             ))}
 
             {/* Grain overlay */}
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+            <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.03] mix-blend-overlay" />
         </div>
     )
 }

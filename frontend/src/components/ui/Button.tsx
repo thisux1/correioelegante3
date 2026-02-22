@@ -1,10 +1,11 @@
-import { type ButtonHTMLAttributes, forwardRef } from 'react'
-import { motion } from 'framer-motion'
+import { forwardRef, type ReactNode } from 'react'
+import { motion, type HTMLMotionProps } from 'framer-motion'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends HTMLMotionProps<'button'> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
+  children?: ReactNode
 }
 
 const variants = {
@@ -34,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           ${variants[variant]} ${sizes[size]} ${className}
         `}
         disabled={disabled || isLoading}
-        {...(props as any)}
+        {...props}
       >
         {isLoading && (
           <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

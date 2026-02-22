@@ -47,6 +47,13 @@ npm run dev
 
 O frontend roda em `http://localhost:5173` e o backend em `http://localhost:3000`.
 
+## Deploy na Vercel (pré-produção)
+
+- O frontend é buildado a partir de `frontend/` e publicado como SPA (`frontend/dist`).
+- A API Express roda como função serverless via `api/[...all].ts`, mantendo as rotas em `/api/...`.
+- Garanta as variáveis de ambiente do backend no projeto da Vercel (`DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL`, etc.).
+- Defina `FRONTEND_URL` com o domínio da Vercel para CORS e cookies em produção.
+
 ## Estrutura
 
 ```

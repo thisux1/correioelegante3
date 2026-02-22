@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { Heart, Mail, Trash2, ExternalLink, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'

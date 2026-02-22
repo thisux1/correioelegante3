@@ -39,24 +39,6 @@ export function ScrollReveal({
   const ref = useRef<HTMLDivElement>(null)
   const offset = directionOffsets[direction]
 
-  // ── Mount animation (for hero / top-of-page) ──
-  if (animateOnMount) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: offset.x, y: offset.y }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{
-          duration: 0.8,
-          delay,
-          ease: [0.19, 1, 0.22, 1],
-        }}
-        className={className}
-      >
-        {children}
-      </motion.div>
-    )
-  }
-
   // ── Scroll-driven animation ──
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -76,6 +58,24 @@ export function ScrollReveal({
   const opacity = useTransform(scrollYProgress, [fi, fie, fo, foe], [0, 1, 1, 0])
   const x = useTransform(scrollYProgress, [fi, fie, fo, foe], [offset.x, 0, 0, -offset.x])
   const y = useTransform(scrollYProgress, [fi, fie, fo, foe], [offset.y, 0, 0, -offset.y])
+
+  // ── Mount animation (for hero / top-of-page) ──
+  if (animateOnMount) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: offset.x, y: offset.y }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{
+          duration: 0.8,
+          delay,
+          ease: [0.19, 1, 0.22, 1],
+        }}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    )
+  }
 
   return (
     <motion.div
