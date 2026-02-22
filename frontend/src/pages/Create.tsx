@@ -17,7 +17,7 @@ import { useMessageStore } from '@/store/messageStore'
 const createSchema = z.object({
   recipient: z.string().min(1, 'Nome do destinatário é obrigatório'),
   message: z.string().min(1, 'Escreva sua mensagem').max(1000, 'Mensagem muito longa (máx 1000 caracteres)'),
-  theme: z.string().default('classic'),
+  theme: z.string().min(1, 'Tema é obrigatório'),
 })
 
 type CreateForm = z.infer<typeof createSchema>

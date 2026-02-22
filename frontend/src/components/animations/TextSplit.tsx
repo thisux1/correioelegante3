@@ -13,6 +13,12 @@ interface TextSplitProps {
 export function TextSplit({ text, className = '', charClassName = '', delay = 0, animateOnMount = false }: TextSplitProps) {
   const ref = useRef<HTMLDivElement>(null)
   const words = text.split(' ')
+  const totalChars = text.replace(/ /g, '').length
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end 0.1'],
+  })
 
   // ── Mount animation mode ──
   if (animateOnMount) {
@@ -52,14 +58,6 @@ export function TextSplit({ text, className = '', charClassName = '', delay = 0,
       </motion.div>
     )
   }
-
-  // ── Scroll-driven mode ──
-  const totalChars = text.replace(/ /g, '').length
-
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end 0.1'],
-  })
 
   return (
     <div ref={ref} className={`flex flex-wrap ${className}`}>

@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { isAxiosError } from 'axios'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Mail, Lock, ArrowRight } from 'lucide-react'
+import { Heart, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
@@ -28,6 +29,16 @@ const registerSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>
 type RegisterForm = z.infer<typeof registerSchema>
+interface ApiErrorResponse {
+  error?: string
+}
+
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (isAxiosError<ApiErrorResponse>(err)) {
+    return err.response?.data?.error || fallback
+  }
+  return fallback
+}
 
 export function Auth() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -51,8 +62,8 @@ export function Auth() {
       const response = await authService.login(data)
       setAuth(response.data.user, response.data.accessToken)
       navigate('/create')
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao fazer login')
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Erro ao fazer login'))
     } finally {
       setIsSubmitting(false)
     }
@@ -68,8 +79,8 @@ export function Auth() {
       })
       setAuth(response.data.user, response.data.accessToken)
       navigate('/create')
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao criar conta')
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Erro ao criar conta'))
     } finally {
       setIsSubmitting(false)
     }

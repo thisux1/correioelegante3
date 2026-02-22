@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
