@@ -10,6 +10,7 @@ import { SectionReveal } from '@/components/animations/SectionReveal'
 import { MagneticButton } from '@/components/animations/MagneticButton'
 import { ScrollSection } from '@/components/layout/ScrollSection'
 import { HeroAnimation } from '@/components/animations/HeroAnimation'
+import { HeroIntro } from '@/components/animations/HeroIntro'
 import { SiteAtmosphere } from '@/components/animations/SiteAtmosphere'
 
 // Import Sections
@@ -32,18 +33,24 @@ function HeroSection() {
     target: sectionRef,
     offset: ['start start', 'end end'],
   })
+  // Mantém a timeline sempre avançando (sem plateau/zona morta),
+  // mas sem chegar ao reset completo para o coração linger durante a saída.
+  const heroProgress = useTransform(scrollYProgress, [0, 1], [0, 0.93])
 
   // Text stays fully visible until ~18% scroll, then fades out by 42%
   const textOpacity = useTransform(scrollYProgress, [0.18, 0.42], [1, 0])
   const textY = useTransform(scrollYProgress, [0.18, 0.42], [0, -60])
 
   return (
-    <section ref={sectionRef} className="relative" style={{ height: '210vh' }}>
+    <section ref={sectionRef} className="relative" style={{ height: '500vh' }}>
       {/* Sticky container — stays on screen while section scrolls */}
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
 
         {/* SVG animation — scroll-driven airplane → love letter */}
-        <HeroAnimation scrollProgress={scrollYProgress} />
+        <HeroAnimation scrollProgress={heroProgress} />
+
+        {/* First-visit cloud intro — plays once per session */}
+        <HeroIntro />
 
 
         {/* Hero text content — fades out as you scroll */}

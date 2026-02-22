@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { useLenis } from '@/hooks/useLenis'
 import { CustomCursor } from '@/components/animations/CustomCursor'
 
 interface ProvidersProps {
@@ -7,8 +6,6 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
-  useLenis()
-
   return (
     <>
       <CustomCursor />
