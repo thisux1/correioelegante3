@@ -1,4 +1,4 @@
-import { useRef, ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 
 interface CardTilt3DProps {
