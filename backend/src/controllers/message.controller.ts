@@ -1,86 +1,29 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AppError } from '../utils/AppError';
 import { AuthRequest } from '../middlewares/auth';
-
-const prisma = new PrismaClient();
+import * as messageService from '../services/message.service';
 
 export async function createMessage(req: AuthRequest, res: Response): Promise<void> {
   const { message, recipient, theme } = req.body;
-  const userId = req.userId!;
-
-  const newMessage = await prisma.message.create({
-    data: {
-      message,
-      recipient,
-      theme,
-      userId,
-    },
-  });
-
+  const newMessage = await messageService.createMessage(req.userId!, { message, recipient, theme });
   res.status(201).json({ message: newMessage });
 }
 
 export async function getMessages(req: AuthRequest, res: Response): Promise<void> {
-  const userId = req.userId!;
-
-  const messages = await prisma.message.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' },
-  });
-
+  const messages = await messageService.getMessagesByUser(req.userId!);
   res.json({ messages });
 }
 
-export async function getMessage(req: Request, res: Response): Promise<void> {
-  const id = req.params.id as string;
-
-  const message = await prisma.message.findUnique({
-    where: { id },
-  });
-
-  if (!message) {
-    throw new AppError('Mensagem não encontrada', 404);
-  }
-
+export async function getMessage(req: AuthRequest, res: Response): Promise<void> {
+  const message = await messageService.getMessageById(req.params.id as string, req.userId!);
   res.json({ message });
 }
 
 export async function getPublicCard(req: Request, res: Response): Promise<void> {
-  const id = req.params.id as string;
-
-  const message = await prisma.message.findUnique({
-    where: { id, paymentStatus: 'paid' },
-    select: {
-      id: true,
-      message: true,
-      recipient: true,
-      mediaUrl: true,
-      theme: true,
-      createdAt: true,
-    },
-  });
-
-  if (!message) {
-    throw new AppError('Cartão não encontrado ou pagamento pendente', 404);
-  }
-
-  res.json({ card: message });
+  const card = await messageService.getPublicCard(req.params.id as string);
+  res.json({ card });
 }
 
 export async function deleteMessage(req: AuthRequest, res: Response): Promise<void> {
-  const id = req.params.id as string;
-  const userId = req.userId!;
-
-  const message = await prisma.message.findUnique({ where: { id } });
-
-  if (!message) {
-    throw new AppError('Mensagem não encontrada', 404);
-  }
-  if (message.userId !== userId) {
-    throw new AppError('Sem permissão', 403);
-  }
-
-  await prisma.message.delete({ where: { id } });
+  await messageService.deleteMessage(req.params.id as string, req.userId!);
   res.json({ message: 'Mensagem deletada' });
 }

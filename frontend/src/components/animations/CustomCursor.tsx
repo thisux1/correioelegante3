@@ -111,8 +111,8 @@ export function CustomCursor() {
         cursorRotationRef.current = 0
         cursorEl.style.transform = `translate(${x}px, ${y - 28}px) rotate(0deg)`
 
-        // Only add ink when allowed
-        if (!isNoInkRef.current) {
+        // Only add ink when allowed and mouse button is pressed
+        if (!isNoInkRef.current && isClickingRef.current) {
           const dx = x - lastPosRef.current.x
           const dy = y - lastPosRef.current.y
           const speed = Math.hypot(dx, dy)

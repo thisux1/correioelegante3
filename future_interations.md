@@ -112,6 +112,15 @@ Temas próprios escolhíveis, cada um com animações, cores, fontes e estilos p
 
 **Limitações:** alterações extremas podem quebrar leitura do QR.
 
+#### 1.7 Autenticação Reforçada e Segurança
+
+- **Requisitos de Senha Fortes:** Transição para um modelo mais seguro exigindo caracteres especiais, números, maiúsculas/minúsculas e checagem contra vazamentos (ex: zxcvbn).
+- **Ações Críticas:** Implementar verificação por e-mail antes de executar ações críticas (ex: Alterar Senha, Excluir Conta).
+- **OTP/Magic Link:** Envio de código de confirmação numérico (OTP) ou link mágico para o e-mail cadastrado.
+- Aumenta a segurança impedindo que invasores com acesso ao dispositivo logado consigam roubar ou apagar a conta.
+
+**Limitações:** custo recorrente com serviço de e-mail (Resend, SendGrid); adiciona atrito na experiência do usuário para ações que normalmente devem ser rápidas.
+
 ---
 
 ### Fase 2 — Engajamento Social

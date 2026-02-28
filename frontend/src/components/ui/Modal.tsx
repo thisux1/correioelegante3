@@ -31,6 +31,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
             <div className="glass rounded-3xl p-8 w-full max-w-md relative">
               <button
                 onClick={onClose}
+                aria-label="Fechar"
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 transition-colors"
               >
                 <X size={20} className="text-text-light" />

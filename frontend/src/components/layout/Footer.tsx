@@ -24,7 +24,7 @@ export function Footer() {
 
           {/* Links */}
           <div className="flex flex-col gap-4">
-            <h4 className="text-sm font-bold text-text uppercase tracking-wider">Navegação</h4>
+            <h3 className="text-sm font-bold text-text uppercase tracking-wider">Navegação</h3>
             <div className="flex flex-col gap-2">
               <Link to="/" className="text-sm text-text-light hover:text-primary transition-colors flex items-center gap-2 group">
                 <span className="w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -43,7 +43,7 @@ export function Footer() {
 
           {/* Info */}
           <div className="flex flex-col gap-4">
-            <h4 className="text-sm font-bold text-text uppercase tracking-wider">Sobre</h4>
+            <h3 className="text-sm font-bold text-text uppercase tracking-wider">Sobre</h3>
             <p className="text-sm text-text-light bg-white/40 p-4 rounded-xl border border-white/40">
               Projeto escolar desenvolvido para arrecadação de fundos. Cada mensagem ajuda nossa formatura! 🎓
             </p>

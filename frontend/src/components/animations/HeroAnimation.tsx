@@ -18,46 +18,49 @@ import { motion, useMotionTemplate, useSpring, useTransform, type MotionValue } 
 function PaperAirplane() {
     return (
         <svg viewBox="0 0 160 72" width="260" height="117" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Soft drop shadow */}
-            <ellipse cx="78" cy="68" rx="50" ry="4" fill="rgba(160,80,100,0.12)" />
+            {/* No drop shadow per user request */}
 
-            {/* Upper wing */}
+            {/* Far wing (peeking above) */}
             <polygon
-                points="155,36 0,4 58,36"
+                points="155,36 20,6 40,42"
+                fill="#e8dce2"
+                stroke="rgba(180,130,150,0.2)"
+                strokeWidth="0.6"
+                strokeLinejoin="round"
+            />
+
+            {/* Near wing */}
+            <polygon
+                points="155,36 6,12 40,42"
                 fill="white"
+                stroke="rgba(180,130,150,0.25)"
+                strokeWidth="0.8"
+                strokeLinejoin="round"
+            />
+
+            {/* Near wing upper detail/gradient simulation */}
+            <polygon
+                points="155,36 70,24 6,12"
+                fill="rgba(240,230,238,0.5)"
+            />
+
+            {/* Keel / Lower body */}
+            <polygon
+                points="155,36 40,42 24,52"
+                fill="#f4ebf0"
                 stroke="rgba(180,130,150,0.2)"
                 strokeWidth="0.6"
-            />
-            {/* Upper fold detail */}
-            <polygon
-                points="155,36 90,36 75,28"
-                fill="rgba(240,230,238,0.9)"
+                strokeLinejoin="round"
             />
 
-            {/* Lower body/tail */}
+            {/* Keel inner shadow detail (along the fold) */}
             <polygon
-                points="155,36 0,68 58,36"
-                fill="#f0eaf0"
-                stroke="rgba(180,130,150,0.2)"
-                strokeWidth="0.6"
-            />
-            {/* Lower fold detail */}
-            <polygon
-                points="155,36 90,36 75,44"
-                fill="rgba(225,210,228,0.8)"
+                points="155,36 40,42 32,47"
+                fill="rgba(225,210,228,0.6)"
             />
 
-            {/* Rear tail panel */}
-            <polygon
-                points="0,4 0,68 58,36"
-                fill="#f8f0f4"
-                stroke="rgba(180,130,150,0.15)"
-                strokeWidth="0.4"
-            />
-
-            {/* Fuselage centre crease */}
-            <line x1="0" y1="4" x2="155" y2="36" stroke="rgba(160,100,130,0.2)" strokeWidth="0.8" />
-            <line x1="58" y1="36" x2="155" y2="36" stroke="rgba(160,100,130,0.25)" strokeWidth="0.8" />
+            {/* Center crease line */}
+            <line x1="40" y1="42" x2="155" y2="36" stroke="rgba(160,100,130,0.3)" strokeWidth="1" strokeLinecap="round" />
         </svg>
     )
 }
@@ -390,13 +393,13 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
     // ── Imperative opacity refs (Motion v12 WAAPI workaround) ─────
     // Opacity MotionValues that start at 0 are stuck if used in style/prop.
     // Instead: start elements hidden via CSS class, update via .on('change').
-    const planeRef  = useRef<HTMLDivElement>(null)
-    const trailRef  = useRef<HTMLDivElement>(null)
+    const planeRef = useRef<HTMLDivElement>(null)
+    const trailRef = useRef<HTMLDivElement>(null)
     const letterRef = useRef<HTMLDivElement>(null)
-    const envRef    = useRef<HTMLDivElement>(null)
-    const burstRef  = useRef<HTMLDivElement>(null)
-    const heartRef  = useRef<HTMLDivElement>(null)
-    const exitRef   = useRef<HTMLDivElement>(null)
+    const envRef = useRef<HTMLDivElement>(null)
+    const burstRef = useRef<HTMLDivElement>(null)
+    const heartRef = useRef<HTMLDivElement>(null)
+    const exitRef = useRef<HTMLDivElement>(null)
 
     useLayoutEffect(() => {
         const pairs = [
