@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Providers } from './app/providers'
 import { AppRouter } from './app/router'
 import { SmoothScroll } from './components/layout/SmoothScroll'
@@ -74,5 +75,6 @@ createRoot(document.getElementById('root')!).render(
         <AppRouter />
       </SmoothScroll>
     </Providers>
+    <SpeedInsights />
   </StrictMode>,
 )
