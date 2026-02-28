@@ -44,9 +44,16 @@ app.use('/api/messages', messageRouter);
 app.use('/api/payments', paymentRouter);
 app.use('/api/upload', uploadRouter);
 
-// Health check
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check — includes DB connectivity test (safe, read-only)
+app.get('/api/health', async (_req, res) => {
+  try {
+    const { prisma } = await import('./utils/prisma');
+    await prisma.$runCommandRaw({ ping: 1 });
+    res.json({ status: 'ok', db: 'connected', timestamp: new Date().toISOString() });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(503).json({ status: 'error', db: 'disconnected', error: msg, timestamp: new Date().toISOString() });
+  }
 });
 
 // Error handler (deve ser o último middleware)
