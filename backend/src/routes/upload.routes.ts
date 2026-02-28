@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { authenticate } from '../middlewares/auth';
+import { validateObjectId } from '../middlewares/validate';
 import { uploadMessageMedia } from '../controllers/upload.controller';
 
 const router = Router();
@@ -19,6 +20,6 @@ const upload = multer({
     },
 });
 
-router.post('/:messageId', authenticate, upload.single('file'), uploadMessageMedia);
+router.post('/:messageId', authenticate, validateObjectId('messageId'), upload.single('file'), uploadMessageMedia);
 
 export { router as uploadRouter };

@@ -86,14 +86,18 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
     return { received: true };
 }
 
-export async function getPaymentStatus(messageId: string) {
+export async function getPaymentStatus(messageId: string, userId: string) {
     const message = await prisma.message.findUnique({
         where: { id: messageId },
-        select: { paymentStatus: true, paymentId: true },
+        select: { paymentStatus: true, paymentId: true, userId: true },
     });
 
     if (!message) {
         throw new AppError('Mensagem não encontrada', 404);
+    }
+
+    if (message.userId !== userId) {
+        throw new AppError('Sem permissão', 403);
     }
 
     return { status: message.paymentStatus, paymentId: message.paymentId };

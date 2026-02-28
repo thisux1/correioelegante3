@@ -2,6 +2,7 @@ import { Router } from 'express';
 import express from 'express';
 import { createPayment, webhookHandler, getPaymentStatus } from '../controllers/payment.controller';
 import { authenticate } from '../middlewares/auth';
+import { validateObjectId } from '../middlewares/validate';
 
 const router = Router();
 
@@ -10,6 +11,6 @@ const router = Router();
 router.post('/webhook', express.raw({ type: 'application/json' }), webhookHandler);
 
 router.post('/create', authenticate, createPayment);
-router.get('/status/:messageId', authenticate, getPaymentStatus);
+router.get('/status/:messageId', authenticate, validateObjectId('messageId'), getPaymentStatus);
 
 export { router as paymentRouter };

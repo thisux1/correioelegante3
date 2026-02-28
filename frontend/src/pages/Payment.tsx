@@ -2,23 +2,17 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion } from 'framer-motion'
-import { Copy, Check, ArrowLeft, Clock } from 'lucide-react'
+import { Copy, Check, ArrowLeft, Clock, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { paymentService } from '@/services/messageService'
-
-interface PaymentData {
-  paymentId: string
-  qrCode: string
-  qrCodeBase64: string
-  status: 'pending' | 'paid'
-}
+import { paymentService, type PaymentCreateResponse } from '@/services/messageService'
 
 export function Payment() {
   const { messageId } = useParams<{ messageId: string }>()
-  const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
+  const [paymentData, setPaymentData] = useState<PaymentCreateResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [status, setStatus] = useState<'pending' | 'paid'>('pending')
 
@@ -30,8 +24,9 @@ export function Payment() {
       try {
         const response = await paymentService.create(currentMessageId)
         setPaymentData(response.data)
-      } catch (err) {
-        console.error('Erro ao criar pagamento:', err)
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { data?: { error?: string } } }
+        setError(axiosErr.response?.data?.error || 'Erro ao criar pagamento. Tente recarregar a página.')
       } finally {
         setIsLoading(false)
       }
@@ -58,8 +53,8 @@ export function Payment() {
   }, [messageId, status])
 
   async function handleCopy() {
-    if (paymentData?.qrCode) {
-      await navigator.clipboard.writeText(paymentData.qrCode)
+    if (paymentData?.pixQrCode) {
+      await navigator.clipboard.writeText(paymentData.pixQrCode)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -69,6 +64,23 @@ export function Payment() {
     return (
       <div className="min-h-screen flex items-center justify-center pt-24">
         <div className="shimmer w-16 h-16 bg-primary/10 rounded-2xl" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-24 px-6">
+        <Card glass className="text-center max-w-md w-full py-12">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="font-display text-2xl font-bold text-text mb-2">
+            Ops! Algo deu errado
+          </h2>
+          <p className="text-text-light mb-6">{error}</p>
+          <Link to="/profile">
+            <Button variant="outline">Voltar ao Perfil</Button>
+          </Link>
+        </Card>
       </div>
     )
   }
@@ -120,7 +132,7 @@ export function Payment() {
 
               <div className="bg-white rounded-2xl p-6 inline-block mb-6 shadow-sm">
                 <QRCodeSVG
-                  value={paymentData?.qrCode || 'placeholder'}
+                  value={paymentData?.pixQrCode || 'placeholder'}
                   size={200}
                   level="H"
                   includeMargin
@@ -131,7 +143,7 @@ export function Payment() {
                 <p className="text-xs text-text-muted mb-2">Código Pix Copia e Cola</p>
                 <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-3">
                   <code className="text-xs text-text-light flex-1 truncate">
-                    {paymentData?.qrCode}
+                    {paymentData?.pixQrCode}
                   </code>
                   <button
                     onClick={handleCopy}

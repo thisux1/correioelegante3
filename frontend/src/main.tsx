@@ -62,11 +62,23 @@ function setupAnimatedFavicon() {
   window.addEventListener('focus', syncFaviconState)
   window.addEventListener('blur', syncFaviconState)
   syncFaviconState()
+
+  return function cleanup() {
+    stopAnimation()
+    document.removeEventListener('visibilitychange', syncFaviconState)
+    window.removeEventListener('focus', syncFaviconState)
+    window.removeEventListener('blur', syncFaviconState)
+  }
 }
 
 // Disable right-click context menu
 document.addEventListener('contextmenu', (e) => e.preventDefault())
-setupAnimatedFavicon()
+
+const faviconCleanup = setupAnimatedFavicon()
+// HMR: dispose previous favicon animation when module hot-reloads
+if (import.meta.hot) {
+  import.meta.hot.dispose(faviconCleanup)
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -19,8 +19,8 @@ export async function getMessage(req: AuthRequest, res: Response): Promise<void>
 }
 
 export async function getPublicCard(req: Request, res: Response): Promise<void> {
-  const card = await messageService.getPublicCard(req.params.id as string);
-  res.json({ card });
+  const message = await messageService.getPublicCard(req.params.id as string);
+  res.json({ message });
 }
 
 export async function deleteMessage(req: AuthRequest, res: Response): Promise<void> {

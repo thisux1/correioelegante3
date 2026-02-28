@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { verifyAccessToken } from '../utils/jwt';
 import { AppError } from '../utils/AppError';
 
@@ -23,7 +24,10 @@ export function authenticate(
     const payload = verifyAccessToken(token);
     req.userId = payload.userId;
     next();
-  } catch {
-    throw new AppError('Token inválido ou expirado', 401);
+  } catch (err) {
+    if (err instanceof jwt.TokenExpiredError) {
+      throw new AppError('Token expirado', 401, 'TOKEN_EXPIRED');
+    }
+    throw new AppError('Token inválido', 401, 'TOKEN_INVALID');
   }
 }

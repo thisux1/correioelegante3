@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { isAxiosError } from 'axios'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
 import { Send, Heart, Palette } from 'lucide-react'
@@ -10,7 +11,6 @@ import { Input } from '@/components/ui/Input'
 import { TextArea } from '@/components/ui/TextArea'
 import { Card } from '@/components/ui/Card'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
-import { useAuthStore } from '@/store/authStore'
 import { messageService } from '@/services/messageService'
 import { useMessageStore } from '@/store/messageStore'
 
@@ -31,10 +31,10 @@ const themes = [
 
 export function Create() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
   const { addMessage } = useMessageStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedTheme, setSelectedTheme] = useState('classic')
+  const [submitError, setSubmitError] = useState('')
 
   const {
     register,
@@ -49,18 +49,18 @@ export function Create() {
   const messageContent = watch('message', '')
 
   async function onSubmit(data: CreateForm) {
-    if (!isAuthenticated) {
-      navigate('/auth')
-      return
-    }
-
     setIsSubmitting(true)
+    setSubmitError('')
     try {
       const response = await messageService.create({ ...data, theme: selectedTheme })
       addMessage(response.data.message)
       navigate(`/payment/${response.data.message.id}`)
-    } catch (err) {
-      console.error('Erro ao criar mensagem:', err)
+    } catch (err: unknown) {
+      if (isAxiosError<{ error?: string }>(err)) {
+        setSubmitError(err.response?.data?.error || 'Erro ao criar mensagem. Tente novamente.')
+      } else {
+        setSubmitError('Erro ao criar mensagem. Tente novamente.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -125,16 +125,20 @@ export function Create() {
                   {messageContent.length}/1000 caracteres
                 </div>
 
+                {submitError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3 rounded-xl bg-red-50 text-red-600 text-sm"
+                  >
+                    {submitError}
+                  </motion.div>
+                )}
+
                 <Button type="submit" isLoading={isSubmitting} size="lg">
                   <Send size={18} />
                   Enviar Mensagem
                 </Button>
-
-                {!isAuthenticated && (
-                  <p className="text-xs text-text-muted text-center">
-                    Você precisa estar logado para enviar uma mensagem
-                  </p>
-                )}
               </form>
             </Card>
           </ScrollReveal>
