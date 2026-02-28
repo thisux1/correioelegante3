@@ -13,7 +13,7 @@ const app = express();
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
-  throw new Error('FRONTEND_URL é obrigatório em produção');
+  console.warn('[WARN] FRONTEND_URL not set in production. Using default CORS origin.');
 }
 
 // Security
