@@ -1,15 +1,15 @@
 import jwt from 'jsonwebtoken';
 
-function getJwtSecret(envKey: 'JWT_SECRET' | 'JWT_REFRESH_SECRET', devFallback: string): string {
-  const value = process.env[envKey] ?? (process.env.NODE_ENV === 'production' ? undefined : devFallback);
+function getJwtSecret(envKey: 'JWT_SECRET' | 'JWT_REFRESH_SECRET'): string {
+  const value = process.env[envKey];
   if (!value) {
-    throw new Error('JWT_SECRET e JWT_REFRESH_SECRET são obrigatórios em produção');
+    throw new Error(`${envKey} é obrigatória. Configure a variável de ambiente.`);
   }
   return value;
 }
 
-const JWT_SECRET = getJwtSecret('JWT_SECRET', 'dev-secret');
-const JWT_REFRESH_SECRET = getJwtSecret('JWT_REFRESH_SECRET', 'dev-refresh-secret');
+const JWT_SECRET = getJwtSecret('JWT_SECRET');
+const JWT_REFRESH_SECRET = getJwtSecret('JWT_REFRESH_SECRET');
 
 function parsePayload(payload: string | jwt.JwtPayload): { userId: string } {
   if (typeof payload === 'string' || typeof payload.userId !== 'string') {

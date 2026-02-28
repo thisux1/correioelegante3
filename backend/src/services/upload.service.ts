@@ -13,13 +13,14 @@ function configureCloudinary() {
     });
 }
 
+// Configure once at module load — throws at startup if env vars are missing
+configureCloudinary();
+
 export async function uploadMedia(
     fileBuffer: Buffer,
     mimetype: string,
     folder = 'correio-elegante'
 ): Promise<string> {
-    configureCloudinary();
-
     const resourceType = mimetype.startsWith('audio') ? 'video' : 'image';
 
     return new Promise((resolve, reject) => {

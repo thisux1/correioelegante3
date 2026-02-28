@@ -18,6 +18,8 @@ export function Profile() {
   const { messages, setMessages, removeMessage, setLoading, isLoading } = useMessageStore()
 
   const [activeTab, setActiveTab] = useState<'messages' | 'settings'>('messages')
+  const [fetchError, setFetchError] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   // Password Change State
   const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false)
@@ -31,6 +33,7 @@ export function Profile() {
   // Delete Account State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [deleteAccountError, setDeleteAccountError] = useState('')
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -38,27 +41,40 @@ export function Profile() {
       return
     }
 
+    const abortController = new AbortController()
+
     async function fetchMessages() {
+      setFetchError('')
       setLoading(true)
       try {
         const response = await messageService.getAll()
-        setMessages(response.data.messages)
-      } catch (err) {
-        console.error('Erro ao buscar mensagens:', err)
+        if (!abortController.signal.aborted) {
+          setMessages(response.data.messages)
+        }
+      } catch (err: unknown) {
+        if (!abortController.signal.aborted) {
+          const axiosErr = err as { response?: { data?: { error?: string } } }
+          setFetchError(axiosErr.response?.data?.error || 'Erro ao carregar mensagens.')
+        }
       } finally {
-        setLoading(false)
+        if (!abortController.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchMessages()
+    return () => abortController.abort()
   }, [isAuthenticated, navigate, setMessages, setLoading])
 
   async function handleDelete(id: string) {
+    setDeleteError('')
     try {
       await messageService.delete(id)
       removeMessage(id)
-    } catch (err) {
-      console.error('Erro ao deletar mensagem:', err)
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } }
+      setDeleteError(axiosErr.response?.data?.error || 'Erro ao deletar mensagem. Tente novamente.')
     }
   }
 
@@ -101,15 +117,15 @@ export function Profile() {
 
   async function handleDeleteAccount() {
     setIsDeletingAccount(true)
+    setDeleteAccountError('')
     try {
       await authService.deleteAccount()
       clearAuth()
       navigate('/')
-    } catch (err) {
-      console.error('Erro ao excluir conta:', err)
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } }
+      setDeleteAccountError(axiosErr.response?.data?.error || 'Erro ao excluir conta. Tente novamente mais tarde.')
       setIsDeletingAccount(false)
-      setIsDeleteModalOpen(false)
-      alert('Erro ao excluir conta. Tente novamente mais tarde.')
     }
   }
 
@@ -168,6 +184,10 @@ export function Profile() {
                   <div key={i} className="shimmer h-24 bg-white/60 rounded-2xl" />
                 ))}
               </div>
+            ) : fetchError ? (
+              <Card glass className="text-center py-10">
+                <p className="text-red-500 text-sm">{fetchError}</p>
+              </Card>
             ) : messages.length === 0 ? (
               <Card glass className="text-center py-16">
                 <Heart className="w-12 h-12 text-text-muted mx-auto mb-4" />
@@ -183,6 +203,9 @@ export function Profile() {
               </Card>
             ) : (
               <div className="space-y-4">
+                {deleteError && (
+                  <p className="text-sm text-red-500 px-1">{deleteError}</p>
+                )}
                 {messages.map((message) => (
                   <Card key={message.id} glass hover className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -377,6 +400,9 @@ export function Profile() {
                 </div>
 
                 <div className="flex flex-col gap-3">
+                  {deleteAccountError && (
+                    <p className="text-sm text-red-500 text-center">{deleteAccountError}</p>
+                  )}
                   <Button
                     variant="outline"
                     className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
