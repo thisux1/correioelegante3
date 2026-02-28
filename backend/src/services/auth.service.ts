@@ -75,6 +75,10 @@ export async function changePassword(userId: string, oldPassword: string, newPas
         throw new AppError('Senha atual incorreta', 400);
     }
 
+    if (oldPassword === newPassword) {
+        throw new AppError('A nova senha deve ser diferente da senha atual', 400);
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
         where: { id: userId },

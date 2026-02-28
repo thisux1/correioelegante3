@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
+import { AppError } from '../utils/AppError';
 import * as authService from '../services/auth.service';
 
 function setCookieRefreshToken(res: Response, token: string) {
@@ -27,6 +28,9 @@ export async function login(req: Request, res: Response): Promise<void> {
 
 export async function refresh(req: Request, res: Response): Promise<void> {
   const token = req.cookies?.refreshToken;
+  if (!token) {
+    throw new AppError('Refresh token não fornecido', 401, 'TOKEN_MISSING');
+  }
   const { accessToken, refreshToken } = await authService.refreshTokens(token);
   setCookieRefreshToken(res, refreshToken);
   res.json({ accessToken });

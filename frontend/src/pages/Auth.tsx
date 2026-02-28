@@ -45,7 +45,8 @@ export function Auth() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
+  // Selector prevents re-renders when unrelated store state changes
+  const setAuth = useAuthStore((s) => s.setAuth)
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -80,7 +81,12 @@ export function Auth() {
       setAuth(response.data.user, response.data.accessToken)
       navigate('/create')
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, 'Erro ao criar conta'))
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setError('Este email já está cadastrado. Faça login para continuar.')
+        setMode('login')
+      } else {
+        setError(getApiErrorMessage(err, 'Erro ao criar conta'))
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -132,9 +138,10 @@ export function Auth() {
             {mode === 'login' ? (
               <motion.form
                 key="login"
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
+                exit={{ opacity: 0, x: 16 }}
+                transition={{ duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
                 onSubmit={loginForm.handleSubmit(handleLogin)}
                 className="flex flex-col gap-4"
               >
@@ -160,9 +167,10 @@ export function Auth() {
             ) : (
               <motion.form
                 key="register"
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={{ opacity: 0, x: -16 }}
+                transition={{ duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
                 onSubmit={registerForm.handleSubmit(handleRegister)}
                 className="flex flex-col gap-4"
               >

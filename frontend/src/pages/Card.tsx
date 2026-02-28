@@ -31,18 +31,28 @@ export function Card() {
   useEffect(() => {
     if (!id) return
 
+    const abortController = new AbortController()
+
     async function fetchCard() {
       try {
         const response = await messageService.getPublicCard(id!)
-        setCard(response.data.card)
-      } catch {
-        setError('Cartão não encontrado ou pagamento pendente')
+        if (!abortController.signal.aborted) {
+          setCard(response.data.message)
+        }
+      } catch (err: unknown) {
+        if (!abortController.signal.aborted) {
+          const axiosErr = err as { response?: { data?: { error?: string } } }
+          setError(axiosErr.response?.data?.error || 'Cartão não encontrado ou pagamento pendente')
+        }
       } finally {
-        setIsLoading(false)
+        if (!abortController.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetchCard()
+    return () => abortController.abort()
   }, [id])
 
   if (isLoading) {

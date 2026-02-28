@@ -1,15 +1,5 @@
 import { create } from 'zustand'
-
-interface Message {
-  id: string
-  message: string
-  recipient: string
-  mediaUrl?: string
-  theme: string
-  paymentStatus: 'pending' | 'paid'
-  paymentId?: string
-  createdAt: string
-}
+import type { Message } from '@/services/messageService'
 
 interface MessageState {
   messages: Message[]

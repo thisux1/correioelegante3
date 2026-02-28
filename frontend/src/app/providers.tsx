@@ -1,5 +1,6 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { CustomCursor } from '@/components/animations/CustomCursor'
+import { useAuthStore } from '@/store/authStore'
 
 interface ProvidersProps {
   children: ReactNode
@@ -7,6 +8,12 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   const [showCursor, setShowCursor] = useState(false)
+  const initAuth = useAuthStore((s) => s.initAuth)
+
+  // Restore session from refresh cookie on app mount
+  useEffect(() => {
+    initAuth()
+  }, [initAuth])
 
   useEffect(() => {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0

@@ -16,6 +16,6 @@ export async function webhookHandler(req: Request, res: Response): Promise<void>
 }
 
 export async function getPaymentStatus(req: AuthRequest, res: Response): Promise<void> {
-  const result = await paymentService.getPaymentStatus(req.params.messageId as string);
+  const result = await paymentService.getPaymentStatus(req.params.messageId as string, req.userId!);
   res.json(result);
 }

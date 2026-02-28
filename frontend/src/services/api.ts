@@ -35,6 +35,9 @@ function normalizeErrorData(error: any): void {
   }
 }
 
+// Shared promise to prevent concurrent token refresh race conditions
+let refreshPromise: Promise<string> | null = null
+
 // Handle 401 + refresh
 api.interceptors.response.use(
   (response) => response,
@@ -42,18 +45,33 @@ api.interceptors.response.use(
     normalizeErrorData(error)
 
     const originalRequest = error.config
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
+
       try {
-        const { data } = await axios.post('/api/auth/refresh', {}, { withCredentials: true })
-        useAuthStore.getState().setAuth(useAuthStore.getState().user!, data.accessToken)
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
+        // All concurrent 401s share the same refresh call
+        if (!refreshPromise) {
+          refreshPromise = axios
+            .post('/api/auth/refresh', {}, { withCredentials: true })
+            .then(({ data }) => data.accessToken as string)
+            .finally(() => { refreshPromise = null })
+        }
+
+        const accessToken = await refreshPromise
+        const { user } = useAuthStore.getState()
+        if (user) {
+          useAuthStore.getState().setAuth(user, accessToken)
+        }
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return api(originalRequest)
       } catch {
         useAuthStore.getState().clearAuth()
+        window.location.href = '/session-expired'
         return Promise.reject(error)
       }
     }
+
     return Promise.reject(error)
   }
 )

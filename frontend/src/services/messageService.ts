@@ -6,11 +6,23 @@ export interface CreateMessageData {
   theme?: string
 }
 
+export interface Message {
+  id: string
+  message: string
+  recipient: string
+  mediaUrl?: string
+  theme: string
+  paymentStatus: 'pending' | 'paid'
+  paymentId?: string | null
+  createdAt: string
+}
+
 export interface PaymentCreateResponse {
-  paymentId: string
-  qrCode: string
-  qrCodeBase64: string
-  status: 'pending' | 'paid'
+  paymentIntentId: string
+  clientSecret: string | null
+  status: string
+  pixQrCode: string | null
+  pixQrCodeImageUrl: string | null
 }
 
 export interface PaymentStatusResponse {
@@ -19,11 +31,11 @@ export interface PaymentStatusResponse {
 }
 
 export const messageService = {
-  create: (data: CreateMessageData) => api.post('/messages', data),
-  getAll: () => api.get('/messages'),
-  getById: (id: string) => api.get(`/messages/${id}`),
-  getPublicCard: (id: string) => api.get(`/messages/card/${id}`),
-  delete: (id: string) => api.delete(`/messages/${id}`),
+  create: (data: CreateMessageData) => api.post<{ message: Message }>('/messages', data),
+  getAll: () => api.get<{ messages: Message[] }>('/messages'),
+  getById: (id: string) => api.get<{ message: Message }>(`/messages/${id}`),
+  getPublicCard: (id: string) => api.get<{ message: Message }>(`/messages/card/${id}`),
+  delete: (id: string) => api.delete<{ message: string }>(`/messages/${id}`),
 }
 
 export const paymentService = {

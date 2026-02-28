@@ -30,11 +30,20 @@ export function errorHandler(
     return;
   }
 
-  // Prisma known request errors (e.g. unique constraint violation)
+  // Prisma known request errors — only P2002 (unique constraint) is a 409
   if (err.name === 'PrismaClientKnownRequestError') {
-    res.status(409).json({
-      error: 'Conflito de dados. Verifique se o recurso já existe.',
-      code: 'DATABASE_CONFLICT',
+    const prismaErr = err as Error & { code?: string };
+    if (prismaErr.code === 'P2002') {
+      res.status(409).json({
+        error: 'Conflito de dados. Verifique se o recurso já existe.',
+        code: 'DATABASE_CONFLICT',
+      });
+      return;
+    }
+    console.error('Prisma error:', err);
+    res.status(500).json({
+      error: 'Erro interno do servidor',
+      code: 'DATABASE_ERROR',
     });
     return;
   }
