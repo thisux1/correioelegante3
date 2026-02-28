@@ -16,10 +16,31 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Normalize error responses so err.response.data.error is always a string
+function normalizeErrorData(error: any): void {
+  if (error?.response?.data) {
+    const d = error.response.data
+    // If 'error' field is an object (e.g. {code, message}), extract message
+    if (d.error && typeof d.error === 'object') {
+      d.error = d.error.message || JSON.stringify(d.error)
+    }
+    // Vercel serverless format: { code, message } without 'error' key
+    if (!d.error && typeof d.message === 'string') {
+      d.error = d.message
+    }
+    // Ensure error is always a string
+    if (d.error && typeof d.error !== 'string') {
+      d.error = 'Erro inesperado no servidor'
+    }
+  }
+}
+
 // Handle 401 + refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    normalizeErrorData(error)
+
     const originalRequest = error.config
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
