@@ -16,6 +16,12 @@ export const messageSchema = z.object({
   theme: z.string().default('classic'),
 });
 
+export const changePasswordSchema = z.object({
+  oldPassword: z.string().min(1, 'Senha atual é obrigatória'),
+  newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

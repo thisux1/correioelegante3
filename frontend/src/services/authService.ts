@@ -16,4 +16,6 @@ export const authService = {
   refresh: () => api.post('/auth/refresh'),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  changePassword: (data: any) => api.put('/auth/password', data),
+  deleteAccount: () => api.delete('/auth/account')
 }
