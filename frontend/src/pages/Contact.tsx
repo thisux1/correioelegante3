@@ -25,9 +25,9 @@ export function Contact() {
                   <School className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-text mb-1">
+                  <h2 className="font-display text-lg font-bold text-text mb-1">
                     Projeto Escolar
-                  </h3>
+                  </h2>
                   <p className="text-sm text-text-light leading-relaxed">
                     Este é um projeto de arrecadação de fundos escolar.
                     Todo o dinheiro arrecadado é destinado a melhorias na escola.
@@ -44,9 +44,9 @@ export function Contact() {
                   <Mail className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-text mb-1">
+                  <h2 className="font-display text-lg font-bold text-text mb-1">
                     Email
-                  </h3>
+                  </h2>
                   <p className="text-sm text-text-light">
                     contato@correioelegante.com
                   </p>
@@ -62,9 +62,9 @@ export function Contact() {
                   <MapPin className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-text mb-1">
+                  <h2 className="font-display text-lg font-bold text-text mb-1">
                     Localização
-                  </h3>
+                  </h2>
                   <p className="text-sm text-text-light">
                     Escola Municipal — Seu Município
                   </p>
@@ -80,9 +80,9 @@ export function Contact() {
                   <Heart className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-text mb-1">
+                  <h2 className="font-display text-lg font-bold text-text mb-1">
                     Sobre
-                  </h3>
+                  </h2>
                   <p className="text-sm text-text-light leading-relaxed">
                     O Correio Elegante é uma tradição que une tecnologia e carinho
                     para aproximar pessoas de forma especial.

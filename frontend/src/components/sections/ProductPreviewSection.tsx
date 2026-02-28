@@ -65,12 +65,14 @@ export function ProductPreviewSection() {
 
                         <ul className="space-y-4">
                             {benefits.map((benefit, index) => (
-                                <ScrollReveal key={index} delay={index * 0.08} direction="right" scrollRange={[0.05, 0.20, 0.88, 1.0]}>
-                                    <li className="flex items-center gap-3 text-text">
-                                        <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-                                        <span className="font-medium">{benefit}</span>
-                                    </li>
-                                </ScrollReveal>
+                                <li key={index} className="flex items-center gap-3 text-text">
+                                    <ScrollReveal delay={index * 0.08} direction="right" scrollRange={[0.05, 0.20, 0.88, 1.0]}>
+                                        <div className="flex items-center gap-3">
+                                            <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                                            <span className="font-medium">{benefit}</span>
+                                        </div>
+                                    </ScrollReveal>
+                                </li>
                             ))}
                         </ul>
                     </SectionReveal>
