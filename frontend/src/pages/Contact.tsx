@@ -30,7 +30,7 @@ export function Contact() {
                   </h2>
                   <p className="text-sm text-text-light leading-relaxed">
                     Este é um projeto de arrecadação de fundos escolar.
-                    Todo o dinheiro arrecadado é destinado a melhorias na escola.
+                    Parte do dinheiro arrecadado é destinado a melhorias na escola.
                   </p>
                 </div>
               </div>
@@ -66,7 +66,7 @@ export function Contact() {
                     Localização
                   </h2>
                   <p className="text-sm text-text-light">
-                    Escola Municipal — Seu Município
+                   Etec Dr. Celso Giglio — Osasco
                   </p>
                 </div>
               </div>
@@ -84,7 +84,7 @@ export function Contact() {
                     Sobre
                   </h2>
                   <p className="text-sm text-text-light leading-relaxed">
-                    O Correio Elegante é uma tradição que une tecnologia e carinho
+                    O Correio Elegante é uma junção da tradição, tecnologia e carinho
                     para aproximar pessoas de forma especial.
                   </p>
                 </div>

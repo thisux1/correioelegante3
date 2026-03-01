@@ -43,9 +43,9 @@ export function Footer() {
 
           {/* Info */}
           <div className="flex flex-col gap-4">
-            <h3 className="text-sm font-bold text-text uppercase tracking-wider">Sobre</h3>
+            <h3 className="text-sm font-bold text-text uppercase tracking-wider">Sobre o projeto</h3>
             <p className="text-sm text-text-light bg-white/40 p-4 rounded-xl border border-white/40">
-              Projeto escolar desenvolvido para arrecadação de fundos. Cada mensagem ajuda nossa formatura! 🎓
+              Originalmente um projeto escolar desenvolvido para arrecadação de fundos. 
             </p>
           </div>
         </div>
