@@ -46,7 +46,12 @@ api.interceptors.response.use(
 
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Auth routes return 401 for invalid credentials — don't treat them as expired sessions
+    const isAuthRoute = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'].some(
+      (path) => originalRequest.url?.includes(path)
+    )
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       originalRequest._retry = true
 
       try {
