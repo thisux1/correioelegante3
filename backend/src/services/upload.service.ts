@@ -2,8 +2,16 @@ import { v2 as cloudinary } from 'cloudinary';
 import { AppError } from '../utils/AppError';
 
 function configureCloudinary() {
-    const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
+    const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, NODE_ENV } = process.env;
     if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+        if (NODE_ENV === 'test') {
+            cloudinary.config({
+                cloud_name: 'test_cloud',
+                api_key: 'test_key',
+                api_secret: 'test_secret',
+            });
+            return;
+        }
         throw new Error('Credenciais do Cloudinary não configuradas');
     }
     cloudinary.config({

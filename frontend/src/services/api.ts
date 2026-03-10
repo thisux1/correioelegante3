@@ -17,9 +17,10 @@ api.interceptors.request.use((config) => {
 })
 
 // Normalize error responses so err.response.data.error is always a string
-function normalizeErrorData(error: any): void {
-  if (error?.response?.data) {
-    const d = error.response.data
+function normalizeErrorData(error: unknown): void {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const d = error.response.data as any
     // If 'error' field is an object (e.g. {code, message}), extract message
     if (d.error && typeof d.error === 'object') {
       d.error = d.error.message || JSON.stringify(d.error)
