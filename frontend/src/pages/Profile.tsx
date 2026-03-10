@@ -108,8 +108,9 @@ export function Profile() {
       setOldPassword('')
       setNewPassword('')
       setConfirmPassword('')
-    } catch (err: any) {
-      setPasswordError(err.response?.data?.error || 'Erro ao alterar senha. Verifique sua senha atual.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } }
+      setPasswordError(axiosErr.response?.data?.error || 'Erro ao alterar senha. Verifique sua senha atual.')
     } finally {
       setIsChangingPassword(false)
     }
