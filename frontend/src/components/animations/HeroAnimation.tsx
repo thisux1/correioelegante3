@@ -66,17 +66,42 @@ function PaperAirplane() {
 }
 
 // ── Wind Trail SVG ──────────────────────────────────────────────
-function WindTrail() {
-    const hearts = [
-        { x: 206, y: 30, size: 16, opacity: 0.95 },
-        { x: 176, y: 36, size: 14, opacity: 0.82 },
-        { x: 150, y: 27, size: 12, opacity: 0.72 },
-        { x: 122, y: 39, size: 11, opacity: 0.62 },
-        { x: 94, y: 31, size: 10, opacity: 0.52 },
-        { x: 68, y: 41, size: 9, opacity: 0.42 },
-        { x: 44, y: 34, size: 8, opacity: 0.35 },
-        { x: 22, y: 44, size: 7, opacity: 0.28 },
-    ] as const
+const ALL_TRAIL_HEARTS = [
+    { x: 206, y: 30, size: 16, opacity: 0.95 },
+    { x: 176, y: 36, size: 14, opacity: 0.82 },
+    { x: 150, y: 27, size: 12, opacity: 0.72 },
+    { x: 122, y: 39, size: 11, opacity: 0.62 },
+    { x: 94, y: 31, size: 10, opacity: 0.52 },
+    { x: 68, y: 41, size: 9, opacity: 0.42 },
+    { x: 44, y: 34, size: 8, opacity: 0.35 },
+    { x: 22, y: 44, size: 7, opacity: 0.28 },
+] as const
+
+function WindTrail({ isMobile }: { isMobile: boolean }) {
+    // On mobile: use every other heart (4 instead of 8) to reduce SVG work
+    const hearts = isMobile
+        ? ALL_TRAIL_HEARTS.filter((_, i) => i % 2 === 0)
+        : ALL_TRAIL_HEARTS
+
+    const content = (
+        <g>
+            {hearts.map((heart, i) => (
+                <g key={i} opacity={heart.opacity}>
+                    <circle cx={heart.x} cy={heart.y} r={heart.size * 0.65} fill="url(#trail-heart-glow)" />
+                    <text
+                        x={heart.x}
+                        y={heart.y + heart.size * 0.35}
+                        textAnchor="middle"
+                        fontSize={heart.size}
+                        fill="rgba(255,255,255,0.95)"
+                        fontFamily="serif"
+                    >
+                        ♥
+                    </text>
+                </g>
+            ))}
+        </g>
+    )
 
     return (
         <svg viewBox="0 0 240 84" width="240" height="84" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -86,26 +111,29 @@ function WindTrail() {
                     <stop offset="100%" stopColor="rgba(255, 210, 230, 0)" />
                 </radialGradient>
             </defs>
-            <motion.g
-                animate={{ x: [0, -8, 0], y: [0, -3, 0] }}
-                transition={{ duration: 2.4, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-            >
-                {hearts.map((heart, i) => (
-                    <g key={i} opacity={heart.opacity}>
-                        <circle cx={heart.x} cy={heart.y} r={heart.size * 0.65} fill="url(#trail-heart-glow)" />
-                        <text
-                            x={heart.x}
-                            y={heart.y + heart.size * 0.35}
-                            textAnchor="middle"
-                            fontSize={heart.size}
-                            fill="rgba(255,255,255,0.95)"
-                            fontFamily="serif"
-                        >
-                            ♥
-                        </text>
-                    </g>
-                ))}
-            </motion.g>
+            {/* On mobile skip the continuous floating animation */}
+            {isMobile ? content : (
+                <motion.g
+                    animate={{ x: [0, -8, 0], y: [0, -3, 0] }}
+                    transition={{ duration: 2.4, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+                >
+                    {hearts.map((heart, i) => (
+                        <g key={i} opacity={heart.opacity}>
+                            <circle cx={heart.x} cy={heart.y} r={heart.size * 0.65} fill="url(#trail-heart-glow)" />
+                            <text
+                                x={heart.x}
+                                y={heart.y + heart.size * 0.35}
+                                textAnchor="middle"
+                                fontSize={heart.size}
+                                fill="rgba(255,255,255,0.95)"
+                                fontFamily="serif"
+                            >
+                                ♥
+                            </text>
+                        </g>
+                    ))}
+                </motion.g>
+            )}
         </svg>
     )
 }
@@ -325,6 +353,10 @@ interface HeroAnimationProps {
 }
 
 export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
+    // Detect mobile once (stable — no re-render on resize needed)
+    const isMobile = useRef(typeof window !== 'undefined' && window.innerWidth < 768).current
+    // On mobile: use 5 particles (skip every other) to reduce concurrent animations
+    const burstParticles = isMobile ? BURST_PARTICLES.filter((_, i) => i % 2 === 0) : BURST_PARTICLES
     // ── Airplane ──────────────────────────────────────────────
     const planeX = useTransform(scrollProgress,
         [0.00, 0.10, 0.22, 0.34, 0.88, 0.98, 1.00],
@@ -430,35 +462,47 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                 }}
             />
 
-            {/* ── Far background clouds ──────────────────────── */}
-            <motion.div className="absolute inset-0" style={{ y: c1Y }}>
-                <Cloud w={500} cx={-60} cy={-20} opacity={0.18} variant={0} />
-                <Cloud w={380} cx="65%" cy={-10} opacity={0.15} variant={1} flip />
-                <Cloud w={280} cx="35%" cy={10} opacity={0.12} variant={2} />
-            </motion.div>
+            {/* ── Far background clouds — desktop only (3 clouds) ──── */}
+            {!isMobile && (
+                <motion.div className="absolute inset-0" style={{ y: c1Y }}>
+                    <Cloud w={500} cx={-60} cy={-20} opacity={0.18} variant={0} />
+                    <Cloud w={380} cx="65%" cy={-10} opacity={0.15} variant={1} flip />
+                    <Cloud w={280} cx="35%" cy={10} opacity={0.12} variant={2} />
+                </motion.div>
+            )}
 
-            {/* ── Mid clouds ─────────────────────────────────── */}
+            {/* ── Mid clouds — 1 on mobile, 3 on desktop ─────────── */}
             <motion.div className="absolute inset-0" style={{ y: c2Y }}>
                 <Cloud w={560} cx={-80} cy="55%" opacity={0.32} variant={1} />
-                <Cloud w={480} cx="68%" cy="60%" opacity={0.28} variant={0} flip />
-                <Cloud w={320} cx="28%" cy="52%" opacity={0.20} variant={2} blur={1} />
+                {!isMobile && (
+                    <>
+                        <Cloud w={480} cx="68%" cy="60%" opacity={0.28} variant={0} flip />
+                        <Cloud w={320} cx="28%" cy="52%" opacity={0.20} variant={2} blur={1} />
+                    </>
+                )}
             </motion.div>
 
-            {/* ── Foreground clouds ──────────────────────────── */}
+            {/* ── Foreground clouds — 2 on mobile, 3 on desktop ──── */}
             <motion.div className="absolute inset-0" style={{ y: c3Y }}>
                 <Cloud w={640} cx={-100} cy="80%" opacity={0.40} variant={0} />
                 <Cloud w={520} cx="62%" cy="82%" opacity={0.36} variant={1} flip />
-                <Cloud w={380} cx="25%" cy="86%" opacity={0.30} variant={2} />
+                {!isMobile && (
+                    <Cloud w={380} cx="25%" cy="86%" opacity={0.30} variant={2} />
+                )}
             </motion.div>
 
-            {/* ── Transition cloud bank (masks hero/content seam) ── */}
+            {/* ── Transition cloud bank — 3 on mobile, 6 on desktop ─ */}
             <div className="absolute inset-0">
                 <Cloud w={760} cx={-130} cy="76%" opacity={0.70} variant={0} />
                 <Cloud w={680} cx="52%" cy="80%" opacity={0.62} variant={1} flip />
-                <Cloud w={580} cx="18%" cy="86%" opacity={0.58} variant={2} />
                 <Cloud w={700} cx={-60} cy="90%" opacity={0.75} variant={0} flip blur={1} />
-                <Cloud w={540} cx="65%" cy="88%" opacity={0.65} variant={1} />
-                <Cloud w={480} cx="32%" cy="93%" opacity={0.60} variant={2} flip />
+                {!isMobile && (
+                    <>
+                        <Cloud w={580} cx="18%" cy="86%" opacity={0.58} variant={2} />
+                        <Cloud w={540} cx="65%" cy="88%" opacity={0.65} variant={1} />
+                        <Cloud w={480} cx="32%" cy="93%" opacity={0.60} variant={2} flip />
+                    </>
+                )}
             </div>
 
 
@@ -475,7 +519,7 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                     originX: '100%',
                 }}
             >
-                <WindTrail />
+                <WindTrail isMobile={isMobile} />
             </motion.div>
 
             {/* ── Paper airplane ─────────────────────────────── */}
@@ -529,9 +573,9 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                 <Envelope flapProgress={flapProgress} />
             </motion.div>
 
-            {/* ── Emotional burst particles ───────────────────── */}
+            {/* ── Emotional burst particles (5 on mobile, 10 on desktop) ─ */}
             <div ref={burstRef} className="absolute inset-0 pointer-events-none opacity-0">
-                {BURST_PARTICLES.map((particle) => (
+                {burstParticles.map((particle) => (
                     <BurstParticle
                         key={particle.id}
                         particle={particle}
