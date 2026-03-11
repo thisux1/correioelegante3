@@ -297,9 +297,9 @@ function StarParticle({
             }}
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
             animate={{
-                opacity: [0, 1, 1, 0],
-                scale: [0.3, 1, 0.8, 0.2],
-                rotate: [0, 45, 90, 135],
+                opacity: [0, 0.9, 1, 0.8, 0.35, 0],
+                scale: [0.2, 1, 0.9, 0.75, 0.4, 0.15],
+                rotate: [0, 15, 40, 55, 72, 90],
             }}
             transition={{
                 duration,

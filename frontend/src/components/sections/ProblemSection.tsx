@@ -7,9 +7,9 @@ import { SectionReveal } from '@/components/animations/SectionReveal'
 import { motion, useScroll, useTransform } from 'framer-motion'
 
 const problems = [
-    { icon: Frown, title: 'Presentes Genéricos', description: 'Chocolates e flores são bonitos, mas muitas vezes não transmitem o verdadeiro sentimento.', fromX: -100 },
-    { icon: Sparkles, title: 'Falta de Criatividade', description: 'Quer surpreender alguém especial, mas não sabe como sair do óbvio e fazer diferente.', fromY: 100 },
-    { icon: Clock, title: 'Mensagens Esquecidas', description: 'Cartões de papel se perdem ou rasgam. O digital dura para sempre e pode ser revisto.', fromX: 100 },
+    { icon: Frown, title: 'Presentes genéricos', description: 'Chocolate e flor são legais, mas não dizem o que você realmente sente.', fromX: -100 },
+    { icon: Sparkles, title: 'Falta de ideias', description: 'Quer fazer algo diferente, mas tudo parece muito do mesmo.', fromY: 100 },
+    { icon: Clock, title: 'Papel se perde', description: 'Cartões amassam, rasgam e somem. O digital fica pra sempre.', fromX: 100 },
 ]
 
 function ProblemCard({ problem, index }: { problem: typeof problems[number]; index: number }) {
@@ -20,7 +20,6 @@ function ProblemCard({ problem, index }: { problem: typeof problems[number]; ind
         offset: ['start end', 'end 0.1'],
     })
 
-    // Opacity appears early, slide starts a bit later
     const opacityStart = 0.03 + index * 0.02
     const opacityEnd = opacityStart + 0.10
     const slideStart = 0.08 + index * 0.04
@@ -53,15 +52,11 @@ export function ProblemSection() {
     return (
         <ScrollSection id="problem-section">
             <div className="max-w-6xl mx-auto px-6">
-                {/* Header visible earlier */}
                 <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
                     <div className="text-center mb-16">
                         <h2 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
-                            O que falta nos <span className="text-gradient">Presentes</span> de hoje?
+                            Por que um <span className="text-gradient">correio elegante</span>?
                         </h2>
-                        <p className="text-text-light text-lg max-w-xl mx-auto">
-                            Identificamos os problemas mais comuns na hora de presentear quem a gente ama.
-                        </p>
                     </div>
                 </SectionReveal>
 

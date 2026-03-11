@@ -16,10 +16,7 @@ export function Header() {
   const location = useLocation()
   const { isAuthenticated } = useAuthStore()
 
-  // Scroll Progress Logic
   const { scrollYProgress } = useScroll()
-
-  // Smooth out the progress
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
@@ -29,8 +26,6 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-40">
       <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden glass">
-
-        {/* Scroll Progress Border */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-50 rounded-2xl">
           <motion.rect
             width="100%"
@@ -47,7 +42,6 @@ export function Header() {
         </svg>
 
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between relative z-10">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <MagneticButton>
               <Heart
@@ -59,7 +53,6 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
@@ -78,7 +71,6 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Auth Button */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <Link
@@ -98,7 +90,6 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
@@ -109,7 +100,6 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
