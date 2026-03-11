@@ -38,7 +38,9 @@ function generateStars(count: number, seed: number, sizeMin: number, sizeMax: nu
 
 // ── CSS Keyframes (injected once) ───────────────────────────────
 const STYLES_ID = 'site-atmosphere-styles'
-
+type DeviceOrientationCtor = typeof DeviceOrientationEvent & {
+    requestPermission?: () => Promise<'granted' | 'denied'>
+}
 
 function injectStyles() {
     if (document.getElementById(STYLES_ID)) return
@@ -54,12 +56,13 @@ function injectStyles() {
         @keyframes cloud-drift-5 { 0%,100%{transform:translate(0,0)} 35%{transform:translate(3vw,-14px)} 70%{transform:translate(-3vw,-7px)} }
         @keyframes cloud-drift-6 { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(-7vw,-4px) rotate(0.3deg)} }
 
-        /* ── Star twinkle ────────────────────── */
+        /* ── Star twinkle (gradual fade-out) ─ */
         @keyframes twinkle {
             0%   { opacity: 0; transform: scale(0.2) rotate(0deg); }
-            20%  { opacity: 0.9; transform: scale(1) rotate(20deg); }
-            50%  { opacity: 1; transform: scale(0.85) rotate(45deg); }
-            80%  { opacity: 0.9; transform: scale(1) rotate(70deg); }
+            15%  { opacity: 0.9; transform: scale(1) rotate(15deg); }
+            40%  { opacity: 1; transform: scale(0.85) rotate(35deg); }
+            60%  { opacity: 0.9; transform: scale(1) rotate(55deg); }
+            80%  { opacity: 0.5; transform: scale(0.6) rotate(72deg); }
             100% { opacity: 0; transform: scale(0.2) rotate(90deg); }
         }
 
@@ -169,68 +172,119 @@ const CLOUDS: CloudDef[] = [
     { path: 0, x: '38%', y: '86%', opacity: 0.20, drift: 'cloud-drift-2', duration: 80, scale: 0.52, highlight: true },
 ]
 
-// Mobile: 6 clouds (1 per vertical zone) vs 18 on desktop
-const MOBILE_CLOUD_INDICES = [0, 3, 5, 7, 9, 11]
-const MOBILE_CLOUDS = MOBILE_CLOUD_INDICES.map(i => CLOUDS[i])
+// ── Mobile detection (stable, no re-renders) ───────────────────
+const getIsMobile = () => typeof window !== 'undefined' && window.innerWidth < 768
 
 // ── Component ───────────────────────────────────────────────────
 export function SiteAtmosphere() {
     const bgRef = useRef<HTMLDivElement>(null)
     const fgRef = useRef<HTMLDivElement>(null)
+    const isMobile = useMemo(getIsMobile, [])
 
-    // Mobile detection — consistent with CSS media queries
-    const isMobile = typeof window !== 'undefined'
-        ? window.matchMedia('(max-width: 767px)').matches
-        : false
-
-    // Mobile: 6 bg stars + 4 fg stars (vs 18 + 12 on desktop)
-    const bgStars = useMemo(() => generateStars(isMobile ? 6 : 18, 42, 12, 36), [isMobile])
-    const fgStars = useMemo(() => generateStars(isMobile ? 4 : 12, 99, 6, 18), [isMobile])
-
-    // Active clouds: 6 on mobile, 18 on desktop
-    const activeClouds = isMobile ? MOBILE_CLOUDS : CLOUDS
+    // Reduce element counts on mobile for GPU performance
+    const activeClouds = useMemo(() => isMobile ? CLOUDS.slice(0, 8) : CLOUDS, [isMobile])
+    const bgStars = useMemo(() => generateStars(isMobile ? 10 : 18, 42, 12, 36), [isMobile])
+    const fgStars = useMemo(() => generateStars(isMobile ? 6 : 12, 99, 6, 18), [isMobile])
 
     // Inject CSS keyframes once
     useEffect(() => { injectStyles() }, [])
 
     // Pointer/gyroscope parallax via CSS transform (single handler, no React re-renders)
-    // Disabled on mobile to save rAF budget
     useEffect(() => {
-        if (isMobile) return // no parallax on mobile — saves continuous rAF loop
-
         let rafId: number | null = null
         let targetX = 0, targetY = 0
         let currentX = 0, currentY = 0
+        let orientationBaseX: number | null = null
+        let orientationBaseY: number | null = null
+
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+        const hasOrientationSupport = typeof window.DeviceOrientationEvent !== 'undefined'
+        const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
         const handleMove = (e: MouseEvent) => {
             targetX = (e.clientX / window.innerWidth - 0.5) * 2
             targetY = (e.clientY / window.innerHeight - 0.5) * 2
         }
 
-        const tick = () => {
-            currentX += (targetX - currentX) * 0.04
-            currentY += (targetY - currentY) * 0.04
+        const handleOrientation = (e: DeviceOrientationEvent) => {
+            if (e.gamma == null || e.beta == null) return
 
-            const bgX = currentX * 15
-            const bgY = currentY * 8
-            const fgX = currentX * 28
-            const fgY = currentY * 14
+            if (orientationBaseX === null || orientationBaseY === null) {
+                orientationBaseX = e.gamma
+                orientationBaseY = e.beta
+            }
+
+            targetX = clamp((e.gamma - orientationBaseX) / 25, -1, 1)
+            targetY = clamp((e.beta - orientationBaseY) / 25, -1, 1)
+        }
+
+        // On mobile, use lower lerp factor and reduced parallax amplitudes
+        const lerpFactor = isMobile ? 0.02 : 0.04
+        const bgAmpX = isMobile ? 8 : 15
+        const bgAmpY = isMobile ? 4 : 8
+        const fgAmpX = isMobile ? 14 : 28
+        const fgAmpY = isMobile ? 7 : 14
+
+        const tick = () => {
+            currentX += (targetX - currentX) * lerpFactor
+            currentY += (targetY - currentY) * lerpFactor
 
             if (bgRef.current) {
-                bgRef.current.style.transform = `translate(${bgX}px, ${bgY}px)`
+                bgRef.current.style.transform = `translate(${currentX * bgAmpX}px, ${currentY * bgAmpY}px)`
             }
             if (fgRef.current) {
-                fgRef.current.style.transform = `translate(${fgX}px, ${fgY}px)`
+                fgRef.current.style.transform = `translate(${currentX * fgAmpX}px, ${currentY * fgAmpY}px)`
             }
 
             rafId = requestAnimationFrame(tick)
         }
 
-        window.addEventListener('mousemove', handleMove, { passive: true })
+        let cleanupInput = () => { }
+
+        if (isTouchDevice && hasOrientationSupport) {
+            const orientationEvent = window.DeviceOrientationEvent as DeviceOrientationCtor
+            const requestPermission = orientationEvent.requestPermission
+
+            if (typeof requestPermission === 'function') {
+                let permissionRequested = false
+
+                const requestOrientation = () => {
+                    if (permissionRequested) return
+                    permissionRequested = true
+
+                    requestPermission()
+                        .then((permission) => {
+                            if (permission === 'granted') {
+                                window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+                            }
+                        })
+                        .catch((error: unknown) => {
+                            console.error('Falha ao solicitar permissao do giroscopio', error)
+                        })
+                }
+
+                window.addEventListener('touchstart', requestOrientation, { passive: true })
+                cleanupInput = () => {
+                    window.removeEventListener('touchstart', requestOrientation)
+                    window.removeEventListener('deviceorientation', handleOrientation)
+                }
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+                cleanupInput = () => {
+                    window.removeEventListener('deviceorientation', handleOrientation)
+                }
+            }
+        } else {
+            window.addEventListener('mousemove', handleMove, { passive: true })
+            cleanupInput = () => {
+                window.removeEventListener('mousemove', handleMove)
+            }
+        }
+
         rafId = requestAnimationFrame(tick)
 
         return () => {
-            window.removeEventListener('mousemove', handleMove)
+            cleanupInput()
             if (rafId !== null) cancelAnimationFrame(rafId)
         }
     }, [isMobile])
@@ -252,19 +306,24 @@ export function SiteAtmosphere() {
                             top: c.y,
                             opacity: c.opacity,
                             transform: `scale(${c.scale ?? 1})${c.flip ? ' scaleX(-1)' : ''}`,
-                            animation: `${c.drift} ${c.duration}s ease-in-out infinite`,
-                            animationDelay: `${i * 2.5}s`,
                         }}
                     >
-                        <svg
-                            viewBox={CLOUD_VIEWBOXES[c.path]}
-                            fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg"
-                            style={c.blur ? { filter: `blur(${c.blur}px)` } : undefined}
+                        <div
+                            style={{
+                                animation: `${c.drift} ${c.duration}s ease-in-out infinite`,
+                                animationDelay: `${i * 2.5}s`,
+                            }}
                         >
-                            <path d={CLOUD_PATHS[c.path]} />
-                            {c.highlight && <path d={CLOUD_HIGHLIGHTS[c.path]} fill="rgba(255,255,255,0.30)" />}
-                        </svg>
+                            <svg
+                                viewBox={CLOUD_VIEWBOXES[c.path]}
+                                fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg"
+                                style={c.blur ? { filter: `blur(${c.blur}px)` } : undefined}
+                            >
+                                <path d={CLOUD_PATHS[c.path]} />
+                                {c.highlight && <path d={CLOUD_HIGHLIGHTS[c.path]} fill="rgba(255,255,255,0.30)" />}
+                            </svg>
+                        </div>
                     </div>
                 ))}
 

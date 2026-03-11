@@ -7,9 +7,9 @@ import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { ScrollSection } from '@/components/layout/ScrollSection'
 
 const benefits = [
-    'Mensagens 100% personalizadas',
-    'QR Code de alta qualidade para impressão',
-    'Experiência digital interativa e imersiva',
+    'Mensagem 100% personalizada por você',
+    'QR Code bonito pra imprimir ou enviar',
+    'Pode ser lido quantas vezes quiser',
     'Pagamento instantâneo via Pix',
     'Pronto em menos de 5 minutos',
 ]
@@ -19,7 +19,6 @@ export function ProductPreviewSection() {
         <ScrollSection id="product-preview">
             <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center px-6">
 
-                {/* Left: Product Mockup */}
                 <div className="order-2 lg:order-1">
                     <SectionReveal scrollRange={[0.0, 0.12, 0.88, 1.0]}>
                         <CardTilt3D>
@@ -27,11 +26,9 @@ export function ProductPreviewSection() {
                                 className="relative max-w-sm mx-auto perspective-1000"
                                 whileHover={{ rotateY: 5 }}
                             >
-                                {/* Decorative Elements */}
                                 <div className="absolute -top-10 -left-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl" />
                                 <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-secondary/20 rounded-full blur-2xl" />
 
-                                {/* The Card Mockup */}
                                 <Card glass className="relative z-10 border-2 border-white/50 bg-white/60 p-8 shadow-2xl backdrop-blur-xl" data-no-ink="true">
                                     <div className="text-center">
                                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -53,15 +50,11 @@ export function ProductPreviewSection() {
                     </SectionReveal>
                 </div>
 
-                {/* Right: Benefits Content */}
                 <div className="order-1 lg:order-2">
                     <SectionReveal delay={0.2} scrollRange={[0.0, 0.12, 0.88, 1.0]}>
                         <h2 className="font-display text-4xl md:text-5xl font-bold text-text mb-6">
-                            Por que escolher o <span className="text-gradient">Correio Elegante?</span>
+                            O que você <span className="text-gradient">ganha</span>
                         </h2>
-                        <p className="text-text-light text-lg mb-8 leading-relaxed">
-                            Mais do que uma mensagem, entregamos uma experiência. Cuidamos de cada detalhe para que seu gesto de carinho seja inesquecível.
-                        </p>
 
                         <ul className="space-y-4">
                             {benefits.map((benefit, index) => (

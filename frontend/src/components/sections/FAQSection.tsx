@@ -34,12 +34,9 @@ export function FAQSection() {
                         <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/10 text-primary mb-4">
                             <HelpCircle size={24} />
                         </div>
-                        <h2 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
-                            Perguntas <span className="text-gradient">Frequentes</span>
+                        <h2 className="font-display text-4xl md:text-5xl font-bold text-text">
+                            Perguntas <span className="text-gradient">frequentes</span>
                         </h2>
-                        <p className="text-text-light text-lg">
-                            Tire suas dúvidas sobre o funcionamento do Correio Elegante.
-                        </p>
                     </div>
                 </SectionReveal>
 
