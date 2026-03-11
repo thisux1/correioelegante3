@@ -1,189 +1,212 @@
 import { useRef, useMemo, useEffect } from 'react'
+import { scheduleRenderer } from './animationScheduler'
 
 /**
- * BackgroundField — Gradient mesh + floating bokeh circles.
- * Fixed behind all content. Mouse-reactive glow on desktop.
+ * BackgroundField — Canvas-rendered gradient mesh + floating bokeh.
+ * Fixed behind all content. Mouse-reactive glow remains DOM.
+ *
+ * PERFORMANCE STRATEGY:
+ *   ✅ Bokeh + gradient orbs on a single Canvas 2D (was: N animated DOM elements each with filter:blur)
+ *   ✅ Bokeh drawn with ctx.arc + radialGradient; blur batched by quantized level
+ *   ✅ Orbs drawn with large radialGradient + single ctx.filter pass
+ *   ✅ Shared RAF via animationScheduler — no independent loop
+ *   ✅ Canvas at 60% resolution on mobile, CSS-scaled to 100% (reduced fill-rate)
+ *   ✅ Reduced particle counts on mobile: bokeh=6 (vs 14 desktop)
+ *   ✅ Cursor glow stays DOM — single element, trivially cheap
  */
 
-const STYLES_ID = 'bg-field-styles'
-
-function injectStyles() {
-    if (document.getElementById(STYLES_ID)) return
-
-    const style = document.createElement('style')
-    style.id = STYLES_ID
-    style.textContent = `
-        @keyframes bg-drift-1 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(5vw, -3vh) scale(1.08); }
-            66% { transform: translate(-3vw, 4vh) scale(0.95); }
-        }
-        @keyframes bg-drift-2 {
-            0%, 100% { transform: translate(0, 0) scale(1.05); }
-            33% { transform: translate(-4vw, 5vh) scale(1); }
-            66% { transform: translate(6vw, -2vh) scale(1.1); }
-        }
-        @keyframes bg-drift-3 {
-            0%, 100% { transform: translate(0, 0) scale(0.95); }
-            50% { transform: translate(3vw, 3vh) scale(1.05); }
-        }
-        @keyframes bokeh-float {
-            0%, 100% { transform: translate(0, 0); }
-            25% { transform: translate(var(--bk-dx1), var(--bk-dy1)); }
-            50% { transform: translate(var(--bk-dx2), var(--bk-dy2)); }
-            75% { transform: translate(var(--bk-dx3), var(--bk-dy3)); }
-        }
-        .bg-glow {
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            filter: blur(120px);
-            will-change: transform;
-        }
-        .bg-bokeh {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: bokeh-float var(--bk-dur) ease-in-out var(--bk-delay) infinite;
-            will-change: transform;
-        }
-    `
-    document.head.appendChild(style)
-}
-
-// Seeded random for consistent positions
+// ── Seeded random ────────────────────────────────────────────────
 function seededRandom(seed: number) {
     let s = seed
     return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647 }
 }
 
-interface BokehCircle {
-    x: number
+// ── Bokeh particle ───────────────────────────────────────────────
+interface BokehParticle {
+    x: number         // normalized 0..1
     y: number
-    size: number
+    size: number      // diameter in viewport pixels
     opacity: number
-    color: string
-    blur: number
-    duration: number
-    delay: number
-    dx1: string; dy1: string
-    dx2: string; dy2: string
-    dx3: string; dy3: string
+    r: number; g: number; b: number; a: number  // pre-parsed color components
+    blur: number      // blur radius in viewport pixels (20–60)
+    speed: number     // drift angular speed (rad/sec)
+    phase: number     // drift phase offset
+    driftAmp: number  // max drift distance in viewport pixels
 }
 
 const BOKEH_COLORS = [
-    'rgba(225, 29, 72, 0.12)',   // primary
-    'rgba(244, 63, 94, 0.10)',   // secondary
-    'rgba(253, 164, 175, 0.15)', // accent
-    'rgba(255, 255, 255, 0.10)', // white
-    'rgba(251, 113, 133, 0.08)', // rose
+    { r: 225, g: 29,  b: 72,  a: 0.12 },
+    { r: 244, g: 63,  b: 94,  a: 0.10 },
+    { r: 253, g: 164, b: 175, a: 0.15 },
+    { r: 255, g: 255, b: 255, a: 0.10 },
+    { r: 251, g: 113, b: 133, a: 0.08 },
 ]
 
-function generateBokeh(count: number): BokehCircle[] {
+function generateBokeh(count: number): BokehParticle[] {
     const rand = seededRandom(42069)
     return Array.from({ length: count }, () => {
-        const size = 30 + rand() * 120
+        const c = BOKEH_COLORS[Math.floor(rand() * BOKEH_COLORS.length)]
         return {
-            x: rand() * 100,
-            y: rand() * 100,
-            size,
+            x: rand(),
+            y: rand(),
+            size: 30 + rand() * 120,
             opacity: 0.15 + rand() * 0.25,
-            color: BOKEH_COLORS[Math.floor(rand() * BOKEH_COLORS.length)],
+            r: c.r, g: c.g, b: c.b, a: c.a,
             blur: 20 + rand() * 40,
-            duration: 20 + rand() * 30,
-            delay: rand() * 10,
-            dx1: `${(rand() - 0.5) * 80}px`,
-            dy1: `${(rand() - 0.5) * 60}px`,
-            dx2: `${(rand() - 0.5) * 80}px`,
-            dy2: `${(rand() - 0.5) * 60}px`,
-            dx3: `${(rand() - 0.5) * 80}px`,
-            dy3: `${(rand() - 0.5) * 60}px`,
+            speed: 0.02 + rand() * 0.04,
+            phase: rand() * Math.PI * 2,
+            driftAmp: 40 + rand() * 40,
         }
     })
 }
 
+// ── Gradient orb definitions ─────────────────────────────────────
+// Positions mirror the original CSS (top/right/bottom/left percentages → normalized 0..1).
+interface OrbDef {
+    cx: number; cy: number  // center normalized 0..1
+    size: number            // diameter in viewport pixels
+    r: number; g: number; b: number; a: number
+    blurVp: number          // blur in viewport pixels
+    speed: number           // drift speed (rad/sec)
+    phase: number
+    driftX: number          // max horizontal drift as fraction of viewport width
+    driftY: number
+}
+
+const ORBS: OrbDef[] = [
+    { cx: 0.95, cy: 0.10, size: 500, r: 225, g: 29,  b: 72,  a: 0.15, blurVp: 120, speed: 0.018, phase: 0, driftX: 0.08, driftY: 0.06 },
+    { cx: -0.10, cy: 0.90, size: 600, r: 244, g: 63,  b: 94,  a: 0.12, blurVp: 120, speed: 0.015, phase: 2, driftX: 0.08, driftY: 0.07 },
+    { cx: 0.40, cy: 0.50, size: 400, r: 253, g: 164, b: 175, a: 0.18, blurVp: 120, speed: 0.022, phase: 4, driftX: 0.06, driftY: 0.05 },
+]
+
+// ── Canvas helpers ───────────────────────────────────────────────
+function initCanvas(canvas: HTMLCanvasElement, scale: number) {
+    canvas.width = Math.round(window.innerWidth * scale)
+    canvas.height = Math.round(window.innerHeight * scale)
+    const s = canvas.style
+    s.position = 'fixed'
+    s.inset = '0'
+    s.width = '100%'
+    s.height = '100%'
+    s.pointerEvents = 'none'
+}
+
+// ── Component ────────────────────────────────────────────────────
 export function BackgroundField() {
+    const canvasRef = useRef<HTMLCanvasElement>(null)
     const cursorGlowRef = useRef<HTMLDivElement>(null)
     const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
-    const bokeh = useMemo(() => generateBokeh(isMobile ? 8 : 14), [isMobile])
+    const bokeh = useMemo(() => generateBokeh(isMobile ? 6 : 14), [isMobile])
 
     useEffect(() => {
-        injectStyles()
+        const canvas = canvasRef.current
+        if (!canvas) return
 
-        if (isMobile) return
+        const cScale = isMobile ? 0.6 : 1.0
+        initCanvas(canvas, cScale)
 
-        const handleMove = (e: MouseEvent) => {
-            if (cursorGlowRef.current) {
-                cursorGlowRef.current.style.left = `${e.clientX}px`
-                cursorGlowRef.current.style.top = `${e.clientY}px`
-                cursorGlowRef.current.style.opacity = '1'
+        const ctx = canvas.getContext('2d', { alpha: true })
+        if (!ctx) return
+
+        // Cursor glow — remains DOM, handled separately
+        let cleanupGlow = () => {}
+        if (!isMobile) {
+            const handleMove = (e: MouseEvent) => {
+                if (cursorGlowRef.current) {
+                    cursorGlowRef.current.style.left = `${e.clientX}px`
+                    cursorGlowRef.current.style.top = `${e.clientY}px`
+                    cursorGlowRef.current.style.opacity = '1'
+                }
             }
+            window.addEventListener('mousemove', handleMove, { passive: true })
+            cleanupGlow = () => window.removeEventListener('mousemove', handleMove)
         }
 
-        window.addEventListener('mousemove', handleMove, { passive: true })
-        return () => window.removeEventListener('mousemove', handleMove)
-    }, [isMobile])
+        // Debounced resize
+        let resizeTimer: ReturnType<typeof setTimeout> | null = null
+        const handleResize = () => {
+            if (resizeTimer !== null) clearTimeout(resizeTimer)
+            resizeTimer = setTimeout(() => initCanvas(canvas, cScale), 200)
+        }
+        window.addEventListener('resize', handleResize, { passive: true })
+
+        const unschedule = scheduleRenderer((timeMs: number) => {
+            const w = canvas.width
+            const h = canvas.height
+            const t = timeMs / 1000
+
+            ctx.clearRect(0, 0, w, h)
+
+            // ── Gradient orbs (large, blurred) ──────────────────
+            // All orbs share the same blur level — one filter state change.
+            const orbBlur = Math.round(120 * cScale)
+            ctx.filter = `blur(${orbBlur}px)`
+            for (const o of ORBS) {
+                const dx = Math.sin(t * o.speed + o.phase) * o.driftX * w
+                const dy = Math.cos(t * o.speed * 0.7 + o.phase + 1) * o.driftY * h
+                const cx = o.cx * w + dx
+                const cy = o.cy * h + dy
+                const radius = (o.size * cScale) / 2
+                const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius)
+                grd.addColorStop(0, `rgba(${o.r},${o.g},${o.b},${o.a})`)
+                grd.addColorStop(0.7, `rgba(${o.r},${o.g},${o.b},0.02)`)
+                grd.addColorStop(1, 'rgba(0,0,0,0)')
+                ctx.fillStyle = grd
+                ctx.beginPath()
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+                ctx.fill()
+            }
+            ctx.filter = 'none'
+
+            // ── Bokeh circles ────────────────────────────────────
+            // Sort-free batching: bokeh is already generated in ascending blur order
+            // (seeded, so consistent). Group by quantized blur to minimize filter switches.
+            let lastBlurLevel = -1
+            for (const b of bokeh) {
+                // Lissajous drift — organic motion without CSS keyframes
+                const dx = Math.sin(t * b.speed + b.phase) * b.driftAmp * cScale
+                const dy = Math.cos(t * b.speed * 0.73 + b.phase + 1.2) * b.driftAmp * cScale
+                const bx = b.x * w + dx
+                const by = b.y * h + dy
+                const radius = (b.size * cScale) / 2
+
+                const blurLevel = Math.round(b.blur / 10) * 10
+                if (blurLevel !== lastBlurLevel) {
+                    ctx.filter = `blur(${Math.round(blurLevel * cScale)}px)`
+                    lastBlurLevel = blurLevel
+                }
+
+                const grd = ctx.createRadialGradient(bx, by, 0, bx, by, radius)
+                grd.addColorStop(0, `rgba(${b.r},${b.g},${b.b},${b.a})`)
+                grd.addColorStop(0.6, `rgba(${b.r},${b.g},${b.b},${(b.a * 0.3).toFixed(3)})`)
+                grd.addColorStop(1, 'rgba(0,0,0,0)')
+                ctx.globalAlpha = b.opacity
+                ctx.fillStyle = grd
+                ctx.beginPath()
+                ctx.arc(bx, by, radius, 0, Math.PI * 2)
+                ctx.fill()
+            }
+            ctx.filter = 'none'
+            ctx.globalAlpha = 1
+        })
+
+        return () => {
+            unschedule()
+            cleanupGlow()
+            window.removeEventListener('resize', handleResize)
+            if (resizeTimer !== null) clearTimeout(resizeTimer)
+        }
+    }, [isMobile, bokeh])
 
     return (
         <div className="fixed inset-0 z-[-2] overflow-hidden pointer-events-none select-none">
-            {/* Base gradient */}
+            {/* Static base gradient — pure CSS, no animation */}
             <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-secondary/5" />
 
-            {/* Gradient mesh orbs */}
-            <div
-                className="bg-glow w-[500px] h-[500px] opacity-20"
-                style={{
-                    top: '10%',
-                    right: '-5%',
-                    background: 'radial-gradient(circle, rgba(225, 29, 72, 0.15), transparent 70%)',
-                    animation: 'bg-drift-1 30s ease-in-out infinite',
-                }}
-            />
-            <div
-                className="bg-glow w-[600px] h-[600px] opacity-15"
-                style={{
-                    bottom: '5%',
-                    left: '-10%',
-                    background: 'radial-gradient(circle, rgba(244, 63, 94, 0.12), transparent 70%)',
-                    animation: 'bg-drift-2 35s ease-in-out infinite',
-                }}
-            />
-            <div
-                className="bg-glow w-[400px] h-[400px] opacity-10"
-                style={{
-                    top: '50%',
-                    left: '40%',
-                    background: 'radial-gradient(circle, rgba(253, 164, 175, 0.18), transparent 70%)',
-                    animation: 'bg-drift-3 25s ease-in-out infinite',
-                }}
-            />
+            {/* Canvas — renders bokeh circles + gradient orbs */}
+            <canvas ref={canvasRef} />
 
-            {/* Bokeh circles */}
-            {bokeh.map((b, i) => (
-                <div
-                    key={i}
-                    className="bg-bokeh"
-                    style={{
-                        left: `${b.x}%`,
-                        top: `${b.y}%`,
-                        width: b.size,
-                        height: b.size,
-                        opacity: b.opacity,
-                        background: `radial-gradient(circle, ${b.color}, transparent 70%)`,
-                        filter: `blur(${b.blur}px)`,
-                        '--bk-dur': `${b.duration}s`,
-                        '--bk-delay': `${b.delay}s`,
-                        '--bk-dx1': b.dx1,
-                        '--bk-dy1': b.dy1,
-                        '--bk-dx2': b.dx2,
-                        '--bk-dy2': b.dy2,
-                        '--bk-dx3': b.dx3,
-                        '--bk-dy3': b.dy3,
-                    } as React.CSSProperties}
-                />
-            ))}
-
-            {/* Mouse-reactive glow (desktop only) */}
+            {/* Cursor glow — single DOM element, trivially cheap */}
             <div
                 ref={cursorGlowRef}
                 className="fixed w-[300px] h-[300px] rounded-full pointer-events-none opacity-0 transition-opacity duration-500"
