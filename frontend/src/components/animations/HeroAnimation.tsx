@@ -353,8 +353,12 @@ interface HeroAnimationProps {
 }
 
 export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
-    // Detect mobile once (stable — no re-render on resize needed)
-    const isMobile = useRef(typeof window !== 'undefined' && window.innerWidth < 768).current
+    // Use matchMedia for mobile detection — consistent with CSS breakpoints and
+    // reliable in Chrome DevTools emulation (unlike window.innerWidth which can
+    // report the outer window size before DevTools applies the emulated viewport)
+    const isMobile = typeof window !== 'undefined'
+        ? window.matchMedia('(max-width: 767px)').matches
+        : false
     // On mobile: use 5 particles (skip every other) to reduce concurrent animations
     const burstParticles = isMobile ? BURST_PARTICLES.filter((_, i) => i % 2 === 0) : BURST_PARTICLES
     // ── Airplane ──────────────────────────────────────────────
