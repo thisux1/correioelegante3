@@ -13,9 +13,9 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Ease Out Expo
         orientation: 'vertical',
         gestureOrientation: 'vertical',
-        smoothWheel: true,
-        syncTouch: true, // Explicitly requested for mobile
-        touchMultiplier: 2, // Make touch feel more responsive/faster before inertia kicks in
+        smoothWheel: true,        // smooth mouse wheel on desktop — unaffected
+        syncTouch: false,         // let native iOS/Android handle touch momentum
+        touchMultiplier: 1,       // neutral velocity (was 2 — caused over-sensitivity)
         infinite: false,
     }
 
