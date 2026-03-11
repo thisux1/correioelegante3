@@ -18,6 +18,8 @@ const mockMessage = {
     mediaUrl: null,
     paymentStatus: 'pending',
     paymentId: null,
+    paymentProvider: null,
+    paymentMethod: null,
     createdAt: new Date(),
     updatedAt: new Date(),
 };
