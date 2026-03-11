@@ -1,141 +1,198 @@
 import { useRef, useMemo, useEffect } from 'react'
 
-/*
- * BackgroundField — Floating cards + gradient orbs
- *
- * PERFORMANCE NOTES:
- *   ✅ Cards use CSS @keyframes for floating bob (no framer-motion animate)
- *   ✅ Scroll parallax via single RAF loop + getComputedStyle
- *   ✅ Removed backdrop-blur (extremely costly on GPU)
- *   ✅ Reduced card count: 15 → 8
- *   ✅ Orbs use CSS animation (not framer-motion)
+/**
+ * BackgroundField — Gradient mesh + floating bokeh circles.
+ * Fixed behind all content. Mouse-reactive glow on desktop.
  */
 
-// ── Types ───────────────────────────────────────────────────────
-interface FloatingCard {
-    id: number
-    x: number
-    y: number
-    rotate: number
-    scale: number
-    duration: number
-    delay: number
-}
+const STYLES_ID = 'bg-field-styles'
 
-// ── Seeded card generation ──────────────────────────────────────
-function generateCards(count: number): FloatingCard[] {
-    let s = 12345
-    const rand = () => { s = (s * 16807) % 2147483647; return s / 2147483647 }
-
-    return Array.from({ length: count }, (_, i) => ({
-        id: i,
-        x: rand() * 90 + 5,
-        y: rand() * 90 + 5,
-        rotate: rand() * 30 - 15,
-        scale: 0.5 + rand() * 0.5,
-        duration: 12 + rand() * 18,
-        delay: rand() * 6,
-    }))
-}
-
-// ── Inject styles ───────────────────────────────────────────────
-const BG_STYLES_ID = 'bg-field-styles'
-
-function injectBgStyles() {
-    if (document.getElementById(BG_STYLES_ID)) return
+function injectStyles() {
+    if (document.getElementById(STYLES_ID)) return
 
     const style = document.createElement('style')
-    style.id = BG_STYLES_ID
+    style.id = STYLES_ID
     style.textContent = `
-        @keyframes card-bob {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(18px); }
+        @keyframes bg-drift-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(5vw, -3vh) scale(1.08); }
+            66% { transform: translate(-3vw, 4vh) scale(0.95); }
         }
-        @keyframes orb-pulse-1 {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.15) rotate(180deg); }
+        @keyframes bg-drift-2 {
+            0%, 100% { transform: translate(0, 0) scale(1.05); }
+            33% { transform: translate(-4vw, 5vh) scale(1); }
+            66% { transform: translate(6vw, -2vh) scale(1.1); }
         }
-        @keyframes orb-pulse-2 {
-            0%, 100% { transform: scale(1.15) rotate(360deg); }
-            50% { transform: scale(1) rotate(180deg); }
+        @keyframes bg-drift-3 {
+            0%, 100% { transform: translate(0, 0) scale(0.95); }
+            50% { transform: translate(3vw, 3vh) scale(1.05); }
         }
-        .bg-card {
-            position: absolute;
+        @keyframes bokeh-float {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(var(--bk-dx1), var(--bk-dy1)); }
+            50% { transform: translate(var(--bk-dx2), var(--bk-dy2)); }
+            75% { transform: translate(var(--bk-dx3), var(--bk-dy3)); }
+        }
+        .bg-glow {
+            position: fixed;
+            border-radius: 50%;
             pointer-events: none;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.35);
-            background: rgba(255,255,255,0.15);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            animation: card-bob var(--bob-dur) ease-in-out var(--bob-delay) infinite;
+            filter: blur(120px);
             will-change: transform;
-            opacity: 0.35;
         }
-        .bg-card::before {
-            content: '';
+        .bg-bokeh {
             position: absolute;
-            top: 8px; left: 8px; right: 8px;
-            height: 2px;
-            background: rgba(255,255,255,0.25);
-            border-radius: 2px;
-        }
-        .bg-card::after {
-            content: '';
-            position: absolute;
-            bottom: 8px; left: 12px;
-            width: 40%;
-            height: 2px;
-            background: rgba(255,255,255,0.25);
-            border-radius: 2px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: bokeh-float var(--bk-dur) ease-in-out var(--bk-delay) infinite;
+            will-change: transform;
         }
     `
     document.head.appendChild(style)
 }
 
-// ── Component ───────────────────────────────────────────────────
-export function BackgroundField() {
-    const containerRef = useRef<HTMLDivElement>(null)
-    const cards = useMemo(() => generateCards(8), [])
+// Seeded random for consistent positions
+function seededRandom(seed: number) {
+    let s = seed
+    return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647 }
+}
 
-    useEffect(() => { injectBgStyles() }, [])
+interface BokehCircle {
+    x: number
+    y: number
+    size: number
+    opacity: number
+    color: string
+    blur: number
+    duration: number
+    delay: number
+    dx1: string; dy1: string
+    dx2: string; dy2: string
+    dx3: string; dy3: string
+}
+
+const BOKEH_COLORS = [
+    'rgba(225, 29, 72, 0.12)',   // primary
+    'rgba(244, 63, 94, 0.10)',   // secondary
+    'rgba(253, 164, 175, 0.15)', // accent
+    'rgba(255, 255, 255, 0.10)', // white
+    'rgba(251, 113, 133, 0.08)', // rose
+]
+
+function generateBokeh(count: number): BokehCircle[] {
+    const rand = seededRandom(42069)
+    return Array.from({ length: count }, () => {
+        const size = 30 + rand() * 120
+        return {
+            x: rand() * 100,
+            y: rand() * 100,
+            size,
+            opacity: 0.15 + rand() * 0.25,
+            color: BOKEH_COLORS[Math.floor(rand() * BOKEH_COLORS.length)],
+            blur: 20 + rand() * 40,
+            duration: 20 + rand() * 30,
+            delay: rand() * 10,
+            dx1: `${(rand() - 0.5) * 80}px`,
+            dy1: `${(rand() - 0.5) * 60}px`,
+            dx2: `${(rand() - 0.5) * 80}px`,
+            dy2: `${(rand() - 0.5) * 60}px`,
+            dx3: `${(rand() - 0.5) * 80}px`,
+            dy3: `${(rand() - 0.5) * 60}px`,
+        }
+    })
+}
+
+export function BackgroundField() {
+    const cursorGlowRef = useRef<HTMLDivElement>(null)
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+    const bokeh = useMemo(() => generateBokeh(isMobile ? 8 : 14), [isMobile])
+
+    useEffect(() => {
+        injectStyles()
+
+        if (isMobile) return
+
+        const handleMove = (e: MouseEvent) => {
+            if (cursorGlowRef.current) {
+                cursorGlowRef.current.style.left = `${e.clientX}px`
+                cursorGlowRef.current.style.top = `${e.clientY}px`
+                cursorGlowRef.current.style.opacity = '1'
+            }
+        }
+
+        window.addEventListener('mousemove', handleMove, { passive: true })
+        return () => window.removeEventListener('mousemove', handleMove)
+    }, [isMobile])
 
     return (
-        <div
-            ref={containerRef}
-            className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none select-none"
-        >
-            {/* Gradient base */}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5 opacity-80" />
+        <div className="fixed inset-0 z-[-2] overflow-hidden pointer-events-none select-none">
+            {/* Base gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-secondary/5" />
 
-            {/* Orbs — CSS animated, no framer-motion */}
+            {/* Gradient mesh orbs */}
             <div
-                className="fixed top-0 right-0 w-[400px] h-[400px] bg-primary/8 rounded-full opacity-25 pointer-events-none"
+                className="bg-glow w-[500px] h-[500px] opacity-20"
                 style={{
-                    filter: 'blur(100px)',
-                    animation: 'orb-pulse-1 25s linear infinite',
+                    top: '10%',
+                    right: '-5%',
+                    background: 'radial-gradient(circle, rgba(225, 29, 72, 0.15), transparent 70%)',
+                    animation: 'bg-drift-1 30s ease-in-out infinite',
                 }}
             />
             <div
-                className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-secondary/8 rounded-full opacity-25 pointer-events-none"
+                className="bg-glow w-[600px] h-[600px] opacity-15"
                 style={{
-                    filter: 'blur(100px)',
-                    animation: 'orb-pulse-2 30s linear infinite',
+                    bottom: '5%',
+                    left: '-10%',
+                    background: 'radial-gradient(circle, rgba(244, 63, 94, 0.12), transparent 70%)',
+                    animation: 'bg-drift-2 35s ease-in-out infinite',
+                }}
+            />
+            <div
+                className="bg-glow w-[400px] h-[400px] opacity-10"
+                style={{
+                    top: '50%',
+                    left: '40%',
+                    background: 'radial-gradient(circle, rgba(253, 164, 175, 0.18), transparent 70%)',
+                    animation: 'bg-drift-3 25s ease-in-out infinite',
                 }}
             />
 
-            {/* Cards — pure CSS animation, no backdrop-blur */}
-            {cards.map((card) => (
+            {/* Bokeh circles */}
+            {bokeh.map((b, i) => (
                 <div
-                    key={card.id}
-                    className="bg-card w-14 h-20 md:w-20 md:h-28"
+                    key={i}
+                    className="bg-bokeh"
                     style={{
-                        left: `${card.x}%`,
-                        top: `${card.y}%`,
-                        transform: `rotate(${card.rotate}deg) scale(${card.scale})`,
-                        '--bob-dur': `${card.duration}s`,
-                        '--bob-delay': `${card.delay}s`,
+                        left: `${b.x}%`,
+                        top: `${b.y}%`,
+                        width: b.size,
+                        height: b.size,
+                        opacity: b.opacity,
+                        background: `radial-gradient(circle, ${b.color}, transparent 70%)`,
+                        filter: `blur(${b.blur}px)`,
+                        '--bk-dur': `${b.duration}s`,
+                        '--bk-delay': `${b.delay}s`,
+                        '--bk-dx1': b.dx1,
+                        '--bk-dy1': b.dy1,
+                        '--bk-dx2': b.dx2,
+                        '--bk-dy2': b.dy2,
+                        '--bk-dx3': b.dx3,
+                        '--bk-dy3': b.dy3,
                     } as React.CSSProperties}
                 />
             ))}
+
+            {/* Mouse-reactive glow (desktop only) */}
+            <div
+                ref={cursorGlowRef}
+                className="fixed w-[300px] h-[300px] rounded-full pointer-events-none opacity-0 transition-opacity duration-500"
+                style={{
+                    transform: 'translate(-50%, -50%)',
+                    background: 'radial-gradient(circle, rgba(225, 29, 72, 0.08), transparent 70%)',
+                    filter: 'blur(60px)',
+                }}
+            />
 
             {/* Grain overlay */}
             <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.03] mix-blend-overlay" />

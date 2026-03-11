@@ -416,14 +416,14 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
     const burstOpacity = useTransform(scrollProgress, [0.66, 0.70, 0.80, 0.88, 1.00], [0, 1, 1, 0, 0])
     const burstProgress = useTransform(scrollProgress, [0.66, 0.74, 0.84, 1.00], [0, 1, 1, 0])
 
-    // ── Cloud parallax + return-to-start frame at the end ───────
-    const c1Y = useTransform(scrollProgress, [0.00, 0.80, 1.00], [0, -30, 0])
-    const c2Y = useTransform(scrollProgress, [0.00, 0.80, 1.00], [0, -90, 0])
-    const c3Y = useTransform(scrollProgress, [0.00, 0.80, 1.00], [0, -15, 0])
+    // ── Cloud parallax (no return-to-zero — heroProgress stops at 0.93) ──
+    const c1Y = useTransform(scrollProgress, [0.00, 0.80], [0, -30])
+    const c2Y = useTransform(scrollProgress, [0.00, 0.80], [0, -90])
+    const c3Y = useTransform(scrollProgress, [0.00, 0.80], [0, -15])
 
-    // ── Chapter 4 veil (mask reset), then reveal frame 0 at 1.0 ───
-    const exitOpacity = useTransform(scrollProgress, [0.80, 0.90, 0.97, 1.00], [0, 0.85, 0.85, 0])
-    const skyCenterX = useTransform(scrollProgress, [0.00, 0.75, 1.00], [55, 61, 55])
+    // ── Chapter 4 veil (masks section exit) ──────────────────────
+    const exitOpacity = useTransform(scrollProgress, [0.80, 0.90, 0.93], [0, 0.85, 0.85])
+    const skyCenterX = useTransform(scrollProgress, [0.00, 0.75], [55, 61])
     const skyBackground = useMotionTemplate`radial-gradient(ellipse 140% 90% at ${skyCenterX}% 45%, #fbc5cc 0%, #f4a8b4 25%, #e8909e 55%, #f2c5cb 82%, #fad8dc 100%)`
 
     // ── Imperative opacity refs (Motion v12 WAAPI workaround) ─────

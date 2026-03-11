@@ -29,7 +29,6 @@ export function SocialProofSection() {
     return (
         <ScrollSection id="social-proof">
             <div className="max-w-6xl mx-auto px-6">
-                {/* Animated Stats */}
                 <div className="flex flex-wrap justify-center gap-12 md:gap-24 mb-20">
                     {stats.map((stat, index) => (
                         <ScrollReveal key={index} delay={index * 0.1} scrollRange={[0.0, 0.12, 0.88, 1.0]}>
@@ -45,19 +44,14 @@ export function SocialProofSection() {
                     ))}
                 </div>
 
-                {/* Section Title */}
                 <SectionReveal scrollRange={[0.0, 0.10, 0.88, 1.0]}>
                     <div className="text-center mb-16">
                         <h2 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
-                            Quem já se <span className="text-gradient">Surpreendeu</span>
+                            Quem já <span className="text-gradient">mandou</span>
                         </h2>
-                        <p className="text-text-light text-lg max-w-xl mx-auto">
-                            Histórias reais de pessoas que usaram nossa plataforma para emocionar.
-                        </p>
                     </div>
                 </SectionReveal>
 
-                {/* Testimonial Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {testimonials.map((testimonial, index) => (
                         <ScrollReveal key={index} delay={index * 0.15} scrollRange={[0.05, 0.18, 0.85, 1.0]}>
