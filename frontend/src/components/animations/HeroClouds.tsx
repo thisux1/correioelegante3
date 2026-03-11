@@ -74,6 +74,10 @@ const clouds: CloudConfig[] = [
     { Shape: CloudShape2, drift: 16, duration: 38, x: '20%', y: '80%', scale: 1.1, opacity: 0.30, z: 3, parallax: 0.20 },
 ]
 
+// Mobile: keep 1 from each layer = 3 clouds total (instead of 8)
+const MOBILE_CLOUD_INDICES = [0, 2, 5]
+const mobileClouds = MOBILE_CLOUD_INDICES.map(i => clouds[i])
+
 // ── Star config ─────────────────────────────────────────────────
 interface StarConfig {
     x: number    // % position
@@ -144,17 +148,29 @@ interface HeroCloudsProps {
 
 export function HeroClouds({ scrollProgress }: HeroCloudsProps) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const { smoothX, smoothY } = useMouseParallax(containerRef, 1)
-    const stars = useMemo(() => generateStars(25, 42), [])
+
+    // Mobile detection — consistent with CSS media queries
+    const isMobile = typeof window !== 'undefined'
+        ? window.matchMedia('(max-width: 767px)').matches
+        : false
+
+    // Mouse parallax disabled on mobile (no mouse on touch devices)
+    const { smoothX, smoothY } = useMouseParallax(containerRef, isMobile ? 0 : 1)
+
+    // Mobile: 8 stars, Desktop: 25
+    const stars = useMemo(() => generateStars(isMobile ? 8 : 25, 42), [isMobile])
+
+    // Mobile: 3 clouds (1 per layer), Desktop: all 8
+    const activeClouds = isMobile ? mobileClouds : clouds
 
     return (
         <div
             ref={containerRef}
             className="absolute inset-0 overflow-hidden"
-            style={{ zIndex: 5, pointerEvents: 'auto' }}
+            style={{ zIndex: 5, pointerEvents: isMobile ? 'none' : 'auto' }}
         >
             {/* Cloud layers */}
-            {clouds.map((cloud, i) => (
+            {activeClouds.map((cloud, i) => (
                 <CloudLayer
                     key={`cloud-${i}`}
                     config={cloud}
