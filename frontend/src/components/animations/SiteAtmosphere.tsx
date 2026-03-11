@@ -38,9 +38,7 @@ function generateStars(count: number, seed: number, sizeMin: number, sizeMax: nu
 
 // ── CSS Keyframes (injected once) ───────────────────────────────
 const STYLES_ID = 'site-atmosphere-styles'
-type DeviceOrientationCtor = typeof DeviceOrientationEvent & {
-    requestPermission?: () => Promise<'granted' | 'denied'>
-}
+
 
 function injectStyles() {
     if (document.getElementById(STYLES_ID)) return
@@ -171,50 +169,45 @@ const CLOUDS: CloudDef[] = [
     { path: 0, x: '38%', y: '86%', opacity: 0.20, drift: 'cloud-drift-2', duration: 80, scale: 0.52, highlight: true },
 ]
 
+// Mobile: 6 clouds (1 per vertical zone) vs 18 on desktop
+const MOBILE_CLOUD_INDICES = [0, 3, 5, 7, 9, 11]
+const MOBILE_CLOUDS = MOBILE_CLOUD_INDICES.map(i => CLOUDS[i])
+
 // ── Component ───────────────────────────────────────────────────
 export function SiteAtmosphere() {
     const bgRef = useRef<HTMLDivElement>(null)
     const fgRef = useRef<HTMLDivElement>(null)
 
-    // Background stars: fewer but BIGGER (12-36px)
-    const bgStars = useMemo(() => generateStars(18, 42, 12, 36), [])
-    // Foreground stars: fewer, medium (6-18px)
-    const fgStars = useMemo(() => generateStars(12, 99, 6, 18), [])
+    // Mobile detection — consistent with CSS media queries
+    const isMobile = typeof window !== 'undefined'
+        ? window.matchMedia('(max-width: 767px)').matches
+        : false
+
+    // Mobile: 6 bg stars + 4 fg stars (vs 18 + 12 on desktop)
+    const bgStars = useMemo(() => generateStars(isMobile ? 6 : 18, 42, 12, 36), [isMobile])
+    const fgStars = useMemo(() => generateStars(isMobile ? 4 : 12, 99, 6, 18), [isMobile])
+
+    // Active clouds: 6 on mobile, 18 on desktop
+    const activeClouds = isMobile ? MOBILE_CLOUDS : CLOUDS
 
     // Inject CSS keyframes once
     useEffect(() => { injectStyles() }, [])
 
     // Pointer/gyroscope parallax via CSS transform (single handler, no React re-renders)
+    // Disabled on mobile to save rAF budget
     useEffect(() => {
+        if (isMobile) return // no parallax on mobile — saves continuous rAF loop
+
         let rafId: number | null = null
         let targetX = 0, targetY = 0
         let currentX = 0, currentY = 0
-        let orientationBaseX: number | null = null
-        let orientationBaseY: number | null = null
-
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-        const hasOrientationSupport = typeof window.DeviceOrientationEvent !== 'undefined'
-        const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
         const handleMove = (e: MouseEvent) => {
             targetX = (e.clientX / window.innerWidth - 0.5) * 2
             targetY = (e.clientY / window.innerHeight - 0.5) * 2
         }
 
-        const handleOrientation = (e: DeviceOrientationEvent) => {
-            if (e.gamma == null || e.beta == null) return
-
-            if (orientationBaseX === null || orientationBaseY === null) {
-                orientationBaseX = e.gamma
-                orientationBaseY = e.beta
-            }
-
-            targetX = clamp((e.gamma - orientationBaseX) / 25, -1, 1)
-            targetY = clamp((e.beta - orientationBaseY) / 25, -1, 1)
-        }
-
         const tick = () => {
-            // Smooth lerp (no spring/React overhead)
             currentX += (targetX - currentX) * 0.04
             currentY += (targetY - currentY) * 0.04
 
@@ -233,55 +226,14 @@ export function SiteAtmosphere() {
             rafId = requestAnimationFrame(tick)
         }
 
-        let cleanupInput = () => { }
-
-        if (isTouchDevice && hasOrientationSupport) {
-            const orientationEvent = window.DeviceOrientationEvent as DeviceOrientationCtor
-            const requestPermission = orientationEvent.requestPermission
-
-            if (typeof requestPermission === 'function') {
-                let permissionRequested = false
-
-                const requestOrientation = () => {
-                    if (permissionRequested) return
-                    permissionRequested = true
-
-                    requestPermission()
-                        .then((permission) => {
-                            if (permission === 'granted') {
-                                window.addEventListener('deviceorientation', handleOrientation, { passive: true })
-                            }
-                        })
-                        .catch((error: unknown) => {
-                            console.error('Falha ao solicitar permissao do giroscopio', error)
-                        })
-                }
-
-                window.addEventListener('touchstart', requestOrientation, { passive: true })
-                cleanupInput = () => {
-                    window.removeEventListener('touchstart', requestOrientation)
-                    window.removeEventListener('deviceorientation', handleOrientation)
-                }
-            } else {
-                window.addEventListener('deviceorientation', handleOrientation, { passive: true })
-                cleanupInput = () => {
-                    window.removeEventListener('deviceorientation', handleOrientation)
-                }
-            }
-        } else {
-            window.addEventListener('mousemove', handleMove, { passive: true })
-            cleanupInput = () => {
-                window.removeEventListener('mousemove', handleMove)
-            }
-        }
-
+        window.addEventListener('mousemove', handleMove, { passive: true })
         rafId = requestAnimationFrame(tick)
 
         return () => {
-            cleanupInput()
+            window.removeEventListener('mousemove', handleMove)
             if (rafId !== null) cancelAnimationFrame(rafId)
         }
-    }, [])
+    }, [isMobile])
 
     return (
         <>
@@ -291,7 +243,7 @@ export function SiteAtmosphere() {
                 className="fixed inset-0 overflow-hidden pointer-events-none atm-bg-layer"
                 style={{ zIndex: 1 }}
             >
-                {CLOUDS.map((c, i) => (
+                {activeClouds.map((c, i) => (
                     <div
                         key={`c${i}`}
                         className="atm-cloud"
