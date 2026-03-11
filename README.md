@@ -5,22 +5,22 @@ Plataforma de correio elegante digital com pagamento via Pix e QR Code.
 ## Stack
 
 ### Frontend
-- React 18 + TypeScript
-- Vite
-- Tailwind CSS
+- React 19 + TypeScript
+- Vite + Tailwind CSS v4
 - Framer Motion + GSAP
 - Lenis (smooth scroll)
 - Zustand (estado global)
-- React Router DOM v6
+- React Router DOM v7
 - React Hook Form + Zod
 - Axios
 
 ### Backend
 - Node.js + Express 5
 - TypeScript
-- Prisma + PostgreSQL
+- Prisma + MongoDB (Atlas)
 - JWT (Access + Refresh Token)
 - Zod (validação server-side)
+- Stripe (Pagamentos)
 
 ## Como Rodar
 
@@ -32,9 +32,9 @@ Plataforma de correio elegante digital com pagamento via Pix e QR Code.
 ```bash
 cd backend
 cp .env.example .env
-# Configure DATABASE_URL no .env
+# Configure DATABASE_URL (MongoDB) no .env
 npm install
-npx prisma migrate dev --name init
+npx prisma generate
 npm run dev
 ```
 
@@ -67,13 +67,14 @@ correioelegante3/
 │       ├── store/     # Zustand stores
 │       └── services/  # API service layer
 ├── backend/           # Express API
-│   ├── prisma/        # Schema + migrations
+│   ├── prisma/        # Schema
 │   └── src/
 │       ├── routes/    # Rotas da API
 │       ├── controllers/# Controllers
 │       ├── middlewares/# Auth, validation, error handler
-│       ├── services/  # Business logic
-│       └── utils/     # JWT, validation schemas
+│       ├── services/  # Camada de Serviços (Lógica)
+│       ├── utils/     # JWT, validações
+│       └── __tests__/ # Testes Backend (Vitest)
 └── README.md
 ```
 
@@ -81,10 +82,11 @@ correioelegante3/
 
 - ✅ Autenticação (registro/login com JWT + refresh token)
 - ✅ Criação de mensagens com temas
-- ✅ Pagamento via Pix (Mercado Pago)
+- ✅ Pagamento Híbrido: Stripe (Cartão/Boleto) e Mercado Pago (Pix)
 - ✅ Visualização pública de cartão
 - ✅ Perfil com histórico de mensagens
-- ✅ Animações avançadas (scroll reveal, parallax, 3D tilt, magnetic buttons, custom cursor)
+- ✅ Animações avançadas e Hero com Canvas 2D
+- ✅ CI/CD com GitHub Actions
 - ✅ Design system com glassmorphism
 - ✅ Smooth scroll com Lenis
 - ✅ Responsivo
