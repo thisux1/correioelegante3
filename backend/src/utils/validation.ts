@@ -21,7 +21,15 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
 });
 
+export const createPaymentSchema = z.object({
+  messageId: z.string().min(1, 'messageId é obrigatório'),
+  paymentMethod: z.enum(['pix', 'credit_card'], {
+    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix" ou "credit_card".' }),
+  }),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;

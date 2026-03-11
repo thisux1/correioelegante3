@@ -2,6 +2,9 @@ import Stripe from 'stripe';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/AppError';
 
+// R$ 4,99 em centavos
+const AMOUNT_CENTS = 499;
+
 function getStripe(): Stripe {
     const key = process.env.STRIPE_SECRET_KEY;
     if (!key) {
@@ -10,7 +13,7 @@ function getStripe(): Stripe {
     return new Stripe(key);
 }
 
-export async function createPixPayment(messageId: string, userId: string) {
+export async function createCardPayment(messageId: string, userId: string) {
     const message = await prisma.message.findUnique({ where: { id: messageId } });
 
     if (!message) {
@@ -25,34 +28,47 @@ export async function createPixPayment(messageId: string, userId: string) {
 
     const stripe = getStripe();
 
-    // Valor fixo em centavos (R$ 4,99 = 499). Adapte conforme a lógica de preço do produto.
-    const AMOUNT_CENTS = 499;
+    const successUrl = (process.env.STRIPE_CHECKOUT_SUCCESS_URL ?? 'http://localhost:5173/payment/{messageId}/success')
+        .replace('{messageId}', messageId);
+    const cancelUrl = (process.env.STRIPE_CHECKOUT_CANCEL_URL ?? 'http://localhost:5173/payment/{messageId}')
+        .replace('{messageId}', messageId);
 
-    const paymentIntent = await stripe.paymentIntents.create({
-        amount: AMOUNT_CENTS,
-        currency: 'brl',
-        payment_method_types: ['pix'],
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+            {
+                price_data: {
+                    currency: 'brl',
+                    product_data: {
+                        name: 'Correio Elegante',
+                        description: `Para: ${message.recipient}`,
+                    },
+                    unit_amount: AMOUNT_CENTS,
+                },
+                quantity: 1,
+            },
+        ],
+        mode: 'payment',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
         metadata: {
             messageId,
             userId,
         },
     });
 
-    // Salva o paymentId no banco assim que o intent é criado
     await prisma.message.update({
         where: { id: messageId },
-        data: { paymentId: paymentIntent.id },
+        data: {
+            paymentId: session.id,
+            paymentProvider: 'stripe',
+            paymentMethod: 'credit_card',
+        },
     });
 
-    const pixData = paymentIntent.next_action?.pix_display_qr_code;
-
     return {
-        paymentIntentId: paymentIntent.id,
-        clientSecret: paymentIntent.client_secret,
-        status: paymentIntent.status,
-        // Estes campos são populados após o client confirmar o PaymentIntent com método PIX
-        pixQrCode: pixData?.data ?? null,
-        pixQrCodeImageUrl: pixData?.image_url_png ?? null,
+        sessionId: session.id,
+        checkoutUrl: session.url,
     };
 }
 
@@ -71,6 +87,19 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
         throw new AppError('Assinatura do webhook inválida', 400);
     }
 
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const messageId = session.metadata?.messageId;
+
+        if (messageId && session.payment_status === 'paid') {
+            await prisma.message.update({
+                where: { id: messageId },
+                data: { paymentStatus: 'paid' },
+            });
+        }
+    }
+
+    // Manter compatibilidade com payment_intent.succeeded para outros fluxos
     if (event.type === 'payment_intent.succeeded') {
         const intent = event.data.object as Stripe.PaymentIntent;
         const messageId = intent.metadata?.messageId;
@@ -84,21 +113,4 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
     }
 
     return { received: true };
-}
-
-export async function getPaymentStatus(messageId: string, userId: string) {
-    const message = await prisma.message.findUnique({
-        where: { id: messageId },
-        select: { paymentStatus: true, paymentId: true, userId: true },
-    });
-
-    if (!message) {
-        throw new AppError('Mensagem não encontrada', 404);
-    }
-
-    if (message.userId !== userId) {
-        throw new AppError('Sem permissão', 403);
-    }
-
-    return { status: message.paymentStatus, paymentId: message.paymentId };
 }

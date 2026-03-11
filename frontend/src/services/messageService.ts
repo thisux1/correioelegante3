@@ -1,5 +1,7 @@
 import api from './api'
 
+export type PaymentMethod = 'pix' | 'credit_card'
+
 export interface CreateMessageData {
   message: string
   recipient: string
@@ -17,17 +19,29 @@ export interface Message {
   createdAt: string
 }
 
-export interface PaymentCreateResponse {
-  paymentIntentId: string
-  clientSecret: string | null
+/** Resposta para pagamento via Pix (Mercado Pago) */
+export interface PixPaymentResponse {
+  paymentMethod: 'pix'
+  paymentId: string
   status: string
   pixQrCode: string | null
-  pixQrCodeImageUrl: string | null
+  pixQrCodeBase64: string | null
 }
+
+/** Resposta para pagamento via cartão (Stripe Checkout) */
+export interface CardPaymentResponse {
+  paymentMethod: 'credit_card'
+  sessionId: string
+  checkoutUrl: string | null
+}
+
+export type PaymentCreateResponse = PixPaymentResponse | CardPaymentResponse
 
 export interface PaymentStatusResponse {
   status: 'pending' | 'paid'
   paymentId: string | null
+  paymentProvider: 'stripe' | 'mercadopago' | null
+  paymentMethod: PaymentMethod | null
 }
 
 export const messageService = {
@@ -39,6 +53,9 @@ export const messageService = {
 }
 
 export const paymentService = {
-  create: (messageId: string) => api.post<PaymentCreateResponse>('/payments/create', { messageId }),
+  createPix: (messageId: string) =>
+    api.post<PixPaymentResponse>('/payments/create', { messageId, paymentMethod: 'pix' }),
+  createCard: (messageId: string) =>
+    api.post<CardPaymentResponse>('/payments/create', { messageId, paymentMethod: 'credit_card' }),
   getStatus: (messageId: string) => api.get<PaymentStatusResponse>(`/payments/status/${messageId}`),
 }

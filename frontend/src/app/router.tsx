@@ -10,6 +10,7 @@ const Auth = lazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
 const Profile = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
 const Contact = lazy(() => import('@/pages/Contact').then(m => ({ default: m.Contact })))
 const Payment = lazy(() => import('@/pages/Payment').then(m => ({ default: m.Payment })))
+const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })))
 const Card = lazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
 const Error404 = lazy(() => import('@/pages/Error404').then(m => ({ default: m.Error404 })))
 const Error500 = lazy(() => import('@/pages/Error500').then(m => ({ default: m.Error500 })))
@@ -56,6 +57,7 @@ export function AppRouter() {
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
+              <Route path="/payment/:messageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
               <Route path="/500" element={<Error500 />} />
               <Route path="/session-expired" element={<ErrorSession />} />
               <Route path="*" element={<Error404 />} />
