@@ -18,25 +18,25 @@ Foco inicial: correio elegante. Arquitetura escalável para o resto.
 | -------- | ------------------------------------------------------------------------------ |
 | Frontend | React 19, Vite, Tailwind CSS v4, Zustand, Framer Motion, GSAP, Lenis          |
 | Backend  | Express 5, TypeScript, Prisma, MongoDB (Atlas)                                 |
-| Infra    | Cloudinary (mídia), Stripe (cartão/boleto), Mercado Pago (PIX), JWT (auth)    |
+| Infra    | Cloudinary (mídia), Stripe (cartão — Checkout Session), Mercado Pago (Pix), JWT (auth) |
 
 ### O que já existe
 
 - **Auth completo** — registro, login, JWT access/refresh tokens, httpOnly cookies
 - **CRUD de mensagens** — criação de cartas temáticas com texto, mídia e temas
-- **Pagamento** — integração Stripe implementada (cartão, boleto, Apple/Google Pay); PIX via Stripe requer 60 dias de histórico de transações → estratégia híbrida planejada com Mercado Pago para PIX
+- **Pagamento multi-gateway** — Mercado Pago para Pix (QR Code + Copia e Cola) e Stripe Checkout Session para cartão de crédito; webhooks independentes por provedor (`/webhook/stripe`, `/webhook/mercadopago`); campos `paymentProvider` e `paymentMethod` no modelo Message
+- **Tela de pagamento com seleção de método** — usuário escolhe Pix ou Cartão antes de iniciar o fluxo; página de sucesso pós-Stripe Checkout com polling de confirmação
 - **Card públicos** — link compartilhável visível após pagamento
 - **Upload de mídia** — Cloudinary para imagens/áudio
 - **Design system** — glassmorphism, paleta rosa/dourado, animações (scroll reveal, parallax, 3D tilt, cursor custom, hero animation com frames WebP)
 - **Validação** — Zod schemas no backend, middleware de validação
-- **Rotas** — Home, criação, auth, perfil, pagamento, card público
-- **Testes automatizados** — Vitest + Supertest configurados no backend com mocks de Prisma e Stripe. Cobertura de rotas de auth, messages e payments (100% passando).
+- **Rotas** — Home, criação, auth, perfil, pagamento, card público, sucesso de pagamento
+- **Testes automatizados** — Vitest + Supertest no backend com mocks de Prisma, Mercado Pago e Stripe; 47 testes passando (auth, messages, payments)
 
 ### O que falta no core atual
 
-- **Pagamento PIX funcional** — Stripe exige 60 dias de histórico; solução imediata: Stripe Checkout (cartão/boleto) + Mercado Pago (PIX) em paralelo
 - Persistência de estado no frontend (Zustand in-memory only)
-- CI/CD automatizado
+- CI/CD automatizado com deploy em produção (Vercel)
 
 ---
 
@@ -334,10 +334,11 @@ Pet criado em conjunto pelo casal:
 ### Técnico
 
 - `PrismaClient` já centralizado em singleton (`utils/prisma.ts`) ✅
-- Service layer já implementado no backend (`auth.service.ts`, `payment.service.ts`, `message.service.ts`, `upload.service.ts`) ✅
+- Service layer implementado no backend (`auth.service.ts`, `mercadopago.service.ts`, `stripe.service.ts`, `message.service.ts`, `upload.service.ts`) ✅
 - Infraestrutura de testes implementada com Vitest + Supertest e isolamento de módulos (poolOptions/forks) ✅
+- **Pagamentos multi-gateway implementado** — Mercado Pago (Pix) + Stripe Checkout (cartão); webhooks separados por provedor ✅
 - Persistência de estado no frontend (Zustand persist middleware) melhora UX significativamente.
-- **Estratégia de pagamento híbrida:** usar **Stripe Checkout** para cartão/boleto/Apple Pay/Google Pay imediatamente; adicionar **Mercado Pago** para PIX instantâneo. Após 60 dias de transações Stripe, avaliar migração de PIX para o Stripe também.
+- **Avaliar boleto e Apple/Google Pay via Stripe** após acúmulo de histórico de transações (60 dias).
 
 ### Monetização
 
