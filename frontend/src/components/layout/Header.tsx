@@ -7,8 +7,6 @@ import { MagneticButton } from '@/components/animations/MagneticButton'
 
 const navLinks = [
   { path: '/', label: 'Início' },
-  { path: '/create', label: 'Escrever' },
-  { path: '/contact', label: 'Contato' },
 ]
 
 export function Header() {
@@ -49,7 +47,7 @@ export function Header() {
               />
             </MagneticButton>
             <span className="font-display text-xl font-bold text-text">
-              Correio <span className="text-gradient">Elegante</span>
+              Auth <span className="text-gradient">Boilerplate</span>
             </span>
           </Link>
 
