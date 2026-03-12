@@ -46,3 +46,5 @@ relatorio-lighthouse.html
 future_interations.md
 frontend/lighthouse-report.json
 frontend/lighthouse-production.json
+frontend/lh_sum.txt
+frontend/lh_sum_prod.txt

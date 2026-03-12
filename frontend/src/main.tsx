@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { SpeedInsights } from '@vercel/speed-insights/react'
+import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals'
 import { Providers } from './app/providers'
 import { AppRouter } from './app/router'
 import { SmoothScroll } from './components/layout/SmoothScroll'
@@ -90,3 +91,12 @@ createRoot(document.getElementById('root')!).render(
     <SpeedInsights />
   </StrictMode>,
 )
+
+// Report Web Vitals to console in development
+if (import.meta.env.DEV) {
+  onCLS(console.log)
+  onINP(console.log)
+  onLCP(console.log)
+  onFCP(console.log)
+  onTTFB(console.log)
+}
