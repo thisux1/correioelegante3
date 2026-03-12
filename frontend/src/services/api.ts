@@ -72,6 +72,7 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return api(originalRequest)
       } catch {
+        localStorage.removeItem('@ce:session')
         useAuthStore.getState().clearAuth()
         window.location.href = '/session-expired'
         return Promise.reject(error)
