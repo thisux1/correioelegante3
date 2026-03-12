@@ -5,9 +5,6 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import { authRouter } from './routes/auth.routes';
-import { messageRouter } from './routes/message.routes';
-import { paymentRouter } from './routes/payment.routes';
-import { uploadRouter } from './routes/upload.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -41,9 +38,6 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRouter);
-app.use('/api/messages', messageRouter);
-app.use('/api/payments', paymentRouter);
-app.use('/api/upload', uploadRouter);
 
 // Health check — includes DB connectivity test (safe, read-only)
 app.get('/api/health', async (_req, res) => {
