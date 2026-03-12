@@ -23,15 +23,26 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
 
-  setAuth: (user, accessToken) =>
-    set({ user, accessToken, isAuthenticated: true, isLoading: false }),
+  setAuth: (user, accessToken) => {
+    localStorage.setItem('@ce:session', JSON.stringify({ lastLogin: Date.now() }))
+    set({ user, accessToken, isAuthenticated: true, isLoading: false })
+  },
 
-  clearAuth: () =>
-    set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false }),
+  clearAuth: () => {
+    localStorage.removeItem('@ce:session')
+    set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false })
+  },
 
   setLoading: (isLoading) => set({ isLoading }),
 
   initAuth: async () => {
+    // Prevent Lighthouse / console 401 errors by not calling refresh
+    // if we know the user is not logged in.
+    if (!localStorage.getItem('@ce:session')) {
+      set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false })
+      return
+    }
+
     try {
       // Try to get a new access token from the refresh cookie
       const { data: refreshData } = await axios.post(
@@ -44,6 +55,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         headers: { Authorization: `Bearer ${refreshData.accessToken}` },
         withCredentials: true,
       })
+      
+      // Update the session timestamp to simulate activity or fresh token login validation refresh
+      localStorage.setItem('@ce:session', JSON.stringify({ lastLogin: Date.now() }))
+      
       set({
         user: userData.user,
         accessToken: refreshData.accessToken,
@@ -51,6 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       })
     } catch {
+      localStorage.removeItem('@ce:session')
       set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false })
     }
   },
