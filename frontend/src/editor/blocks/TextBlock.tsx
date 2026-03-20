@@ -95,12 +95,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   return (
-    <div
-      className="relative rounded-2xl border border-dashed border-primary/30 bg-white/75 p-4"
-      onClick={() => {
-        editableRef.current?.focus()
-      }}
-    >
+    <div className="relative rounded-2xl border border-dashed border-primary/30 bg-white/75 p-4">
       <div
         ref={editableRef}
         contentEditable

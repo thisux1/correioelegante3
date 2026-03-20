@@ -60,34 +60,6 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     setIsEditingUrl(false)
   }, [draftSrc, isImageBlock, onUpdate, source])
 
-  const handleRemoveImage = useCallback(() => {
-    if (!isImageBlock) {
-      return
-    }
-
-    setDraftSrc('')
-    setFailedSource(null)
-    setIsEditingUrl(true)
-
-    if (!onUpdate) {
-      return
-    }
-
-    onUpdate((currentBlock) => {
-      if (currentBlock.type !== 'image') {
-        return currentBlock
-      }
-
-      return {
-        ...currentBlock,
-        props: {
-          ...currentBlock.props,
-          src: '',
-        },
-      }
-    })
-  }, [isImageBlock, onUpdate])
-
   if (!isImageBlock) {
     return null
   }
@@ -184,16 +156,6 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         >
           {hasSource ? 'Trocar imagem' : 'Adicionar imagem'}
         </button>
-
-        {hasSource && (
-          <button
-            type="button"
-            onClick={handleRemoveImage}
-            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50"
-          >
-            Remover imagem
-          </button>
-        )}
       </div>
 
       {isEditingUrl && (

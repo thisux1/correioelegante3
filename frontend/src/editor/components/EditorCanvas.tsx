@@ -337,7 +337,9 @@ export function EditorCanvas() {
 
       <Modal isOpen={Boolean(pendingDeletionId)} onClose={cancelDelete} title="Remover bloco?">
         <div className="space-y-4">
-          <p className="text-sm text-text-light">Essa acao remove o bloco selecionado do canvas.</p>
+          <p className="text-sm text-text-light">
+            Esta ação não pode ser desfeita.
+          </p>
           <div className="flex justify-end gap-2">
             <button
               type="button"

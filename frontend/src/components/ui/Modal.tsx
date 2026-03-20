@@ -27,6 +27,11 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                onClose()
+              }
+            }}
           >
             <div className="glass rounded-3xl p-8 w-full max-w-md relative">
               <button
