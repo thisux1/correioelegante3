@@ -5,6 +5,7 @@ import { Heart } from 'lucide-react'
 import { Card as UICard } from '@/components/ui/Card'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { messageService } from '@/services/messageService'
+import type { PageStatus, PageVisibility } from '@/editor/types'
 
 interface CardData {
   id: string
@@ -12,6 +13,9 @@ interface CardData {
   recipient: string
   mediaUrl?: string
   theme: string
+  status: PageStatus
+  visibility: PageVisibility
+  publishedAt: string | null
   createdAt: string
 }
 

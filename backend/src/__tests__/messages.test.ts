@@ -9,12 +9,33 @@ function makeToken(userId = '507f1f77bcf86cd799439000') {
     return generateAccessToken(userId);
 }
 
-const mockMessage = {
+type MockMessageRecord = {
+    id: string;
+    userId: string;
+    recipient: string;
+    message: string;
+    theme: string;
+    status: 'draft' | 'published' | 'archived';
+    visibility: 'public' | 'private' | 'unlisted';
+    publishedAt: Date | null;
+    mediaUrl: string | null;
+    paymentStatus: 'pending' | 'paid';
+    paymentId: string | null;
+    paymentProvider: string | null;
+    paymentMethod: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+const mockMessage: MockMessageRecord = {
     id: '507f1f77bcf86cd799439011',
     userId: '507f1f77bcf86cd799439000',
     recipient: 'Ana',
     message: 'Você é especial!',
     theme: 'classic',
+    status: 'draft',
+    visibility: 'public',
+    publishedAt: null,
     mediaUrl: null,
     paymentStatus: 'pending',
     paymentId: null,
@@ -64,6 +85,39 @@ describe('POST /api/messages', () => {
             .post('/api/messages')
             .set('Authorization', `Bearer ${token}`)
             .send({ recipient: 'Ana', theme: 'classic' });
+
+        expect(res.status).toBe(400);
+    });
+
+    it('400 — published sem publishedAt', async () => {
+        const token = makeToken();
+        const res = await request(app)
+            .post('/api/messages')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                recipient: 'Ana',
+                message: 'Mensagem pronta',
+                theme: 'classic',
+                status: 'published',
+                visibility: 'public',
+            });
+
+        expect(res.status).toBe(400);
+    });
+
+    it('400 — draft com publishedAt', async () => {
+        const token = makeToken();
+        const res = await request(app)
+            .post('/api/messages')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                recipient: 'Ana',
+                message: 'Rascunho com data inválida',
+                theme: 'classic',
+                status: 'draft',
+                visibility: 'public',
+                publishedAt: '2026-03-19T12:00:00.000Z',
+            });
 
         expect(res.status).toBe(400);
     });
@@ -160,17 +214,26 @@ describe('DELETE /api/messages/:id', () => {
 
 // ── GET /api/messages/card/:id ────────────────────────────────────────────────
 describe('GET /api/messages/card/:id', () => {
-    const paidMessage = {
+    const paidMessage: MockMessageRecord = {
         id: '507f1f77bcf86cd799439011',
+        userId: '507f1f77bcf86cd799439000',
         message: 'Você é especial!',
         recipient: 'Ana',
         mediaUrl: null,
         theme: 'classic',
+        status: 'published',
+        visibility: 'public',
+        publishedAt: new Date(),
+        paymentStatus: 'paid',
+        paymentId: 'payment-123',
+        paymentProvider: 'mercadopago',
+        paymentMethod: 'pix',
         createdAt: new Date(),
+        updatedAt: new Date(),
     };
 
     it('200 — retorna cartão público de mensagem paga', async () => {
-        vi.mocked(prisma.message.findUnique).mockResolvedValue(paidMessage as typeof mockMessage);
+        vi.mocked(prisma.message.findUnique).mockResolvedValue(paidMessage);
 
         const res = await request(app)
             .get(`/api/messages/card/${paidMessage.id}`);
@@ -184,6 +247,47 @@ describe('GET /api/messages/card/:id', () => {
 
         const res = await request(app)
             .get(`/api/messages/card/507f1f77bcf86cd799439011`);
+
+        expect(res.status).toBe(404);
+    });
+
+    it('404 — cartão privado sem autenticação', async () => {
+        vi.mocked(prisma.message.findUnique).mockResolvedValue({
+            ...paidMessage,
+            visibility: 'private',
+        });
+
+        const res = await request(app)
+            .get(`/api/messages/card/${paidMessage.id}`);
+
+        expect(res.status).toBe(404);
+    });
+
+    it('200 — cartão privado para dono autenticado', async () => {
+        const ownerId = '507f1f77bcf86cd799439000';
+        vi.mocked(prisma.message.findUnique).mockResolvedValue({
+            ...paidMessage,
+            visibility: 'private',
+            userId: ownerId,
+        });
+
+        const token = makeToken(ownerId);
+        const res = await request(app)
+            .get(`/api/messages/card/${paidMessage.id}`)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.message.id).toBe(paidMessage.id);
+    });
+
+    it('404 — cartão arquivado não é público', async () => {
+        vi.mocked(prisma.message.findUnique).mockResolvedValue({
+            ...paidMessage,
+            status: 'archived',
+        });
+
+        const res = await request(app)
+            .get(`/api/messages/card/${paidMessage.id}`);
 
         expect(res.status).toBe(404);
     });

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 
 const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
 const Create = lazy(() => import('@/pages/Create').then(m => ({ default: m.Create })))
+const Editor = lazy(() => import('@/pages/Editor').then(m => ({ default: m.Editor })))
 const Auth = lazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
 const Profile = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
 const Contact = lazy(() => import('@/pages/Contact').then(m => ({ default: m.Contact })))
@@ -55,6 +56,8 @@ export function AppRouter() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/card/:id" element={<Card />} />
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
+              <Route path="/editor" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+              <Route path="/editor/:pageId" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
               <Route path="/payment/:messageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />

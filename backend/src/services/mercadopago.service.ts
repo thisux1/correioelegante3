@@ -111,7 +111,11 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
             if (messageId) {
                 await prisma.message.update({
                     where: { id: messageId },
-                    data: { paymentStatus: 'paid' },
+                    data: {
+                        paymentStatus: 'paid',
+                        status: 'published',
+                        publishedAt: new Date(),
+                    },
                 });
             }
         }

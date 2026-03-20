@@ -25,6 +25,13 @@ vi.mock('../utils/prisma', () => ({
             update: vi.fn(),
             delete: vi.fn(),
         },
+        page: {
+            findUnique: vi.fn(),
+            findMany: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
+            delete: vi.fn(),
+        },
     },
 }));
 
