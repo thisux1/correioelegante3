@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowDown, ArrowUp, ImagePlus, X } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 
@@ -10,7 +11,30 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const [activeIndex, setActiveIndex] = useState(0)
 
   const images = useMemo(
-    () => (isGalleryBlock ? block.props.images.slice(0, MAX_GALLERY_IMAGES) : []),
+    () => {
+      if (!isGalleryBlock) {
+        return []
+      }
+
+      const uniqueImages: string[] = []
+      const seen = new Set<string>()
+
+      for (const rawImage of block.props.images) {
+        const normalized = rawImage.trim()
+        if (!normalized || seen.has(normalized)) {
+          continue
+        }
+
+        seen.add(normalized)
+        uniqueImages.push(normalized)
+
+        if (uniqueImages.length >= MAX_GALLERY_IMAGES) {
+          break
+        }
+      }
+
+      return uniqueImages
+    },
     [block.props, isGalleryBlock],
   )
   const transition = isGalleryBlock ? block.props.transition ?? 'fade' : 'fade'
@@ -33,7 +57,30 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return null
   }
 
+  const normalizeImages = (inputImages: string[]) => {
+    const nextUnique: string[] = []
+    const seen = new Set<string>()
+
+    for (const image of inputImages) {
+      const normalized = image.trim()
+      if (!normalized || seen.has(normalized)) {
+        continue
+      }
+
+      seen.add(normalized)
+      nextUnique.push(normalized)
+
+      if (nextUnique.length >= MAX_GALLERY_IMAGES) {
+        break
+      }
+    }
+
+    return nextUnique
+  }
+
   const updateImages = (nextImages: string[]) => {
+    const normalizedImages = normalizeImages(nextImages)
+
     onUpdate?.((currentBlock) => {
       if (currentBlock.type !== 'gallery') {
         return currentBlock
@@ -43,7 +90,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         ...currentBlock,
         props: {
           ...currentBlock.props,
-          images: nextImages.slice(0, MAX_GALLERY_IMAGES),
+          images: normalizedImages,
         },
       }
     })
@@ -69,7 +116,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             type="button"
             onClick={() => {
               const normalized = draftUrl.trim()
-              if (!normalized || images.length >= MAX_GALLERY_IMAGES) {
+              if (!normalized || images.length >= MAX_GALLERY_IMAGES || images.includes(normalized)) {
                 return
               }
 
@@ -116,9 +163,18 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             Adicione URLs para montar o slideshow.
           </div>
         ) : (
-          <ul className="space-y-2">
+          <motion.ul layout className="space-y-2">
+            <AnimatePresence initial={false}>
             {images.map((image, index) => (
-              <li key={`${image}-${index}`} className="rounded-xl border border-primary/15 bg-white/80 p-2">
+              <motion.li
+                key={image}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18, layout: { type: 'spring', stiffness: 420, damping: 34 } }}
+                className="rounded-xl border border-primary/15 bg-white/80 p-2"
+              >
                 <div className="flex items-center gap-2">
                   <img
                     src={image}
@@ -182,9 +238,10 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     </button>
                   </div>
                 </div>
-              </li>
+              </motion.li>
             ))}
-          </ul>
+            </AnimatePresence>
+          </motion.ul>
         )}
       </div>
     )
@@ -199,7 +256,6 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   const resolvedActiveIndex = activeIndex % images.length
-
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-white/80">
       <div className="relative h-[280px] w-full sm:h-[360px]">
@@ -217,7 +273,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
           return (
             <img
-              key={`${image}-${index}`}
+              key={image}
               src={image}
               alt={`Imagem ${index + 1}`}
               loading="lazy"
@@ -229,9 +285,18 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
       <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1 rounded-full bg-black/35 px-2 py-1">
         {images.map((_, index) => (
-          <span
+          <button
             key={index}
+            type="button"
+            onClick={() => {
+              if (index === resolvedActiveIndex) {
+                return
+              }
+
+              setActiveIndex(index)
+            }}
             className={`h-1.5 w-1.5 rounded-full ${index === resolvedActiveIndex ? 'bg-white' : 'bg-white/50'}`}
+            aria-label={`Ir para imagem ${index + 1}`}
           />
         ))}
       </div>
