@@ -84,6 +84,7 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         ? props.images
           .filter((item): item is string => typeof item === 'string')
           .map((url) => ensureSafeUrl(url, 'URL da galeria'))
+          .slice(0, 10)
         : [];
       return {
         images,
@@ -95,9 +96,11 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         ? ensureSafeUrl(props.src, 'URL da musica')
         : '';
       const title = typeof props.title === 'string' ? sanitizeText(props.title) : undefined;
+      const artist = typeof props.artist === 'string' ? sanitizeText(props.artist) : undefined;
       return {
         src,
         title,
+        artist,
       };
     }
     default:

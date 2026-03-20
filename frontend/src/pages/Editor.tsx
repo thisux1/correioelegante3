@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
 import { ArrowLeft } from 'lucide-react'
@@ -11,12 +11,14 @@ import { useEditorStore } from '@/editor/store/editorStore'
 import {
   AUTOSAVE_DEBOUNCE_MS,
   PAGE_VERSION,
+  type Block,
   type PageStatus,
   type PageVisibility,
 } from '@/editor/types'
 import {
   resolveDraftPrecedence,
 } from '@/editor/draftPrecedence'
+import { cloneTemplateBlocks, getTemplateById } from '@/editor/templates'
 import { pageService, type PageSummary } from '@/services/pageService'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
@@ -40,6 +42,11 @@ interface DraftConflictState {
   backendPage: PageSummary
 }
 
+interface TemplateConflictState {
+  templateName: string
+  blocks: Block[]
+}
+
 function toDraftSnapshot(page: PageSummary) {
   return {
     pageId: page.id,
@@ -60,7 +67,9 @@ function toDraftSnapshot(page: PageSummary) {
 export function Editor() {
   const navigate = useNavigate()
   const params = useParams<{ pageId?: string }>()
+  const [searchParams] = useSearchParams()
   const pageIdFromRoute = params.pageId
+  const templateIdFromQuery = searchParams.get('template')?.trim() || null
 
   const mode = useEditorStore((state) => state.mode)
   const blocks = useEditorStore((state) => state.blocks)
@@ -77,6 +86,8 @@ export function Editor() {
   const [visibility, setVisibility] = useState<PageVisibility>('public')
   const [lastSyncedSignature, setLastSyncedSignature] = useState('')
   const [draftConflict, setDraftConflict] = useState<DraftConflictState | null>(null)
+  const [templateConflict, setTemplateConflict] = useState<TemplateConflictState | null>(null)
+  const handledTemplateKeyRef = useRef<string>('')
 
   const pageMetaRef = useRef({
     status,
@@ -138,6 +149,19 @@ export function Editor() {
     }))
     setFeedback('Rascunho local carregado para continuar a edicao.')
   }, [setDraftContext])
+
+  const applyTemplate = useCallback((templateBlocks: Block[], templateName: string) => {
+    setBlocks(templateBlocks)
+    setCurrentPageId(undefined)
+    setPageVersion(undefined)
+    setStatus('draft')
+    setVisibility('public')
+    setDraftContext(null)
+    setLastSyncedSignature('')
+    setSaveState('idle')
+    setMode('edit')
+    setFeedback(`Template "${templateName}" aplicado. Personalize e salve quando quiser.`)
+  }, [setBlocks, setDraftContext, setMode])
 
   const savePage = useCallback(async () => {
     try {
@@ -206,6 +230,41 @@ export function Editor() {
 
     return () => clearTimeout(timeoutId)
   }, [feedback])
+
+  useEffect(() => {
+    const templateKey = `${pageIdFromRoute ?? 'new'}:${templateIdFromQuery ?? ''}`
+    if (handledTemplateKeyRef.current === templateKey) {
+      return
+    }
+
+    handledTemplateKeyRef.current = templateKey
+
+    if (pageIdFromRoute || !templateIdFromQuery) {
+      return
+    }
+
+    const template = getTemplateById(templateIdFromQuery)
+    if (!template) {
+      setFeedback('Template nao encontrado. O editor foi aberto sem modelo.')
+      return
+    }
+
+    const clonedBlocks = cloneTemplateBlocks(template.blocks)
+    if (blocks.length > 0) {
+      setTemplateConflict({
+        templateName: template.name,
+        blocks: clonedBlocks,
+      })
+      return
+    }
+
+    applyTemplate(clonedBlocks, template.name)
+  }, [
+    applyTemplate,
+    blocks.length,
+    pageIdFromRoute,
+    templateIdFromQuery,
+  ])
 
   useEffect(() => {
     let active = true
@@ -422,6 +481,47 @@ export function Editor() {
           )}
         </AnimatePresence>
       </div>
+
+      <Modal
+        isOpen={Boolean(templateConflict)}
+        onClose={() => {
+          setTemplateConflict(null)
+          setFeedback('Template ignorado para preservar o rascunho atual.')
+        }}
+        title="Aplicar template"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-light">
+            Ja existe conteudo no editor. Deseja substituir os blocos atuais pelo template {templateConflict ? `"${templateConflict.templateName}"` : ''}?
+          </p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setTemplateConflict(null)
+                setFeedback('Template ignorado para preservar o rascunho atual.')
+              }}
+              className="rounded-lg border border-primary/20 px-3 py-2 text-sm font-medium text-text-light transition-colors hover:bg-primary/5"
+            >
+              Manter rascunho atual
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!templateConflict) {
+                  return
+                }
+
+                applyTemplate(templateConflict.blocks, templateConflict.templateName)
+                setTemplateConflict(null)
+              }}
+              className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+            >
+              Substituir pelo template
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={Boolean(draftConflict)}

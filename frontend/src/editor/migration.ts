@@ -104,6 +104,7 @@ function migrateBlock(input: unknown, index: number): Block {
         props: {
           src: asText(props.src),
           title: typeof props.title === 'string' ? props.title : 'Nova musica',
+          artist: typeof props.artist === 'string' ? props.artist : '',
         },
       }
     default:

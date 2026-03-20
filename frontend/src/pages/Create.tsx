@@ -1,174 +1,106 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { isAxiosError } from 'axios'
-import { z } from 'zod'
 import { motion } from 'framer-motion'
-import { Send, Heart, Palette } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { TextArea } from '@/components/ui/TextArea'
+import { ChevronRight, FilePlus2, Shapes, Sparkles } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
-import { messageService } from '@/services/messageService'
-import { useMessageStore } from '@/store/messageStore'
+import { templates } from '@/editor/templates'
 
-const createSchema = z.object({
-  recipient: z.string().min(1, 'Nome do destinatário é obrigatório'),
-  message: z.string().min(1, 'Escreva sua mensagem').max(1000, 'Mensagem muito longa (máx 1000 caracteres)'),
-  theme: z.string().min(1, 'Tema é obrigatório'),
-})
-
-type CreateForm = z.infer<typeof createSchema>
-
-const themes = [
-  { id: 'classic', name: 'Clássico', color: 'bg-rose-100 border-rose-300' },
-  { id: 'romantic', name: 'Romântico', color: 'bg-pink-100 border-pink-300' },
-  { id: 'friendship', name: 'Amizade', color: 'bg-purple-100 border-purple-300' },
-  { id: 'secret', name: 'Admirador Secreto', color: 'bg-amber-100 border-amber-300' },
-]
+const categoryLabel = {
+  romantic: 'Romantico',
+  friendship: 'Amizade',
+  secret: 'Secreto',
+  classic: 'Classico',
+  poetic: 'Poetico',
+}
 
 export function Create() {
   const navigate = useNavigate()
-  const { addMessage } = useMessageStore()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [selectedTheme, setSelectedTheme] = useState('classic')
-  const [submitError, setSubmitError] = useState('')
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<CreateForm>({
-    resolver: zodResolver(createSchema),
-    defaultValues: { theme: 'classic' },
-  })
-
-  const messageContent = watch('message', '')
-
-  async function onSubmit(data: CreateForm) {
-    setIsSubmitting(true)
-    setSubmitError('')
-    try {
-      const response = await messageService.create({ ...data, theme: selectedTheme })
-      addMessage(response.data.message)
-      navigate(`/payment/${response.data.message.id}`)
-    } catch (err: unknown) {
-      if (isAxiosError<{ error?: string }>(err)) {
-        setSubmitError(err.response?.data?.error || 'Erro ao criar mensagem. Tente novamente.')
-      } else {
-        setSubmitError('Erro ao criar mensagem. Tente novamente.')
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const templateCards = useMemo(() => templates, [])
 
   return (
     <div className="min-h-screen pt-28 pb-16 px-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto w-full max-w-6xl">
         <ScrollReveal animateOnMount>
-          <div className="text-center mb-12">
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
-              Escreva sua <span className="text-gradient">mensagem</span>
+          <div className="mb-12 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/70 px-4 py-1.5 text-sm text-text-light backdrop-blur-sm">
+              <Sparkles size={14} />
+              Modelos prontos para editar
+            </div>
+            <h1 className="font-display text-4xl font-bold text-text md:text-5xl">
+              Escolha um <span className="text-gradient">template</span> para comecar
             </h1>
-            <p className="text-text-light text-lg">
-              Escolha um tema e escreva algo especial para alguém
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-text-light">
+              Comece com um modelo pronto ou abra uma pagina em branco. Depois, personalize tudo no editor modular.
             </p>
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Form */}
-          <ScrollReveal direction="left" animateOnMount>
-            <Card glass className="h-full">
-              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-                <Input
-                  label="Para quem é?"
-                  placeholder="Nome do destinatário"
-                  error={errors.recipient?.message}
-                  {...register('recipient')}
-                />
-
-                <TextArea
-                  label="Sua mensagem"
-                  placeholder="Escreva sua mensagem com carinho..."
-                  error={errors.message?.message}
-                  {...register('message')}
-                />
-
-                <div>
-                  <label className="text-sm font-medium text-text-light flex items-center gap-2 mb-3">
-                    <Palette size={16} />
-                    Tema do cartão
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {themes.map((theme) => (
-                      <button
-                        key={theme.id}
-                        type="button"
-                        onClick={() => setSelectedTheme(theme.id)}
-                        className={`px-4 py-3 rounded-xl text-sm font-medium border-2 transition-all ${selectedTheme === theme.id
-                            ? `${theme.color} ring-2 ring-primary/30`
-                            : 'bg-white/50 border-gray-100 hover:border-gray-200'
-                          }`}
-                      >
-                        {theme.name}
-                      </button>
-                    ))}
+        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <ScrollReveal animateOnMount>
+            <motion.button
+              type="button"
+              whileHover={{ y: -4, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => navigate('/editor')}
+              className="group text-left"
+            >
+              <Card glass className="relative h-full overflow-hidden border border-primary/15 p-0">
+                <div className="h-44 bg-[radial-gradient(circle_at_top,_rgba(239,68,68,0.18),_transparent_60%),linear-gradient(140deg,rgba(255,255,255,0.8),rgba(255,232,232,0.65))] p-5">
+                  <div className="flex h-full items-end rounded-2xl border border-dashed border-primary/25 bg-white/60 p-4">
+                    <FilePlus2 className="text-primary" size={28} />
                   </div>
                 </div>
-
-                <div className="text-xs text-text-muted text-right">
-                  {messageContent.length}/1000 caracteres
+                <div className="p-5">
+                  <h2 className="font-display text-2xl text-text">Em branco</h2>
+                  <p className="mt-2 text-sm text-text-light">Comece do zero e monte cada bloco do seu jeito.</p>
+                  <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                    Criar agora
+                    <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
+                  </div>
                 </div>
-
-                {submitError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 rounded-xl bg-red-50 text-red-600 text-sm"
-                  >
-                    {submitError}
-                  </motion.div>
-                )}
-
-                <Button type="submit" isLoading={isSubmitting} size="lg">
-                  <Send size={18} />
-                  Enviar Mensagem
-                </Button>
-              </form>
-            </Card>
+              </Card>
+            </motion.button>
           </ScrollReveal>
 
-          {/* Preview */}
-          <ScrollReveal direction="right" animateOnMount>
-            <Card glass className="h-full flex flex-col items-center justify-center min-h-[400px]">
-              <div className="text-center mb-6">
-                <p className="text-sm text-text-muted mb-2">Pré-visualização</p>
-              </div>
-              <motion.div
-                layout
-                className={`w-full max-w-sm rounded-2xl p-8 shadow-xl border ${themes.find((t) => t.id === selectedTheme)?.color || 'bg-rose-50 border-rose-200'
-                  }`}
+          {templateCards.map((template, index) => (
+            <ScrollReveal key={template.id} animateOnMount delay={Math.min(index * 0.08, 0.24)}>
+              <motion.button
+                type="button"
+                whileHover={{ y: -4, scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => navigate(`/editor?template=${template.id}`)}
+                className="group text-left"
               >
-                <Heart className="w-8 h-8 text-primary fill-primary mx-auto mb-4" />
-                <p className="text-sm text-text-light text-center mb-4 font-cursive">
-                  Para: {watch('recipient') || 'Alguém especial'}
-                </p>
-                <p className="font-cursive text-lg text-text text-center leading-relaxed min-h-[60px]">
-                  {messageContent || 'Sua mensagem aparecerá aqui...'}
-                </p>
-                <div className="mt-6 pt-4 border-t border-black/5">
-                  <p className="text-xs text-text-muted text-center">
-                    💌 Correio Elegante
-                  </p>
-                </div>
-              </motion.div>
-            </Card>
-          </ScrollReveal>
+                <Card glass className="h-full overflow-hidden border border-primary/10 p-0">
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={template.thumbnail}
+                      alt={`Preview do template ${template.name}`}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute left-3 top-3 rounded-full border border-white/60 bg-white/75 px-3 py-1 text-xs font-medium text-text-light backdrop-blur-sm">
+                      {categoryLabel[template.category]}
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h2 className="font-display text-2xl text-text">{template.name}</h2>
+                      <Shapes size={16} className="text-primary/70" />
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-text-light">{template.description}</p>
+                    <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                      Usar template
+                      <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </Card>
+              </motion.button>
+            </ScrollReveal>
+          ))}
         </div>
       </div>
     </div>

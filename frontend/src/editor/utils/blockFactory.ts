@@ -86,6 +86,7 @@ export function createBlock(type: BlockType): Block {
         props: {
           src: '',
           title: 'Nova musica',
+          artist: '',
         },
         meta: {
           createdAt: now,
