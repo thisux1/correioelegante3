@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  Check,
   Eye,
   Image as ImageIcon,
   Images,
   LoaderCircle,
   Music2,
+  Palette,
   Pencil,
   Plus,
   Save,
@@ -14,6 +16,7 @@ import {
 import { MAX_BLOCKS, type BlockType } from '@/editor/types'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
+import { getThemeById, resolveThemeId, themeCatalog } from '@/editor/themes'
 
 type AvailableBlockType = Extract<BlockType, 'text' | 'image' | 'timer' | 'gallery' | 'music'>
 
@@ -35,13 +38,17 @@ interface ToolbarControlsProps {
   mode: 'edit' | 'preview'
   blocksCount: number
   isAddMenuOpen: boolean
+  isThemeMenuOpen: boolean
   isAtBlockLimit: boolean
   menuPlacement: 'down' | 'up'
   isSaving: boolean
   hasPageId: boolean
+  selectedThemeId: string
   toggleMode: () => void
   toggleAddMenu: () => void
+  toggleThemeMenu: () => void
   addFromOption: (type: AvailableBlockType) => void
+  onSelectTheme: (themeId: string) => void
   onSave: () => void
 }
 
@@ -87,19 +94,74 @@ function AddMenu({
   )
 }
 
+function ThemeMenu({
+  isOpen,
+  placement,
+  selectedThemeId,
+  onSelect,
+}: {
+  isOpen: boolean
+  placement: 'down' | 'up'
+  selectedThemeId: string
+  onSelect: (themeId: string) => void
+}) {
+  if (!isOpen) {
+    return null
+  }
+
+  const positionClassName =
+    placement === 'up'
+      ? 'absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl backdrop-blur-sm'
+      : 'absolute left-0 top-full z-30 mt-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl backdrop-blur-sm'
+
+  return (
+    <div className={positionClassName}>
+      {themeCatalog.map((theme) => {
+        const isSelected = selectedThemeId === theme.id
+
+        return (
+          <button
+            key={theme.id}
+            type="button"
+            onClick={() => onSelect(theme.id)}
+            className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-primary/10 ${
+              isSelected ? 'bg-primary/10 text-primary' : 'text-text'
+            }`}
+          >
+            <span
+              className="h-5 w-5 rounded-md border border-white/70 shadow-sm"
+              style={{ background: theme.thumbnail }}
+              aria-hidden="true"
+            />
+            <span className="flex-1 truncate">{theme.name}</span>
+            {isSelected ? <Check size={14} /> : null}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function ToolbarControls({
   mode,
   blocksCount,
   isAddMenuOpen,
+  isThemeMenuOpen,
   isAtBlockLimit,
   menuPlacement,
   isSaving,
   hasPageId,
+  selectedThemeId,
   toggleMode,
   toggleAddMenu,
+  toggleThemeMenu,
   addFromOption,
+  onSelectTheme,
   onSave,
 }: ToolbarControlsProps) {
+  const normalizedSelectedThemeId = resolveThemeId(selectedThemeId)
+  const selectedTheme = getThemeById(normalizedSelectedThemeId)
+
   return (
     <>
       <div className="relative">
@@ -120,6 +182,33 @@ function ToolbarControls({
           isDisabled={isAtBlockLimit}
           placement={menuPlacement}
           onSelect={addFromOption}
+        />
+      </div>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={toggleThemeMenu}
+          disabled={mode !== 'edit'}
+          className="inline-flex h-11 items-center gap-2 rounded-xl border border-primary/25 bg-white/80 px-3 text-sm font-medium text-text transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Selecionar tema"
+          aria-expanded={isThemeMenuOpen}
+          aria-haspopup="menu"
+          title={selectedTheme.name}
+        >
+          <Palette size={16} className="text-primary" />
+          <span
+            className="h-4 w-4 rounded-full border border-white/70"
+            style={{ background: selectedTheme.thumbnail }}
+            aria-hidden="true"
+          />
+        </button>
+
+        <ThemeMenu
+          isOpen={isThemeMenuOpen}
+          placement={menuPlacement}
+          selectedThemeId={normalizedSelectedThemeId}
+          onSelect={onSelectTheme}
         />
       </div>
 
@@ -153,22 +242,25 @@ interface EditorToolbarProps {
   onSave: () => void
   isSaving: boolean
   hasPageId: boolean
+  selectedThemeId: string
 }
 
-export function EditorToolbar({ onSave, isSaving, hasPageId }: EditorToolbarProps) {
+export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: EditorToolbarProps) {
   const blocksCount = useEditorStore((state) => state.blocks.length)
   const mode = useEditorStore((state) => state.mode)
   const addBlock = useEditorStore((state) => state.addBlock)
+  const setTheme = useEditorStore((state) => state.setTheme)
   const selectBlock = useEditorStore((state) => state.selectBlock)
   const setMode = useEditorStore((state) => state.setMode)
 
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
   const toolbarRef = useRef<HTMLDivElement>(null)
 
   const isAtBlockLimit = blocksCount >= MAX_BLOCKS
 
   useEffect(() => {
-    if (!isAddMenuOpen) {
+    if (!isAddMenuOpen && !isThemeMenuOpen) {
       return
     }
 
@@ -180,6 +272,7 @@ export function EditorToolbar({ onSave, isSaving, hasPageId }: EditorToolbarProp
 
       if (!toolbarRef.current?.contains(target)) {
         setIsAddMenuOpen(false)
+        setIsThemeMenuOpen(false)
       }
     }
 
@@ -187,7 +280,7 @@ export function EditorToolbar({ onSave, isSaving, hasPageId }: EditorToolbarProp
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick)
     }
-  }, [isAddMenuOpen])
+  }, [isAddMenuOpen, isThemeMenuOpen])
 
   const focusBlockEditor = useCallback((blockId: string, type: AvailableBlockType) => {
     if (typeof document === 'undefined') {
@@ -237,18 +330,32 @@ export function EditorToolbar({ onSave, isSaving, hasPageId }: EditorToolbarProp
     selectBlock(newBlock.id)
     focusBlockEditor(newBlock.id, type)
     setIsAddMenuOpen(false)
+    setIsThemeMenuOpen(false)
   }, [addBlock, focusBlockEditor, selectBlock])
+
+  const handleSelectTheme = useCallback((themeId: string) => {
+    setTheme(themeId)
+    setIsThemeMenuOpen(false)
+  }, [setTheme])
 
   const toggleMode = useCallback(() => {
     setIsAddMenuOpen(false)
+    setIsThemeMenuOpen(false)
     setMode(mode === 'edit' ? 'preview' : 'edit')
   }, [mode, setMode])
 
   const toggleAddMenu = useCallback(() => {
+    setIsThemeMenuOpen(false)
     setIsAddMenuOpen((current) => !current)
   }, [])
 
+  const toggleThemeMenu = useCallback(() => {
+    setIsAddMenuOpen(false)
+    setIsThemeMenuOpen((current) => !current)
+  }, [])
+
   const isMenuVisible = mode === 'edit' && isAddMenuOpen
+  const isThemeVisible = mode === 'edit' && isThemeMenuOpen
 
   return (
     <>
@@ -261,13 +368,17 @@ export function EditorToolbar({ onSave, isSaving, hasPageId }: EditorToolbarProp
                 mode={mode}
                 blocksCount={blocksCount}
                 isAddMenuOpen={isMenuVisible}
+                isThemeMenuOpen={isThemeVisible}
                 isAtBlockLimit={isAtBlockLimit}
                 menuPlacement="down"
                 isSaving={isSaving}
                 hasPageId={hasPageId}
+                selectedThemeId={selectedThemeId}
                 toggleMode={toggleMode}
                 toggleAddMenu={toggleAddMenu}
+                toggleThemeMenu={toggleThemeMenu}
                 addFromOption={addFromOption}
+                onSelectTheme={handleSelectTheme}
                 onSave={onSave}
               />
             </div>
@@ -280,13 +391,17 @@ export function EditorToolbar({ onSave, isSaving, hasPageId }: EditorToolbarProp
               mode={mode}
               blocksCount={blocksCount}
               isAddMenuOpen={isMenuVisible}
+              isThemeMenuOpen={isThemeVisible}
               isAtBlockLimit={isAtBlockLimit}
               menuPlacement="up"
               isSaving={isSaving}
               hasPageId={hasPageId}
+              selectedThemeId={selectedThemeId}
               toggleMode={toggleMode}
               toggleAddMenu={toggleAddMenu}
+              toggleThemeMenu={toggleThemeMenu}
               addFromOption={addFromOption}
+              onSelectTheme={handleSelectTheme}
               onSave={onSave}
             />
           </div>

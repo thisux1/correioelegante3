@@ -10,9 +10,11 @@ import {
   type Block,
   type EditorMode,
 } from '@/editor/types'
+import { DEFAULT_THEME_ID, resolveThemeId } from '@/editor/themes'
 
 interface EditorStoreState {
   blocks: Block[]
+  theme: string
   selectedBlockId: string | null
   isDragging: boolean
   mode: EditorMode
@@ -28,6 +30,8 @@ interface EditorStoreActions {
   moveBlockDown: (id: string) => void
   reorderBlocks: (blocks: Block[]) => void
   setBlocks: (blocks: Block[]) => void
+  setTheme: (themeId: string) => void
+  setPage: (page: { blocks: Block[]; theme?: string }) => void
   selectBlock: (id: string | null) => void
   setDragging: (isDragging: boolean) => void
   setMode: (mode: EditorMode) => void
@@ -62,6 +66,7 @@ function moveBlockByOffset(blocks: Block[], id: string, offset: -1 | 1) {
 
 const initialEditorState: EditorStoreState = {
   blocks: [],
+  theme: DEFAULT_THEME_ID,
   selectedBlockId: null,
   isDragging: false,
   mode: 'edit',
@@ -217,6 +222,25 @@ export const useEditorStore = create<EditorStore>()(
         }),
       reorderBlocks: (blocks) => set({ blocks, draftUpdatedAt: nowIsoString() }),
       setBlocks: (blocks) => set({ blocks, selectedBlockId: null, draftUpdatedAt: nowIsoString() }),
+      setTheme: (themeId) =>
+        set((state) => {
+          const normalizedThemeId = resolveThemeId(themeId)
+          if (state.theme === normalizedThemeId) {
+            return state
+          }
+
+          return {
+            theme: normalizedThemeId,
+            draftUpdatedAt: nowIsoString(),
+          }
+        }),
+      setPage: (page) =>
+        set({
+          blocks: page.blocks,
+          theme: resolveThemeId(page.theme),
+          selectedBlockId: null,
+          draftUpdatedAt: nowIsoString(),
+        }),
       selectBlock: (selectedBlockId) => set({ selectedBlockId }),
       setDragging: (isDragging) => set({ isDragging }),
       setMode: (mode) => set({ mode }),
@@ -232,6 +256,7 @@ export const useEditorStore = create<EditorStore>()(
       storage: persistStorage,
       partialize: (state) => ({
         blocks: state.blocks,
+        theme: state.theme,
         draftPageId: state.draftPageId,
         draftUpdatedAt: state.draftUpdatedAt,
       }),

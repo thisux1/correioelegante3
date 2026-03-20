@@ -93,7 +93,7 @@ export const templates: Template[] = [
     description: 'Estrutura curta para uma declaracao com capa e mensagem principal.',
     thumbnail: 'https://placehold.co/640x360/FCE7F3/9D174D?text=Romantico',
     category: 'romantic',
-    theme: 'romantic',
+    theme: 'romantic-sunset',
     blocks: [
       {
         id: 'tpl-romantic-title',
@@ -142,7 +142,7 @@ export const templates: Template[] = [
     description: 'Modelo simples para celebrar historias, gratidao e bons momentos.',
     thumbnail: 'https://placehold.co/640x360/DBEAFE/1E3A8A?text=Amizade',
     category: 'friendship',
-    theme: 'classic',
+    theme: 'ocean-breeze',
     blocks: [
       {
         id: 'tpl-friendship-title',
