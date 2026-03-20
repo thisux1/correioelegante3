@@ -15,6 +15,7 @@ import {
   type PageStatus,
   type PageVisibility,
 } from '@/editor/types'
+import { buildThemeStyle, resolveThemeId } from '@/editor/themes'
 import {
   resolveDraftPrecedence,
 } from '@/editor/draftPrecedence'
@@ -29,6 +30,7 @@ interface LocalDraftSnapshot {
   page: {
     id: string
     blocks: PageSummary['blocks']
+    theme?: string
     status: PageStatus
     visibility: PageVisibility
     publishedAt: string | null
@@ -45,9 +47,10 @@ interface DraftConflictState {
 interface TemplateConflictState {
   templateName: string
   blocks: Block[]
+  theme?: string
 }
 
-function toDraftSnapshot(page: PageSummary) {
+function toDraftSnapshot(page: PageSummary): LocalDraftSnapshot {
   return {
     pageId: page.id,
     updatedAt: page.updatedAt,
@@ -64,6 +67,20 @@ function toDraftSnapshot(page: PageSummary) {
   }
 }
 
+function toPageSignature(input: {
+  blocks: PageSummary['blocks']
+  theme?: string
+  status: PageStatus
+  visibility: PageVisibility
+}) {
+  return JSON.stringify({
+    blocks: input.blocks,
+    theme: resolveThemeId(input.theme),
+    status: input.status,
+    visibility: input.visibility,
+  })
+}
+
 export function Editor() {
   const navigate = useNavigate()
   const params = useParams<{ pageId?: string }>()
@@ -73,8 +90,9 @@ export function Editor() {
 
   const mode = useEditorStore((state) => state.mode)
   const blocks = useEditorStore((state) => state.blocks)
+  const theme = useEditorStore((state) => state.theme)
   const setMode = useEditorStore((state) => state.setMode)
-  const setBlocks = useEditorStore((state) => state.setBlocks)
+  const setPage = useEditorStore((state) => state.setPage)
   const setDraftContext = useEditorStore((state) => state.setDraftContext)
 
   const [isLoadingPage, setIsLoadingPage] = useState(false)
@@ -105,9 +123,10 @@ export function Editor() {
 
   const hasPageId = Boolean(currentPageId)
   const currentSignature = useMemo(
-    () => JSON.stringify({ blocks, status, visibility }),
-    [blocks, status, visibility],
+    () => toPageSignature({ blocks, theme, status, visibility }),
+    [blocks, status, theme, visibility],
   )
+  const editorThemeStyle = useMemo(() => buildThemeStyle(theme), [theme])
 
   const handleLoadServerVersion = useCallback(async () => {
     if (!currentPageId) {
@@ -115,43 +134,39 @@ export function Editor() {
     }
 
     const page = await pageService.loadPage(currentPageId)
-    setBlocks(page.blocks)
+    setPage({ blocks: page.blocks, theme: page.theme })
     setPageVersion(page.version)
     setStatus(page.status)
     setVisibility(page.visibility)
     setDraftContext(page.id, page.updatedAt)
-    setLastSyncedSignature(JSON.stringify({ blocks: page.blocks, status: page.status, visibility: page.visibility }))
+    setLastSyncedSignature(toPageSignature(page))
     setSaveState('idle')
     setFeedback('Versao do servidor carregada com sucesso.')
-  }, [currentPageId, setBlocks, setDraftContext])
+  }, [currentPageId, setDraftContext, setPage])
 
   const applyBackendPage = useCallback((backendPage: PageSummary) => {
-    setBlocks(backendPage.blocks)
+    setPage({ blocks: backendPage.blocks, theme: backendPage.theme })
     setCurrentPageId(backendPage.id)
     setPageVersion(backendPage.version)
     setStatus(backendPage.status)
     setVisibility(backendPage.visibility)
     setDraftContext(backendPage.id, backendPage.updatedAt)
-    setLastSyncedSignature(JSON.stringify({
-      blocks: backendPage.blocks,
-      status: backendPage.status,
-      visibility: backendPage.visibility,
-    }))
-  }, [setBlocks, setDraftContext])
+    setLastSyncedSignature(toPageSignature(backendPage))
+  }, [setDraftContext, setPage])
 
   const applyLocalDraft = useCallback((localSnapshot: LocalDraftSnapshot) => {
+    setPage({ blocks: localSnapshot.page.blocks, theme: localSnapshot.page.theme })
     setCurrentPageId(localSnapshot.pageId)
     setDraftContext(localSnapshot.pageId, localSnapshot.updatedAt)
-    setLastSyncedSignature(JSON.stringify({
-      blocks: localSnapshot.page.blocks,
-      status: localSnapshot.page.status,
-      visibility: localSnapshot.page.visibility,
-    }))
+    setStatus(localSnapshot.page.status)
+    setVisibility(localSnapshot.page.visibility)
+    setPageVersion(localSnapshot.page.version)
+    setLastSyncedSignature(toPageSignature(localSnapshot.page))
     setFeedback('Rascunho local carregado para continuar a edicao.')
-  }, [setDraftContext])
+  }, [setDraftContext, setPage])
 
-  const applyTemplate = useCallback((templateBlocks: Block[], templateName: string) => {
-    setBlocks(templateBlocks)
+  const applyTemplate = useCallback((templateBlocks: Block[], templateName: string, templateTheme?: string) => {
+    setPage({ blocks: templateBlocks, theme: templateTheme })
     setCurrentPageId(undefined)
     setPageVersion(undefined)
     setStatus('draft')
@@ -161,7 +176,7 @@ export function Editor() {
     setSaveState('idle')
     setMode('edit')
     setFeedback(`Template "${templateName}" aplicado. Personalize e salve quando quiser.`)
-  }, [setBlocks, setDraftContext, setMode])
+  }, [setDraftContext, setMode, setPage])
 
   const savePage = useCallback(async () => {
     try {
@@ -172,6 +187,7 @@ export function Editor() {
         pageId: currentPageId,
         content: {
           blocks,
+          theme,
           version: PAGE_VERSION,
         },
         status,
@@ -216,6 +232,7 @@ export function Editor() {
     pageVersion,
     setDraftContext,
     status,
+    theme,
     visibility,
   ])
 
@@ -254,11 +271,12 @@ export function Editor() {
       setTemplateConflict({
         templateName: template.name,
         blocks: clonedBlocks,
+        theme: template.theme,
       })
       return
     }
 
-    applyTemplate(clonedBlocks, template.name)
+    applyTemplate(clonedBlocks, template.name, template.theme)
   }, [
     applyTemplate,
     blocks.length,
@@ -290,6 +308,7 @@ export function Editor() {
         const localVersion = pageMetaRef.current.pageVersion
         const localDraftPageId = editorState.draftPageId
         const localDraftUpdatedAt = editorState.draftUpdatedAt
+        const localTheme = editorState.theme
 
         const localSnapshot: LocalDraftSnapshot | null =
           localDraftPageId === pageIdFromRoute && localDraftUpdatedAt
@@ -299,6 +318,7 @@ export function Editor() {
                 page: {
                   id: pageIdFromRoute,
                   blocks: localBlocks,
+                  theme: localTheme,
                   status: localStatus,
                   visibility: localVisibility,
                   publishedAt: null,
@@ -400,7 +420,7 @@ export function Editor() {
   }, [saveState])
 
   return (
-    <div className="min-h-screen px-4 pb-24 pt-28 md:px-6 md:pb-12">
+    <div className="min-h-screen px-4 pb-24 pt-28 md:px-6 md:pb-12" style={editorThemeStyle}>
       <div className="mx-auto w-full max-w-4xl">
         <div className="mb-6">
           <h1 className="font-display text-3xl text-text md:text-4xl">Editor modular</h1>
@@ -431,6 +451,7 @@ export function Editor() {
             }}
             isSaving={saveState === 'saving'}
             hasPageId={hasPageId}
+            selectedThemeId={theme}
           />
         ) : (
           <div className="mb-6 flex justify-end">
@@ -476,7 +497,7 @@ export function Editor() {
               transition={{ duration: 0.2 }}
               className="rounded-3xl border border-primary/20 bg-white/80 p-4 shadow-sm md:p-6"
             >
-              <PageRenderer blocks={blocks} />
+              <PageRenderer blocks={blocks} theme={theme} />
             </motion.section>
           )}
         </AnimatePresence>
@@ -512,7 +533,7 @@ export function Editor() {
                   return
                 }
 
-                applyTemplate(templateConflict.blocks, templateConflict.templateName)
+                applyTemplate(templateConflict.blocks, templateConflict.templateName, templateConflict.theme)
                 setTemplateConflict(null)
               }}
               className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"

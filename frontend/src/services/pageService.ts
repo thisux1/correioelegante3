@@ -1,5 +1,6 @@
 import api from './api'
 import { migratePage } from '@/editor/migration'
+import { resolveThemeId } from '@/editor/themes'
 import type {
   PageContent,
   PageStatus,
@@ -55,7 +56,7 @@ export const pageService = {
     const payload = {
       content: {
         blocks: input.content.blocks,
-        theme: input.content.theme,
+        theme: resolveThemeId(input.content.theme),
         version: input.content.version,
       },
       status: input.status,

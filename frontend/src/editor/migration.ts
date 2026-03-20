@@ -5,6 +5,7 @@ import {
   type BlockType,
   type PageContent,
 } from '@/editor/types'
+import { resolveThemeId } from '@/editor/themes'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -125,7 +126,7 @@ export function migratePage(input: unknown): PageContent {
 
   return {
     blocks: maybeBlocks.map((block, index) => migrateBlock(block, index)),
-    theme: typeof record.theme === 'string' ? record.theme : undefined,
+    theme: resolveThemeId(typeof record.theme === 'string' ? record.theme : undefined),
     version: PAGE_VERSION,
   }
 }
