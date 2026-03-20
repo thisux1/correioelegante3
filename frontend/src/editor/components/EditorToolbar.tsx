@@ -1,10 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Eye, LoaderCircle, Pencil, Plus, Save, Type, Image as ImageIcon } from 'lucide-react'
+import {
+  Eye,
+  Image as ImageIcon,
+  Images,
+  LoaderCircle,
+  Music2,
+  Pencil,
+  Plus,
+  Save,
+  Timer,
+  Type,
+} from 'lucide-react'
 import { MAX_BLOCKS, type BlockType } from '@/editor/types'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
 
-type AvailableBlockType = Extract<BlockType, 'text' | 'image'>
+type AvailableBlockType = Extract<BlockType, 'text' | 'image' | 'timer' | 'gallery' | 'music'>
 
 interface AddBlockOption {
   type: AvailableBlockType
@@ -15,6 +26,9 @@ interface AddBlockOption {
 const addBlockOptions: AddBlockOption[] = [
   { type: 'text', label: 'Texto', icon: Type },
   { type: 'image', label: 'Imagem', icon: ImageIcon },
+  { type: 'timer', label: 'Timer', icon: Timer },
+  { type: 'gallery', label: 'Galeria', icon: Images },
+  { type: 'music', label: 'Musica', icon: Music2 },
 ]
 
 interface ToolbarControlsProps {
@@ -183,7 +197,9 @@ export function EditorToolbar({ onSave, isSaving, hasPageId }: EditorToolbarProp
     const selector =
       type === 'text'
         ? `[data-block-id="${blockId}"] [contenteditable="true"]`
-        : `[data-block-id="${blockId}"] input`
+        : type === 'gallery'
+          ? `[data-block-id="${blockId}"] input[type="url"]`
+          : `[data-block-id="${blockId}"] input`
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {

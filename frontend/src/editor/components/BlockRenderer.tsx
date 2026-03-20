@@ -2,6 +2,9 @@ import { memo } from 'react'
 import type { Block, BlockComponentProps, BlockMap, EditorMode } from '@/editor/types'
 import { TextBlock } from '@/editor/blocks/TextBlock'
 import { ImageBlock } from '@/editor/blocks/ImageBlock'
+import { TimerBlock } from '@/editor/blocks/TimerBlock'
+import { GalleryBlock } from '@/editor/blocks/GalleryBlock'
+import { MusicBlock } from '@/editor/blocks/MusicBlock'
 
 interface BlockRendererProps {
   block: Block
@@ -12,6 +15,9 @@ interface BlockRendererProps {
 const blockMap: BlockMap = {
   text: TextBlock,
   image: ImageBlock,
+  timer: TimerBlock,
+  gallery: GalleryBlock,
+  music: MusicBlock,
 }
 
 function renderFallback(block: Block) {

@@ -37,6 +37,7 @@ export interface GalleryBlockProps {
 export interface MusicBlockProps {
   src: string
   title?: string
+  artist?: string
 }
 
 export interface BlockPropsByType {

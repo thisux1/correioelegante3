@@ -95,6 +95,7 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       return {
         src: asText(props.src),
         title: asOptionalText(props.title),
+        artist: asOptionalText(props.artist),
       };
     default:
       return { ...props };
