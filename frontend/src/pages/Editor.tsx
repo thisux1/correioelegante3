@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
 import { ArrowLeft } from 'lucide-react'
+import { Modal } from '@/components/ui/Modal'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { EditorCanvas } from '@/editor/components/EditorCanvas'
 import { PageRenderer } from '@/editor/components/PageRenderer'
@@ -14,12 +15,30 @@ import {
   type PageVisibility,
 } from '@/editor/types'
 import {
-  LOCAL_DRAFT_PREFERENCE_PROMPT,
   resolveDraftPrecedence,
 } from '@/editor/draftPrecedence'
 import { pageService, type PageSummary } from '@/services/pageService'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+
+interface LocalDraftSnapshot {
+  pageId: string
+  updatedAt: string
+  page: {
+    id: string
+    blocks: PageSummary['blocks']
+    status: PageStatus
+    visibility: PageVisibility
+    publishedAt: string | null
+    version: number
+    updatedAt: string
+  }
+}
+
+interface DraftConflictState {
+  localSnapshot: LocalDraftSnapshot
+  backendPage: PageSummary
+}
 
 function toDraftSnapshot(page: PageSummary) {
   return {
@@ -47,8 +66,6 @@ export function Editor() {
   const blocks = useEditorStore((state) => state.blocks)
   const setMode = useEditorStore((state) => state.setMode)
   const setBlocks = useEditorStore((state) => state.setBlocks)
-  const draftPageId = useEditorStore((state) => state.draftPageId)
-  const draftUpdatedAt = useEditorStore((state) => state.draftUpdatedAt)
   const setDraftContext = useEditorStore((state) => state.setDraftContext)
 
   const [isLoadingPage, setIsLoadingPage] = useState(false)
@@ -59,6 +76,21 @@ export function Editor() {
   const [status, setStatus] = useState<PageStatus>('draft')
   const [visibility, setVisibility] = useState<PageVisibility>('public')
   const [lastSyncedSignature, setLastSyncedSignature] = useState('')
+  const [draftConflict, setDraftConflict] = useState<DraftConflictState | null>(null)
+
+  const pageMetaRef = useRef({
+    status,
+    visibility,
+    pageVersion,
+  })
+
+  useEffect(() => {
+    pageMetaRef.current = {
+      status,
+      visibility,
+      pageVersion,
+    }
+  }, [pageVersion, status, visibility])
 
   const hasPageId = Boolean(currentPageId)
   const currentSignature = useMemo(
@@ -81,6 +113,31 @@ export function Editor() {
     setSaveState('idle')
     setFeedback('Versao do servidor carregada com sucesso.')
   }, [currentPageId, setBlocks, setDraftContext])
+
+  const applyBackendPage = useCallback((backendPage: PageSummary) => {
+    setBlocks(backendPage.blocks)
+    setCurrentPageId(backendPage.id)
+    setPageVersion(backendPage.version)
+    setStatus(backendPage.status)
+    setVisibility(backendPage.visibility)
+    setDraftContext(backendPage.id, backendPage.updatedAt)
+    setLastSyncedSignature(JSON.stringify({
+      blocks: backendPage.blocks,
+      status: backendPage.status,
+      visibility: backendPage.visibility,
+    }))
+  }, [setBlocks, setDraftContext])
+
+  const applyLocalDraft = useCallback((localSnapshot: LocalDraftSnapshot) => {
+    setCurrentPageId(localSnapshot.pageId)
+    setDraftContext(localSnapshot.pageId, localSnapshot.updatedAt)
+    setLastSyncedSignature(JSON.stringify({
+      blocks: localSnapshot.page.blocks,
+      status: localSnapshot.page.status,
+      visibility: localSnapshot.page.visibility,
+    }))
+    setFeedback('Rascunho local carregado para continuar a edicao.')
+  }, [setDraftContext])
 
   const savePage = useCallback(async () => {
     try {
@@ -167,19 +224,27 @@ export function Editor() {
           return
         }
 
-        const localSnapshot =
-          draftPageId === pageIdFromRoute && draftUpdatedAt
+        const editorState = useEditorStore.getState()
+        const localBlocks = editorState.blocks
+        const localStatus = pageMetaRef.current.status
+        const localVisibility = pageMetaRef.current.visibility
+        const localVersion = pageMetaRef.current.pageVersion
+        const localDraftPageId = editorState.draftPageId
+        const localDraftUpdatedAt = editorState.draftUpdatedAt
+
+        const localSnapshot: LocalDraftSnapshot | null =
+          localDraftPageId === pageIdFromRoute && localDraftUpdatedAt
             ? {
                 pageId: pageIdFromRoute,
-                updatedAt: draftUpdatedAt,
+                updatedAt: localDraftUpdatedAt,
                 page: {
                   id: pageIdFromRoute,
-                  blocks,
-                  status,
-                  visibility,
+                  blocks: localBlocks,
+                  status: localStatus,
+                  visibility: localVisibility,
                   publishedAt: null,
-                  version: pageVersion ?? PAGE_VERSION,
-                  updatedAt: draftUpdatedAt,
+                  version: localVersion ?? PAGE_VERSION,
+                  updatedAt: localDraftUpdatedAt,
                 },
               }
             : null
@@ -193,31 +258,18 @@ export function Editor() {
 
         const shouldUseLocal =
           precedence.decision === 'use-local'
-          || (
-            precedence.decision === 'ask-user'
-            && typeof window !== 'undefined'
-            && window.confirm(LOCAL_DRAFT_PREFERENCE_PROMPT)
-          )
 
         if (shouldUseLocal && localSnapshot) {
-          setCurrentPageId(pageIdFromRoute)
-          setDraftContext(pageIdFromRoute, localSnapshot.updatedAt)
-          setLastSyncedSignature(currentSignature)
-          setFeedback('Rascunho local carregado para continuar a edicao.')
+          applyLocalDraft(localSnapshot)
           return
         }
 
-        setBlocks(backendPage.blocks)
-        setCurrentPageId(backendPage.id)
-        setPageVersion(backendPage.version)
-        setStatus(backendPage.status)
-        setVisibility(backendPage.visibility)
-        setDraftContext(backendPage.id, backendPage.updatedAt)
-        setLastSyncedSignature(JSON.stringify({
-          blocks: backendPage.blocks,
-          status: backendPage.status,
-          visibility: backendPage.visibility,
-        }))
+        if (precedence.decision === 'ask-user' && localSnapshot) {
+          setDraftConflict({ localSnapshot, backendPage })
+          return
+        }
+
+        applyBackendPage(backendPage)
       } catch (error) {
         if (!active) {
           return
@@ -241,16 +293,9 @@ export function Editor() {
       active = false
     }
   }, [
-    blocks,
-    currentSignature,
-    draftPageId,
-    draftUpdatedAt,
     pageIdFromRoute,
-    pageVersion,
-    setBlocks,
-    setDraftContext,
-    status,
-    visibility,
+    applyBackendPage,
+    applyLocalDraft,
   ])
 
   useEffect(() => {
@@ -377,6 +422,57 @@ export function Editor() {
           )}
         </AnimatePresence>
       </div>
+
+      <Modal
+        isOpen={Boolean(draftConflict)}
+        onClose={() => {
+          if (!draftConflict) {
+            return
+          }
+
+          applyBackendPage(draftConflict.backendPage)
+          setDraftConflict(null)
+          setFeedback('Versao salva carregada com sucesso.')
+        }}
+        title="Rascunho local encontrado"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-light">
+            Encontramos um rascunho local mais recente para esta pagina. Deseja continuar com o rascunho local ou usar a versao salva no servidor?
+          </p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!draftConflict) {
+                  return
+                }
+
+                applyBackendPage(draftConflict.backendPage)
+                setDraftConflict(null)
+                setFeedback('Versao salva carregada com sucesso.')
+              }}
+              className="rounded-lg border border-primary/20 px-3 py-2 text-sm font-medium text-text-light transition-colors hover:bg-primary/5"
+            >
+              Usar versao salva
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!draftConflict) {
+                  return
+                }
+
+                applyLocalDraft(draftConflict.localSnapshot)
+                setDraftConflict(null)
+              }}
+              className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+            >
+              Continuar rascunho local
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
