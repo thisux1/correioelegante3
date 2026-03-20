@@ -59,25 +59,25 @@ function addMonths(base: Date, value: number): Date {
   return next
 }
 
-function diffTimerParts(target: Date, now: Date): TimerParts {
-  if (target.getTime() <= now.getTime()) {
+function diffTimerParts(from: Date, to: Date): TimerParts {
+  if (to.getTime() <= from.getTime()) {
     return ZERO_TIMER
   }
 
-  let cursor = new Date(now)
-  let years = target.getFullYear() - cursor.getFullYear()
-  if (addYears(cursor, years).getTime() > target.getTime()) {
+  let cursor = new Date(from)
+  let years = to.getFullYear() - cursor.getFullYear()
+  if (addYears(cursor, years).getTime() > to.getTime()) {
     years -= 1
   }
   cursor = addYears(cursor, years)
 
-  let months = (target.getFullYear() - cursor.getFullYear()) * 12 + target.getMonth() - cursor.getMonth()
-  if (addMonths(cursor, months).getTime() > target.getTime()) {
+  let months = (to.getFullYear() - cursor.getFullYear()) * 12 + to.getMonth() - cursor.getMonth()
+  if (addMonths(cursor, months).getTime() > to.getTime()) {
     months -= 1
   }
   cursor = addMonths(cursor, months)
 
-  let remainingMs = target.getTime() - cursor.getTime()
+  let remainingMs = to.getTime() - cursor.getTime()
   const days = Math.floor(remainingMs / 86_400_000)
   remainingMs -= days * 86_400_000
   const hours = Math.floor(remainingMs / 3_600_000)
@@ -186,12 +186,16 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     )
   }
 
-  const hasExpired = parsedTarget.getTime() <= now.getTime()
-  const parts = hasExpired ? ZERO_TIMER : diffTimerParts(parsedTarget, now)
+  const hasElapsed = now.getTime() >= parsedTarget.getTime()
+  const fromDate = hasElapsed ? parsedTarget : now
+  const toDate = hasElapsed ? now : parsedTarget
+  const parts = diffTimerParts(fromDate, toDate)
+
+  const statusText = hasElapsed ? 'Tempo decorrido' : 'Contagem regressiva'
 
   return (
     <div className="rounded-2xl border border-primary/20 bg-white/85 p-5">
-      <p className="mb-3 text-center text-sm font-medium text-text-light">{label?.trim() || 'Contagem regressiva'}</p>
+      <p className="mb-3 text-center text-sm font-medium text-text-light">{label?.trim() || statusText}</p>
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {[
@@ -212,9 +216,6 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         ))}
       </div>
 
-      {hasExpired ? (
-        <p className="mt-3 text-center text-sm text-text-light">A data escolhida ja passou. O contador foi zerado.</p>
-      ) : null}
     </div>
   )
 }

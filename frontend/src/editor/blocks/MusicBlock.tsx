@@ -163,11 +163,12 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
 
 function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const isMusicBlock = block.type === 'music'
-  const src = isMusicBlock ? block.props.src.trim() : ''
-  const title = isMusicBlock ? block.props.title?.trim() || '' : ''
-  const artist = isMusicBlock ? block.props.artist?.trim() || '' : ''
+  const src = isMusicBlock ? block.props.src : ''
+  const title = isMusicBlock ? block.props.title ?? '' : ''
+  const artist = isMusicBlock ? block.props.artist ?? '' : ''
 
-  const canPlay = useMemo(() => isValidAudioUrl(src), [src])
+  const normalizedSrc = src.trim()
+  const canPlay = useMemo(() => isValidAudioUrl(normalizedSrc), [normalizedSrc])
 
   if (!isMusicBlock) {
     return null
@@ -265,7 +266,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     )
   }
 
-  return <MusicPlayer key={src} src={src} title={title} artist={artist} />
+  return <MusicPlayer key={normalizedSrc} src={normalizedSrc} title={title.trim()} artist={artist.trim()} />
 }
 
 function areMusicBlockPropsEqual(prev: BlockComponentProps, next: BlockComponentProps) {
