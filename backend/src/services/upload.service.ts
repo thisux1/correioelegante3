@@ -1,7 +1,13 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { AppError } from '../utils/AppError';
 
-function configureCloudinary() {
+let cloudinaryConfigured = false;
+
+function ensureCloudinaryConfigured() {
+    if (cloudinaryConfigured) {
+        return;
+    }
+
     const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, NODE_ENV } = process.env;
     if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
         if (NODE_ENV === 'test') {
@@ -10,25 +16,28 @@ function configureCloudinary() {
                 api_key: 'test_key',
                 api_secret: 'test_secret',
             });
+            cloudinaryConfigured = true;
             return;
         }
-        throw new Error('Credenciais do Cloudinary não configuradas');
+
+        throw new AppError('Servico de upload indisponivel: credenciais do Cloudinary nao configuradas', 503);
     }
+
     cloudinary.config({
         cloud_name: CLOUDINARY_CLOUD_NAME,
         api_key: CLOUDINARY_API_KEY,
         api_secret: CLOUDINARY_API_SECRET,
     });
+    cloudinaryConfigured = true;
 }
-
-// Configure once at module load — throws at startup if env vars are missing
-configureCloudinary();
 
 export async function uploadMedia(
     fileBuffer: Buffer,
     mimetype: string,
     folder = 'correio-elegante'
 ): Promise<string> {
+    ensureCloudinaryConfigured();
+
     const resourceType = mimetype.startsWith('audio') ? 'video' : 'image';
 
     return new Promise((resolve, reject) => {

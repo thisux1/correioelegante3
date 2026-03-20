@@ -30,13 +30,20 @@ export function errorHandler(
     return;
   }
 
-  // Prisma known request errors — only P2002 (unique constraint) is a 409
+  // Prisma known request errors
   if (err.name === 'PrismaClientKnownRequestError') {
     const prismaErr = err as Error & { code?: string };
     if (prismaErr.code === 'P2002') {
       res.status(409).json({
         error: 'Conflito de dados. Verifique se o recurso já existe.',
         code: 'DATABASE_CONFLICT',
+      });
+      return;
+    }
+    if (prismaErr.code === 'P2023') {
+      res.status(400).json({
+        error: 'Identificador inválido',
+        code: 'INVALID_ID',
       });
       return;
     }

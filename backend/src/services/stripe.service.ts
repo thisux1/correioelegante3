@@ -94,7 +94,11 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
         if (messageId && session.payment_status === 'paid') {
             await prisma.message.update({
                 where: { id: messageId },
-                data: { paymentStatus: 'paid' },
+                data: {
+                    paymentStatus: 'paid',
+                    status: 'published',
+                    publishedAt: new Date(),
+                },
             });
         }
     }
@@ -107,7 +111,11 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
         if (messageId) {
             await prisma.message.update({
                 where: { id: messageId },
-                data: { paymentStatus: 'paid' },
+                data: {
+                    paymentStatus: 'paid',
+                    status: 'published',
+                    publishedAt: new Date(),
+                },
             });
         }
     }

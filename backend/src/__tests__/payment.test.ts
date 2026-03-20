@@ -33,6 +33,9 @@ const mockMessage = {
     recipient: 'Ana',
     message: 'Você é especial!',
     theme: 'classic',
+    status: 'draft',
+    visibility: 'public',
+    publishedAt: null,
     mediaUrl: null,
     paymentStatus: 'pending',
     paymentId: null,
@@ -96,6 +99,19 @@ describe('POST /api/payments/create', () => {
             .send({ messageId: MSG_ID });
 
         expect(res.status).toBe(400);
+    });
+
+    it('400 — messageId inválido (não é ObjectId)', async () => {
+        const token = makeToken(USER_ID);
+        const res = await request(app)
+            .post('/api/payments/create')
+            .set('Authorization', `Bearer ${token}`)
+            .send({ messageId: 'editor', paymentMethod: 'pix' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/messageId inválido/i);
+        expect(mercadopagoService.createPixPayment).not.toHaveBeenCalled();
+        expect(stripeService.createCardPayment).not.toHaveBeenCalled();
     });
 
     it('404 — mensagem não encontrada', async () => {

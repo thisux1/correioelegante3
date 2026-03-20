@@ -3,8 +3,15 @@ import { AuthRequest } from '../middlewares/auth';
 import * as messageService from '../services/message.service';
 
 export async function createMessage(req: AuthRequest, res: Response): Promise<void> {
-  const { message, recipient, theme } = req.body;
-  const newMessage = await messageService.createMessage(req.userId!, { message, recipient, theme });
+  const { message, recipient, theme, status, visibility, publishedAt } = req.body;
+  const newMessage = await messageService.createMessage(req.userId!, {
+    message,
+    recipient,
+    theme,
+    status,
+    visibility,
+    publishedAt,
+  });
   res.status(201).json({ message: newMessage });
 }
 
@@ -18,8 +25,8 @@ export async function getMessage(req: AuthRequest, res: Response): Promise<void>
   res.json({ message });
 }
 
-export async function getPublicCard(req: Request, res: Response): Promise<void> {
-  const message = await messageService.getPublicCard(req.params.id as string);
+export async function getPublicCard(req: AuthRequest, res: Response): Promise<void> {
+  const message = await messageService.getPublicCard(req.params.id as string, req.userId);
   res.json({ message });
 }
 

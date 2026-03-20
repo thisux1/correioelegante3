@@ -1,4 +1,5 @@
 import api from './api'
+import type { PageStatus, PageVisibility } from '@/editor/types'
 
 export type PaymentMethod = 'pix' | 'credit_card'
 
@@ -6,6 +7,9 @@ export interface CreateMessageData {
   message: string
   recipient: string
   theme?: string
+  status?: PageStatus
+  visibility?: PageVisibility
+  publishedAt?: string | null
 }
 
 export interface Message {
@@ -14,6 +18,9 @@ export interface Message {
   recipient: string
   mediaUrl?: string
   theme: string
+  status: PageStatus
+  visibility: PageVisibility
+  publishedAt: string | null
   paymentStatus: 'pending' | 'paid'
   paymentId?: string | null
   createdAt: string
