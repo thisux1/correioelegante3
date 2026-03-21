@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
+import { LoaderCircle, Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
-import { assetService } from '@/services/assetService'
+import { assetService, type AssetSummary } from '@/services/assetService'
 
 type UploadState = 'idle' | 'sending' | 'processing' | 'ready' | 'error'
 
@@ -33,15 +33,17 @@ interface MusicPlayerProps {
   src: string
   title: string
   artist: string
+  waveform?: number[] | null
 }
 
-function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
+function MusicPlayer({ src, title, artist, waveform }: MusicPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [volume, setVolume] = useState(0.8)
   const [hasPlaybackError, setHasPlaybackError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!audioRef.current) {
@@ -52,7 +54,21 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
   }, [volume])
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-white to-primary/5 p-4">
+    <div
+      className="relative overflow-hidden rounded-3xl border p-5 backdrop-blur-md md:p-6"
+      style={{
+        borderColor: 'var(--color-border)',
+        background: 'linear-gradient(140deg, var(--color-surface) 0%, var(--color-surface-glass) 100%)',
+        boxShadow: '0 24px 45px -34px rgba(0, 0, 0, 0.22)',
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-70"
+        style={{
+          background: 'radial-gradient(circle at 18% 18%, var(--color-primary-light), transparent 55%), radial-gradient(circle at 82% 84%, var(--color-accent), transparent 48%)',
+          opacity: 0.18,
+        }}
+      />
       <audio
         ref={audioRef}
         src={src}
@@ -60,6 +76,13 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
         onLoadedMetadata={(event) => {
           setHasPlaybackError(false)
           setDuration(event.currentTarget.duration)
+          setIsLoading(false)
+        }}
+        onWaiting={() => {
+          setIsLoading(true)
+        }}
+        onCanPlay={() => {
+          setIsLoading(false)
         }}
         onTimeUpdate={(event) => {
           setCurrentTime(event.currentTarget.currentTime)
@@ -71,21 +94,39 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
         onError={() => {
           setHasPlaybackError(true)
           setIsPlaying(false)
+          setIsLoading(false)
         }}
       />
 
-      <div className="mb-4">
-        <p className="truncate text-base font-semibold text-text">{title || 'Sua musica especial'}</p>
-        <p className="truncate text-sm text-text-light">{artist || 'Artista'}</p>
+      <div className="relative mb-5">
+        <p className="truncate font-display text-2xl font-bold text-text">{title || 'Sua musica especial'}</p>
+        <p className="truncate text-sm text-text-light">{artist || 'Trilha do seu momento'}</p>
       </div>
 
+      {Array.isArray(waveform) && waveform.length > 0 ? (
+        <div className="relative mb-4 flex h-12 items-end gap-1 rounded-xl border border-primary/15 bg-white/60 px-2 py-1">
+          {waveform.slice(0, 64).map((point, index) => (
+            <span
+              key={`${index}-${point}`}
+              className="w-1 rounded-full bg-primary/65"
+              style={{ height: `${Math.max(8, Math.round(point * 100))}%` }}
+            />
+          ))}
+        </div>
+      ) : null}
+
       {hasPlaybackError ? (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <p className="relative rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
           Nao foi possivel carregar este audio. Verifique a URL.
         </p>
       ) : (
         <>
-          <div className="mb-2 flex items-center gap-3">
+          {isLoading ? (
+            <p className="mb-3 rounded-xl border border-primary/20 bg-white/70 px-3 py-2 text-xs text-text-light">
+              Carregando audio...
+            </p>
+          ) : null}
+          <div className="relative mb-3 flex items-center gap-3">
             <button
               type="button"
               onClick={async () => {
@@ -107,7 +148,7 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
                   setHasPlaybackError(true)
                 }
               }}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary-dark"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] hover:from-primary-dark hover:to-primary"
               aria-label={isPlaying ? 'Pausar musica' : 'Reproduzir musica'}
             >
               {isPlaying ? <Pause size={18} /> : <Play size={18} className="translate-x-[1px]" />}
@@ -130,6 +171,7 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
                   setCurrentTime(nextTime)
                 }}
                 className="w-full accent-primary"
+                disabled={isLoading || hasPlaybackError}
               />
 
               <div className="mt-1 flex justify-between text-[11px] text-text-light">
@@ -139,7 +181,7 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             {volume <= 0.01 ? <VolumeX size={15} className="text-text-light" /> : <Volume2 size={15} className="text-text-light" />}
             <input
               type="range"
@@ -155,8 +197,18 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
 
                 setVolume(nextVolume)
               }}
-              className="w-36 max-w-full accent-primary"
+              className="w-40 max-w-full accent-primary"
+              disabled={hasPlaybackError}
             />
+            <span
+              className="rounded-full border px-2 py-0.5 text-[10px] font-medium text-text-light"
+              style={{
+                backgroundColor: 'var(--color-surface-glass)',
+                borderColor: 'var(--color-border)',
+              }}
+            >
+              {Math.round(volume * 100)}%
+            </span>
           </div>
         </>
       )}
@@ -167,15 +219,67 @@ function MusicPlayer({ src, title, artist }: MusicPlayerProps) {
 function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const isMusicBlock = block.type === 'music'
   const src = isMusicBlock ? block.props.src : ''
+  const assetId = isMusicBlock ? block.props.assetId ?? '' : ''
   const title = isMusicBlock ? block.props.title ?? '' : ''
   const artist = isMusicBlock ? block.props.artist ?? '' : ''
 
-  const normalizedSrc = src.trim()
-  const canPlay = useMemo(() => isValidAudioUrl(normalizedSrc), [normalizedSrc])
+  const [selectedAsset, setSelectedAsset] = useState<AssetSummary | null>(null)
+  const resolvedSource = selectedAsset?.publicUrl?.trim() || src.trim()
+  const canPlay = useMemo(() => isValidAudioUrl(resolvedSource), [resolvedSource])
   const [uploadState, setUploadState] = useState<UploadState>('idle')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [libraryCount, setLibraryCount] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!isMusicBlock) {
+      return
+    }
+
+    if (!assetId) {
+      setSelectedAsset(null)
+      return
+    }
+
+    let active = true
+    assetService.getById(assetId)
+      .then(({ data }) => {
+        if (!active) {
+          return
+        }
+
+        setSelectedAsset(data.asset)
+      })
+      .catch(() => {
+        if (!active) {
+          return
+        }
+
+        setSelectedAsset(null)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [assetId, isMusicBlock])
+
+  useEffect(() => {
+    if (!selectedAsset || (selectedAsset.processingStatus !== 'pending' && selectedAsset.processingStatus !== 'processing')) {
+      return
+    }
+
+    const timer = window.setInterval(() => {
+      assetService.getById(selectedAsset.id)
+        .then(({ data }) => {
+          setSelectedAsset(data.asset)
+        })
+        .catch(() => undefined)
+    }, 3000)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [selectedAsset])
 
   const triggerFilePicker = () => {
     fileInputRef.current?.click()
@@ -200,6 +304,8 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
       const { data } = await assetService.list('audio')
       setLibraryCount(data.assets.length)
+      const refreshedAsset = data.assets.find((item) => item.id === asset.id) ?? asset
+      setSelectedAsset(refreshedAsset)
 
       onUpdate?.((currentBlock) => {
         if (currentBlock.type !== 'music') {
@@ -210,6 +316,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           ...currentBlock,
           props: {
             ...currentBlock.props,
+            assetId: asset.id,
             src: asset.publicUrl ?? currentBlock.props.src,
           },
         }
@@ -268,6 +375,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                   ...currentBlock,
                   props: {
                     ...currentBlock.props,
+                    assetId: undefined,
                     src: nextSrc,
                   },
                 }
@@ -283,6 +391,25 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               {uploadState === 'ready' ? 'Audio pronto para uso.' : null}
               {uploadState === 'error' ? `Erro no upload: ${uploadError ?? 'tente novamente.'}` : null}
               {libraryCount !== null ? ` Biblioteca: ${libraryCount} asset(s).` : null}
+            </div>
+          ) : null}
+
+          {selectedAsset ? (
+            <div className="mt-2 rounded-lg border border-primary/20 bg-white/70 px-3 py-2 text-xs text-text-light">
+              Asset {selectedAsset.id.slice(-6)} | status: {selectedAsset.processingStatus}
+              {selectedAsset.errorMessage ? ` | erro: ${selectedAsset.errorMessage}` : ''}
+              {selectedAsset.processingStatus === 'failed' ? (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await assetService.reprocess(selectedAsset.id)
+                    setUploadState('processing')
+                  }}
+                  className="ml-2 rounded border border-amber-300 px-1.5 py-0.5 text-amber-700 hover:bg-amber-50"
+                >
+                  Reprocessar
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -350,7 +477,24 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     )
   }
 
-  return <MusicPlayer key={normalizedSrc} src={normalizedSrc} title={title.trim()} artist={artist.trim()} />
+  if (selectedAsset && (selectedAsset.processingStatus === 'pending' || selectedAsset.processingStatus === 'processing')) {
+    return (
+      <div className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light">
+        <LoaderCircle size={18} className="animate-spin" />
+        <p className="text-sm">Audio em processamento...</p>
+      </div>
+    )
+  }
+
+  return (
+    <MusicPlayer
+      key={`${resolvedSource}-${assetId || 'manual'}-${selectedAsset?.updatedAt ?? ''}`}
+      src={resolvedSource}
+      title={title.trim()}
+      artist={artist.trim()}
+      waveform={selectedAsset?.waveform}
+    />
+  )
 }
 
 function areMusicBlockPropsEqual(prev: BlockComponentProps, next: BlockComponentProps) {

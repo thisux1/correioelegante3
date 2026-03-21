@@ -149,6 +149,13 @@ export const assetCompleteSchema = z.object({
     .regex(/^[a-f\d]{24}$/i, 'assetId invalido'),
 });
 
+export const assetReprocessSchema = z.object({
+  assetId: z
+    .string({ required_error: 'assetId e obrigatorio' })
+    .min(1, 'assetId e obrigatorio')
+    .regex(/^[a-f\d]{24}$/i, 'assetId invalido'),
+});
+
 export const assetListQuerySchema = z.object({
   kind: z.enum(ASSET_KIND_VALUES).optional(),
 });
@@ -162,4 +169,5 @@ export type CreatePageInput = z.infer<typeof createPageSchema>;
 export type UpdatePageInput = z.infer<typeof updatePageSchema>;
 export type AssetUploadUrlInput = z.infer<typeof assetUploadUrlSchema>;
 export type AssetCompleteInput = z.infer<typeof assetCompleteSchema>;
+export type AssetReprocessInput = z.infer<typeof assetReprocessSchema>;
 export type AssetListQueryInput = z.infer<typeof assetListQuerySchema>;

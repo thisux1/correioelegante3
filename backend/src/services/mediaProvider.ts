@@ -24,8 +24,21 @@ export interface CompleteUploadResult {
   bytes?: number;
 }
 
+export interface ProcessAssetResult {
+  publicUrl?: string;
+  posterUrl?: string;
+  waveform?: number[];
+  durationMs?: number;
+  width?: number;
+  height?: number;
+  bytes?: number;
+}
+
 export interface MediaProvider {
   createUploadUrl(input: CreateUploadUrlInput): Promise<CreateUploadUrlResult>;
   completeUpload(storageKey: string): Promise<CompleteUploadResult>;
+  transcodeAsset(storageKey: string): Promise<ProcessAssetResult>;
+  generatePoster(storageKey: string): Promise<ProcessAssetResult>;
+  generateWaveform(storageKey: string): Promise<ProcessAssetResult>;
   deleteAsset(storageKey: string): Promise<void>;
 }

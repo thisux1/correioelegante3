@@ -37,8 +37,25 @@ vi.mock('../utils/prisma', () => ({
             findMany: vi.fn(),
             create: vi.fn(),
             update: vi.fn(),
+            updateMany: vi.fn(),
             delete: vi.fn(),
         },
+        mediaJob: {
+            findUnique: vi.fn(),
+            findFirst: vi.fn(),
+            findMany: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
+            updateMany: vi.fn(),
+        },
+        $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback({
+            mediaJob: {
+                update: vi.fn(),
+            },
+            asset: {
+                update: vi.fn(),
+            },
+        })),
     },
 }));
 

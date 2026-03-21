@@ -48,7 +48,7 @@ api.interceptors.response.use(
     const originalRequest = error.config
 
     // Auth routes return 401 for invalid credentials — don't treat them as expired sessions
-    const isAuthRoute = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'].some(
+    const isAuthRoute = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh', '/auth/login', '/auth/register', '/auth/refresh'].some(
       (path) => originalRequest.url?.includes(path)
     )
 

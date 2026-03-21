@@ -127,9 +127,15 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
     }
     case 'music':
       return {
+        assetId: asOptionalText(props.assetId),
         src: asText(props.src),
         title: asOptionalText(props.title),
         artist: asOptionalText(props.artist),
+      };
+    case 'video':
+      return {
+        assetId: asOptionalText(props.assetId),
+        src: asText(props.src),
       };
     default:
       return { ...props };

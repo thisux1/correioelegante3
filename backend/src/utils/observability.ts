@@ -29,7 +29,17 @@ export function logPageEvent(payload: PageEventPayload): void {
 }
 
 interface AssetEventPayload {
-  event: 'upload_url_requested' | 'upload_completed' | 'asset_list' | 'asset_delete';
+  event:
+    | 'upload_url_requested'
+    | 'upload_completed'
+    | 'asset_list'
+    | 'asset_delete'
+    | 'asset_reprocess'
+    | 'media_job_enqueued'
+    | 'media_job_started'
+    | 'media_job_success'
+    | 'media_job_failure'
+    ;
   userId: string;
   assetId?: string;
   kind?: string;

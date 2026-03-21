@@ -86,6 +86,7 @@ describe('POST /api/auth/login', () => {
             .send({ email: 'naoexiste@teste.com', password: 'Senha1234' });
 
         expect(res.status).toBe(401);
+        expect(res.body.code).toBe('AUTH_EMAIL_NOT_FOUND');
     });
 
     it('401 — senha incorreta', async () => {
@@ -98,6 +99,7 @@ describe('POST /api/auth/login', () => {
             .send({ email: 'test@correio.com', password: 'SenhaErrada' });
 
         expect(res.status).toBe(401);
+        expect(res.body.code).toBe('AUTH_INVALID_PASSWORD');
     });
 });
 

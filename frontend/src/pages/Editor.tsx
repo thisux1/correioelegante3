@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
-import { ArrowLeft } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { EditorCanvas } from '@/editor/components/EditorCanvas'
@@ -550,27 +549,14 @@ export function Editor() {
           </div>
         ) : null}
 
-        {mode === 'edit' ? (
-          <EditorToolbar
-            onSave={() => {
-              void savePage()
-            }}
-            isSaving={saveState === 'saving'}
-            hasPageId={hasPageId}
-            selectedThemeId={theme}
-          />
-        ) : (
-          <div className="mb-6 flex justify-end">
-            <button
-              type="button"
-              onClick={() => setMode('edit')}
-              className="inline-flex items-center gap-2 rounded-xl border border-primary/25 bg-white/85 px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-primary/10"
-            >
-              <ArrowLeft size={16} />
-              Voltar ao editor
-            </button>
-          </div>
-        )}
+        <EditorToolbar
+          onSave={() => {
+            void savePage()
+          }}
+          isSaving={saveState === 'saving'}
+          hasPageId={hasPageId}
+          selectedThemeId={theme}
+        />
 
         <AnimatePresence mode="wait" initial={false}>
           {isLoadingPage ? (

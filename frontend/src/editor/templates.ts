@@ -78,6 +78,14 @@ export function cloneTemplateBlocks(templateBlocks: Block[]): Block[] {
           props: cloneBlockProps(block),
           meta: nextMeta,
         }
+      case 'video':
+        return {
+          ...block,
+          id: generateBlockId(),
+          version: BLOCK_VERSION,
+          props: cloneBlockProps(block),
+          meta: nextMeta,
+        }
       default: {
         const exhaustiveTypeCheck: never = block
         return exhaustiveTypeCheck

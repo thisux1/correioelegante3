@@ -31,13 +31,49 @@ type LoginForm = z.infer<typeof loginSchema>
 type RegisterForm = z.infer<typeof registerSchema>
 interface ApiErrorResponse {
   error?: string
+  code?: string
 }
+
+type AuthApiErrorCode =
+  | 'AUTH_EMAIL_NOT_FOUND'
+  | 'AUTH_INVALID_PASSWORD'
+  | 'AUTH_EMAIL_ALREADY_REGISTERED'
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
   if (isAxiosError<ApiErrorResponse>(err)) {
+    const code = err.response?.data?.code
+    if (code === 'AUTH_EMAIL_NOT_FOUND') {
+      return 'Nao encontramos esse email. Confira o endereco ou crie sua conta.'
+    }
+
+    if (code === 'AUTH_INVALID_PASSWORD') {
+      return 'Senha incorreta. Verifique e tente novamente.'
+    }
+
+    if (code === 'AUTH_EMAIL_ALREADY_REGISTERED') {
+      return 'Este email ja esta cadastrado. Entre para continuar.'
+    }
+
     return err.response?.data?.error || fallback
   }
   return fallback
+}
+
+function getApiErrorCode(err: unknown): AuthApiErrorCode | undefined {
+  if (!isAxiosError<ApiErrorResponse>(err)) {
+    return undefined
+  }
+
+  const code = err.response?.data?.code
+  if (
+    code === 'AUTH_EMAIL_NOT_FOUND'
+    || code === 'AUTH_INVALID_PASSWORD'
+    || code === 'AUTH_EMAIL_ALREADY_REGISTERED'
+  ) {
+    return code
+  }
+
+  return undefined
 }
 
 export function Auth() {
@@ -59,11 +95,32 @@ export function Auth() {
   async function handleLogin(data: LoginForm) {
     setIsSubmitting(true)
     setError('')
+    loginForm.clearErrors()
     try {
       const response = await authService.login(data)
       setAuth(response.data.user, response.data.accessToken)
       navigate('/create')
     } catch (err: unknown) {
+      const code = getApiErrorCode(err)
+
+      if (code === 'AUTH_EMAIL_NOT_FOUND') {
+        loginForm.setError('email', {
+          type: 'server',
+          message: 'Este email nao esta cadastrado.',
+        })
+        setError('Nao encontramos esse email. Confira o endereco ou crie sua conta.')
+        return
+      }
+
+      if (code === 'AUTH_INVALID_PASSWORD') {
+        loginForm.setError('password', {
+          type: 'server',
+          message: 'Senha incorreta para este email.',
+        })
+        setError('Senha incorreta. Verifique e tente novamente.')
+        return
+      }
+
       setError(getApiErrorMessage(err, 'Erro ao fazer login'))
     } finally {
       setIsSubmitting(false)
@@ -73,6 +130,7 @@ export function Auth() {
   async function handleRegister(data: RegisterForm) {
     setIsSubmitting(true)
     setError('')
+    registerForm.clearErrors()
     try {
       const response = await authService.register({
         email: data.email,
@@ -81,7 +139,12 @@ export function Auth() {
       setAuth(response.data.user, response.data.accessToken)
       navigate('/create')
     } catch (err: unknown) {
-      if (isAxiosError(err) && err.response?.status === 409) {
+      const code = getApiErrorCode(err)
+      if ((isAxiosError(err) && err.response?.status === 409) || code === 'AUTH_EMAIL_ALREADY_REGISTERED') {
+        registerForm.setError('email', {
+          type: 'server',
+          message: 'Este email ja possui conta.',
+        })
         setError('Este email já está cadastrado. Faça login para continuar.')
         setMode('login')
       } else {
