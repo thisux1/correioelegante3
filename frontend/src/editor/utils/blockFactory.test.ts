@@ -17,7 +17,7 @@ describe('createBlock', () => {
     const block = createBlock('image')
 
     expect(block.type).toBe('image')
-    expect(block.props).toEqual({ src: '', alt: '' })
+    expect(block.props).toEqual({ src: '', assetId: undefined, alt: '' })
   })
 
   it('cria bloco de timer com label e targetDate', () => {
@@ -32,7 +32,7 @@ describe('createBlock', () => {
     const block = createBlock('gallery')
 
     expect(block.type).toBe('gallery')
-    expect(block.props).toEqual({ images: [], transition: 'fade' })
+    expect(block.props).toEqual({ images: [], items: [], transition: 'fade' })
   })
 
   it('cria bloco de musica com defaults', () => {
@@ -41,6 +41,8 @@ describe('createBlock', () => {
     expect(block.type).toBe('music')
     expect(block.props).toEqual({
       src: '',
+      coverSrc: '',
+      tracks: [],
       title: 'Nova musica',
       artist: '',
     })

@@ -21,7 +21,13 @@ export interface TextBlockProps {
 
 export interface ImageBlockProps {
   src: string
+  assetId?: string
   alt?: string
+}
+
+export interface GalleryItem {
+  src: string
+  assetId?: string
 }
 
 export interface TimerBlockProps {
@@ -31,12 +37,23 @@ export interface TimerBlockProps {
 
 export interface GalleryBlockProps {
   images: string[]
+  items?: GalleryItem[]
   transition?: 'fade' | 'slide'
 }
 
 export interface MusicBlockProps {
   assetId?: string
   src: string
+  coverSrc?: string
+  coverAssetId?: string
+  tracks?: Array<{
+    assetId?: string
+    src: string
+    title?: string
+    artist?: string
+    coverSrc?: string
+    coverAssetId?: string
+  }>
   title?: string
   artist?: string
 }

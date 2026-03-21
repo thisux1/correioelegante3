@@ -7,6 +7,9 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { InlineAlert } from '@/components/ui/InlineAlert'
+import { SectionCard } from '@/components/ui/SectionCard'
+import { SettingRow } from '@/components/ui/SettingRow'
 import { useAuthStore } from '@/store/authStore'
 import { useMessageStore } from '@/store/messageStore'
 import { messageService } from '@/services/messageService'
@@ -257,31 +260,26 @@ export function Profile() {
           </>
         ) : (
           <div className="space-y-6">
-            <Card glass className="p-6">
-              <h2 className="font-display text-xl font-semibold text-text mb-6">
-                Sua Conta
-              </h2>
-              <div className="flex items-center justify-between p-4 bg-white/40 rounded-xl mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex flex-shrink-0 items-center justify-center">
-                    <Mail size={20} className="text-primary-dark" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-text-muted mb-0.5">E-mail Cadastrado</p>
-                    <p className="font-medium text-text truncate">{user?.email}</p>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-                className="w-full sm:w-auto text-text-light hover:text-text hover:bg-white/60"
-              >
-                <LogOut size={16} className="mr-2" />
-                Sair da Conta
-              </Button>
-            </Card>
+            <SectionCard
+              title="Sua Conta"
+              description="Gerencie seus dados e sessoes com uma interface consistente."
+            >
+              <SettingRow
+                icon={<Mail size={18} />}
+                label="E-mail cadastrado"
+                value={user?.email}
+                action={(
+                  <Button
+                    variant="outline"
+                    onClick={handleLogout}
+                    className="w-full sm:w-auto text-text-light hover:text-text hover:bg-white/60"
+                  >
+                    <LogOut size={16} className="mr-2" />
+                    Sair da Conta
+                  </Button>
+                )}
+              />
+            </SectionCard>
 
             <Card glass className="overflow-hidden">
               <button
@@ -345,12 +343,8 @@ export function Profile() {
                           required
                         />
 
-                        {passwordError && (
-                          <p className="text-sm text-red-500">{passwordError}</p>
-                        )}
-                        {passwordSuccess && (
-                          <p className="text-sm text-emerald-500">{passwordSuccess}</p>
-                        )}
+                         {passwordError ? <InlineAlert tone="danger">{passwordError}</InlineAlert> : null}
+                         {passwordSuccess ? <InlineAlert tone="success">{passwordSuccess}</InlineAlert> : null}
 
                         <div className="pt-2">
                           <Button type="submit" disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword}>
@@ -364,11 +358,10 @@ export function Profile() {
               </AnimatePresence>
             </Card>
 
-            <Card glass className="p-6 border-red-200/50 bg-red-50/30">
-              <h2 className="font-display text-xl font-semibold text-red-600 flex items-center gap-2 mb-2">
+            <SectionCard title="Zona de Perigo" className="border-red-200/50 bg-red-50/30">
+              <div className="mb-2 flex items-center gap-2 text-red-600">
                 <AlertTriangle size={20} />
-                Zona de Perigo
-              </h2>
+              </div>
               <p className="text-text-light text-sm mb-4">
                 A exclusão da conta é permanente e não pode ser desfeita.
                 Todos os seus correios elegantes serão apagados.
@@ -380,7 +373,7 @@ export function Profile() {
               >
                 Excluir Minha Conta
               </Button>
-            </Card>
+            </SectionCard>
 
             <Modal
               isOpen={isDeleteModalOpen}
@@ -401,9 +394,7 @@ export function Profile() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {deleteAccountError && (
-                    <p className="text-sm text-red-500 text-center">{deleteAccountError}</p>
-                  )}
+                  {deleteAccountError ? <InlineAlert tone="danger" className="text-center">{deleteAccountError}</InlineAlert> : null}
                   <Button
                     variant="outline"
                     className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
