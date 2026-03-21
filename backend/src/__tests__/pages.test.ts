@@ -130,6 +130,76 @@ describe('POST /api/pages', () => {
     expect(res.status).toBe(201);
     expect(res.body.page.content.theme).toBe('romantic-sunset');
   });
+
+  it('preserva novos campos de midia no payload sanitizado', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'm1',
+              type: 'music',
+              version: 1,
+              props: {
+                src: 'https://cdn.example.com/audio.mp3',
+                coverSrc: 'https://cdn.example.com/cover.jpg',
+                coverAssetId: '507f1f77bcf86cd799439120',
+                tracks: [{ src: 'https://cdn.example.com/audio.mp3' }],
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+            {
+              id: 'g1',
+              type: 'gallery',
+              version: 1,
+              props: {
+                images: ['https://cdn.example.com/g1.jpg'],
+                items: [{ src: 'https://cdn.example.com/g1.jpg', assetId: '507f1f77bcf86cd799439121' }],
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+            {
+              id: 'i1',
+              type: 'image',
+              version: 1,
+              props: {
+                src: 'https://cdn.example.com/pic.jpg',
+                assetId: '507f1f77bcf86cd799439122',
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          theme: 'romantic-sunset',
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(201);
+    const createCall = vi.mocked(prisma.page.create).mock.calls.at(0);
+    const payload = (createCall?.[0] as { data?: { content?: unknown } })?.data?.content as {
+      blocks: Array<{ type: string; props: Record<string, unknown> }>;
+    };
+    const musicBlock = payload.blocks.find((item) => item.type === 'music');
+    const galleryBlock = payload.blocks.find((item) => item.type === 'gallery');
+    const imageBlock = payload.blocks.find((item) => item.type === 'image');
+
+    expect(musicBlock?.props).toMatchObject({
+      coverSrc: 'https://cdn.example.com/cover.jpg',
+      coverAssetId: '507f1f77bcf86cd799439120',
+    });
+    expect(galleryBlock?.props).toMatchObject({
+      images: ['https://cdn.example.com/g1.jpg'],
+      items: [{ src: 'https://cdn.example.com/g1.jpg', assetId: '507f1f77bcf86cd799439121' }],
+    });
+    expect(imageBlock?.props).toMatchObject({
+      src: 'https://cdn.example.com/pic.jpg',
+      assetId: '507f1f77bcf86cd799439122',
+    });
+  });
 });
 
 describe('PUT /api/pages/:id', () => {

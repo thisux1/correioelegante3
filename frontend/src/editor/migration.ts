@@ -21,6 +21,36 @@ function asText(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
 
+function asOptionalText(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const normalized = value.trim()
+  return normalized.length > 0 ? normalized : undefined
+}
+
+function asGalleryItems(value: unknown): Array<{ src: string; assetId?: string }> {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<Array<{ src: string; assetId?: string }>>((accumulator, item) => {
+    const record = asRecord(item)
+    const src = asText(record.src)
+    if (!src) {
+      return accumulator
+    }
+
+    accumulator.push({
+      src,
+      assetId: asOptionalText(record.assetId),
+    })
+
+    return accumulator
+  }, [])
+}
+
 function asTimestamp(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return Math.max(0, Math.trunc(value))
@@ -74,6 +104,7 @@ function migrateBlock(input: unknown, index: number): Block {
         ...base,
         type: 'image',
         props: {
+          assetId: typeof props.assetId === 'string' ? props.assetId : undefined,
           src: asText(props.src),
           alt: typeof props.alt === 'string' ? props.alt : '',
         },
@@ -88,15 +119,24 @@ function migrateBlock(input: unknown, index: number): Block {
         },
       }
     case 'gallery':
+      {
+        const legacyImages = Array.isArray(props.images)
+          ? props.images.filter((item): item is string => typeof item === 'string')
+          : []
+        const items = asGalleryItems(props.items)
+        const mergedItems = items.length > 0
+          ? items
+          : legacyImages.map((src) => ({ src }))
+
       return {
         ...base,
         type: 'gallery',
         props: {
-          images: Array.isArray(props.images)
-            ? props.images.filter((item): item is string => typeof item === 'string')
-            : [],
+          images: mergedItems.map((item) => item.src),
+          items: mergedItems,
           transition: props.transition === 'slide' ? 'slide' : 'fade',
         },
+      }
       }
     case 'music':
       return {
@@ -105,6 +145,35 @@ function migrateBlock(input: unknown, index: number): Block {
         props: {
           assetId: typeof props.assetId === 'string' ? props.assetId : undefined,
           src: asText(props.src),
+          coverSrc: typeof props.coverSrc === 'string' ? props.coverSrc : '',
+          coverAssetId: typeof props.coverAssetId === 'string' ? props.coverAssetId : undefined,
+          tracks: Array.isArray(props.tracks)
+            ? props.tracks.reduce<Array<{
+              src: string
+              assetId?: string
+              title?: string
+              artist?: string
+              coverSrc?: string
+              coverAssetId?: string
+            }>>((accumulator, track) => {
+              const trackRecord = asRecord(track)
+              const trackSrc = asText(trackRecord.src)
+              if (!trackSrc) {
+                return accumulator
+              }
+
+              accumulator.push({
+                src: trackSrc,
+                assetId: asOptionalText(trackRecord.assetId),
+                title: asOptionalText(trackRecord.title),
+                artist: asOptionalText(trackRecord.artist),
+                coverSrc: asOptionalText(trackRecord.coverSrc),
+                coverAssetId: asOptionalText(trackRecord.coverAssetId),
+              })
+
+              return accumulator
+            }, [])
+            : [],
           title: typeof props.title === 'string' ? props.title : 'Nova musica',
           artist: typeof props.artist === 'string' ? props.artist : '',
         },

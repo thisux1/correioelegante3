@@ -1,86 +1,55 @@
 import { memo, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowDown, ArrowUp, ImagePlus, X } from 'lucide-react'
-import type { BlockComponentProps } from '@/editor/types'
+import { ArrowDown, ArrowUp, X } from 'lucide-react'
+import type { BlockComponentProps, GalleryItem } from '@/editor/types'
+import { MediaField } from '@/editor/components/MediaField'
 
 const MAX_GALLERY_IMAGES = 10
 
+function normalizeItems(items: GalleryItem[]): GalleryItem[] {
+  const uniqueItems: GalleryItem[] = []
+  const seen = new Set<string>()
+
+  for (const item of items) {
+    const normalizedSrc = item.src.trim()
+    if (!normalizedSrc || seen.has(normalizedSrc)) {
+      continue
+    }
+
+    seen.add(normalizedSrc)
+    uniqueItems.push({
+      src: normalizedSrc,
+      assetId: item.assetId,
+    })
+
+    if (uniqueItems.length >= MAX_GALLERY_IMAGES) {
+      break
+    }
+  }
+
+  return uniqueItems
+}
+
 function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const isGalleryBlock = block.type === 'gallery'
-  const [draftUrl, setDraftUrl] = useState('')
+
   const [activeIndex, setActiveIndex] = useState(0)
 
-  const images = useMemo(
-    () => {
-      if (!isGalleryBlock) {
-        return []
-      }
+  const items = useMemo(() => {
+    if (!isGalleryBlock) {
+      return []
+    }
+    const directItems = Array.isArray(block.props.items) ? block.props.items : []
+    if (directItems.length > 0) {
+      return normalizeItems(directItems)
+    }
+    return normalizeItems((block.props.images ?? []).map((src) => ({ src })))
+  }, [block, isGalleryBlock])
 
-      const uniqueImages: string[] = []
-      const seen = new Set<string>()
-
-      for (const rawImage of block.props.images) {
-        const normalized = rawImage.trim()
-        if (!normalized || seen.has(normalized)) {
-          continue
-        }
-
-        seen.add(normalized)
-        uniqueImages.push(normalized)
-
-        if (uniqueImages.length >= MAX_GALLERY_IMAGES) {
-          break
-        }
-      }
-
-      return uniqueImages
-    },
-    [block.props, isGalleryBlock],
-  )
   const transition = isGalleryBlock ? block.props.transition ?? 'fade' : 'fade'
 
-  useEffect(() => {
-    if (mode !== 'preview' || images.length <= 1) {
-      return
-    }
-
-    const intervalId = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % images.length)
-    }, 3500)
-
-    return () => {
-      window.clearInterval(intervalId)
-    }
-  }, [images.length, mode])
-
-  if (!isGalleryBlock) {
-    return null
-  }
-
-  const normalizeImages = (inputImages: string[]) => {
-    const nextUnique: string[] = []
-    const seen = new Set<string>()
-
-    for (const image of inputImages) {
-      const normalized = image.trim()
-      if (!normalized || seen.has(normalized)) {
-        continue
-      }
-
-      seen.add(normalized)
-      nextUnique.push(normalized)
-
-      if (nextUnique.length >= MAX_GALLERY_IMAGES) {
-        break
-      }
-    }
-
-    return nextUnique
-  }
-
-  const updateImages = (nextImages: string[]) => {
-    const normalizedImages = normalizeImages(nextImages)
-
+  const updateItems = (nextItems: GalleryItem[]) => {
+    const normalizedItems = normalizeItems(nextItems)
     onUpdate?.((currentBlock) => {
       if (currentBlock.type !== 'gallery') {
         return currentBlock
@@ -90,10 +59,29 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         ...currentBlock,
         props: {
           ...currentBlock.props,
-          images: normalizedImages,
+          items: normalizedItems,
+          images: normalizedItems.map((item) => item.src),
         },
       }
     })
+  }
+
+  useEffect(() => {
+    if (mode !== 'preview' || items.length <= 1) {
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % items.length)
+    }, 3500)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [items.length, mode])
+
+  if (!isGalleryBlock) {
+    return null
   }
 
   if (mode === 'edit') {
@@ -101,35 +89,23 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-text">Galeria</p>
-          <span className="text-xs text-text-light">{images.length}/{MAX_GALLERY_IMAGES}</span>
+          <span className="text-xs text-text-light">{items.length}/{MAX_GALLERY_IMAGES}</span>
         </div>
 
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={draftUrl}
-            onChange={(event) => setDraftUrl(event.target.value)}
-            placeholder="https://..."
-            className="flex-1 rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              const normalized = draftUrl.trim()
-              if (!normalized || images.length >= MAX_GALLERY_IMAGES || images.includes(normalized)) {
-                return
-              }
+        <button
+          type="button"
+          onClick={() => {
+            if (items.length >= MAX_GALLERY_IMAGES) {
+              return
+            }
 
-              updateImages([...images, normalized])
-              setDraftUrl('')
-            }}
-            disabled={images.length >= MAX_GALLERY_IMAGES}
-            className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <ImagePlus size={14} />
-            Adicionar
-          </button>
-        </div>
+            updateItems([...items, { src: '' }])
+          }}
+          className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+          disabled={items.length >= MAX_GALLERY_IMAGES}
+        >
+          Adicionar item de galeria
+        </button>
 
         <div>
           <label className="mb-1 block text-xs font-medium text-text-light">Transicao</label>
@@ -158,46 +134,55 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           </select>
         </div>
 
-        {images.length === 0 ? (
+        {items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-primary/30 bg-white/70 p-4 text-center text-sm text-text-light">
-            Adicione URLs para montar o slideshow.
+            Adicione itens para montar o slideshow.
           </div>
         ) : (
           <motion.ul layout className="space-y-2">
             <AnimatePresence initial={false}>
-            {images.map((image, index) => (
-              <motion.li
-                key={image}
-                layout
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.18, layout: { type: 'spring', stiffness: 420, damping: 34 } }}
-                className="rounded-xl border border-primary/15 bg-white/80 p-2"
-              >
-                <div className="flex items-center gap-2">
-                  <img
-                    src={image}
-                    alt={`Miniatura ${index + 1}`}
-                    loading="lazy"
-                    className="h-14 w-14 rounded-md border border-primary/15 object-cover"
+              {items.map((item, index) => (
+                <motion.li
+                  key={`${item.src}-${index}`}
+                  layout
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18, layout: { type: 'spring', stiffness: 420, damping: 34 } }}
+                  className="rounded-xl border border-primary/15 bg-white/80 p-2"
+                >
+                  <MediaField
+                    kind="image"
+                    label={`Imagem ${index + 1}`}
+                    value={{ src: item.src, assetId: item.assetId }}
+                    onChange={(nextValue) => {
+                      const updated = [...items]
+                      updated[index] = {
+                        src: nextValue.src,
+                        assetId: nextValue.assetId,
+                      }
+                      updateItems(updated)
+                    }}
+                    onRemove={() => {
+                      updateItems(items.filter((_, currentIndex) => currentIndex !== index))
+                    }}
+                    helperText="Upload direto ou URL manual para item da galeria."
                   />
-                  <p className="min-w-0 flex-1 truncate text-xs text-text-light">{image}</p>
-                  <div className="flex gap-1">
+
+                  <div className="mt-2 flex gap-1">
                     <button
                       type="button"
                       onClick={() => {
                         if (index === 0) {
                           return
                         }
-
-                        const reordered = [...images]
+                        const reordered = [...items]
                         const [moved] = reordered.splice(index, 1)
                         if (!moved) {
                           return
                         }
                         reordered.splice(index - 1, 0, moved)
-                        updateImages(reordered)
+                        updateItems(reordered)
                       }}
                       disabled={index === 0}
                       className="rounded-md border border-primary/20 p-1 text-text-light transition-colors hover:bg-primary/10 disabled:opacity-40"
@@ -208,19 +193,18 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        if (index === images.length - 1) {
+                        if (index === items.length - 1) {
                           return
                         }
-
-                        const reordered = [...images]
+                        const reordered = [...items]
                         const [moved] = reordered.splice(index, 1)
                         if (!moved) {
                           return
                         }
                         reordered.splice(index + 1, 0, moved)
-                        updateImages(reordered)
+                        updateItems(reordered)
                       }}
-                      disabled={index === images.length - 1}
+                      disabled={index === items.length - 1}
                       className="rounded-md border border-primary/20 p-1 text-text-light transition-colors hover:bg-primary/10 disabled:opacity-40"
                       aria-label="Mover imagem para baixo"
                     >
@@ -228,18 +212,15 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        updateImages(images.filter((_, currentIndex) => currentIndex !== index))
-                      }}
+                      onClick={() => updateItems(items.filter((_, currentIndex) => currentIndex !== index))}
                       className="rounded-md border border-red-200 p-1 text-red-500 transition-colors hover:bg-red-50"
                       aria-label="Remover imagem"
                     >
                       <X size={14} />
                     </button>
                   </div>
-                </div>
-              </motion.li>
-            ))}
+                </motion.li>
+              ))}
             </AnimatePresence>
           </motion.ul>
         )}
@@ -247,7 +228,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     )
   }
 
-  if (images.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-8 text-center text-sm text-text-light">
         Galeria vazia. Adicione imagens no modo de edicao.
@@ -255,11 +236,11 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     )
   }
 
-  const resolvedActiveIndex = activeIndex % images.length
+  const resolvedActiveIndex = activeIndex % items.length
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-white/80">
       <div className="relative h-[280px] w-full sm:h-[360px]">
-        {images.map((image, index) => {
+        {items.map((item, index) => {
           const isActive = index === resolvedActiveIndex
           const transitionClass = transition === 'slide'
             ? isActive
@@ -273,8 +254,8 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
           return (
             <img
-              key={image}
-              src={image}
+              key={`${item.src}-${index}`}
+              src={item.src}
               alt={`Imagem ${index + 1}`}
               loading="lazy"
               className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ${transitionClass}`}
@@ -284,7 +265,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       </div>
 
       <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1 rounded-full bg-black/35 px-2 py-1">
-        {images.map((_, index) => (
+        {items.map((_, index) => (
           <button
             key={index}
             type="button"

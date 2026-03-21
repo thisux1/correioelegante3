@@ -44,6 +44,7 @@ export function createBlock(type: BlockType): Block {
         version: BLOCK_VERSION,
         props: {
           src: '',
+          assetId: undefined,
           alt: '',
         },
         meta: {
@@ -72,6 +73,7 @@ export function createBlock(type: BlockType): Block {
         version: BLOCK_VERSION,
         props: {
           images: [],
+          items: [],
           transition: 'fade',
         },
         meta: {
@@ -86,6 +88,8 @@ export function createBlock(type: BlockType): Block {
         version: BLOCK_VERSION,
         props: {
           src: '',
+          coverSrc: '',
+          tracks: [],
           title: 'Nova musica',
           artist: '',
         },

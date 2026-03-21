@@ -67,8 +67,12 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       const src = typeof props.src === 'string'
         ? ensureSafeUrl(props.src, 'URL da imagem')
         : '';
+      const assetId = typeof props.assetId === 'string' && /^[a-f\d]{24}$/i.test(props.assetId)
+        ? props.assetId
+        : undefined;
       const alt = typeof props.alt === 'string' ? sanitizeText(props.alt) : undefined;
       return {
+        assetId,
         src,
         alt,
       };
@@ -87,8 +91,33 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
           .map((url) => ensureSafeUrl(url, 'URL da galeria'))
           .slice(0, 10)
         : [];
+      const items = Array.isArray(props.items)
+        ? props.items
+          .reduce<Array<{ src: string; assetId?: string }>>((accumulator, item) => {
+            if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+              return accumulator;
+            }
+
+            const itemRecord = item as UnknownRecord;
+            if (typeof itemRecord.src !== 'string') {
+              return accumulator;
+            }
+
+            const src = ensureSafeUrl(itemRecord.src, 'URL da galeria');
+            accumulator.push({
+              src,
+              assetId: typeof itemRecord.assetId === 'string' && /^[a-f\d]{24}$/i.test(itemRecord.assetId)
+                ? itemRecord.assetId
+                : undefined,
+            });
+
+            return accumulator;
+          }, [])
+          .slice(0, 10)
+        : images.map((src) => ({ src }));
       return {
-        images,
+        images: items.map((item) => item.src),
+        items,
         transition: props.transition === 'slide' ? 'slide' : 'fade',
       };
     }
@@ -99,11 +128,56 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       const assetId = typeof props.assetId === 'string' && /^[a-f\d]{24}$/i.test(props.assetId)
         ? props.assetId
         : undefined;
+      const coverSrc = typeof props.coverSrc === 'string'
+        ? ensureSafeUrl(props.coverSrc, 'URL da capa')
+        : '';
+      const coverAssetId = typeof props.coverAssetId === 'string' && /^[a-f\d]{24}$/i.test(props.coverAssetId)
+        ? props.coverAssetId
+        : undefined;
+      const tracks = Array.isArray(props.tracks)
+        ? props.tracks
+          .reduce<Array<{
+            src: string;
+            assetId?: string;
+            title?: string;
+            artist?: string;
+            coverSrc?: string;
+            coverAssetId?: string;
+          }>>((accumulator, item) => {
+            if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+              return accumulator;
+            }
+
+            const track = item as UnknownRecord;
+            if (typeof track.src !== 'string') {
+              return accumulator;
+            }
+
+            accumulator.push({
+              src: ensureSafeUrl(track.src, 'URL da musica'),
+              assetId: typeof track.assetId === 'string' && /^[a-f\d]{24}$/i.test(track.assetId)
+                ? track.assetId
+                : undefined,
+              title: typeof track.title === 'string' ? sanitizeText(track.title) : undefined,
+              artist: typeof track.artist === 'string' ? sanitizeText(track.artist) : undefined,
+              coverSrc: typeof track.coverSrc === 'string' ? ensureSafeUrl(track.coverSrc, 'URL da capa') : undefined,
+              coverAssetId: typeof track.coverAssetId === 'string' && /^[a-f\d]{24}$/i.test(track.coverAssetId)
+                ? track.coverAssetId
+                : undefined,
+            });
+
+            return accumulator;
+          }, [])
+          .slice(0, 30)
+        : [];
       const title = typeof props.title === 'string' ? sanitizeText(props.title) : undefined;
       const artist = typeof props.artist === 'string' ? sanitizeText(props.artist) : undefined;
       return {
         assetId,
         src,
+        coverSrc,
+        coverAssetId,
+        tracks,
         title,
         artist,
       };

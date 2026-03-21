@@ -90,6 +90,27 @@ function asStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string');
 }
 
+function asGalleryItems(value: unknown): Array<{ src: string; assetId?: string }> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.reduce<Array<{ src: string; assetId?: string }>>((accumulator, item) => {
+    const record = asRecord(item);
+    const src = asText(record.src);
+    if (!src) {
+      return accumulator;
+    }
+
+    accumulator.push({
+      src,
+      assetId: asOptionalText(record.assetId),
+    });
+
+    return accumulator;
+  }, []);
+}
+
 function asBlockType(value: unknown): SupportedBlockType {
   if (typeof value === 'string' && (BLOCK_TYPE_VALUES as readonly string[]).includes(value)) {
     return value as SupportedBlockType;
@@ -110,6 +131,7 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
     }
     case 'image':
       return {
+        assetId: asOptionalText(props.assetId),
         src: asText(props.src),
         alt: asOptionalText(props.alt),
       };
@@ -120,8 +142,14 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       };
     case 'gallery': {
       const transition = props.transition === 'slide' ? 'slide' : 'fade';
+      const legacyImages = asStringArray(props.images);
+      const items = asGalleryItems(props.items);
+      const mergedItems = items.length > 0
+        ? items
+        : legacyImages.map((src) => ({ src }));
       return {
-        images: asStringArray(props.images),
+        images: mergedItems.map((item) => item.src),
+        items: mergedItems,
         transition,
       };
     }
@@ -129,6 +157,34 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       return {
         assetId: asOptionalText(props.assetId),
         src: asText(props.src),
+        coverSrc: asOptionalText(props.coverSrc),
+        coverAssetId: asOptionalText(props.coverAssetId),
+        tracks: Array.isArray(props.tracks)
+          ? props.tracks.reduce<Array<{
+            src: string;
+            assetId?: string;
+            title?: string;
+            artist?: string;
+            coverSrc?: string;
+            coverAssetId?: string;
+          }>>((accumulator, track) => {
+            const record = asRecord(track);
+            const src = asText(record.src);
+            if (!src) {
+              return accumulator;
+            }
+
+            accumulator.push({
+              src,
+              assetId: asOptionalText(record.assetId),
+              title: asOptionalText(record.title),
+              artist: asOptionalText(record.artist),
+              coverSrc: asOptionalText(record.coverSrc),
+              coverAssetId: asOptionalText(record.coverAssetId),
+            });
+            return accumulator;
+          }, [])
+          : [],
         title: asOptionalText(props.title),
         artist: asOptionalText(props.artist),
       };

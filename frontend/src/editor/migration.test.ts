@@ -39,9 +39,13 @@ describe('migratePage', () => {
     })
 
     expect(migrated.blocks[0].type).toBe('gallery')
-    expect(migrated.blocks[0].props).toEqual({ images: ['a'], transition: 'fade' })
+    expect(migrated.blocks[0].props).toEqual({
+      images: ['a'],
+      items: [{ src: 'a' }],
+      transition: 'fade',
+    })
     expect(migrated.blocks[1].type).toBe('image')
-    expect(migrated.blocks[1].props).toEqual({ src: 'https://a', alt: '' })
+    expect(migrated.blocks[1].props).toEqual({ assetId: undefined, src: 'https://a', alt: '' })
     expect(migrated.theme).toBe('ocean-breeze')
   })
 
@@ -56,6 +60,14 @@ describe('migratePage', () => {
     expect(migrated.blocks[0].type).toBe('video')
     expect(migrated.blocks[0].props).toEqual({ assetId: 'a1', src: 'https://cdn/video.mp4' })
     expect(migrated.blocks[1].type).toBe('music')
-    expect(migrated.blocks[1].props).toEqual({ assetId: 'a2', src: 'https://cdn/audio.mp3', title: 'x', artist: '' })
+    expect(migrated.blocks[1].props).toEqual({
+      assetId: 'a2',
+      src: 'https://cdn/audio.mp3',
+      coverSrc: '',
+      coverAssetId: undefined,
+      tracks: [],
+      title: 'x',
+      artist: '',
+    })
   })
 })
