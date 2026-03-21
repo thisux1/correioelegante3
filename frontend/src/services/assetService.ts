@@ -14,12 +14,16 @@ export interface AssetSummary {
   source: string
   storageKey: string
   publicUrl: string | null
+  posterUrl: string | null
+  waveform: number[] | null
   mimeType: string
   sizeBytes: number
   width: number | null
   height: number | null
   durationMs: number | null
   processingStatus: AssetProcessingStatus
+  errorCode: string | null
+  errorMessage: string | null
   moderationStatus: AssetModerationStatus
   createdAt: string
   updatedAt: string
@@ -92,6 +96,15 @@ async function uploadFileToProvider(file: File, payload: UploadUrlPayload['uploa
 }
 
 export const assetService = {
+  normalizeAsset(asset: AssetSummary): AssetSummary {
+    return {
+      ...asset,
+      waveform: Array.isArray(asset.waveform)
+        ? asset.waveform.filter((point): point is number => typeof point === 'number' && Number.isFinite(point))
+        : null,
+    }
+  },
+
   async uploadFileFlow(params: UploadFileFlowParams): Promise<AssetSummary> {
     ensureMediaUploadEnabled()
 
@@ -121,7 +134,7 @@ export const assetService = {
         detail: completePayload.asset.kind,
       })
 
-      return completePayload.asset
+      return assetService.normalizeAsset(completePayload.asset)
     } catch (error) {
       const backendMessage = isAxiosError<{ error?: string; code?: string }>(error)
         ? error.response?.data?.error ?? error.response?.data?.code
@@ -138,10 +151,36 @@ export const assetService = {
 
   list(kind?: AssetKind) {
     return api.get<{ assets: AssetSummary[] }>('/assets', { params: kind ? { kind } : undefined })
+      .then((response) => ({
+        ...response,
+        data: {
+          assets: response.data.assets.map((asset) => assetService.normalizeAsset(asset)),
+        },
+      }))
+  },
+
+  reprocess(assetId: string) {
+    return api.post<{ asset: AssetSummary }>('/assets/reprocess', { assetId })
+      .then((response) => ({
+        ...response,
+        data: {
+          asset: assetService.normalizeAsset(response.data.asset),
+        },
+      }))
+  },
+
+  processPending(limit = 10) {
+    return api.post<{ processed: number }>('/assets/process-pending', { limit })
   },
 
   getById(id: string) {
     return api.get<{ asset: AssetSummary }>(`/assets/${id}`)
+      .then((response) => ({
+        ...response,
+        data: {
+          asset: assetService.normalizeAsset(response.data.asset),
+        },
+      }))
   },
 
   delete(id: string) {

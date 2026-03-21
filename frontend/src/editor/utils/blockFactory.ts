@@ -17,6 +17,7 @@ export function createBlock(type: 'image'): Extract<Block, { type: 'image' }>
 export function createBlock(type: 'timer'): Extract<Block, { type: 'timer' }>
 export function createBlock(type: 'gallery'): Extract<Block, { type: 'gallery' }>
 export function createBlock(type: 'music'): Extract<Block, { type: 'music' }>
+export function createBlock(type: 'video'): Extract<Block, { type: 'video' }>
 export function createBlock(type: BlockType): Block
 export function createBlock(type: BlockType): Block {
   const now = Date.now()
@@ -87,6 +88,19 @@ export function createBlock(type: BlockType): Block {
           src: '',
           title: 'Nova musica',
           artist: '',
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'video':
+      return {
+        id: generateBlockId(),
+        type: 'video',
+        version: BLOCK_VERSION,
+        props: {
+          src: '',
         },
         meta: {
           createdAt: now,

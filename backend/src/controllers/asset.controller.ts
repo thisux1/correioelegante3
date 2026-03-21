@@ -121,6 +121,42 @@ export async function listAssets(req: AuthRequest, res: Response): Promise<void>
   }
 }
 
+export async function reprocessAsset(req: AuthRequest, res: Response): Promise<void> {
+  const startedAt = Date.now();
+
+  try {
+    const asset = await assetService.reprocessAsset({
+      userId: req.userId!,
+      assetId: req.body.assetId,
+    });
+
+    logAssetEvent({
+      event: 'asset_reprocess',
+      userId: req.userId!,
+      assetId: asset.id,
+      kind: asset.kind,
+      durationMs: Date.now() - startedAt,
+      result: 'success',
+      statusCode: 200,
+    });
+
+    res.json({ asset });
+  } catch (error) {
+    const appError = error instanceof AppError ? error : undefined;
+    logAssetEvent({
+      event: 'asset_reprocess',
+      userId: req.userId!,
+      assetId: req.body.assetId,
+      durationMs: Date.now() - startedAt,
+      result: 'error',
+      statusCode: appError?.statusCode,
+      code: appError?.code,
+    });
+    throw error;
+  }
+}
+
+
 export async function getAsset(req: AuthRequest, res: Response): Promise<void> {
   const asset = await assetService.getAssetById(req.userId!, req.params.id as string);
   res.json({ asset });

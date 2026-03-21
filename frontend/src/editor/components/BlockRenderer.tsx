@@ -5,6 +5,7 @@ import { ImageBlock } from '@/editor/blocks/ImageBlock'
 import { TimerBlock } from '@/editor/blocks/TimerBlock'
 import { GalleryBlock } from '@/editor/blocks/GalleryBlock'
 import { MusicBlock } from '@/editor/blocks/MusicBlock'
+import { VideoBlock } from '@/editor/blocks/VideoBlock'
 
 interface BlockRendererProps {
   block: Block
@@ -18,6 +19,7 @@ const blockMap: BlockMap = {
   timer: TimerBlock,
   gallery: GalleryBlock,
   music: MusicBlock,
+  video: VideoBlock,
 }
 
 function renderFallback(block: Block) {

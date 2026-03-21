@@ -6,7 +6,7 @@ export const PAGE_VISIBILITY_VALUES = ['public', 'private', 'unlisted'] as const
 export type PageStatus = (typeof PAGE_STATUS_VALUES)[number]
 export type PageVisibility = (typeof PAGE_VISIBILITY_VALUES)[number]
 
-export type BlockType = 'text' | 'image' | 'timer' | 'gallery' | 'music'
+export type BlockType = 'text' | 'image' | 'timer' | 'gallery' | 'music' | 'video'
 export type EditorMode = 'edit' | 'preview'
 
 export interface BlockMeta {
@@ -35,9 +35,15 @@ export interface GalleryBlockProps {
 }
 
 export interface MusicBlockProps {
+  assetId?: string
   src: string
   title?: string
   artist?: string
+}
+
+export interface VideoBlockProps {
+  assetId?: string
+  src: string
 }
 
 export interface BlockPropsByType {
@@ -46,6 +52,7 @@ export interface BlockPropsByType {
   timer: TimerBlockProps
   gallery: GalleryBlockProps
   music: MusicBlockProps
+  video: VideoBlockProps
 }
 
 interface BlockBase<TType extends BlockType> {

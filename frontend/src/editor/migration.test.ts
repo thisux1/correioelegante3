@@ -44,4 +44,18 @@ describe('migratePage', () => {
     expect(migrated.blocks[1].props).toEqual({ src: 'https://a', alt: '' })
     expect(migrated.theme).toBe('ocean-breeze')
   })
+
+  it('preserva props de video e assetId em musica', () => {
+    const migrated = migratePage({
+      blocks: [
+        { id: 'v1', type: 'video', props: { assetId: 'a1', src: 'https://cdn/video.mp4' }, meta: {} },
+        { id: 'm1', type: 'music', props: { assetId: 'a2', src: 'https://cdn/audio.mp3', title: 'x' }, meta: {} },
+      ],
+    })
+
+    expect(migrated.blocks[0].type).toBe('video')
+    expect(migrated.blocks[0].props).toEqual({ assetId: 'a1', src: 'https://cdn/video.mp4' })
+    expect(migrated.blocks[1].type).toBe('music')
+    expect(migrated.blocks[1].props).toEqual({ assetId: 'a2', src: 'https://cdn/audio.mp3', title: 'x', artist: '' })
+  })
 })

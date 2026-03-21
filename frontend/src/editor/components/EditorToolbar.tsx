@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import {
   Check,
   Eye,
@@ -11,6 +12,7 @@ import {
   Plus,
   Save,
   Timer,
+  Video,
   Type,
 } from 'lucide-react'
 import { MAX_BLOCKS, type BlockType } from '@/editor/types'
@@ -18,7 +20,7 @@ import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
 import { getThemeById, resolveThemeId, themeCatalog } from '@/editor/themes'
 
-type AvailableBlockType = Extract<BlockType, 'text' | 'image' | 'timer' | 'gallery' | 'music'>
+type AvailableBlockType = Extract<BlockType, 'text' | 'image' | 'timer' | 'gallery' | 'music' | 'video'>
 
 interface AddBlockOption {
   type: AvailableBlockType
@@ -32,9 +34,11 @@ const addBlockOptions: AddBlockOption[] = [
   { type: 'timer', label: 'Timer', icon: Timer },
   { type: 'gallery', label: 'Galeria', icon: Images },
   { type: 'music', label: 'Musica', icon: Music2 },
+  { type: 'video', label: 'Video', icon: Video },
 ]
 
 interface ToolbarControlsProps {
+  isMobile: boolean
   mode: 'edit' | 'preview'
   blocksCount: number
   isAddMenuOpen: boolean
@@ -69,8 +73,8 @@ function AddMenu({
 
   const positionClassName =
     placement === 'up'
-      ? 'absolute bottom-full left-0 z-30 mb-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl backdrop-blur-sm'
-      : 'absolute left-0 top-full z-30 mt-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl backdrop-blur-sm'
+      ? 'absolute bottom-full left-0 z-30 mb-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      : 'absolute left-0 top-full z-30 mt-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
 
   return (
     <div className={positionClassName}>
@@ -138,11 +142,15 @@ function ThemeMenu({
 
   const positionClassName =
     placement === 'up'
-      ? 'absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl backdrop-blur-sm'
-      : 'absolute left-0 top-full z-30 mt-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl backdrop-blur-sm'
+      ? 'absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      : 'absolute left-0 top-full z-30 mt-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
 
   return (
-    <div className={positionClassName} role="menu" aria-label="Escolher tema">
+    <div
+      className={positionClassName}
+      role="menu"
+      aria-label="Escolher tema"
+    >
       {themeCatalog.map((theme, index) => {
         const isSelected = selectedThemeId === theme.id
 
@@ -197,6 +205,7 @@ function ThemeMenu({
 }
 
 function ToolbarControls({
+  isMobile,
   mode,
   blocksCount,
   isAddMenuOpen,
@@ -231,12 +240,14 @@ function ToolbarControls({
           <Plus size={18} />
         </button>
 
-        <AddMenu
-          isOpen={isAddMenuOpen}
-          isDisabled={isAtBlockLimit}
-          placement={menuPlacement}
-          onSelect={addFromOption}
-        />
+        <AnimatePresence>
+          <AddMenu
+            isOpen={isAddMenuOpen}
+            isDisabled={isAtBlockLimit}
+            placement={menuPlacement}
+            onSelect={addFromOption}
+          />
+        </AnimatePresence>
       </div>
 
       <div className="relative">
@@ -258,31 +269,50 @@ function ToolbarControls({
           />
         </button>
 
-        <ThemeMenu
-          isOpen={isThemeMenuOpen}
-          placement={menuPlacement}
-          selectedThemeId={normalizedSelectedThemeId}
-          onSelect={onSelectTheme}
-        />
+        <AnimatePresence>
+          <ThemeMenu
+            isOpen={isThemeMenuOpen}
+            placement={menuPlacement}
+            selectedThemeId={normalizedSelectedThemeId}
+            onSelect={onSelectTheme}
+          />
+        </AnimatePresence>
       </div>
 
-      <button
-        type="button"
-        onClick={toggleMode}
-        className="inline-flex h-11 items-center gap-2 rounded-xl border border-primary/25 bg-white/80 px-4 text-sm font-medium text-text transition-colors hover:bg-primary/10"
-      >
-        {mode === 'edit' ? <Eye size={16} /> : <Pencil size={16} />}
-        {mode === 'edit' ? 'Preview' : 'Editar'}
-      </button>
+      {isMobile ? (
+        <button
+          type="button"
+          onClick={toggleMode}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/35 bg-primary text-white shadow-[0_10px_25px_-14px_rgba(236,72,153,0.7)] transition-colors hover:bg-primary-dark"
+          aria-label={mode === 'edit' ? 'Ir para preview' : 'Ir para edicao'}
+          title={mode === 'edit' ? 'Preview' : 'Editar'}
+        >
+          {mode === 'edit' ? <Eye size={16} /> : <Pencil size={16} />}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={toggleMode}
+          className="inline-flex h-11 items-center gap-2 rounded-xl border border-primary/35 bg-primary px-4 text-sm font-semibold text-white shadow-[0_12px_28px_-16px_rgba(236,72,153,0.7)] transition-colors hover:bg-primary-dark"
+        >
+          {mode === 'edit' ? <Eye size={16} /> : <Pencil size={16} />}
+          {mode === 'edit' ? 'Preview' : 'Editar'}
+        </button>
+      )}
 
       <button
         type="button"
         onClick={onSave}
         disabled={isSaving}
-        className="inline-flex h-11 items-center gap-2 rounded-xl border border-primary/35 bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className={`${isMobile
+          ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-white/90 text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
+          : 'inline-flex h-11 items-center gap-2 rounded-xl border border-primary/30 bg-white/90 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
+          }`}
+        aria-label={isSaving ? 'Salvando pagina' : 'Salvar pagina'}
+        title={isSaving ? 'Salvando...' : hasPageId ? 'Salvar' : 'Salvar'}
       >
         {isSaving ? <LoaderCircle size={16} className="animate-spin" /> : <Save size={16} />}
-        {isSaving ? 'Salvando...' : hasPageId ? 'Salvar' : 'Salvar pagina'}
+        {!isMobile ? (isSaving ? 'Salvando...' : 'Salvar') : null}
       </button>
 
       <span className="rounded-xl border border-primary/15 bg-white/70 px-3 py-2 text-xs font-medium text-text-light">
@@ -310,8 +340,27 @@ export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: 
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
   const toolbarRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   const isAtBlockLimit = blocksCount >= MAX_BLOCKS
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const media = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(media.matches)
+    sync()
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', sync)
+      return () => media.removeEventListener('change', sync)
+    }
+
+    media.addListener(sync)
+    return () => media.removeListener(sync)
+  }, [])
 
   useEffect(() => {
     if (!isAddMenuOpen && !isThemeMenuOpen) {
@@ -408,8 +457,8 @@ export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: 
     setIsThemeMenuOpen((current) => !current)
   }, [])
 
-  const isMenuVisible = mode === 'edit' && isAddMenuOpen
-  const isThemeVisible = mode === 'edit' && isThemeMenuOpen
+  const isMenuVisible = isAddMenuOpen
+  const isThemeVisible = isThemeMenuOpen
 
   return (
     <>
@@ -419,6 +468,7 @@ export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: 
             <p className="text-sm text-text-light">Monte sua carta com blocos</p>
             <div className="flex items-center gap-2">
               <ToolbarControls
+                isMobile={false}
                 mode={mode}
                 blocksCount={blocksCount}
                 isAddMenuOpen={isMenuVisible}
@@ -439,9 +489,10 @@ export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: 
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-4 z-40 px-4 md:hidden">
-          <div className="glass mx-auto flex w-full max-w-md items-center justify-between rounded-2xl px-3 py-3">
+        <div className="fixed inset-x-0 bottom-24 z-[60] px-4 md:hidden">
+          <div className="glass mx-auto flex w-full max-w-sm items-center justify-between rounded-2xl px-2.5 py-2.5 shadow-[0_14px_35px_-20px_rgba(0,0,0,0.45)]">
             <ToolbarControls
+              isMobile={isMobile}
               mode={mode}
               blocksCount={blocksCount}
               isAddMenuOpen={isMenuVisible}

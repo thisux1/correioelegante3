@@ -6,7 +6,7 @@ import { AppError } from '../utils/AppError';
 export async function registerUser(email: string, password: string) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-        throw new AppError('Email já cadastrado', 409);
+        throw new AppError('Este email ja esta cadastrado. Faca login para continuar.', 409, 'AUTH_EMAIL_ALREADY_REGISTERED');
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -23,12 +23,12 @@ export async function registerUser(email: string, password: string) {
 export async function loginUser(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-        throw new AppError('Credenciais inválidas', 401);
+        throw new AppError('Email nao encontrado. Verifique o endereco ou crie uma conta.', 401, 'AUTH_EMAIL_NOT_FOUND');
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-        throw new AppError('Credenciais inválidas', 401);
+        throw new AppError('Senha incorreta. Tente novamente.', 401, 'AUTH_INVALID_PASSWORD');
     }
 
     const accessToken = generateAccessToken(user.id);

@@ -96,12 +96,28 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       const src = typeof props.src === 'string'
         ? ensureSafeUrl(props.src, 'URL da musica')
         : '';
+      const assetId = typeof props.assetId === 'string' && /^[a-f\d]{24}$/i.test(props.assetId)
+        ? props.assetId
+        : undefined;
       const title = typeof props.title === 'string' ? sanitizeText(props.title) : undefined;
       const artist = typeof props.artist === 'string' ? sanitizeText(props.artist) : undefined;
       return {
+        assetId,
         src,
         title,
         artist,
+      };
+    }
+    case 'video': {
+      const src = typeof props.src === 'string'
+        ? ensureSafeUrl(props.src, 'URL do video')
+        : '';
+      const assetId = typeof props.assetId === 'string' && /^[a-f\d]{24}$/i.test(props.assetId)
+        ? props.assetId
+        : undefined;
+      return {
+        assetId,
+        src,
       };
     }
     default:

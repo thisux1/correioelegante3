@@ -30,7 +30,7 @@ function asTimestamp(value: unknown, fallback: number): number {
 }
 
 function asBlockType(value: unknown): BlockType {
-  const supported: BlockType[] = ['text', 'image', 'timer', 'gallery', 'music']
+  const supported: BlockType[] = ['text', 'image', 'timer', 'gallery', 'music', 'video']
   if (typeof value === 'string' && supported.includes(value as BlockType)) {
     return value as BlockType
   }
@@ -103,9 +103,19 @@ function migrateBlock(input: unknown, index: number): Block {
         ...base,
         type: 'music',
         props: {
+          assetId: typeof props.assetId === 'string' ? props.assetId : undefined,
           src: asText(props.src),
           title: typeof props.title === 'string' ? props.title : 'Nova musica',
           artist: typeof props.artist === 'string' ? props.artist : '',
+        },
+      }
+    case 'video':
+      return {
+        ...base,
+        type: 'video',
+        props: {
+          assetId: typeof props.assetId === 'string' ? props.assetId : undefined,
+          src: asText(props.src),
         },
       }
     default:
