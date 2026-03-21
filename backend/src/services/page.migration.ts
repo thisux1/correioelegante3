@@ -75,7 +75,7 @@ function asTimestamp(value: unknown, fallback: number): number {
 }
 
 function asText(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 function asOptionalText(value: unknown): string | undefined {
@@ -154,40 +154,63 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       };
     }
     case 'music':
-      return {
-        assetId: asOptionalText(props.assetId),
-        src: asText(props.src),
-        coverSrc: asOptionalText(props.coverSrc),
-        coverAssetId: asOptionalText(props.coverAssetId),
-        tracks: Array.isArray(props.tracks)
-          ? props.tracks.reduce<Array<{
-            src: string;
-            assetId?: string;
-            title?: string;
-            artist?: string;
-            coverSrc?: string;
-            coverAssetId?: string;
-          }>>((accumulator, track) => {
-            const record = asRecord(track);
-            const src = asText(record.src);
-            if (!src) {
-              return accumulator;
-            }
-
-            accumulator.push({
-              src,
-              assetId: asOptionalText(record.assetId),
-              title: asOptionalText(record.title),
-              artist: asOptionalText(record.artist),
-              coverSrc: asOptionalText(record.coverSrc),
-              coverAssetId: asOptionalText(record.coverAssetId),
-            });
+      {
+      const legacySrc = asText(props.src);
+      const legacyAssetId = asOptionalText(props.assetId);
+      const legacyTitle = asOptionalText(props.title);
+      const legacyArtist = asOptionalText(props.artist);
+      const legacyCoverSrc = asOptionalText(props.coverSrc);
+      const legacyCoverAssetId = asOptionalText(props.coverAssetId);
+      const tracks = Array.isArray(props.tracks)
+        ? props.tracks.reduce<Array<{
+          src: string;
+          assetId?: string;
+          title?: string;
+          artist?: string;
+          coverSrc?: string;
+          coverAssetId?: string;
+        }>>((accumulator, track) => {
+          const record = asRecord(track);
+          const src = asText(record.src);
+          if (!src) {
             return accumulator;
-          }, [])
-          : [],
-        title: asOptionalText(props.title),
-        artist: asOptionalText(props.artist),
+          }
+
+          accumulator.push({
+            src,
+            assetId: asOptionalText(record.assetId),
+            title: asOptionalText(record.title),
+            artist: asOptionalText(record.artist),
+            coverSrc: asOptionalText(record.coverSrc),
+            coverAssetId: asOptionalText(record.coverAssetId),
+          });
+          return accumulator;
+        }, []).slice(0, 30)
+        : [];
+      const normalizedTracks = tracks.length > 0
+        ? tracks
+        : (legacySrc
+          ? [{
+              src: legacySrc,
+              assetId: legacyAssetId,
+              title: legacyTitle,
+              artist: legacyArtist,
+              coverSrc: legacyCoverSrc,
+              coverAssetId: legacyCoverAssetId,
+            }]
+          : []);
+      const mirrorTrack = normalizedTracks[0];
+
+      return {
+        assetId: legacyAssetId ?? mirrorTrack?.assetId,
+        src: legacySrc || mirrorTrack?.src || '',
+        coverSrc: legacyCoverSrc ?? mirrorTrack?.coverSrc,
+        coverAssetId: legacyCoverAssetId ?? mirrorTrack?.coverAssetId,
+        tracks: normalizedTracks,
+        title: legacyTitle ?? mirrorTrack?.title,
+        artist: legacyArtist ?? mirrorTrack?.artist,
       };
+      }
     case 'video':
       return {
         assetId: asOptionalText(props.assetId),

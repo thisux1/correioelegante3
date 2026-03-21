@@ -11,7 +11,10 @@ export function shouldRenderPreviewBlock(block: Block): boolean {
     case 'image':
       return hasContent(block.props.src)
     case 'music':
-      return hasContent(block.props.src) || hasContent(block.props.assetId)
+      return hasContent(block.props.src)
+        || hasContent(block.props.assetId)
+        || (Array.isArray(block.props.tracks)
+          && block.props.tracks.some((track) => hasContent(track.src) || hasContent(track.assetId)))
     case 'video':
       return hasContent(block.props.src) || hasContent(block.props.assetId)
     case 'gallery':

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, Mail, Trash2, ExternalLink, LogOut, Settings, MessageCircle, AlertTriangle, Key, ChevronDown } from 'lucide-react'
@@ -89,7 +89,7 @@ export function Profile() {
     navigate('/')
   }
 
-  async function handleChangePassword(e: React.FormEvent) {
+  async function handleChangePassword(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setPasswordError('')
     setPasswordSuccess('')
@@ -133,49 +133,64 @@ export function Profile() {
     }
   }
 
-  return (
-    <div className="min-h-screen pt-28 pb-16 px-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-10">
-          <h1 className="font-display text-3xl font-bold text-text mb-2">
-            Meu Perfil
-          </h1>
-          <p className="text-text-light text-sm">
-            Crie, envie e gerencie a magia dos seus correios elegantes.
-          </p>
-        </div>
+  const tabButtonBase = 'flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30'
 
-        <div className="flex items-center gap-4 mb-8 border-b border-gray-200/50 pb-4">
-          <button
-            onClick={() => setActiveTab('messages')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'messages'
-              ? 'bg-primary/20 text-primary-dark'
-              : 'text-text-light hover:bg-gray-100 hover:text-text'
-              }`}
-          >
-            <MessageCircle size={18} />
-            Mensagens
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'settings'
-              ? 'bg-primary/20 text-primary-dark'
-              : 'text-text-light hover:bg-gray-100 hover:text-text'
-              }`}
-          >
-            <Settings size={18} />
-            Configurações
-          </button>
-        </div>
+  return (
+    <div className="min-h-screen px-4 pb-16 pt-28 sm:px-6">
+      <div className="mx-auto w-full max-w-4xl">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.19, 1, 0.22, 1] }}
+          className="mb-8 space-y-6 sm:mb-10"
+        >
+          <header className="space-y-2">
+            <h1 className="font-display text-4xl font-bold text-text sm:text-5xl">
+              Meu Perfil
+            </h1>
+            <p className="max-w-2xl text-sm leading-relaxed text-text-light sm:text-base">
+              Crie, envie e gerencie a magia dos seus correios elegantes.
+            </p>
+          </header>
+
+          <div className="glass rounded-2xl p-2">
+            <nav className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="Seções do perfil">
+              <button
+                type="button"
+                onClick={() => setActiveTab('messages')}
+                className={`${tabButtonBase} ${activeTab === 'messages'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                  : 'text-text-light hover:bg-white/60 hover:text-text'
+                  }`}
+                aria-current={activeTab === 'messages' ? 'page' : undefined}
+              >
+                <MessageCircle size={18} />
+                Mensagens
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('settings')}
+                className={`${tabButtonBase} ${activeTab === 'settings'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                  : 'text-text-light hover:bg-white/60 hover:text-text'
+                  }`}
+                aria-current={activeTab === 'settings' ? 'page' : undefined}
+              >
+                <Settings size={18} />
+                Configurações
+              </button>
+            </nav>
+          </div>
+        </motion.div>
 
         {activeTab === 'messages' ? (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display text-xl font-semibold text-text">
+          <section className="space-y-6" aria-label="Mensagens">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="font-display text-2xl font-semibold text-text sm:text-3xl">
                 Minhas Mensagens ({messages.length})
               </h2>
-              <Link to="/create">
-                <Button size="sm">
+              <Link to="/create" className="w-full sm:w-auto">
+                <Button size="sm" className="w-full sm:w-auto">
                   <Heart size={14} />
                   Nova mensagem
                 </Button>
@@ -183,144 +198,181 @@ export function Profile() {
             </div>
 
             {isLoading ? (
-              <div className="space-y-4">
+              <div className="space-y-4" aria-live="polite">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="shimmer h-24 bg-white/60 rounded-2xl" />
+                  <div key={i} className="shimmer h-32 rounded-2xl bg-white/60" />
                 ))}
               </div>
             ) : fetchError ? (
-              <Card glass className="text-center py-10">
-                <p className="text-red-500 text-sm">{fetchError}</p>
+              <Card glass className="py-8 text-center sm:py-10">
+                <InlineAlert tone="danger" className="mx-auto max-w-xl text-center">
+                  {fetchError}
+                </InlineAlert>
               </Card>
             ) : messages.length === 0 ? (
-              <Card glass className="text-center py-16">
-                <Heart className="w-12 h-12 text-text-muted mx-auto mb-4" />
-                <h3 className="font-display text-xl font-bold text-text mb-2">
+              <Card glass className="py-14 text-center sm:py-16">
+                <Heart className="mx-auto mb-4 h-12 w-12 text-text-muted" />
+                <h3 className="mb-2 font-display text-2xl font-bold text-text">
                   Nenhuma mensagem ainda
                 </h3>
-                <p className="text-text-light mb-6">
+                <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-text-light sm:text-base">
                   Que tal enviar seu primeiro correio elegante?
                 </p>
-                <Link to="/create">
-                  <Button>Escrever Mensagem</Button>
+                <Link to="/create" className="inline-flex w-full justify-center sm:w-auto">
+                  <Button className="w-full sm:w-auto">Escrever mensagem</Button>
                 </Link>
               </Card>
             ) : (
               <div className="space-y-4">
-                {deleteError && (
-                  <p className="text-sm text-red-500 px-1">{deleteError}</p>
-                )}
+                {deleteError ? <InlineAlert tone="danger">{deleteError}</InlineAlert> : null}
+
                 {messages.map((message) => (
-                  <Card key={message.id} glass hover className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-text truncate">
+                  <Card
+                    key={message.id}
+                    glass
+                    hover
+                    className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6"
+                  >
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-text break-words">
                           Para: {message.recipient}
                         </p>
-                        <Badge
-                          variant={message.paymentStatus === 'paid' ? 'success' : 'warning'}
-                        >
+                        <Badge variant={message.paymentStatus === 'paid' ? 'success' : 'warning'}>
                           {message.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
                         </Badge>
                       </div>
-                      <p className="text-sm text-text-light truncate">
+
+                      <p className="break-words text-sm leading-relaxed text-text-light sm:text-base">
                         {message.message}
                       </p>
-                      <p className="text-xs text-text-muted mt-1">
+
+                      <p className="text-xs text-text-muted">
                         {new Date(message.createdAt).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                       {message.paymentStatus === 'paid' ? (
-                        <Link to={`/card/${message.id}`}>
-                          <Button variant="ghost" size="sm">
+                        <Link to={`/card/${message.id}`} className="w-full sm:w-auto">
+                          <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                             <ExternalLink size={14} />
+                            Abrir cartão
                           </Button>
                         </Link>
                       ) : (
-                        <Link to={`/payment/${message.id}`}>
-                          <Button variant="outline" size="sm">
-                            Pagar
+                        <Link to={`/payment/${message.id}`} className="w-full sm:w-auto">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                            Pagar agora
                           </Button>
                         </Link>
                       )}
+
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="w-full text-red-600 hover:bg-red-50 hover:text-red-600 sm:w-auto"
                         onClick={() => handleDelete(message.id)}
+                        aria-label={`Excluir mensagem para ${message.recipient}`}
                       >
-                        <Trash2 size={14} className="text-red-400" />
+                        <Trash2 size={14} />
+                        Excluir
                       </Button>
                     </div>
                   </Card>
                 ))}
               </div>
             )}
-          </>
+          </section>
         ) : (
-          <div className="space-y-6">
-            <SectionCard
-              title="Sua Conta"
-              description="Gerencie seus dados e sessoes com uma interface consistente."
-            >
-              <SettingRow
-                icon={<Mail size={18} />}
-                label="E-mail cadastrado"
-                value={user?.email}
-                action={(
-                  <Button
-                    variant="outline"
-                    onClick={handleLogout}
-                    className="w-full sm:w-auto text-text-light hover:text-text hover:bg-white/60"
-                  >
-                    <LogOut size={16} className="mr-2" />
-                    Sair da Conta
-                  </Button>
-                )}
-              />
-            </SectionCard>
+          <section className="space-y-6" aria-label="Configurações">
+            <div className="space-y-2">
+              <h2 className="font-display text-2xl font-semibold text-text sm:text-3xl">
+                Configurações da Conta
+              </h2>
+              <p className="max-w-2xl text-sm leading-relaxed text-text-light sm:text-base">
+                Ajuste segurança, sessão e dados sensíveis no mesmo padrão visual do restante da experiência.
+              </p>
+            </div>
 
-            <Card glass className="overflow-hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.32, ease: [0.19, 1, 0.22, 1] }}
+            >
+              <SectionCard
+                title="Sua Conta"
+                description="Gerencie seus dados e sessões com uma interface consistente."
+                className="border border-primary/10"
+              >
+                <SettingRow
+                  icon={<Mail size={18} />}
+                  label="E-mail cadastrado"
+                  value={user?.email}
+                  className="flex-col items-start border-primary/10 bg-white/55 sm:flex-row sm:items-center"
+                  action={(
+                    <Button
+                      variant="outline"
+                      onClick={handleLogout}
+                      className="w-full text-text-light hover:bg-white/60 hover:text-text sm:w-auto"
+                    >
+                      <LogOut size={16} className="mr-2" />
+                      Sair da conta
+                    </Button>
+                  )}
+                />
+              </SectionCard>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.34, delay: 0.04, ease: [0.19, 1, 0.22, 1] }}
+            >
+              <Card glass className="overflow-hidden border border-primary/10 p-0">
               <button
+                type="button"
                 onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                className="w-full flex items-center justify-between p-6 hover:bg-white/20 transition-colors"
+                className="group flex w-full items-start justify-between gap-4 p-5 text-left transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:items-center sm:p-6"
                 aria-expanded={isPasswordFormOpen}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex flex-shrink-0 items-center justify-center">
-                    <Key size={20} className="text-blue-600" />
+                <div className="flex min-w-0 items-start gap-4 sm:items-center">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-dark">
+                    <Key size={20} />
                   </div>
-                  <div className="text-left">
-                    <h2 className="font-display text-lg font-semibold text-text">
+                  <div>
+                    <h2 className="font-display text-xl font-semibold text-text">
                       Alterar Senha
                     </h2>
-                    <p className="text-sm text-text-light mt-0.5">
+                    <p className="mt-0.5 text-sm leading-relaxed text-text-light">
                       Atualize sua senha para manter sua conta mágica segura.
                     </p>
                   </div>
                 </div>
-                <motion.div animate={{ rotate: isPasswordFormOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <motion.div
+                  animate={{ rotate: isPasswordFormOpen ? 180 : 0 }}
+                  transition={{ duration: 0.28, ease: [0.19, 1, 0.22, 1] }}
+                >
                   <ChevronDown size={20} className="text-text-muted" />
                 </motion.div>
               </button>
 
-              <AnimatePresence>
-                {isPasswordFormOpen && (
+              <AnimatePresence initial={false}>
+                {isPasswordFormOpen ? (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    transition={{ duration: 0.28, ease: [0.19, 1, 0.22, 1] }}
                   >
-                    <div className="p-6 pt-2 border-t border-white/20">
-                      <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+                    <div className="border-t border-white/30 p-5 pt-4 sm:p-6 sm:pt-4">
+                      <form onSubmit={handleChangePassword} className="mx-auto w-full max-w-md space-y-4">
                         <Input
                           label="Senha atual"
                           type="password"
                           placeholder="Sua senha atual"
                           value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
+                          onChange={(event) => setOldPassword(event.target.value)}
                           disabled={isChangingPassword}
                           required
                         />
@@ -329,7 +381,7 @@ export function Profile() {
                           type="password"
                           placeholder="Mínimo de 6 caracteres"
                           value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
+                          onChange={(event) => setNewPassword(event.target.value)}
                           disabled={isChangingPassword}
                           required
                         />
@@ -338,42 +390,54 @@ export function Profile() {
                           type="password"
                           placeholder="Repita a nova senha"
                           value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onChange={(event) => setConfirmPassword(event.target.value)}
                           disabled={isChangingPassword}
                           required
                         />
 
-                         {passwordError ? <InlineAlert tone="danger">{passwordError}</InlineAlert> : null}
-                         {passwordSuccess ? <InlineAlert tone="success">{passwordSuccess}</InlineAlert> : null}
+                        {passwordError ? <InlineAlert tone="danger">{passwordError}</InlineAlert> : null}
+                        {passwordSuccess ? <InlineAlert tone="success">{passwordSuccess}</InlineAlert> : null}
 
                         <div className="pt-2">
-                          <Button type="submit" disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword}>
-                            {isChangingPassword ? 'Salvando...' : 'Salvar Nova Senha'}
+                          <Button
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword}
+                          >
+                            {isChangingPassword ? 'Salvando...' : 'Salvar nova senha'}
                           </Button>
                         </div>
                       </form>
                     </div>
                   </motion.div>
-                )}
+                ) : null}
               </AnimatePresence>
             </Card>
+            </motion.div>
 
-            <SectionCard title="Zona de Perigo" className="border-red-200/50 bg-red-50/30">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.34, delay: 0.08, ease: [0.19, 1, 0.22, 1] }}
+            >
+            <SectionCard title="Zona de Perigo" className="border border-red-200/60 bg-red-50/35">
               <div className="mb-2 flex items-center gap-2 text-red-600">
                 <AlertTriangle size={20} />
+                <p className="text-sm font-medium">Atenção</p>
               </div>
-              <p className="text-text-light text-sm mb-4">
+              <p className="mb-4 text-sm leading-relaxed text-text-light">
                 A exclusão da conta é permanente e não pode ser desfeita.
                 Todos os seus correios elegantes serão apagados.
               </p>
               <Button
                 variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 sm:w-auto"
                 onClick={() => setIsDeleteModalOpen(true)}
               >
-                Excluir Minha Conta
+                Excluir minha conta
               </Button>
             </SectionCard>
+            </motion.div>
 
             <Modal
               isOpen={isDeleteModalOpen}
@@ -382,10 +446,10 @@ export function Profile() {
             >
               <div className="space-y-6">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Trash2 className="w-8 h-8 text-red-500" />
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                    <Trash2 className="h-8 w-8 text-red-500" />
                   </div>
-                  <p className="text-text-light mb-4">
+                  <p className="mb-4 text-sm leading-relaxed text-text-light sm:text-base">
                     Tem certeza que deseja excluir sua conta? Esta ação é{' '}
                     <strong className="text-red-600">irreversível</strong>.
                     <br />
@@ -394,14 +458,18 @@ export function Profile() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {deleteAccountError ? <InlineAlert tone="danger" className="text-center">{deleteAccountError}</InlineAlert> : null}
+                  {deleteAccountError ? (
+                    <InlineAlert tone="danger" className="text-center">
+                      {deleteAccountError}
+                    </InlineAlert>
+                  ) : null}
                   <Button
                     variant="outline"
-                    className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                    className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50"
                     onClick={handleDeleteAccount}
                     disabled={isDeletingAccount}
                   >
-                    {isDeletingAccount ? 'A tristeza é grande, apagando...' : 'Sim, Excluir Para Sempre'}
+                    {isDeletingAccount ? 'A tristeza é grande, apagando...' : 'Sim, excluir para sempre'}
                   </Button>
                   <Button
                     variant="ghost"
@@ -409,12 +477,12 @@ export function Profile() {
                     onClick={() => setIsDeleteModalOpen(false)}
                     disabled={isDeletingAccount}
                   >
-                    Cancelar e Voltar à Magia
+                    Cancelar e voltar à magia
                   </Button>
                 </div>
               </div>
             </Modal>
-          </div>
+          </section>
         )}
       </div>
     </div>

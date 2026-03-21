@@ -18,7 +18,7 @@ function asRecord(value: unknown): UnknownRecord {
 }
 
 function asText(value: unknown): string {
-  return typeof value === 'string' ? value : ''
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 function asOptionalText(value: unknown): string | undefined {
@@ -66,6 +66,45 @@ function asBlockType(value: unknown): BlockType {
   }
 
   return 'text'
+}
+
+function asMusicTracks(value: unknown): Array<{
+  src: string
+  assetId?: string
+  title?: string
+  artist?: string
+  coverSrc?: string
+  coverAssetId?: string
+}> {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<Array<{
+    src: string
+    assetId?: string
+    title?: string
+    artist?: string
+    coverSrc?: string
+    coverAssetId?: string
+  }>>((accumulator, track) => {
+    const trackRecord = asRecord(track)
+    const trackSrc = asText(trackRecord.src)
+    if (!trackSrc) {
+      return accumulator
+    }
+
+    accumulator.push({
+      src: trackSrc,
+      assetId: asOptionalText(trackRecord.assetId),
+      title: asOptionalText(trackRecord.title),
+      artist: asOptionalText(trackRecord.artist),
+      coverSrc: asOptionalText(trackRecord.coverSrc),
+      coverAssetId: asOptionalText(trackRecord.coverAssetId),
+    })
+
+    return accumulator
+  }, []).slice(0, 30)
 }
 
 function migrateBlock(input: unknown, index: number): Block {
@@ -139,44 +178,41 @@ function migrateBlock(input: unknown, index: number): Block {
       }
       }
     case 'music':
+      {
+      const legacySrc = asText(props.src)
+      const legacyAssetId = asOptionalText(props.assetId)
+      const legacyTitle = asOptionalText(props.title)
+      const legacyArtist = asOptionalText(props.artist)
+      const legacyCoverSrc = asOptionalText(props.coverSrc)
+      const legacyCoverAssetId = asOptionalText(props.coverAssetId)
+      const normalizedTracks = asMusicTracks(props.tracks)
+      const tracks = normalizedTracks.length > 0
+        ? normalizedTracks
+        : (legacySrc
+          ? [{
+              src: legacySrc,
+              assetId: legacyAssetId,
+              title: legacyTitle,
+              artist: legacyArtist,
+              coverSrc: legacyCoverSrc,
+              coverAssetId: legacyCoverAssetId,
+            }]
+          : [])
+      const mirrorTrack = tracks[0]
+
       return {
         ...base,
         type: 'music',
         props: {
-          assetId: typeof props.assetId === 'string' ? props.assetId : undefined,
-          src: asText(props.src),
-          coverSrc: typeof props.coverSrc === 'string' ? props.coverSrc : '',
-          coverAssetId: typeof props.coverAssetId === 'string' ? props.coverAssetId : undefined,
-          tracks: Array.isArray(props.tracks)
-            ? props.tracks.reduce<Array<{
-              src: string
-              assetId?: string
-              title?: string
-              artist?: string
-              coverSrc?: string
-              coverAssetId?: string
-            }>>((accumulator, track) => {
-              const trackRecord = asRecord(track)
-              const trackSrc = asText(trackRecord.src)
-              if (!trackSrc) {
-                return accumulator
-              }
-
-              accumulator.push({
-                src: trackSrc,
-                assetId: asOptionalText(trackRecord.assetId),
-                title: asOptionalText(trackRecord.title),
-                artist: asOptionalText(trackRecord.artist),
-                coverSrc: asOptionalText(trackRecord.coverSrc),
-                coverAssetId: asOptionalText(trackRecord.coverAssetId),
-              })
-
-              return accumulator
-            }, [])
-            : [],
-          title: typeof props.title === 'string' ? props.title : 'Nova musica',
-          artist: typeof props.artist === 'string' ? props.artist : '',
+          assetId: legacyAssetId ?? mirrorTrack?.assetId,
+          src: legacySrc || mirrorTrack?.src || '',
+          coverSrc: legacyCoverSrc ?? mirrorTrack?.coverSrc ?? '',
+          coverAssetId: legacyCoverAssetId ?? mirrorTrack?.coverAssetId,
+          tracks,
+          title: (typeof props.title === 'string' ? props.title : undefined) ?? mirrorTrack?.title ?? '',
+          artist: (typeof props.artist === 'string' ? props.artist : undefined) ?? mirrorTrack?.artist ?? '',
         },
+      }
       }
     case 'video':
       return {

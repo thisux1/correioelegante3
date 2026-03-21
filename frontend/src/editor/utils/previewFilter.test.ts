@@ -22,9 +22,21 @@ describe('filterPreviewBlocks', () => {
   it('remove audio vazio do preview', () => {
     const music = createBlock('music')
     music.props.src = ''
+    music.props.tracks = []
 
     const visible = filterPreviewBlocks([music])
     expect(visible).toHaveLength(0)
+  })
+
+  it('mantem audio no preview quando apenas tracks estao preenchidas', () => {
+    const music = createBlock('music')
+    music.props.src = ''
+    music.props.assetId = undefined
+    music.props.tracks = [{ src: 'https://cdn.example.com/song.mp3' }]
+
+    const visible = filterPreviewBlocks([music])
+    expect(visible).toHaveLength(1)
+    expect(visible[0]?.type).toBe('music')
   })
 
   it('mantem apenas blocos com conteudo util', () => {

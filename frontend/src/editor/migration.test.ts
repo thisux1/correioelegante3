@@ -65,9 +65,74 @@ describe('migratePage', () => {
       src: 'https://cdn/audio.mp3',
       coverSrc: '',
       coverAssetId: undefined,
-      tracks: [],
+      tracks: [{ src: 'https://cdn/audio.mp3', assetId: 'a2', title: 'x', artist: undefined, coverSrc: undefined, coverAssetId: undefined }],
       title: 'x',
       artist: '',
     })
+  })
+
+  it('usa tracks como fonte de verdade, preserva ordem e aplica limite de 30', () => {
+    const migrated = migratePage({
+      blocks: [{
+        id: 'm2',
+        type: 'music',
+        props: {
+          src: 'https://cdn/legacy.mp3',
+          tracks: Array.from({ length: 34 }, (_, index) => ({
+            src: `https://cdn/t${index}.mp3`,
+            title: `Track ${index}`,
+          })),
+        },
+        meta: {},
+      }],
+    })
+
+    const music = migrated.blocks[0]
+    expect(music?.type).toBe('music')
+    if (music?.type !== 'music') {
+      return
+    }
+
+    expect(music.props.tracks).toHaveLength(30)
+    expect(music.props.tracks?.[0]?.src).toBe('https://cdn/t0.mp3')
+    expect(music.props.tracks?.[1]?.src).toBe('https://cdn/t1.mp3')
+    expect(music.props.tracks?.[29]?.src).toBe('https://cdn/t29.mp3')
+    expect(music.props.src).toBe('https://cdn/legacy.mp3')
+  })
+
+  it('remove tracks invalidas e faz fallback para legado quando necessario', () => {
+    const migrated = migratePage({
+      blocks: [{
+        id: 'm3',
+        type: 'music',
+        props: {
+          src: 'https://cdn/legacy-only.mp3',
+          assetId: 'asset-1',
+          title: 'Titulo legado',
+          artist: 'Artista legado',
+          coverSrc: 'https://cdn/legacy-cover.jpg',
+          coverAssetId: 'cover-1',
+          tracks: [{ src: '   ' }, { foo: 'bar' }],
+        },
+        meta: {},
+      }],
+    })
+
+    const music = migrated.blocks[0]
+    expect(music?.type).toBe('music')
+    if (music?.type !== 'music') {
+      return
+    }
+
+    expect(music.props.tracks).toEqual([
+      {
+        src: 'https://cdn/legacy-only.mp3',
+        assetId: 'asset-1',
+        title: 'Titulo legado',
+        artist: 'Artista legado',
+        coverSrc: 'https://cdn/legacy-cover.jpg',
+        coverAssetId: 'cover-1',
+      },
+    ])
   })
 })

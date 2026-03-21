@@ -200,6 +200,103 @@ describe('POST /api/pages', () => {
       assetId: '507f1f77bcf86cd799439122',
     });
   });
+
+  it('normaliza legacy->tracks, preserva ordem, limita em 30 e mantem capa por track', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'm2',
+              type: 'music',
+              version: 1,
+              props: {
+                src: 'https://cdn.example.com/legacy.mp3',
+                coverSrc: 'https://cdn.example.com/legacy-cover.jpg',
+                coverAssetId: '507f1f77bcf86cd799439123',
+                tracks: Array.from({ length: 34 }, (_, index) => ({
+                  src: index === 5 ? '   ' : `https://cdn.example.com/song-${index}.mp3`,
+                  coverSrc: `https://cdn.example.com/cover-${index}.jpg`,
+                  coverAssetId: '507f1f77bcf86cd799439124',
+                })),
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(201);
+    const createCall = vi.mocked(prisma.page.create).mock.calls.at(0);
+    const payload = (createCall?.[0] as { data?: { content?: unknown } })?.data?.content as {
+      blocks: Array<{ type: string; props: Record<string, unknown> }>;
+    };
+    const musicBlock = payload.blocks.find((item) => item.type === 'music');
+    const tracks = (musicBlock?.props.tracks as Array<Record<string, unknown>>) ?? [];
+
+    expect(musicBlock?.props.src).toBe('https://cdn.example.com/legacy.mp3');
+    expect(tracks).toHaveLength(30);
+    expect(tracks[0]?.src).toBe('https://cdn.example.com/song-0.mp3');
+    expect(tracks[1]?.src).toBe('https://cdn.example.com/song-1.mp3');
+    expect(tracks[5]?.src).toBe('https://cdn.example.com/song-6.mp3');
+    expect(tracks[29]?.src).toBe('https://cdn.example.com/song-30.mp3');
+    expect(tracks[0]?.coverSrc).toBe('https://cdn.example.com/cover-0.jpg');
+    expect(tracks[0]?.coverAssetId).toBe('507f1f77bcf86cd799439124');
+  });
+
+  it('cria track a partir de campos legados quando tracks vier vazio', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'm3',
+              type: 'music',
+              version: 1,
+              props: {
+                src: 'https://cdn.example.com/legacy-only.mp3',
+                assetId: '507f1f77bcf86cd799439125',
+                title: 'Faixa antiga',
+                artist: 'Artista antigo',
+                coverSrc: 'https://cdn.example.com/legacy-only-cover.jpg',
+                coverAssetId: '507f1f77bcf86cd799439126',
+                tracks: [],
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(201);
+    const createCall = vi.mocked(prisma.page.create).mock.calls.at(0);
+    const payload = (createCall?.[0] as { data?: { content?: unknown } })?.data?.content as {
+      blocks: Array<{ type: string; props: Record<string, unknown> }>;
+    };
+    const musicBlock = payload.blocks.find((item) => item.type === 'music');
+    const tracks = (musicBlock?.props.tracks as Array<Record<string, unknown>>) ?? [];
+
+    expect(tracks).toEqual([
+      {
+        src: 'https://cdn.example.com/legacy-only.mp3',
+        assetId: '507f1f77bcf86cd799439125',
+        title: 'Faixa antiga',
+        artist: 'Artista antigo',
+        coverSrc: 'https://cdn.example.com/legacy-only-cover.jpg',
+        coverAssetId: '507f1f77bcf86cd799439126',
+      },
+    ]);
+  });
 });
 
 describe('PUT /api/pages/:id', () => {
