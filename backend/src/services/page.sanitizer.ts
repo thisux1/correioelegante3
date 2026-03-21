@@ -6,6 +6,7 @@ import {
 } from './page.constants';
 import {
   migratePage,
+  normalizeThemeId,
   type PersistedBlock,
   type PersistedPageContent,
 } from './page.migration';
@@ -120,7 +121,7 @@ export function sanitizePageContent(input: unknown): PersistedPageContent {
   const sanitized: PersistedPageContent = {
     ...migrated,
     blocks: migrated.blocks.map(sanitizeBlock),
-    theme: typeof migrated.theme === 'string' ? sanitizeText(migrated.theme) : undefined,
+    theme: normalizeThemeId(migrated.theme),
   };
 
   const bytes = Buffer.byteLength(JSON.stringify(sanitized), 'utf8');

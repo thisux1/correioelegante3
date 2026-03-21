@@ -8,6 +8,7 @@ import {
   deletePage,
 } from '../controllers/page.controller';
 import { authenticate, optionalAuthenticate } from '../middlewares/auth';
+import { requireEditorFeature } from '../middlewares/editorFeatureFlag';
 import { validate, validateObjectId } from '../middlewares/validate';
 import { createPageSchema, updatePageSchema } from '../utils/validation';
 
@@ -24,10 +25,10 @@ const writePageRateLimiter = rateLimit({
 
 const router = Router();
 
-router.post('/', authenticate, writePageRateLimiter, validate(createPageSchema), createPage);
-router.put('/:id', authenticate, writePageRateLimiter, validateObjectId('id'), validate(updatePageSchema), updatePage);
+router.post('/', authenticate, requireEditorFeature, writePageRateLimiter, validate(createPageSchema), createPage);
+router.put('/:id', authenticate, requireEditorFeature, writePageRateLimiter, validateObjectId('id'), validate(updatePageSchema), updatePage);
 router.get('/:id', optionalAuthenticate, validateObjectId('id'), getPage);
-router.get('/', authenticate, getPages);
-router.delete('/:id', authenticate, validateObjectId('id'), deletePage);
+router.get('/', authenticate, requireEditorFeature, getPages);
+router.delete('/:id', authenticate, requireEditorFeature, validateObjectId('id'), deletePage);
 
 export { router as pageRouter };

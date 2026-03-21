@@ -9,6 +9,7 @@ import { messageRouter } from './routes/message.routes';
 import { paymentRouter } from './routes/payment.routes';
 import { uploadRouter } from './routes/upload.routes';
 import { pageRouter } from './routes/page.routes';
+import { assetRouter } from './routes/asset.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/messages', messageRouter);
 app.use('/api/payments', paymentRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/pages', pageRouter);
+app.use('/api/assets', assetRouter);
 
 // Health check — includes DB connectivity test (safe, read-only)
 app.get('/api/health', async (_req, res) => {

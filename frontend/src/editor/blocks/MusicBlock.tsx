@@ -1,6 +1,9 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
+import { assetService } from '@/services/assetService'
+
+type UploadState = 'idle' | 'sending' | 'processing' | 'ready' | 'error'
 
 function isValidAudioUrl(value: string): boolean {
   const normalized = value.trim()
@@ -169,6 +172,61 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   const normalizedSrc = src.trim()
   const canPlay = useMemo(() => isValidAudioUrl(normalizedSrc), [normalizedSrc])
+  const [uploadState, setUploadState] = useState<UploadState>('idle')
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [libraryCount, setLibraryCount] = useState<number | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const triggerFilePicker = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelection = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!isMusicBlock) {
+      return
+    }
+
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    setUploadError(null)
+    setUploadState('sending')
+
+    try {
+      const asset = await assetService.uploadFileFlow({ file, kind: 'audio' })
+      setUploadState('processing')
+
+      const { data } = await assetService.list('audio')
+      setLibraryCount(data.assets.length)
+
+      onUpdate?.((currentBlock) => {
+        if (currentBlock.type !== 'music') {
+          return currentBlock
+        }
+
+        return {
+          ...currentBlock,
+          props: {
+            ...currentBlock.props,
+            src: asset.publicUrl ?? currentBlock.props.src,
+          },
+        }
+      })
+
+      setUploadState('ready')
+    } catch (error) {
+      setUploadState('error')
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : 'Falha no upload do audio. Verifique a configuracao de midia no backend.',
+      )
+    } finally {
+      event.target.value = ''
+    }
+  }
 
   if (!isMusicBlock) {
     return null
@@ -178,6 +236,23 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return (
       <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
         <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/x-wav"
+            className="hidden"
+            onChange={handleFileSelection}
+          />
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={triggerFilePicker}
+              className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+            >
+              Upload de audio
+            </button>
+            <span className="text-xs text-text-light">ou preencha URL manual abaixo</span>
+          </div>
           <label className="mb-1 block text-xs font-medium text-text-light">URL do audio</label>
           <input
             type="url"
@@ -201,6 +276,15 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             placeholder="https://..."
             className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50"
           />
+          {(uploadState !== 'idle' || uploadError || libraryCount !== null) ? (
+            <div className="mt-2 rounded-lg border border-primary/20 bg-white/70 px-3 py-2 text-xs text-text-light">
+              {uploadState === 'sending' ? 'Enviando audio...' : null}
+              {uploadState === 'processing' ? 'Processando audio...' : null}
+              {uploadState === 'ready' ? 'Audio pronto para uso.' : null}
+              {uploadState === 'error' ? `Erro no upload: ${uploadError ?? 'tente novamente.'}` : null}
+              {libraryCount !== null ? ` Biblioteca: ${libraryCount} asset(s).` : null}
+            </div>
+          ) : null}
         </div>
 
         <div>

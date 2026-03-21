@@ -14,6 +14,7 @@ model User {
   password  String
   messages  Message[]
   pages     Page[]
+  assets    Asset[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -55,4 +56,27 @@ model Page {
 
   @@index([userId])
   @@index([status, visibility])
+}
+
+model Asset {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @db.ObjectId
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind             String
+  source           String
+  storageKey       String
+  publicUrl        String?
+  mimeType         String
+  sizeBytes        Int
+  width            Int?
+  height           Int?
+  durationMs       Int?
+  processingStatus String   @default("pending")
+  moderationStatus String   @default("pending")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([userId, kind])
+  @@index([storageKey])
 }

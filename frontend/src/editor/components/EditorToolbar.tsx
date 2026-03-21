@@ -105,6 +105,33 @@ function ThemeMenu({
   selectedThemeId: string
   onSelect: (themeId: string) => void
 }) {
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
+
+  const selectedIndex = Math.max(
+    0,
+    themeCatalog.findIndex((theme) => theme.id === selectedThemeId),
+  )
+
+  const focusItemByIndex = (index: number) => {
+    const total = themeCatalog.length
+    if (total === 0) {
+      return
+    }
+
+    const wrapped = ((index % total) + total) % total
+    itemRefs.current[wrapped]?.focus()
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    requestAnimationFrame(() => {
+      itemRefs.current[selectedIndex]?.focus()
+    })
+  }, [isOpen, selectedIndex])
+
   if (!isOpen) {
     return null
   }
@@ -115,8 +142,8 @@ function ThemeMenu({
       : 'absolute left-0 top-full z-30 mt-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl backdrop-blur-sm'
 
   return (
-    <div className={positionClassName}>
-      {themeCatalog.map((theme) => {
+    <div className={positionClassName} role="menu" aria-label="Escolher tema">
+      {themeCatalog.map((theme, index) => {
         const isSelected = selectedThemeId === theme.id
 
         return (
@@ -124,16 +151,43 @@ function ThemeMenu({
             key={theme.id}
             type="button"
             onClick={() => onSelect(theme.id)}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-primary/10 ${
-              isSelected ? 'bg-primary/10 text-primary' : 'text-text'
+            ref={(element) => {
+              itemRefs.current[index] = element
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowDown') {
+                event.preventDefault()
+                focusItemByIndex(index + 1)
+              } else if (event.key === 'ArrowUp') {
+                event.preventDefault()
+                focusItemByIndex(index - 1)
+              } else if (event.key === 'Home') {
+                event.preventDefault()
+                focusItemByIndex(0)
+              } else if (event.key === 'End') {
+                event.preventDefault()
+                focusItemByIndex(themeCatalog.length - 1)
+              }
+            }}
+            role="menuitemradio"
+            aria-checked={isSelected}
+            aria-label={`Tema ${theme.name}`}
+            tabIndex={isSelected ? 0 : -1}
+            className={`flex w-full items-center gap-3 rounded-lg border px-2 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 hover:bg-primary/5 ${
+              isSelected
+                ? 'border-primary/35 bg-primary/10 text-primary'
+                : 'border-transparent text-text hover:border-primary/20'
             }`}
           >
             <span
-              className="h-5 w-5 rounded-md border border-white/70 shadow-sm"
+              className="h-8 w-8 rounded-md border border-white/70 shadow-sm"
               style={{ background: theme.thumbnail }}
               aria-hidden="true"
             />
-            <span className="flex-1 truncate">{theme.name}</span>
+            <span className="flex-1">
+              <span className="block truncate font-medium">{theme.name}</span>
+              <span className="block text-xs text-text-light">Fonte e paleta</span>
+            </span>
             {isSelected ? <Check size={14} /> : null}
           </button>
         )

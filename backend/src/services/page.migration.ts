@@ -24,6 +24,40 @@ export interface PersistedPageContent {
   version: number;
 }
 
+const DEFAULT_THEME_ID = 'romantic-sunset';
+
+const LEGACY_THEME_ALIASES: Record<string, string> = {
+  classic: 'romantic-sunset',
+  romantic: 'romantic-sunset',
+  friendship: 'ocean-breeze',
+  secret: 'midnight-ink',
+  poetic: 'golden-letter',
+};
+
+const THEME_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function normalizeThemeId(value: unknown): string {
+  if (typeof value !== 'string') {
+    return DEFAULT_THEME_ID;
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return DEFAULT_THEME_ID;
+  }
+
+  const alias = LEGACY_THEME_ALIASES[normalized];
+  if (alias) {
+    return alias;
+  }
+
+  if (THEME_ID_PATTERN.test(normalized)) {
+    return normalized;
+  }
+
+  return DEFAULT_THEME_ID;
+}
+
 function asRecord(value: unknown): UnknownRecord {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return {};
@@ -133,7 +167,7 @@ export function migratePage(input: unknown): PersistedPageContent {
 
   return {
     blocks: maybeBlocks.map((block, index) => sanitizeBlock(block, index)),
-    theme: asOptionalText(inputRecord.theme),
+    theme: normalizeThemeId(asOptionalText(inputRecord.theme)),
     version: PAGE_VERSION,
   };
 }
