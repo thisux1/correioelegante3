@@ -40,10 +40,12 @@ describe('createBlock', () => {
 
     expect(block.type).toBe('music')
     expect(block.props).toEqual({
+      assetId: undefined,
       src: '',
       coverSrc: '',
+      coverAssetId: undefined,
       tracks: [],
-      title: 'Nova musica',
+      title: '',
       artist: '',
     })
   })

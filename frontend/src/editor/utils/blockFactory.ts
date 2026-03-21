@@ -87,10 +87,12 @@ export function createBlock(type: BlockType): Block {
         type: 'music',
         version: BLOCK_VERSION,
         props: {
+          assetId: undefined,
           src: '',
           coverSrc: '',
+          coverAssetId: undefined,
           tracks: [],
-          title: 'Nova musica',
+          title: '',
           artist: '',
         },
         meta: {

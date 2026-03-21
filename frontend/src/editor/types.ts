@@ -41,19 +41,21 @@ export interface GalleryBlockProps {
   transition?: 'fade' | 'slide'
 }
 
+export interface MusicTrack {
+  src: string
+  assetId?: string
+  title?: string
+  artist?: string
+  coverSrc?: string
+  coverAssetId?: string
+}
+
 export interface MusicBlockProps {
   assetId?: string
   src: string
   coverSrc?: string
   coverAssetId?: string
-  tracks?: Array<{
-    assetId?: string
-    src: string
-    title?: string
-    artist?: string
-    coverSrc?: string
-    coverAssetId?: string
-  }>
+  tracks?: MusicTrack[]
   title?: string
   artist?: string
 }

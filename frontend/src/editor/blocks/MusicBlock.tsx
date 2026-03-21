@@ -38,27 +38,33 @@ function formatTime(totalSeconds: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-function AudioVisualizer({ bars, isPlaying, waveform }: { bars: number[]; isPlaying: boolean; waveform?: number[] | null }) {
+function PlaybackIndicator({ isPlaying, pulseTick }: { isPlaying: boolean; pulseTick: number }) {
+  const barHeights = [0, 1, 2, 3].map((index) => {
+    const mainWave = (Math.sin((pulseTick * (0.74 + index * 0.09)) + index * 1.41) + 1) / 2
+    const fastWave = (Math.sin((pulseTick * (1.62 + index * 0.17)) + index * 2.73) + 1) / 2
+    const driftWave = (Math.sin((pulseTick * 0.31) + index * 0.93) + 1) / 2
+    const rawNoise = Math.sin((pulseTick * 13.37) + index * 47.19) * 43758.5453
+    const noise = rawNoise - Math.floor(rawNoise)
+    const burst = noise > 0.82 ? (noise - 0.82) * 2.8 : 0
+    return Math.max(0.16, Math.min(0.98, 0.08 + mainWave * 0.36 + fastWave * 0.23 + driftWave * 0.2 + noise * 0.18 + burst))
+  })
+
   return (
-    <div className="relative mb-4 flex h-14 items-end gap-1 overflow-hidden rounded-xl border border-white/35 bg-white/45 px-2 py-1.5">
-      {bars.map((bar, index) => {
-        const waveformPoint = Array.isArray(waveform) && waveform.length > 0
-          ? waveform[Math.floor((index / Math.max(bars.length - 1, 1)) * (waveform.length - 1))] ?? 0.22
-          : 0.2
-        const renderedBar = isPlaying ? bar : Math.max(0.14, Math.min(0.5, waveformPoint * 0.85 + bar * 0.3))
-        return (
-          <div
-            key={`visual-${index}`}
-            className="w-[3.5%] rounded-full transition-[height,opacity] duration-300"
-            style={{
-              height: `${Math.round(renderedBar * 100)}%`,
-              opacity: isPlaying ? 0.95 : 0.65,
-              background: 'linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 82%, white 18%) 0%, color-mix(in srgb, var(--color-accent) 76%, var(--color-primary) 24%) 100%)',
-            }}
-            aria-hidden="true"
-          />
-        )
-      })}
+    <div className="inline-flex h-full items-end gap-1" aria-live="polite" aria-label={isPlaying ? 'Audio em reproducao' : 'Audio pausado'}>
+      {barHeights.map((height, index) => (
+        <span
+          key={`playback-indicator-${index}`}
+          className="w-2.5 rounded-t-full transition-[height,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{
+            height: `${Math.round((isPlaying ? height : 0.05) * 100)}%`,
+            opacity: isPlaying ? 0.92 : 0,
+            transform: isPlaying ? 'translateY(0%)' : 'translateY(14%)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.06) 100%)',
+            boxShadow: '0 0 20px -12px rgba(255,255,255,0.9)',
+          }}
+          aria-hidden="true"
+        />
+      ))}
     </div>
   )
 }
@@ -81,13 +87,6 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const rafRef = useRef<number | null>(null)
-  const visualizerRafRef = useRef<number | null>(null)
-  const idleVisualizerTimerRef = useRef<number | null>(null)
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const sourceNodeRef = useRef<MediaElementAudioSourceNode | MediaStreamAudioSourceNode | null>(null)
-  const analyserSinkRef = useRef<GainNode | null>(null)
-  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null)
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [duration, setDuration] = useState(0)
@@ -96,8 +95,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const [volume, setVolume] = useState(0.8)
   const [isMuted, setIsMuted] = useState(false)
   const [hasPlaybackError, setHasPlaybackError] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const [visualizerBars, setVisualizerBars] = useState<number[]>(() => Array.from({ length: 24 }, (_, index) => 0.18 + ((index % 7) * 0.04)))
+  const [playbackPulse, setPlaybackPulse] = useState(0)
   const [trackIndex, setTrackIndex] = useState(0)
 
   const resolvedSource = selectedAsset?.publicUrl?.trim() || src.trim()
@@ -128,14 +126,6 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const effectiveDuration = duration > 0 ? duration : (selectedAsset?.durationMs ? selectedAsset.durationMs / 1000 : 0)
   const progressRatio = effectiveDuration > 0 ? Math.min(currentTime / effectiveDuration, 1) : 0
   const bufferedRatio = effectiveDuration > 0 ? Math.min(bufferedTime / effectiveDuration, 1) : 0
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches)
-    handleChange()
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
 
   useEffect(() => {
     if (!isMusicBlock) {
@@ -237,165 +227,24 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     }
   }, [isPlaying])
 
-  const ensureAnalyser = async () => {
-    if (!audioRef.current) {
-      return
-    }
-
-    const AudioContextCtor = window.AudioContext
-      ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioContextCtor) {
-      return
-    }
-
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContextCtor()
-    }
-
-    if (!analyserRef.current) {
-      const analyser = audioContextRef.current.createAnalyser()
-      analyser.fftSize = 128
-      analyser.smoothingTimeConstant = 0.78
-
-      let sourceNode: MediaElementAudioSourceNode | MediaStreamAudioSourceNode | null = null
-      try {
-        const parsed = new URL(activeTrack.src)
-        if (parsed.origin === window.location.origin) {
-          sourceNode = audioContextRef.current.createMediaElementSource(audioRef.current)
-        }
-      } catch {
-        sourceNode = null
-      }
-
-      if (!sourceNode) {
-        try {
-          const audioWithCapture = audioRef.current as HTMLAudioElement & { captureStream?: () => MediaStream; mozCaptureStream?: () => MediaStream }
-          const stream = audioWithCapture.captureStream?.() ?? audioWithCapture.mozCaptureStream?.()
-          if (stream && stream.getAudioTracks().length > 0) {
-            sourceNode = audioContextRef.current.createMediaStreamSource(stream)
-          }
-        } catch {
-          sourceNode = null
-        }
-      }
-
-      if (sourceNode) {
-        const sink = audioContextRef.current.createGain()
-        sink.gain.value = 0
-        sourceNode.connect(analyser)
-        analyser.connect(sink)
-        sink.connect(audioContextRef.current.destination)
-        sourceNodeRef.current = sourceNode
-        analyserRef.current = analyser
-        analyserSinkRef.current = sink
-        dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>
-      }
-    }
-
-    if (audioContextRef.current.state === 'suspended') {
-      await audioContextRef.current.resume()
-    }
-  }
-
   useEffect(() => {
-    if (visualizerRafRef.current) {
-      window.cancelAnimationFrame(visualizerRafRef.current)
-      visualizerRafRef.current = null
-    }
-
-    if (!isPlaying || prefersReducedMotion) {
+    if (!isPlaying) {
       return
     }
 
-    const analyser = analyserRef.current
-    const dataArray = dataArrayRef.current
-
-    const draw = () => {
-      const barCount = 24
-      let nextBars: number[]
-
-      if (analyser && dataArray) {
-        analyser.getByteFrequencyData(dataArray)
-        const step = Math.max(1, Math.floor(dataArray.length / barCount))
-        nextBars = Array.from({ length: barCount }, (_, index) => {
-          let total = 0
-          for (let i = 0; i < step; i += 1) {
-            total += dataArray[index * step + i] ?? 0
-          }
-          return Math.max(0.08, Math.min(1, total / step / 255))
-        })
-      } else {
-        const now = performance.now()
-        const mediaCurrentTime = audioRef.current?.currentTime ?? 0
-        const mediaDuration = audioRef.current?.duration
-        const resolvedDuration = Number.isFinite(mediaDuration) && mediaDuration && mediaDuration > 0
-          ? mediaDuration
-          : effectiveDuration
-        const progress = resolvedDuration > 0 ? Math.min(mediaCurrentTime / resolvedDuration, 1) : 0
-        nextBars = Array.from({ length: barCount }, (_, index) => {
-          if (Array.isArray(selectedAsset?.waveform) && selectedAsset.waveform.length > 0) {
-            const sampleIndex = Math.floor(progress * (selectedAsset.waveform.length - 1))
-            const amplitude = selectedAsset.waveform[Math.min(selectedAsset.waveform.length - 1, Math.max(0, sampleIndex + index - 12))] ?? 0.2
-            const pulse = (Math.sin((now / 240) + index * 0.55 + progress * 8) + 1) * 0.07
-            return Math.max(0.08, Math.min(1, amplitude * 0.9 + pulse))
-          }
-          return Math.max(0.08, Math.min(0.62, 0.14 + Math.abs(Math.sin((now / 230) + index * 0.58 + progress * 10)) * 0.42))
-        })
-      }
-
-      setVisualizerBars(nextBars)
-      visualizerRafRef.current = window.requestAnimationFrame(draw)
-    }
-
-    visualizerRafRef.current = window.requestAnimationFrame(draw)
-    return () => {
-      if (visualizerRafRef.current) {
-        window.cancelAnimationFrame(visualizerRafRef.current)
-        visualizerRafRef.current = null
-      }
-    }
-  }, [effectiveDuration, isPlaying, prefersReducedMotion, selectedAsset?.waveform])
-
-  useEffect(() => {
-    if (idleVisualizerTimerRef.current) {
-      window.clearInterval(idleVisualizerTimerRef.current)
-      idleVisualizerTimerRef.current = null
-    }
-
-    if (isPlaying || prefersReducedMotion) {
-      return
-    }
-
-    idleVisualizerTimerRef.current = window.setInterval(() => {
-      setVisualizerBars((currentBars) => currentBars.map((bar, index) => {
-        const wobble = Math.sin((Date.now() / 1200) + index * 0.45) * 0.03
-        return Math.max(0.08, Math.min(0.32, bar * 0.82 + 0.1 + wobble))
-      }))
-    }, 1200)
+    const timer = window.setInterval(() => {
+      setPlaybackPulse((value) => value + 0.42)
+    }, 90)
 
     return () => {
-      if (idleVisualizerTimerRef.current) {
-        window.clearInterval(idleVisualizerTimerRef.current)
-      }
+      window.clearInterval(timer)
     }
-  }, [isPlaying, prefersReducedMotion])
+  }, [isPlaying])
 
   useEffect(() => {
     return () => {
       if (rafRef.current) {
         window.cancelAnimationFrame(rafRef.current)
-      }
-      if (visualizerRafRef.current) {
-        window.cancelAnimationFrame(visualizerRafRef.current)
-      }
-      if (idleVisualizerTimerRef.current) {
-        window.clearInterval(idleVisualizerTimerRef.current)
-      }
-      sourceNodeRef.current?.disconnect()
-      analyserRef.current?.disconnect()
-      analyserSinkRef.current?.disconnect()
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        void audioContextRef.current.close()
       }
     }
   }, [])
@@ -427,7 +276,6 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     }
 
     try {
-      await ensureAnalyser()
       await audioRef.current.play()
       setHasPlaybackError(false)
       setIsPlaying(true)
@@ -655,6 +503,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       <audio
         ref={audioRef}
         src={activeTrack.src}
+        crossOrigin="anonymous"
         preload="auto"
         onLoadedMetadata={(event) => {
           setHasPlaybackError(false)
@@ -695,42 +544,60 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       <div className="relative mb-5 flex items-center gap-4">
         <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border" style={{ borderColor: 'color-mix(in srgb, var(--color-border) 72%, white 28%)', background: 'linear-gradient(155deg, color-mix(in srgb, var(--color-primary-light) 44%, white 56%) 0%, color-mix(in srgb, var(--color-accent) 26%, var(--color-surface) 74%) 100%)' }}>
           {hasCover ? <img src={resolvedCover} alt={`Capa da musica ${safeTitle}`} className="h-full w-full object-cover" loading="lazy" /> : <><span className="font-display text-xl font-semibold text-text/75">{monogram}</span><Music2 size={14} className="absolute bottom-2 right-2 text-text/55" /></>}
+          <div
+            className="pointer-events-none absolute inset-0 bg-black/24 transition-opacity duration-300"
+            style={{ opacity: isPlaying ? 1 : 0 }}
+            aria-hidden={!isPlaying}
+          >
+            <div className="absolute inset-x-0 bottom-0 flex h-[70%] items-end justify-center pb-1.5">
+              <PlaybackIndicator isPlaying={isPlaying} pulseTick={playbackPulse} />
+            </div>
+          </div>
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-display text-2xl font-bold text-text">{safeTitle}</p>
           <p className="truncate text-sm text-text-light">{safeArtist}</p>
         </div>
+        <div className="hidden items-center gap-2 md:flex">
+          <button type="button" onClick={() => { if (isMuted || volume <= 0.01) { setIsMuted(false); setVolume(0.8); return } setIsMuted(true) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label={isMuted || volume <= 0.01 ? 'Ativar som' : 'Silenciar audio'}>{isMuted || volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
+          <input type="range" min={0} max={1} step={0.01} value={isMuted ? 0 : volume} onChange={(event) => {
+            const nextVolume = Number(event.target.value)
+            if (Number.isNaN(nextVolume)) {
+              return
+            }
+            setIsMuted(nextVolume <= 0.01)
+            setVolume(nextVolume)
+          }} className="w-24 max-w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Controle de volume" />
+        </div>
       </div>
 
-      <AudioVisualizer bars={visualizerBars} isPlaying={isPlaying} waveform={selectedAsset?.waveform} />
+      <div className="mb-2 flex items-center justify-center gap-3">
+        <button type="button" onClick={() => { if (canGoPrev) setTrackIndex((current) => Math.max(0, current - 1)) }} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,opacity,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label="Faixa anterior" disabled={!canGoPrev}><SkipBack size={16} /></button>
+        <button type="button" onClick={() => { void togglePlay() }} className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-primary to-secondary text-white shadow-[0_16px_24px_-18px_color-mix(in_srgb,var(--color-primary)_86%,black_14%)] transition-[transform,opacity,filter] duration-200 hover:scale-[1.02] hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70" aria-label={isPlaying ? 'Pausar musica' : 'Reproduzir musica'}>{isPlaying ? <Pause size={18} /> : <Play size={18} className="translate-x-[1px]" />}</button>
+        <button type="button" onClick={() => { if (canGoNext) setTrackIndex((current) => Math.min(playlist.length - 1, current + 1)) }} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,opacity,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label="Proxima faixa" disabled={!canGoNext}><SkipForward size={16} /></button>
+      </div>
 
-      <div className="relative mb-3 flex items-center gap-3">
-        <button type="button" onClick={() => { void togglePlay() }} className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] hover:from-primary-dark hover:to-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label={isPlaying ? 'Pausar musica' : 'Reproduzir musica'}>{isPlaying ? <Pause size={18} /> : <Play size={18} className="translate-x-[1px]" />}</button>
-        <button type="button" onClick={() => { if (canGoPrev) setTrackIndex((current) => Math.max(0, current - 1)) }} className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/35 bg-white/50 text-text-light transition-colors hover:bg-white/75 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Faixa anterior" disabled={!canGoPrev}><SkipBack size={16} /></button>
-        <button type="button" onClick={() => { if (canGoNext) setTrackIndex((current) => Math.min(playlist.length - 1, current + 1)) }} className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/35 bg-white/50 text-text-light transition-colors hover:bg-white/75 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Proxima faixa" disabled={!canGoNext}><SkipForward size={16} /></button>
-
-        <div className="w-full">
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/10" />
-            <div className="pointer-events-none absolute inset-y-0 left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/20" style={{ width: `${bufferedRatio * 100}%` }} />
-            <div className="pointer-events-none absolute inset-y-0 left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" style={{ width: `${progressRatio * 100}%` }} />
-            <input type="range" min={0} max={effectiveDuration || 0} step={0.1} value={Math.min(currentTime, effectiveDuration || 0)} onChange={(event) => {
-              const nextTime = Number(event.target.value)
-              if (!audioRef.current || Number.isNaN(nextTime)) {
-                return
-              }
-              audioRef.current.currentTime = nextTime
-              setCurrentTime(nextTime)
-            }} className="relative w-full appearance-none bg-transparent accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Barra de progresso da musica" />
-          </div>
-          <div className="mt-1 flex justify-between text-[11px] text-text-light"><span>{formatTime(currentTime)}</span><span>{formatTime(effectiveDuration)}</span></div>
+      <div className="mb-3">
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/10" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/20" style={{ width: `${bufferedRatio * 100}%` }} />
+          <div className="pointer-events-none absolute inset-y-0 left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" style={{ width: `${progressRatio * 100}%` }} />
+          <input type="range" min={0} max={effectiveDuration || 0} step={0.1} value={Math.min(currentTime, effectiveDuration || 0)} onChange={(event) => {
+            const nextTime = Number(event.target.value)
+            if (!audioRef.current || Number.isNaN(nextTime)) {
+              return
+            }
+            audioRef.current.currentTime = nextTime
+            setCurrentTime(nextTime)
+          }} className="relative w-full appearance-none bg-transparent accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Barra de progresso da musica" />
         </div>
+        <div className="mt-1 flex justify-between text-[11px] text-text-light"><span>{formatTime(currentTime)}</span><span>{formatTime(effectiveDuration)}</span></div>
       </div>
 
       {playlist.length > 1 ? <p className="mb-2 text-[11px] text-text-light">Faixa {safeTrackIndex + 1} de {playlist.length}</p> : null}
 
-      <div className="relative flex items-center gap-2">
-        <button type="button" onClick={() => { if (isMuted || volume <= 0.01) { setIsMuted(false); setVolume(0.8); return } setIsMuted(true) }} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/35 bg-white/45 text-text-light transition-colors hover:bg-white/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label={isMuted || volume <= 0.01 ? 'Ativar som' : 'Silenciar audio'}>{isMuted || volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
+      <div className="relative flex items-center justify-end gap-2 md:hidden">
+        <button type="button" onClick={() => { if (isMuted || volume <= 0.01) { setIsMuted(false); setVolume(0.8); return } setIsMuted(true) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label={isMuted || volume <= 0.01 ? 'Ativar som' : 'Silenciar audio'}>{isMuted || volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
         <input type="range" min={0} max={1} step={0.01} value={isMuted ? 0 : volume} onChange={(event) => {
           const nextVolume = Number(event.target.value)
           if (Number.isNaN(nextVolume)) {
@@ -738,7 +605,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           }
           setIsMuted(nextVolume <= 0.01)
           setVolume(nextVolume)
-        }} className="w-40 max-w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Controle de volume" />
+        }} className="w-28 max-w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Controle de volume" />
         <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium text-text-light" style={{ backgroundColor: 'var(--color-surface-glass)', borderColor: 'var(--color-border)' }}>{Math.round((isMuted ? 0 : volume) * 100)}%</span>
       </div>
     </div>

@@ -18,6 +18,15 @@ export function Header() {
   const location = useLocation()
   const { isAuthenticated } = useAuthStore()
   const isEditorRoute = location.pathname.startsWith('/editor')
+  const useMobileLiteGlass = isEditorRoute
+
+  const mobileSurfaceClass = useMobileLiteGlass
+    ? 'glass border border-primary/12 bg-white/85 shadow-[0_14px_34px_-22px_rgba(0,0,0,0.34)] backdrop-blur-sm'
+    : 'glass border border-primary/15 shadow-[0_16px_40px_-22px_rgba(0,0,0,0.35)]'
+
+  const mobilePanelClass = useMobileLiteGlass
+    ? 'glass mx-auto w-full max-w-sm rounded-3xl border border-primary/12 bg-white/85 shadow-[0_18px_42px_-24px_rgba(0,0,0,0.38)] backdrop-blur-sm'
+    : 'glass mx-auto w-full max-w-sm rounded-3xl border border-primary/15 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.45)]'
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -104,7 +113,7 @@ export function Header() {
       </div>
 
       <div className="fixed inset-x-0 bottom-4 z-[90] px-4 md:hidden">
-        <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-primary/15 bg-white/95 shadow-[0_16px_40px_-22px_rgba(0,0,0,0.35)]">
+        <div className={`relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl ${mobileSurfaceClass}`}>
           <div className="px-4 py-3 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5 group">
               <Heart className="h-5 w-5 text-primary fill-primary transition-transform group-active:scale-95" />
@@ -115,7 +124,7 @@ export function Header() {
               ref={menuButtonRef}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-white text-text transition-colors hover:bg-primary/10"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-text backdrop-blur-sm transition-colors hover:bg-primary/10"
             >
               {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -129,7 +138,7 @@ export function Header() {
             type="button"
             aria-label="Fechar menu"
             onClick={() => setIsMenuOpen(false)}
-            className="fixed inset-0 z-[80] bg-black/25 md:hidden"
+            className={`fixed inset-0 z-[80] md:hidden ${useMobileLiteGlass ? 'bg-black/18' : 'bg-black/25'}`}
           />
 
           <motion.div
@@ -140,7 +149,7 @@ export function Header() {
             transition={{ duration: 0.16, ease: 'easeOut' }}
             className={`fixed inset-x-0 z-[95] px-4 md:hidden ${isEditorRoute ? 'bottom-44' : 'bottom-20'}`}
           >
-            <div ref={menuPanelRef} className="mx-auto w-full max-w-sm rounded-3xl border border-primary/15 bg-white/95 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.45)]">
+            <div ref={menuPanelRef} className={mobilePanelClass}>
               <nav className="p-4 flex flex-col gap-2">
                 {navLinks.map((link) => (
                   <Link
