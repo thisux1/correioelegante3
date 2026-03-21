@@ -1,31 +1,47 @@
-import { memo, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { LoaderCircle, Music2, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChevronDown, ChevronUp, LoaderCircle, Music2, Pause, Play, Plus, Settings2, Shuffle, SkipBack, SkipForward, Trash2, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 import { assetService, type AssetSummary } from '@/services/assetService'
 import { MediaField } from '@/editor/components/MediaField'
+import { getMusicPlayerUIMode } from '@/editor/blocks/music/getMusicPlayerUIMode'
+import { normalizeMusicTracks } from '@/editor/blocks/music/normalizeMusicTracks'
+import { resolveIsActuallyPlaying, useMusicPlayback } from '@/editor/blocks/music/useMusicPlayback'
+import { useMusicVisualizer } from '@/editor/blocks/music/useMusicVisualizer'
+import {
+  buildWaveformBarsModel,
+  resolveBarIndexFromClientX,
+  resolveProgressBarIndex,
+  resolveSeekTimeFromBarIndex,
+  resolveWaveformBarsCount,
+} from '@/editor/blocks/music/playerWaveform'
+import {
+  addTrack,
+  clampEditorTrackIndex,
+  moveTrack,
+  removeTrack,
+  syncLegacyMirror,
+  updateTrackAtIndex,
+} from '@/editor/blocks/music/trackEditorState'
 
-type UploadState = 'idle' | 'sending' | 'processing' | 'ready' | 'error'
-const EMPTY_TRACKS: Array<{
-  assetId?: string
-  src: string
-  title?: string
-  artist?: string
-  coverSrc?: string
-  coverAssetId?: string
-}> = []
+const EMPTY_TRACKS: Array<{ src: string }> = []
 
-function isValidUrl(value: string): boolean {
-  const normalized = value.trim()
-  if (!normalized) {
-    return false
+function resolveWaveformHeights(inputBars: number[], barsCount: number): number[] {
+  if (barsCount <= 0) {
+    return []
   }
 
-  try {
-    const parsed = new URL(normalized)
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
-  } catch {
-    return false
+  if (inputBars.length === barsCount) {
+    return inputBars
   }
+
+  if (inputBars.length === 0) {
+    return new Array(barsCount).fill(0.15)
+  }
+
+  return new Array(barsCount).fill(0).map((_, index) => {
+    const sourceIndex = Math.floor((index / barsCount) * inputBars.length)
+    return inputBars[Math.max(0, Math.min(inputBars.length - 1, sourceIndex))] ?? 0.15
+  })
 }
 
 function formatTime(totalSeconds: number): string {
@@ -36,37 +52,6 @@ function formatTime(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = Math.floor(totalSeconds % 60)
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-}
-
-function PlaybackIndicator({ isPlaying, pulseTick }: { isPlaying: boolean; pulseTick: number }) {
-  const barHeights = [0, 1, 2, 3].map((index) => {
-    const mainWave = (Math.sin((pulseTick * (0.74 + index * 0.09)) + index * 1.41) + 1) / 2
-    const fastWave = (Math.sin((pulseTick * (1.62 + index * 0.17)) + index * 2.73) + 1) / 2
-    const driftWave = (Math.sin((pulseTick * 0.31) + index * 0.93) + 1) / 2
-    const rawNoise = Math.sin((pulseTick * 13.37) + index * 47.19) * 43758.5453
-    const noise = rawNoise - Math.floor(rawNoise)
-    const burst = noise > 0.82 ? (noise - 0.82) * 2.8 : 0
-    return Math.max(0.16, Math.min(0.98, 0.08 + mainWave * 0.36 + fastWave * 0.23 + driftWave * 0.2 + noise * 0.18 + burst))
-  })
-
-  return (
-    <div className="inline-flex h-full items-end gap-1" aria-live="polite" aria-label={isPlaying ? 'Audio em reproducao' : 'Audio pausado'}>
-      {barHeights.map((height, index) => (
-        <span
-          key={`playback-indicator-${index}`}
-          className="w-2.5 rounded-t-full transition-[height,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{
-            height: `${Math.round((isPlaying ? height : 0.05) * 100)}%`,
-            opacity: isPlaying ? 0.92 : 0,
-            transform: isPlaying ? 'translateY(0%)' : 'translateY(14%)',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.06) 100%)',
-            boxShadow: '0 0 20px -12px rgba(255,255,255,0.9)',
-          }}
-          aria-hidden="true"
-        />
-      ))}
-    </div>
-  )
 }
 
 function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
@@ -80,65 +65,80 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const artist = isMusicBlock ? block.props.artist ?? '' : ''
 
   const [selectedAsset, setSelectedAsset] = useState<AssetSummary | null>(null)
-  const [uploadState, setUploadState] = useState<UploadState>('idle')
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [libraryCount, setLibraryCount] = useState<number | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null)
+  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
+  const [editActiveTrackIndex, setEditActiveTrackIndex] = useState(0)
+  const editableTracks = tracks as Array<{
+    src: string
+    assetId?: string
+    title?: string
+    artist?: string
+    coverSrc?: string
+    coverAssetId?: string
+  }>
+  const safeEditTrackIndex = clampEditorTrackIndex(editActiveTrackIndex, editableTracks.length)
+  const activeEditableTrack = editableTracks[safeEditTrackIndex]
+  const normalizedPlaylist = useMemo(() => normalizeMusicTracks({
+    tracks,
+    src,
+    title,
+    artist,
+    coverSrc,
+    assetId,
+    coverAssetId,
+  }), [artist, assetId, coverAssetId, coverSrc, src, title, tracks])
+  const playback = useMusicPlayback(normalizedPlaylist)
 
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const rafRef = useRef<number | null>(null)
+  const activeTrack = playback.activeTrack
+  const selectedAssetId = activeTrack?.assetId ?? assetId
+  const activeSelectedAsset = selectedAsset && selectedAsset.id === selectedAssetId
+    ? selectedAsset
+    : null
+  const safeTrackIndex = playback.state.activeTrackIndex
+  const [waveformBarsCount, setWaveformBarsCount] = useState<number>(() => {
+    if (typeof window === 'undefined') {
+      return 44
+    }
+    return resolveWaveformBarsCount(window.innerWidth)
+  })
+  const effectiveDuration = playback.state.duration > 0
+    ? playback.state.duration
+    : (activeSelectedAsset?.durationMs ? activeSelectedAsset.durationMs / 1000 : 0)
+  const activeProgressBarIndex = resolveProgressBarIndex(playback.state.currentTime, effectiveDuration, waveformBarsCount)
 
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [duration, setDuration] = useState(0)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [bufferedTime, setBufferedTime] = useState(0)
-  const [volume, setVolume] = useState(0.8)
-  const [isMuted, setIsMuted] = useState(false)
-  const [hasPlaybackError, setHasPlaybackError] = useState(false)
-  const [playbackPulse, setPlaybackPulse] = useState(0)
-  const [trackIndex, setTrackIndex] = useState(0)
+  const { bars: visualizerBars } = useMusicVisualizer({
+    audioElement,
+    isPlaying: playback.state.isPlaying,
+    barsCount: waveformBarsCount,
+    volume: playback.state.volume,
+    isMuted: playback.state.isMuted,
+  })
+  const waveformHeights = useMemo(
+    () => resolveWaveformHeights(visualizerBars, waveformBarsCount),
+    [visualizerBars, waveformBarsCount],
+  )
+  const waveformBarsModel = useMemo(
+    () => buildWaveformBarsModel(waveformHeights, activeProgressBarIndex, waveformBarsCount),
+    [activeProgressBarIndex, waveformBarsCount, waveformHeights],
+  )
 
-  const resolvedSource = selectedAsset?.publicUrl?.trim() || src.trim()
-  const canPlay = useMemo(() => isValidUrl(resolvedSource), [resolvedSource])
-
-  const playlist = useMemo(() => {
-    const normalizedTracks = Array.isArray(tracks)
-      ? tracks.filter((track) => isValidUrl(track.src)).map((track) => ({ ...track, src: track.src.trim() }))
-      : []
-    const primary = isValidUrl(resolvedSource)
-      ? [{ src: resolvedSource, title, artist, coverSrc }]
-      : []
-    const merged = [...primary, ...normalizedTracks]
-    const seen = new Set<string>()
-    return merged.filter((track) => {
-      if (seen.has(track.src)) {
-        return false
-      }
-      seen.add(track.src)
-      return true
-    })
-  }, [artist, coverSrc, resolvedSource, title, tracks])
-
-  const safeTrackIndex = playlist.length > 0 ? Math.min(trackIndex, playlist.length - 1) : 0
-  const activeTrack = playlist[safeTrackIndex] ?? playlist[0] ?? { src: resolvedSource, title, artist, coverSrc }
-  const canGoPrev = playlist.length > 1 && safeTrackIndex > 0
-  const canGoNext = playlist.length > 1 && safeTrackIndex < playlist.length - 1
-  const effectiveDuration = duration > 0 ? duration : (selectedAsset?.durationMs ? selectedAsset.durationMs / 1000 : 0)
-  const progressRatio = effectiveDuration > 0 ? Math.min(currentTime / effectiveDuration, 1) : 0
-  const bufferedRatio = effectiveDuration > 0 ? Math.min(bufferedTime / effectiveDuration, 1) : 0
+  const handleAudioRef = useCallback((node: HTMLAudioElement | null) => {
+    const audioRef = playback.audioRef
+    audioRef.current = node
+    setAudioElement((current) => (current === node ? current : node))
+  }, [playback.audioRef])
 
   useEffect(() => {
     if (!isMusicBlock) {
       return
     }
 
-    if (!assetId) {
-      setSelectedAsset(null)
+    if (!selectedAssetId) {
       return
     }
 
     let active = true
-    assetService.getById(assetId)
+    assetService.getById(selectedAssetId)
       .then(({ data }) => {
         if (active) {
           setSelectedAsset(data.asset)
@@ -153,110 +153,157 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return () => {
       active = false
     }
-  }, [assetId, isMusicBlock])
+  }, [isMusicBlock, selectedAssetId])
 
   useEffect(() => {
-    if (!selectedAsset || (selectedAsset.processingStatus !== 'pending' && selectedAsset.processingStatus !== 'processing')) {
+    if (!activeSelectedAsset || (activeSelectedAsset.processingStatus !== 'pending' && activeSelectedAsset.processingStatus !== 'processing')) {
       return
     }
 
     const timer = window.setInterval(() => {
-      assetService.getById(selectedAsset.id)
+      assetService.getById(activeSelectedAsset.id)
         .then(({ data }) => setSelectedAsset(data.asset))
         .catch(() => undefined)
     }, 3000)
 
     return () => window.clearInterval(timer)
-  }, [selectedAsset])
+  }, [activeSelectedAsset])
 
   useEffect(() => {
-    if (!audioRef.current) {
-      return
-    }
-    audioRef.current.volume = isMuted ? 0 : volume
-  }, [isMuted, volume])
-
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) {
+    if (typeof window === 'undefined') {
       return
     }
 
-    const wasPlaying = !audio.paused
-    audio.src = activeTrack.src
-    audio.load()
-
-    if (!wasPlaying) {
-      return
+    const updateBarsCount = () => {
+      setWaveformBarsCount(resolveWaveformBarsCount(window.innerWidth))
     }
 
-    audio.play()
-      .then(() => {
-        setIsPlaying(true)
-        setHasPlaybackError(false)
-      })
-      .catch(() => {
-        setIsPlaying(false)
-        setHasPlaybackError(true)
-      })
-  }, [activeTrack.src])
-
-  useEffect(() => {
-    if (!isPlaying || !audioRef.current) {
-      if (rafRef.current) {
-        window.cancelAnimationFrame(rafRef.current)
-        rafRef.current = null
-      }
-      return
-    }
-
-    const sync = () => {
-      if (!audioRef.current) {
-        return
-      }
-      setCurrentTime(audioRef.current.currentTime)
-      rafRef.current = window.requestAnimationFrame(sync)
-    }
-
-    rafRef.current = window.requestAnimationFrame(sync)
-    return () => {
-      if (rafRef.current) {
-        window.cancelAnimationFrame(rafRef.current)
-        rafRef.current = null
-      }
-    }
-  }, [isPlaying])
-
-  useEffect(() => {
-    if (!isPlaying) {
-      return
-    }
-
-    const timer = window.setInterval(() => {
-      setPlaybackPulse((value) => value + 0.42)
-    }, 90)
-
-    return () => {
-      window.clearInterval(timer)
-    }
-  }, [isPlaying])
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current) {
-        window.cancelAnimationFrame(rafRef.current)
-      }
-    }
+    updateBarsCount()
+    window.addEventListener('resize', updateBarsCount)
+    return () => window.removeEventListener('resize', updateBarsCount)
   }, [])
+
+  const playlistLength = normalizedPlaylist.length
+  const playerUIMode = getMusicPlayerUIMode(playlistLength)
+  const isPlaylistMode = playerUIMode === 'playlist'
+
+  useEffect(() => {
+    if (!isMusicBlock || !onUpdate) {
+      return
+    }
+
+    const mirror = syncLegacyMirror(block.props, safeEditTrackIndex)
+    const isAligned =
+      (block.props.src ?? '') === mirror.src
+      && (block.props.assetId ?? '') === (mirror.assetId ?? '')
+      && (block.props.title ?? '') === mirror.title
+      && (block.props.artist ?? '') === mirror.artist
+      && (block.props.coverSrc ?? '') === mirror.coverSrc
+      && (block.props.coverAssetId ?? '') === (mirror.coverAssetId ?? '')
+
+    if (isAligned) {
+      return
+    }
+
+    onUpdate((currentBlock) => {
+      if (currentBlock.type !== 'music') {
+        return currentBlock
+      }
+
+      const nextMirror = syncLegacyMirror(currentBlock.props, safeEditTrackIndex)
+      return {
+        ...currentBlock,
+        props: {
+          ...currentBlock.props,
+          ...nextMirror,
+        },
+      }
+    })
+  }, [block.props, isMusicBlock, onUpdate, safeEditTrackIndex])
+
+  const applyTrackMutation = useCallback((nextTracks: typeof editableTracks, nextActiveIndex: number) => {
+    const safeNextActiveIndex = clampEditorTrackIndex(nextActiveIndex, nextTracks.length)
+    setEditActiveTrackIndex(safeNextActiveIndex)
+
+    onUpdate?.((currentBlock) => {
+      if (currentBlock.type !== 'music') {
+        return currentBlock
+      }
+
+      const nextProps = {
+        ...currentBlock.props,
+        tracks: nextTracks,
+      }
+      const mirror = syncLegacyMirror(nextProps, safeNextActiveIndex)
+
+      return {
+        ...currentBlock,
+        props: {
+          ...nextProps,
+          ...mirror,
+        },
+      }
+    })
+  }, [onUpdate])
+
+  const handleSelectTrack = useCallback((index: number) => {
+    const nextIndex = clampEditorTrackIndex(index, editableTracks.length)
+    setEditActiveTrackIndex(nextIndex)
+
+    onUpdate?.((currentBlock) => {
+      if (currentBlock.type !== 'music') {
+        return currentBlock
+      }
+
+      const mirror = syncLegacyMirror(currentBlock.props, nextIndex)
+      return {
+        ...currentBlock,
+        props: {
+          ...currentBlock.props,
+          ...mirror,
+        },
+      }
+    })
+  }, [editableTracks.length, onUpdate])
+
+  const handleAddTrack = useCallback(() => {
+    const result = addTrack(editableTracks)
+    applyTrackMutation(result.tracks, result.activeIndex)
+  }, [applyTrackMutation, editableTracks])
+
+  const handleRemoveTrack = useCallback((index: number) => {
+    const result = removeTrack(editableTracks, index, safeEditTrackIndex)
+    applyTrackMutation(result.tracks, result.activeIndex)
+  }, [applyTrackMutation, editableTracks, safeEditTrackIndex])
+
+  const handleMoveTrack = useCallback((index: number, direction: 'up' | 'down') => {
+    const result = moveTrack(editableTracks, index, direction, safeEditTrackIndex)
+    applyTrackMutation(result.tracks, result.activeIndex)
+  }, [applyTrackMutation, editableTracks, safeEditTrackIndex])
+
+  const handlePatchTrack = useCallback((index: number, patch: Partial<typeof editableTracks[number]>) => {
+    const result = updateTrackAtIndex(editableTracks, index, patch, safeEditTrackIndex)
+    applyTrackMutation(result.tracks, result.activeIndex)
+  }, [applyTrackMutation, editableTracks, safeEditTrackIndex])
+
+  const handleWaveformSeek = useCallback((clientX: number, element: HTMLDivElement) => {
+    const rect = element.getBoundingClientRect()
+    const barIndex = resolveBarIndexFromClientX(clientX, rect.left, rect.width, waveformBarsCount)
+    const nextTime = resolveSeekTimeFromBarIndex(barIndex, waveformBarsCount, effectiveDuration)
+    playback.seek(nextTime)
+  }, [effectiveDuration, playback, waveformBarsCount])
 
   if (!isMusicBlock) {
     return null
   }
 
-  const safeTitle = activeTrack.title || title || 'Sua musica especial'
-  const safeArtist = activeTrack.artist || artist || 'Trilha do seu momento'
-  const resolvedCover = (activeTrack.coverSrc || coverSrc).trim()
-  const hasCover = isValidUrl(resolvedCover)
+  const isPlaylistPanelOpen = isPlaylistMode && isPlaylistOpen
+  const isActuallyPlaying = resolveIsActuallyPlaying(playback.state.isPlaying, playback.state.shouldContinuePlaying, playback.audioRef.current?.paused)
+
+  const safeTitle = activeTrack?.title || title || 'Sua musica especial'
+  const safeArtist = activeTrack?.artist || artist || 'Trilha do seu momento'
+  const resolvedCover = (activeTrack?.coverSrc || coverSrc).trim()
+  const hasCover = resolvedCover.startsWith('http://') || resolvedCover.startsWith('https://')
   const monogram = safeTitle
     .split(/\s+/)
     .filter(Boolean)
@@ -264,225 +311,151 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     .map((chunk) => chunk[0]?.toUpperCase() ?? '')
     .join('') || 'M'
 
-  const togglePlay = async () => {
-    if (!audioRef.current) {
-      return
-    }
-
-    if (isPlaying) {
-      audioRef.current.pause()
-      setIsPlaying(false)
-      return
-    }
-
-    try {
-      await audioRef.current.play()
-      setHasPlaybackError(false)
-      setIsPlaying(true)
-    } catch {
-      setHasPlaybackError(true)
-      setIsPlaying(false)
-    }
-  }
-
-  const handleFileSelection = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) {
-      return
-    }
-
-    setUploadError(null)
-    setUploadState('sending')
-
-    try {
-      const asset = await assetService.uploadFileFlow({ file, kind: 'audio' })
-      setUploadState('processing')
-
-      const { data } = await assetService.list('audio')
-      setLibraryCount(data.assets.length)
-      const refreshedAsset = data.assets.find((item) => item.id === asset.id) ?? asset
-      setSelectedAsset(refreshedAsset)
-
-      onUpdate?.((currentBlock) => {
-        if (currentBlock.type !== 'music') {
-          return currentBlock
-        }
-
-        const trackTitle = file.name.replace(/\.[^/.]+$/, '')
-        const nextTrack = {
-          src: asset.publicUrl ?? currentBlock.props.src,
-          assetId: asset.id,
-          title: currentBlock.props.title || trackTitle,
-          artist: currentBlock.props.artist || '',
-          coverSrc: currentBlock.props.coverSrc ?? '',
-          coverAssetId: currentBlock.props.coverAssetId,
-        }
-
-        const existingTracks = Array.isArray(currentBlock.props.tracks) ? currentBlock.props.tracks : []
-        const dedupedTracks = [
-          ...existingTracks.filter((track) => track.src.trim() !== nextTrack.src.trim()),
-          nextTrack,
-        ]
-
-        return {
-          ...currentBlock,
-          props: {
-            ...currentBlock.props,
-            assetId: asset.id,
-            src: asset.publicUrl ?? currentBlock.props.src,
-            tracks: dedupedTracks,
-          },
-        }
-      })
-
-      setUploadState('ready')
-    } catch (error) {
-      setUploadState('error')
-      setUploadError(error instanceof Error ? error.message : 'Falha no upload do audio.')
-    } finally {
-      event.target.value = ''
-    }
-  }
-
   if (mode === 'edit') {
     return (
-      <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
-        <div>
-          <input ref={fileInputRef} type="file" accept="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/x-wav" className="hidden" onChange={handleFileSelection} />
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10">Upload de audio</button>
-            <span className="text-xs text-text-light">ou preencha URL manual abaixo</span>
+      <div className="space-y-4 rounded-2xl border border-primary/20 bg-white/80 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="font-display text-lg font-bold text-text">Playlist</p>
+            <p className="text-xs text-text-light">Gerencie audio, metadados e capa por faixa.</p>
           </div>
-          <label className="mb-1 block text-xs font-medium text-text-light">URL do audio</label>
-          <input
-            type="url"
-            value={src}
-            onChange={(event) => {
-              const nextSrc = event.target.value
-              onUpdate?.((currentBlock) => {
-                if (currentBlock.type !== 'music') {
-                  return currentBlock
-                }
-                return {
-                  ...currentBlock,
-                  props: {
-                    ...currentBlock.props,
-                    assetId: undefined,
-                    src: nextSrc,
-                  },
-                }
-              })
-            }}
-            placeholder="https://..."
-            className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
-          />
+          <button
+            type="button"
+            onClick={handleAddTrack}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/35 bg-white px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+          >
+            <Plus size={16} />
+            Adicionar faixa
+          </button>
+        </div>
 
-          <MediaField
-            kind="image"
-            label="URL da capa (opcional)"
-            value={{ src: coverSrc, assetId: coverAssetId }}
-            onChange={(nextValue) => {
-              onUpdate?.((currentBlock) => {
-                if (currentBlock.type !== 'music') {
-                  return currentBlock
-                }
-                return {
-                  ...currentBlock,
-                  props: {
-                    ...currentBlock.props,
+        {editableTracks.length > 0 ? (
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+            <div className="rounded-2xl border border-primary/15 bg-white/70 p-2">
+              <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
+                {editableTracks.map((track, index) => {
+                  const isActiveEditorTrack = index === safeEditTrackIndex
+                  const trackTitle = track.title?.trim() || `Faixa ${String(index + 1).padStart(2, '0')}`
+                  const trackArtist = track.artist?.trim() || 'Sem artista'
+
+                  return (
+                    <div key={`music-edit-track-${index}`} className={`rounded-xl border px-2 py-2 transition-colors ${isActiveEditorTrack ? 'border-primary/30 bg-primary/10' : 'border-primary/10 bg-white/70'}`}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectTrack(index)}
+                        className="flex w-full items-center gap-2 text-left"
+                      >
+                        <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold ${isActiveEditorTrack ? 'border-primary/45 bg-primary/20 text-primary-dark' : 'border-primary/20 bg-white text-text-light'}`}>
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-text">{trackTitle}</span>
+                          <span className="block truncate text-xs text-text-light">{trackArtist}</span>
+                        </span>
+                      </button>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <button type="button" onClick={() => handleMoveTrack(index, 'up')} disabled={index === 0} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-primary/20 px-2 py-1 text-[11px] font-medium text-text-light transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-45">↑</button>
+                        <button type="button" onClick={() => handleMoveTrack(index, 'down')} disabled={index === editableTracks.length - 1} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-primary/20 px-2 py-1 text-[11px] font-medium text-text-light transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-45">↓</button>
+                        <button type="button" onClick={() => handleRemoveTrack(index)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-[11px] font-medium text-red-600 transition-colors hover:bg-red-50">
+                          <Trash2 size={11} />
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-primary/15 bg-white/70 p-3 sm:p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.08em] text-text-light">Faixa ativa {String(safeEditTrackIndex + 1).padStart(2, '0')}</p>
+              <MediaField
+                kind="audio"
+                label="Audio da faixa"
+                value={{ src: activeEditableTrack?.src ?? '', assetId: activeEditableTrack?.assetId }}
+                onChange={(nextValue) => {
+                  handlePatchTrack(safeEditTrackIndex, {
+                    src: nextValue.src,
+                    assetId: nextValue.assetId,
+                  })
+                }}
+                onRemove={() => {
+                  handlePatchTrack(safeEditTrackIndex, {
+                    src: '',
+                    assetId: undefined,
+                  })
+                }}
+                helperText="Upload por faixa com estado individual de envio e processamento."
+              />
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-text-light">Titulo (opcional)</label>
+                <input
+                  type="text"
+                  value={activeEditableTrack?.title ?? ''}
+                  onChange={(event) => {
+                    handlePatchTrack(safeEditTrackIndex, {
+                      title: event.target.value,
+                    })
+                  }}
+                  placeholder="Nome da faixa"
+                  className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-text-light">Artista (opcional)</label>
+                <input
+                  type="text"
+                  value={activeEditableTrack?.artist ?? ''}
+                  onChange={(event) => {
+                    handlePatchTrack(safeEditTrackIndex, {
+                      artist: event.target.value,
+                    })
+                  }}
+                  placeholder="Quem canta"
+                  className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
+                />
+              </div>
+
+              <MediaField
+                kind="image"
+                label="Capa da faixa (opcional)"
+                value={{ src: activeEditableTrack?.coverSrc ?? '', assetId: activeEditableTrack?.coverAssetId }}
+                onChange={(nextValue) => {
+                  handlePatchTrack(safeEditTrackIndex, {
                     coverSrc: nextValue.src,
                     coverAssetId: nextValue.assetId,
-                  },
-                }
-              })
-            }}
-            onRemove={() => {
-              onUpdate?.((currentBlock) => {
-                if (currentBlock.type !== 'music') {
-                  return currentBlock
-                }
-                return {
-                  ...currentBlock,
-                  props: {
-                    ...currentBlock.props,
+                  })
+                }}
+                onRemove={() => {
+                  handlePatchTrack(safeEditTrackIndex, {
                     coverSrc: '',
                     coverAssetId: undefined,
-                  },
-                }
-              })
-            }}
-            helperText="Capa opcional com upload direto ou URL manual."
-          />
-
-          {(uploadState !== 'idle' || uploadError || libraryCount !== null) ? (
-            <div className="mt-2 rounded-lg border border-primary/20 bg-white/70 px-3 py-2 text-xs text-text-light">
-              {uploadState === 'sending' ? 'Enviando audio...' : null}
-              {uploadState === 'processing' ? 'Processando audio...' : null}
-              {uploadState === 'ready' ? 'Audio pronto para uso.' : null}
-              {uploadState === 'error' ? `Erro no upload: ${uploadError ?? 'tente novamente.'}` : null}
-              {libraryCount !== null ? ` Biblioteca: ${libraryCount} asset(s).` : null}
+                  })
+                }}
+                helperText="Capa opcional por faixa para o player e playlist."
+              />
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-text-light">
+            Nenhuma faixa ainda. Toque em "Adicionar faixa" para comecar sua playlist.
+          </div>
+        )}
 
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-light">Titulo (opcional)</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(event) => {
-              const nextTitle = event.target.value
-              onUpdate?.((currentBlock) => {
-                if (currentBlock.type !== 'music') {
-                  return currentBlock
-                }
-                return {
-                  ...currentBlock,
-                  props: {
-                    ...currentBlock.props,
-                    title: nextTitle,
-                  },
-                }
-              })
-            }}
-            placeholder="Nome da faixa"
-            className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-light">Artista (opcional)</label>
-          <input
-            type="text"
-            value={artist}
-            onChange={(event) => {
-              const nextArtist = event.target.value
-              onUpdate?.((currentBlock) => {
-                if (currentBlock.type !== 'music') {
-                  return currentBlock
-                }
-                return {
-                  ...currentBlock,
-                  props: {
-                    ...currentBlock.props,
-                    artist: nextArtist,
-                  },
-                }
-              })
-            }}
-            placeholder="Quem canta"
-            className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
-          />
+        <div className="rounded-xl border border-primary/15 bg-white/70 p-3 text-xs text-text-light">
+          O espelho legado (`src`, `assetId`, `title`, `artist`, `coverSrc`, `coverAssetId`) e sincronizado automaticamente com a faixa ativa para manter compatibilidade.
         </div>
       </div>
     )
   }
 
-  if (!canPlay) {
+  if (playlistLength === 0) {
     return <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-6 text-center text-sm text-text-light">URL de audio invalida ou vazia. Ajuste no modo de edicao.</div>
   }
 
-  if (selectedAsset && (selectedAsset.processingStatus === 'pending' || selectedAsset.processingStatus === 'processing')) {
+  if (activeSelectedAsset && (activeSelectedAsset.processingStatus === 'pending' || activeSelectedAsset.processingStatus === 'processing')) {
     return (
       <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light">
         <div className="mb-4 flex items-center gap-2">
@@ -499,115 +472,185 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border p-5 backdrop-blur-xl md:p-6" style={{ borderColor: 'var(--color-border)', background: 'linear-gradient(132deg, color-mix(in srgb, var(--color-surface) 76%, white 24%) 0%, color-mix(in srgb, var(--color-surface-glass) 82%, var(--color-primary-light) 18%) 100%)', boxShadow: '0 28px 55px -38px rgba(0, 0, 0, 0.32)' }}>
+    <div className="glass relative overflow-hidden rounded-3xl p-4 font-sans sm:p-5 md:p-6" style={{ background: 'linear-gradient(132deg, color-mix(in srgb, var(--color-surface) 76%, white 24%) 0%, color-mix(in srgb, var(--color-surface-glass) 82%, var(--color-primary-light) 18%) 100%)' }}>
       <audio
-        ref={audioRef}
-        src={activeTrack.src}
+        ref={handleAudioRef}
+        src={activeTrack?.src ?? ''}
         crossOrigin="anonymous"
         preload="auto"
-        onLoadedMetadata={(event) => {
-          setHasPlaybackError(false)
-          if (Number.isFinite(event.currentTarget.duration) && event.currentTarget.duration > 0) {
-            setDuration(event.currentTarget.duration)
-          }
-        }}
-        onDurationChange={(event) => {
-          if (Number.isFinite(event.currentTarget.duration) && event.currentTarget.duration > 0) {
-            setDuration(event.currentTarget.duration)
-          }
-        }}
+        onPlay={() => playback.onPlayStateChange(true)}
+        onPause={() => playback.onPlayStateChange(false)}
+        onLoadedMetadata={(event) => playback.onLoadedMetadata(event.currentTarget.duration)}
+        onDurationChange={(event) => playback.onDurationChange(event.currentTarget.duration)}
         onProgress={(event) => {
           const media = event.currentTarget
           if (!media.buffered || media.buffered.length === 0) {
             return
           }
-          setBufferedTime(media.buffered.end(media.buffered.length - 1))
+          playback.onProgress(media.buffered.end(media.buffered.length - 1))
         }}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
-        onEnded={() => {
-          if (canGoNext) {
-            setTrackIndex((current) => current + 1)
-            setCurrentTime(0)
-            return
-          }
-          setIsPlaying(false)
-          setCurrentTime(0)
-        }}
-        onError={() => {
-          setHasPlaybackError(true)
-          setIsPlaying(false)
-        }}
+        onTimeUpdate={(event) => playback.onTimeUpdate(event.currentTarget.currentTime)}
+        onEnded={playback.onEnded}
+        onError={playback.onError}
       />
 
-      {hasPlaybackError ? <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">Nao foi possivel carregar este audio. Verifique a URL.</p> : null}
+      {playback.state.hasPlaybackError ? <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">Nao foi possivel carregar este audio. Verifique a URL.</p> : null}
 
-      <div className="relative mb-5 flex items-center gap-4">
+      <div className="mb-4 flex items-center justify-between gap-2 sm:mb-5">
+        <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/45 bg-white/70 px-3 py-1.5 text-xs text-text-light">
+          <Settings2 size={14} aria-hidden="true" />
+          <span className="font-medium">Player</span>
+        </div>
+        {isPlaylistMode ? (
+          <button
+            type="button"
+            onClick={() => setIsPlaylistOpen((current) => !current)}
+            className="inline-flex min-h-11 items-center justify-center gap-1 rounded-full border border-white/45 bg-white/70 px-3 text-xs font-medium text-text shadow-[0_12px_18px_-14px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 hover:border-white/65 hover:bg-white/85 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65"
+            aria-label={isPlaylistPanelOpen ? 'Fechar lista de faixas' : 'Abrir lista de faixas'}
+            aria-expanded={isPlaylistPanelOpen}
+            aria-controls={`playlist-panel-${block.id}`}
+          >
+            <span>Faixas</span>
+            {isPlaylistPanelOpen ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+          </button>
+        ) : null}
+      </div>
+
+      <div className="relative mb-4 flex min-w-0 items-center gap-3 sm:mb-5 sm:gap-4">
         <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border" style={{ borderColor: 'color-mix(in srgb, var(--color-border) 72%, white 28%)', background: 'linear-gradient(155deg, color-mix(in srgb, var(--color-primary-light) 44%, white 56%) 0%, color-mix(in srgb, var(--color-accent) 26%, var(--color-surface) 74%) 100%)' }}>
           {hasCover ? <img src={resolvedCover} alt={`Capa da musica ${safeTitle}`} className="h-full w-full object-cover" loading="lazy" /> : <><span className="font-display text-xl font-semibold text-text/75">{monogram}</span><Music2 size={14} className="absolute bottom-2 right-2 text-text/55" /></>}
-          <div
-            className="pointer-events-none absolute inset-0 bg-black/24 transition-opacity duration-300"
-            style={{ opacity: isPlaying ? 1 : 0 }}
-            aria-hidden={!isPlaying}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display text-xl font-bold text-text sm:text-2xl">{safeTitle}</p>
+          <p className="truncate text-sm text-text-light">{safeArtist}</p>
+          <p className="text-[11px] text-text-light">{formatTime(playback.state.currentTime)} / {formatTime(effectiveDuration)}</p>
+        </div>
+      </div>
+
+      <div
+        className="mb-4"
+        role="group"
+        aria-label="Waveform de progresso"
+        onClick={(event) => {
+          handleWaveformSeek(event.clientX, event.currentTarget)
+        }}
+        onTouchStart={(event) => {
+          const touch = event.touches[0]
+          if (!touch) {
+            return
+          }
+          handleWaveformSeek(touch.clientX, event.currentTarget)
+        }}
+      >
+        <div className="flex h-24 items-end gap-1 rounded-xl border border-white/35 bg-gradient-to-b from-white/45 to-white/15 px-2 py-2 sm:h-28">
+          {waveformBarsModel.map((bar, index) => {
+            return (
+              <button
+                key={`waveform-bar-${index}`}
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  const nextTime = resolveSeekTimeFromBarIndex(index, waveformBarsCount, effectiveDuration)
+                  playback.seek(nextTime)
+                }}
+                className="min-h-[2px] flex-1 rounded-[999px] transition-[height,background-color,opacity] duration-200 ease-[var(--ease-out-expo)] motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                style={{
+                  height: `${Math.round((isActuallyPlaying ? bar.heightRatio : Math.max(bar.heightRatio * 0.72, 0.12)) * 100)}%`,
+                  opacity: 0.95,
+                  minWidth: '4px',
+                  background: bar.isPlayed
+                    ? 'linear-gradient(180deg, color-mix(in srgb, var(--color-primary-light) 68%, white 32%) 0%, color-mix(in srgb, var(--color-primary) 88%, black 12%) 100%)'
+                    : 'linear-gradient(180deg, rgba(107,114,128,0.58) 0%, rgba(107,114,128,0.32) 100%)',
+                }}
+                aria-label={`Ir para ponto ${index + 1} da faixa`}
+              />
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="mb-2 flex items-center justify-between text-[11px] text-text-light">
+        <span>{isPlaylistMode ? `Faixa ${safeTrackIndex + 1} de ${playlistLength}` : 'Faixa unica'}</span>
+        <span>{playback.state.isShuffleEnabled ? 'Aleatorio ativo' : 'Aleatorio inativo'}</span>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <button type="button" onClick={playback.toggleMute} className="inline-flex h-11 w-11 min-h-11 min-w-11 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label={playback.state.isMuted || playback.state.volume <= 0.01 ? 'Ativar som' : 'Silenciar audio'}>{playback.state.isMuted || playback.state.volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
+          <input type="range" min={0} max={1} step={0.01} value={playback.state.isMuted ? 0 : playback.state.volume} onChange={(event) => playback.setVolume(Number(event.target.value))} className="w-20 max-w-[26vw] accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Controle de volume" />
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          {isPlaylistMode ? (
+            <button type="button" onClick={playback.prevTrack} className="inline-flex h-11 w-11 min-h-11 min-w-11 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,opacity,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label="Faixa anterior" disabled={!playback.canGoPrev}><SkipBack size={16} /></button>
+          ) : null}
+          <button type="button" onClick={() => { void playback.togglePlay() }} className="relative inline-flex h-12 w-12 min-h-12 min-w-12 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-primary to-secondary text-white shadow-[0_16px_24px_-18px_color-mix(in_srgb,var(--color-primary)_86%,black_14%)] transition-[transform,opacity,filter] duration-200 hover:scale-[1.02] hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70" aria-label={isActuallyPlaying ? 'Pausar musica' : 'Reproduzir musica'}>{isActuallyPlaying ? <Pause size={18} /> : <Play size={18} className="translate-x-[1px]" />}</button>
+          {isPlaylistMode ? (
+            <button type="button" onClick={playback.nextTrack} className="inline-flex h-11 w-11 min-h-11 min-w-11 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,opacity,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label="Proxima faixa" disabled={!playback.canGoNext}><SkipForward size={16} /></button>
+          ) : null}
+        </div>
+
+        {isPlaylistMode ? (
+          <button
+            type="button"
+            onClick={playback.toggleShuffle}
+            className={`inline-flex h-11 w-11 min-h-11 min-w-11 items-center justify-center rounded-full border shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65 ${playback.state.isShuffleEnabled ? 'border-primary/45 bg-primary/15 text-primary-dark' : 'border-white/40 bg-white/55 text-text-light hover:border-white/60 hover:bg-white/78'}`}
+            aria-label={playback.state.isShuffleEnabled ? 'Desativar modo aleatorio' : 'Ativar modo aleatorio'}
+            aria-pressed={playback.state.isShuffleEnabled}
           >
-            <div className="absolute inset-x-0 bottom-0 flex h-[70%] items-end justify-center pb-1.5">
-              <PlaybackIndicator isPlaying={isPlaying} pulseTick={playbackPulse} />
+            <Shuffle size={15} />
+          </button>
+        ) : null}
+      </div>
+
+      {isPlaylistMode ? (
+        <div
+          id={`playlist-panel-${block.id}`}
+           className={`overflow-hidden transition-[max-height,opacity,margin] duration-300 ease-[var(--ease-out-expo)] motion-reduce:transition-none ${isPlaylistPanelOpen ? 'mt-3 max-h-72 opacity-100 sm:max-h-80' : 'max-h-0 opacity-0'}`}
+           aria-hidden={!isPlaylistPanelOpen}
+        >
+          <div className="rounded-2xl border border-white/45 bg-white/60 p-2 sm:p-3">
+            <div
+              className="max-h-56 overflow-y-auto pr-1 sm:max-h-64"
+              role="listbox"
+              aria-label="Lista de faixas"
+              aria-activedescendant={`playlist-option-${block.id}-${safeTrackIndex}`}
+            >
+              {normalizedPlaylist.map((track, index) => {
+                const optionId = `playlist-option-${block.id}-${index}`
+                const isActive = index === safeTrackIndex
+                const trackTitle = track.title?.trim() || `Faixa ${index + 1}`
+                const trackArtist = track.artist?.trim() || 'Artista desconhecido'
+
+                return (
+                  <button
+                    key={`${track.src}-${index}`}
+                    id={optionId}
+                    type="button"
+                    role="option"
+                    aria-selected={isActive}
+                    onClick={() => playback.setActiveTrackIndex(index)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        playback.setActiveTrackIndex(index)
+                      }
+                    }}
+                    className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors last:mb-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65 ${isActive ? 'bg-primary/15 text-text' : 'text-text-light hover:bg-white/70'}`}
+                    aria-label={`Reproduzir faixa ${index + 1}: ${trackTitle}`}
+                  >
+                    <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold ${isActive ? 'border-primary/40 bg-primary/20 text-primary-dark' : 'border-white/55 bg-white/70 text-text-light'}`}>{String(index + 1).padStart(2, '0')}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className={`block truncate text-sm ${isActive ? 'font-semibold text-text' : 'font-medium text-text'}`}>{trackTitle}</span>
+                      <span className="block truncate text-xs text-text-light">{trackArtist}</span>
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-2xl font-bold text-text">{safeTitle}</p>
-          <p className="truncate text-sm text-text-light">{safeArtist}</p>
-        </div>
-        <div className="hidden items-center gap-2 md:flex">
-          <button type="button" onClick={() => { if (isMuted || volume <= 0.01) { setIsMuted(false); setVolume(0.8); return } setIsMuted(true) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label={isMuted || volume <= 0.01 ? 'Ativar som' : 'Silenciar audio'}>{isMuted || volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
-          <input type="range" min={0} max={1} step={0.01} value={isMuted ? 0 : volume} onChange={(event) => {
-            const nextVolume = Number(event.target.value)
-            if (Number.isNaN(nextVolume)) {
-              return
-            }
-            setIsMuted(nextVolume <= 0.01)
-            setVolume(nextVolume)
-          }} className="w-24 max-w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Controle de volume" />
-        </div>
-      </div>
-
-      <div className="mb-2 flex items-center justify-center gap-3">
-        <button type="button" onClick={() => { if (canGoPrev) setTrackIndex((current) => Math.max(0, current - 1)) }} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,opacity,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label="Faixa anterior" disabled={!canGoPrev}><SkipBack size={16} /></button>
-        <button type="button" onClick={() => { void togglePlay() }} className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-primary to-secondary text-white shadow-[0_16px_24px_-18px_color-mix(in_srgb,var(--color-primary)_86%,black_14%)] transition-[transform,opacity,filter] duration-200 hover:scale-[1.02] hover:brightness-105 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70" aria-label={isPlaying ? 'Pausar musica' : 'Reproduzir musica'}>{isPlaying ? <Pause size={18} /> : <Play size={18} className="translate-x-[1px]" />}</button>
-        <button type="button" onClick={() => { if (canGoNext) setTrackIndex((current) => Math.min(playlist.length - 1, current + 1)) }} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,opacity,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label="Proxima faixa" disabled={!canGoNext}><SkipForward size={16} /></button>
-      </div>
-
-      <div className="mb-3">
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/10" />
-          <div className="pointer-events-none absolute inset-y-0 left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-black/20" style={{ width: `${bufferedRatio * 100}%` }} />
-          <div className="pointer-events-none absolute inset-y-0 left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary" style={{ width: `${progressRatio * 100}%` }} />
-          <input type="range" min={0} max={effectiveDuration || 0} step={0.1} value={Math.min(currentTime, effectiveDuration || 0)} onChange={(event) => {
-            const nextTime = Number(event.target.value)
-            if (!audioRef.current || Number.isNaN(nextTime)) {
-              return
-            }
-            audioRef.current.currentTime = nextTime
-            setCurrentTime(nextTime)
-          }} className="relative w-full appearance-none bg-transparent accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Barra de progresso da musica" />
-        </div>
-        <div className="mt-1 flex justify-between text-[11px] text-text-light"><span>{formatTime(currentTime)}</span><span>{formatTime(effectiveDuration)}</span></div>
-      </div>
-
-      {playlist.length > 1 ? <p className="mb-2 text-[11px] text-text-light">Faixa {safeTrackIndex + 1} de {playlist.length}</p> : null}
-
-      <div className="relative flex items-center justify-end gap-2 md:hidden">
-        <button type="button" onClick={() => { if (isMuted || volume <= 0.01) { setIsMuted(false); setVolume(0.8); return } setIsMuted(true) }} className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label={isMuted || volume <= 0.01 ? 'Ativar som' : 'Silenciar audio'}>{isMuted || volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
-        <input type="range" min={0} max={1} step={0.01} value={isMuted ? 0 : volume} onChange={(event) => {
-          const nextVolume = Number(event.target.value)
-          if (Number.isNaN(nextVolume)) {
-            return
-          }
-          setIsMuted(nextVolume <= 0.01)
-          setVolume(nextVolume)
-        }} className="w-28 max-w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Controle de volume" />
-        <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium text-text-light" style={{ backgroundColor: 'var(--color-surface-glass)', borderColor: 'var(--color-border)' }}>{Math.round((isMuted ? 0 : volume) * 100)}%</span>
-      </div>
+      ) : null}
     </div>
   )
 }
