@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/layout/Layout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useAuthStore } from '@/store/authStore'
+import { resolveEditorAccessForUser } from '@/config/featureFlags'
 
 const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
 const Create = lazy(() => import('@/pages/Create').then(m => ({ default: m.Create })))
@@ -44,6 +45,29 @@ function PublicOnlyRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+function EditorFeatureRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuthStore()
+
+  if (isLoading) return <PageLoader />
+  if (!isAuthenticated) return <Navigate to="/auth" replace />
+
+  const decision = resolveEditorAccessForUser(user?.id)
+  if (!decision.enabled) {
+    return (
+      <Navigate
+        to="/create"
+        replace
+        state={{
+          editorBlockedReason: decision.reason,
+          rolloutPercent: decision.rolloutPercent,
+        }}
+      />
+    )
+  }
+
+  return <>{children}</>
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
@@ -56,8 +80,8 @@ export function AppRouter() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/card/:id" element={<Card />} />
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
-              <Route path="/editor" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
-              <Route path="/editor/:pageId" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+              <Route path="/editor" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
+              <Route path="/editor/:pageId" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
               <Route path="/payment/:messageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />

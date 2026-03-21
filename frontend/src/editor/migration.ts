@@ -123,10 +123,11 @@ function migrateBlock(input: unknown, index: number): Block {
 export function migratePage(input: unknown): PageContent {
   const record = asRecord(input)
   const maybeBlocks = Array.isArray(record.blocks) ? record.blocks : []
+  const normalizedTheme = resolveThemeId(typeof record.theme === 'string' ? record.theme : undefined)
 
   return {
     blocks: maybeBlocks.map((block, index) => migrateBlock(block, index)),
-    theme: resolveThemeId(typeof record.theme === 'string' ? record.theme : undefined),
+    theme: normalizedTheme,
     version: PAGE_VERSION,
   }
 }

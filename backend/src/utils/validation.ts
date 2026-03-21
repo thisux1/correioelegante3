@@ -9,6 +9,10 @@ import {
   MAX_BLOCKS,
   MAX_PAGE_BYTES,
 } from '../services/page.constants';
+import {
+  ASSET_KIND_VALUES,
+  assetKindSchema,
+} from '../contracts/asset.contract';
 
 export const registerSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -131,6 +135,24 @@ export const updatePageSchema = z
     }
   });
 
+export const assetUploadUrlSchema = z.object({
+  kind: assetKindSchema,
+  fileName: z.string().min(3, 'Nome de arquivo invalido').max(255, 'Nome de arquivo invalido'),
+  mimeType: z.string().min(3, 'Mime type obrigatorio').max(120, 'Mime type invalido').toLowerCase(),
+  sizeBytes: z.number().int().positive('Tamanho do arquivo invalido'),
+});
+
+export const assetCompleteSchema = z.object({
+  assetId: z
+    .string({ required_error: 'assetId e obrigatorio' })
+    .min(1, 'assetId e obrigatorio')
+    .regex(/^[a-f\d]{24}$/i, 'assetId invalido'),
+});
+
+export const assetListQuerySchema = z.object({
+  kind: z.enum(ASSET_KIND_VALUES).optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
@@ -138,3 +160,6 @@ export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
 export type CreatePageInput = z.infer<typeof createPageSchema>;
 export type UpdatePageInput = z.infer<typeof updatePageSchema>;
+export type AssetUploadUrlInput = z.infer<typeof assetUploadUrlSchema>;
+export type AssetCompleteInput = z.infer<typeof assetCompleteSchema>;
+export type AssetListQueryInput = z.infer<typeof assetListQuerySchema>;

@@ -21,6 +21,7 @@ import {
 } from '@/editor/draftPrecedence'
 import { cloneTemplateBlocks, getTemplateById } from '@/editor/templates'
 import { pageService, type PageSummary } from '@/services/pageService'
+import { trackEditorEvent } from '@/services/telemetry'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -107,6 +108,14 @@ export function Editor() {
   const [templateConflict, setTemplateConflict] = useState<TemplateConflictState | null>(null)
   const handledTemplateKeyRef = useRef<string>('')
 
+  useEffect(() => {
+    trackEditorEvent({
+      event: 'editor_open',
+      pageId: pageIdFromRoute,
+      status: pageIdFromRoute ? 'existing' : 'new',
+    })
+  }, [pageIdFromRoute])
+
   const pageMetaRef = useRef({
     status,
     visibility,
@@ -133,15 +142,31 @@ export function Editor() {
       return
     }
 
-    const page = await pageService.loadPage(currentPageId)
-    setPage({ blocks: page.blocks, theme: page.theme })
-    setPageVersion(page.version)
-    setStatus(page.status)
-    setVisibility(page.visibility)
-    setDraftContext(page.id, page.updatedAt)
-    setLastSyncedSignature(toPageSignature(page))
-    setSaveState('idle')
-    setFeedback('Versao do servidor carregada com sucesso.')
+    const startedAt = Date.now()
+    try {
+      const page = await pageService.loadPage(currentPageId)
+      setPage({ blocks: page.blocks, theme: page.theme })
+      setPageVersion(page.version)
+      setStatus(page.status)
+      setVisibility(page.visibility)
+      setDraftContext(page.id, page.updatedAt)
+      setLastSyncedSignature(toPageSignature(page))
+      setSaveState('idle')
+      setFeedback('Versao do servidor carregada com sucesso.')
+      trackEditorEvent({
+        event: 'load_success',
+        pageId: page.id,
+        durationMs: Date.now() - startedAt,
+      })
+    } catch (error) {
+      trackEditorEvent({
+        event: 'load_error',
+        pageId: currentPageId,
+        durationMs: Date.now() - startedAt,
+        detail: isAxiosError<{ error?: string }>(error) ? error.response?.data?.error : undefined,
+      })
+      throw error
+    }
   }, [currentPageId, setDraftContext, setPage])
 
   const applyBackendPage = useCallback((backendPage: PageSummary) => {
@@ -179,6 +204,8 @@ export function Editor() {
   }, [setDraftContext, setMode, setPage])
 
   const savePage = useCallback(async () => {
+    const startedAt = Date.now()
+    trackEditorEvent({ event: 'save_start', pageId: currentPageId })
     try {
       setSaveState('saving')
       setFeedback(null)
@@ -203,17 +230,51 @@ export function Editor() {
       setLastSyncedSignature(currentSignature)
       setSaveState('saved')
       setFeedback('Pagina salva com sucesso.')
+      trackEditorEvent({
+        event: 'save_success',
+        pageId: result.page.id,
+        durationMs: Date.now() - startedAt,
+      })
+
+      if (result.page.status === 'published') {
+        trackEditorEvent({
+          event: 'publish_success',
+          pageId: result.page.id,
+          durationMs: Date.now() - startedAt,
+        })
+      }
 
       if (!currentPageId) {
         navigate(`/editor/${result.page.id}`, { replace: true })
       }
     } catch (error) {
+      const isFeatureDisabled =
+        isAxiosError<{ code?: string; error?: string; reason?: string; rolloutPercent?: number }>(error)
+        && error.response?.data?.code === 'EDITOR_MODULAR_FEATURE_DISABLED'
+
+      if (isFeatureDisabled) {
+        navigate('/create', {
+          replace: true,
+          state: {
+            editorBlockedReason: error.response?.data?.reason,
+            rolloutPercent: error.response?.data?.rolloutPercent,
+          },
+        })
+        return
+      }
+
       if (isAxiosError<{ error?: string; code?: string }>(error) && error.response?.status === 409) {
         setSaveState('error')
         setFeedback(
           error.response.data?.error
           ?? 'A pagina foi atualizada em outro lugar. Recarregue a versao do servidor para continuar.',
         )
+        trackEditorEvent({
+          event: 'save_error',
+          pageId: currentPageId,
+          durationMs: Date.now() - startedAt,
+          detail: error.response.data?.error,
+        })
         return
       }
 
@@ -223,6 +284,22 @@ export function Editor() {
           ? error.response?.data?.error ?? 'Falha ao salvar pagina. Tente novamente.'
           : 'Falha ao salvar pagina. Tente novamente.',
       )
+
+      trackEditorEvent({
+        event: 'save_error',
+        pageId: currentPageId,
+        durationMs: Date.now() - startedAt,
+        detail: isAxiosError<{ error?: string }>(error) ? error.response?.data?.error : undefined,
+      })
+
+      if (status === 'published') {
+        trackEditorEvent({
+          event: 'publish_error',
+          pageId: currentPageId,
+          durationMs: Date.now() - startedAt,
+          detail: isAxiosError<{ error?: string }>(error) ? error.response?.data?.error : undefined,
+        })
+      }
     }
   }, [
     blocks,
@@ -295,6 +372,7 @@ export function Editor() {
       }
 
       setIsLoadingPage(true)
+      const startedAt = Date.now()
       try {
         const backendPage = await pageService.loadPage(pageIdFromRoute)
         if (!active) {
@@ -349,8 +427,28 @@ export function Editor() {
         }
 
         applyBackendPage(backendPage)
+        trackEditorEvent({
+          event: 'load_success',
+          pageId: backendPage.id,
+          durationMs: Date.now() - startedAt,
+        })
       } catch (error) {
         if (!active) {
+          return
+        }
+
+        const isFeatureDisabled =
+          isAxiosError<{ code?: string; reason?: string; rolloutPercent?: number }>(error)
+          && error.response?.data?.code === 'EDITOR_MODULAR_FEATURE_DISABLED'
+
+        if (isFeatureDisabled) {
+          navigate('/create', {
+            replace: true,
+            state: {
+              editorBlockedReason: error.response?.data?.reason,
+              rolloutPercent: error.response?.data?.rolloutPercent,
+            },
+          })
           return
         }
 
@@ -359,6 +457,13 @@ export function Editor() {
             ? error.response?.data?.error ?? 'Nao foi possivel carregar a pagina.'
             : 'Nao foi possivel carregar a pagina.',
         )
+
+        trackEditorEvent({
+          event: 'load_error',
+          pageId: pageIdFromRoute,
+          durationMs: Date.now() - startedAt,
+          detail: isAxiosError<{ error?: string }>(error) ? error.response?.data?.error : undefined,
+        })
       } finally {
         if (active) {
           setIsLoadingPage(false)
@@ -373,6 +478,7 @@ export function Editor() {
     }
   }, [
     pageIdFromRoute,
+    navigate,
     applyBackendPage,
     applyLocalDraft,
   ])

@@ -1,0 +1,47 @@
+import { describe, expect, it } from 'vitest'
+import { PAGE_VERSION } from '@/editor/types'
+import { migratePage } from '@/editor/migration'
+
+describe('migratePage', () => {
+  it('mapeia theme legacy para id novo', () => {
+    const migrated = migratePage({ blocks: [], theme: 'classic' })
+    expect(migrated.theme).toBe('romantic-sunset')
+    expect(migrated.version).toBe(PAGE_VERSION)
+  })
+
+  it('normaliza blocos invalidos com defaults seguros', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: '',
+          type: 'unknown',
+          props: { text: 123, align: 'foo' },
+          meta: { createdAt: -2, updatedAt: 'x' },
+        },
+      ],
+    })
+
+    expect(migrated.blocks).toHaveLength(1)
+    expect(migrated.blocks[0].type).toBe('text')
+    expect(migrated.blocks[0].props).toEqual({ text: '', align: 'left' })
+    expect(migrated.blocks[0].id.length).toBeGreaterThan(0)
+    expect(migrated.blocks[0].meta.createdAt).toBe(0)
+    expect(migrated.blocks[0].meta.updatedAt).toBeGreaterThan(0)
+  })
+
+  it('mantem regras de sanitizacao por tipo', () => {
+    const migrated = migratePage({
+      blocks: [
+        { id: 'g1', type: 'gallery', props: { images: ['a', 2], transition: 'x' }, meta: {} },
+        { id: 'i1', type: 'image', props: { src: 'https://a', alt: 5 }, meta: {} },
+      ],
+      theme: 'ocean-breeze',
+    })
+
+    expect(migrated.blocks[0].type).toBe('gallery')
+    expect(migrated.blocks[0].props).toEqual({ images: ['a'], transition: 'fade' })
+    expect(migrated.blocks[1].type).toBe('image')
+    expect(migrated.blocks[1].props).toEqual({ src: 'https://a', alt: '' })
+    expect(migrated.theme).toBe('ocean-breeze')
+  })
+})

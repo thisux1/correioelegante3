@@ -6,6 +6,7 @@ import { Card as UICard } from '@/components/ui/Card'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { messageService } from '@/services/messageService'
 import type { PageStatus, PageVisibility } from '@/editor/types'
+import { buildThemeStyle, resolveThemeId } from '@/editor/themes'
 
 interface CardData {
   id: string
@@ -17,13 +18,6 @@ interface CardData {
   visibility: PageVisibility
   publishedAt: string | null
   createdAt: string
-}
-
-const themeStyles: Record<string, string> = {
-  classic: 'bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200',
-  romantic: 'bg-gradient-to-br from-pink-50 to-fuchsia-50 border-pink-200',
-  friendship: 'bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200',
-  secret: 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200',
 }
 
 export function Card() {
@@ -82,7 +76,10 @@ export function Card() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-6">
+    <div
+      className="min-h-screen flex items-center justify-center pt-24 pb-16 px-6"
+      style={buildThemeStyle(resolveThemeId(card.theme))}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -90,12 +87,7 @@ export function Card() {
         className="w-full max-w-lg"
       >
         <CardTilt3D intensity={8}>
-          <div
-            className={`rounded-3xl p-10 border-2 shadow-2xl ${
-              themeStyles[card.theme] || themeStyles.classic
-            }`}
-          >
-            {/* Decorative hearts */}
+          <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-10 shadow-2xl">
             <div className="flex justify-center gap-2 mb-6">
               {[...Array(3)].map((_, i) => (
                 <motion.div
@@ -115,7 +107,7 @@ export function Card() {
               {card.recipient}
             </p>
 
-            <div className="bg-white/60 rounded-2xl p-6 mb-8 backdrop-blur-sm">
+            <div className="mb-8 rounded-2xl border border-border bg-surface-glass p-6 backdrop-blur-sm">
               <p className="font-cursive text-xl text-text leading-relaxed text-center">
                 {card.message}
               </p>

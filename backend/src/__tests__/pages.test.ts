@@ -10,8 +10,9 @@ function makeToken(userId = '507f1f77bcf86cd799439000') {
 
 const ownerUserId = '507f1f77bcf86cd799439000';
 const pageId = '507f1f77bcf86cd799439111';
+const otherUserId = '507f1f77bcf86cd799439999';
 
-const basePage = {
+const basePageShape = {
   id: pageId,
   userId: ownerUserId,
   content: {
@@ -24,6 +25,7 @@ const basePage = {
         meta: { createdAt: Date.now(), updatedAt: Date.now() },
       },
     ],
+    theme: 'romantic-sunset',
     version: 1,
   },
   status: 'published',
@@ -34,21 +36,55 @@ const basePage = {
   updatedAt: new Date(),
 };
 
+function makePage(overrides: Partial<typeof basePageShape> = {}) {
+  return {
+    ...basePageShape,
+    ...overrides,
+    content: {
+      ...basePageShape.content,
+      ...(overrides.content ?? {}),
+    },
+  };
+}
+
 describe('POST /api/pages', () => {
   it('201 — cria pagina valida', async () => {
-    vi.mocked(prisma.page.create).mockResolvedValue(basePage);
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
 
     const res = await request(app)
       .post('/api/pages')
       .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
       .send({
-        content: basePage.content,
+        content: basePageShape.content,
         status: 'draft',
         visibility: 'private',
       });
 
     expect(res.status).toBe(201);
     expect(res.body.page.id).toBe(pageId);
+  });
+
+  it('400 — rejeita payload invalido (zod)', async () => {
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'block-1',
+              type: 'invalid-type',
+              version: 1,
+              props: {},
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION_ERROR');
   });
 
   it('400 — bloqueia URL insegura', async () => {
@@ -72,17 +108,39 @@ describe('POST /api/pages', () => {
 
     expect(res.status).toBe(400);
   });
+
+  it('normaliza theme legacy para novo id no retorno', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage({
+      content: {
+        ...basePageShape.content,
+        theme: 'classic',
+      },
+    }));
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          ...basePageShape.content,
+          theme: 'classic',
+        },
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.page.content.theme).toBe('romantic-sunset');
+  });
 });
 
 describe('PUT /api/pages/:id', () => {
   it('409 — conflito de versao', async () => {
-    vi.mocked(prisma.page.findUnique).mockResolvedValue(basePage);
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage());
 
     const res = await request(app)
       .put(`/api/pages/${pageId}`)
       .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
       .send({
-        content: basePage.content,
+        content: basePageShape.content,
         version: 999,
       });
 
@@ -92,11 +150,10 @@ describe('PUT /api/pages/:id', () => {
 });
 
 describe('GET /api/pages/:id', () => {
-  it('404 — draft nao publico', async () => {
-    vi.mocked(prisma.page.findUnique).mockResolvedValue({
-      ...basePage,
+  it('404 — draft public nao deve ser visivel para visitante', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
       status: 'draft',
-    });
+    }));
 
     const res = await request(app)
       .get(`/api/pages/${pageId}`);
@@ -104,11 +161,45 @@ describe('GET /api/pages/:id', () => {
     expect(res.status).toBe(404);
   });
 
-  it('200 — private para dono autenticado', async () => {
-    vi.mocked(prisma.page.findUnique).mockResolvedValue({
-      ...basePage,
+  it('404 — archived public nao deve ser visivel para visitante', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'archived',
+    }));
+
+    const res = await request(app)
+      .get(`/api/pages/${pageId}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('404 — published private bloqueia visitante sem auth', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
       visibility: 'private',
-    });
+    }));
+
+    const res = await request(app)
+      .get(`/api/pages/${pageId}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('200 — published unlisted permite acesso por link', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      visibility: 'unlisted',
+    }));
+
+    const res = await request(app)
+      .get(`/api/pages/${pageId}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.page.id).toBe(pageId);
+  });
+
+  it('200 — private para dono autenticado (owner bypass)', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'draft',
+      visibility: 'private',
+    }));
 
     const res = await request(app)
       .get(`/api/pages/${pageId}`)
@@ -121,7 +212,7 @@ describe('GET /api/pages/:id', () => {
 
 describe('GET /api/pages', () => {
   it('200 — lista paginas do usuario', async () => {
-    vi.mocked(prisma.page.findMany).mockResolvedValue([basePage]);
+    vi.mocked(prisma.page.findMany).mockResolvedValue([makePage()]);
 
     const res = await request(app)
       .get('/api/pages')
@@ -134,10 +225,7 @@ describe('GET /api/pages', () => {
 
 describe('DELETE /api/pages/:id', () => {
   it('403 — sem ownership', async () => {
-    vi.mocked(prisma.page.findUnique).mockResolvedValue({
-      ...basePage,
-      userId: '507f1f77bcf86cd799439999',
-    });
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({ userId: otherUserId }));
 
     const res = await request(app)
       .delete(`/api/pages/${pageId}`)

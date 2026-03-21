@@ -10,10 +10,24 @@ export interface Theme {
     text: string
     accent: string
     font: string
+    fontDisplay?: string
+    fontCursive?: string
+    surface?: string
+    surfaceGlass?: string
+    border?: string
+    textLight?: string
   }
 }
 
 export const DEFAULT_THEME_ID = 'romantic-sunset'
+
+const themeAliases = {
+  classic: DEFAULT_THEME_ID,
+  romantic: DEFAULT_THEME_ID,
+  friendship: 'ocean-breeze',
+  secret: 'midnight-ink',
+  poetic: 'golden-letter',
+} as const
 
 export const themeCatalog: Theme[] = [
   {
@@ -26,6 +40,10 @@ export const themeCatalog: Theme[] = [
       text: '#3a1d2a',
       accent: '#f59bb5',
       font: '"Inter", system-ui, sans-serif',
+      fontDisplay: '"Playfair Display", Georgia, serif',
+      fontCursive: '"Dancing Script", "Brush Script MT", cursive',
+      surface: '#fff9fb',
+      border: '#f6c4d4',
     },
   },
   {
@@ -38,6 +56,10 @@ export const themeCatalog: Theme[] = [
       text: '#143840',
       accent: '#2dd4bf',
       font: '"Inter", system-ui, sans-serif',
+      fontDisplay: '"Merriweather", Georgia, serif',
+      fontCursive: '"Caveat", "Brush Script MT", cursive',
+      surface: '#f3ffff',
+      border: '#bdebe6',
     },
   },
   {
@@ -50,6 +72,10 @@ export const themeCatalog: Theme[] = [
       text: '#3f2a18',
       accent: '#e6b86a',
       font: '"Playfair Display", Georgia, serif',
+      fontDisplay: '"Playfair Display", Georgia, serif',
+      fontCursive: '"Great Vibes", "Brush Script MT", cursive',
+      surface: '#fffaf0',
+      border: '#edd4a7',
     },
   },
   {
@@ -62,6 +88,10 @@ export const themeCatalog: Theme[] = [
       text: '#1f3328',
       accent: '#7bbf97',
       font: '"Inter", system-ui, sans-serif',
+      fontDisplay: '"Libre Baskerville", Georgia, serif',
+      fontCursive: '"Satisfy", "Brush Script MT", cursive',
+      surface: '#f5fcf7',
+      border: '#c4decf',
     },
   },
   {
@@ -74,17 +104,13 @@ export const themeCatalog: Theme[] = [
       text: '#1a2747',
       accent: '#60a5fa',
       font: '"Playfair Display", Georgia, serif',
+      fontDisplay: '"Merriweather", Georgia, serif',
+      fontCursive: '"Kaushan Script", "Brush Script MT", cursive',
+      surface: '#f3f7ff',
+      border: '#c4d5f6',
     },
   },
 ]
-
-const legacyThemeAlias: Record<string, string> = {
-  classic: 'romantic-sunset',
-  romantic: 'romantic-sunset',
-  friendship: 'ocean-breeze',
-  secret: 'midnight-ink',
-  poetic: 'golden-letter',
-}
 
 function findThemeById(themeId?: string | null): Theme | undefined {
   if (!themeId) {
@@ -119,7 +145,7 @@ export function resolveThemeId(themeId?: string | null): string {
     return byId.id
   }
 
-  const alias = legacyThemeAlias[normalized]
+  const alias = themeAliases[normalized as keyof typeof themeAliases]
   if (alias) {
     return alias
   }
@@ -145,17 +171,40 @@ type ThemeCssVariables = CSSProperties & {
   '--color-secondary': string
   '--color-accent': string
   '--color-background': string
+   '--color-surface': string
   '--color-surface-glass': string
   '--color-border': string
   '--color-text': string
   '--color-text-light': string
   '--font-sans': string
+   '--font-display': string
+   '--font-cursive': string
+}
+
+function resolveThemeVariable(theme: Theme) {
+  const surface = theme.variables.surface ?? theme.variables.background
+  const surfaceGlass = theme.variables.surfaceGlass ?? withAlphaHex(surface, 'B8')
+  const border = theme.variables.border ?? withAlphaHex(theme.variables.accent, '66')
+  const textLight = theme.variables.textLight ?? withAlphaHex(theme.variables.text, 'A6')
+  const fontDisplay = theme.variables.fontDisplay ?? theme.variables.font
+  const fontCursive = theme.variables.fontCursive ?? theme.variables.font
+
+  return {
+    surface,
+    surfaceGlass,
+    border,
+    textLight,
+    fontDisplay,
+    fontCursive,
+  }
 }
 
 export function buildThemeStyle(themeOrId?: Theme | string | null): CSSProperties {
   const theme = typeof themeOrId === 'object' && themeOrId !== null
     ? themeOrId
     : getThemeById(themeOrId)
+
+  const resolved = resolveThemeVariable(theme)
 
   const style: ThemeCssVariables = {
     '--color-primary': theme.variables.primary,
@@ -164,11 +213,14 @@ export function buildThemeStyle(themeOrId?: Theme | string | null): CSSPropertie
     '--color-secondary': theme.variables.accent,
     '--color-accent': theme.variables.accent,
     '--color-background': theme.variables.background,
-    '--color-surface-glass': 'rgba(255, 255, 255, 0.72)',
-    '--color-border': 'rgba(255, 255, 255, 0.55)',
+    '--color-surface': resolved.surface,
+    '--color-surface-glass': resolved.surfaceGlass,
+    '--color-border': resolved.border,
     '--color-text': theme.variables.text,
-    '--color-text-light': withAlphaHex(theme.variables.text, 'A6'),
+    '--color-text-light': resolved.textLight,
     '--font-sans': theme.variables.font,
+    '--font-display': resolved.fontDisplay,
+    '--font-cursive': resolved.fontCursive,
     backgroundColor: 'var(--color-background)',
     color: 'var(--color-text)',
     fontFamily: 'var(--font-sans)',
