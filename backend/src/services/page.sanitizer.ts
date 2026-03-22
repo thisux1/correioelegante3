@@ -12,8 +12,11 @@ import {
 } from './page.migration';
 
 type UnknownRecord = Record<string, unknown>;
+type GalleryItem = { src: string; assetId?: string };
 
 const BLOCKED_PROTOCOLS = new Set(['javascript:', 'data:', 'file:']);
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+const MAX_GALLERY_ITEMS = 10;
 
 function sanitizeText(input: string): string {
   return input
@@ -41,16 +44,134 @@ function ensureSafeUrl(raw: string, fieldLabel: string): string {
     throw new AppError(`${fieldLabel} usa protocolo bloqueado`, 400, 'INVALID_MEDIA_URL');
   }
 
+  if (!isAllowedProtocol(protocol)) {
+    throw new AppError(`${fieldLabel} deve usar URL segura`, 400, 'INVALID_MEDIA_URL');
+  }
+
+  return parsed.toString();
+}
+
+function isAllowedProtocol(protocol: string): boolean {
   const canUseHttpInDev = process.env.NODE_ENV !== 'production';
   const allowedProtocols = canUseHttpInDev
     ? new Set(['https:', 'http:'])
     : new Set(['https:']);
 
-  if (!allowedProtocols.has(protocol)) {
-    throw new AppError(`${fieldLabel} deve usar URL segura`, 400, 'INVALID_MEDIA_URL');
+  return allowedProtocols.has(protocol);
+}
+
+function toOptionalObjectId(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  if (!OBJECT_ID_PATTERN.test(normalized)) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
+function tryNormalizeGalleryUrl(raw: unknown): string | null {
+  if (typeof raw !== 'string') {
+    return null;
+  }
+
+  const value = raw.trim();
+  if (!value) {
+    return null;
+  }
+
+  const protocolMatch = value.match(/^([a-zA-Z][a-zA-Z\d+\-.]*:)/);
+  if (protocolMatch) {
+    const protocol = protocolMatch[1].toLowerCase();
+    if (BLOCKED_PROTOCOLS.has(protocol)) {
+      throw new AppError('URL da galeria usa protocolo bloqueado', 400, 'INVALID_MEDIA_URL');
+    }
+    if (!isAllowedProtocol(protocol)) {
+      throw new AppError('URL da galeria deve usar URL segura', 400, 'INVALID_MEDIA_URL');
+    }
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+
+  const protocol = parsed.protocol.toLowerCase();
+  if (BLOCKED_PROTOCOLS.has(protocol)) {
+    throw new AppError('URL da galeria usa protocolo bloqueado', 400, 'INVALID_MEDIA_URL');
+  }
+  if (!isAllowedProtocol(protocol)) {
+    throw new AppError('URL da galeria deve usar URL segura', 400, 'INVALID_MEDIA_URL');
   }
 
   return parsed.toString();
+}
+
+function dedupeGalleryItems(items: GalleryItem[]): GalleryItem[] {
+  const seen = new Set<string>();
+  const deduped: GalleryItem[] = [];
+
+  for (const item of items) {
+    if (seen.has(item.src)) {
+      continue;
+    }
+
+    seen.add(item.src);
+    deduped.push(item);
+
+    if (deduped.length >= MAX_GALLERY_ITEMS) {
+      break;
+    }
+  }
+
+  return deduped;
+}
+
+function sanitizeGalleryItems(props: UnknownRecord): GalleryItem[] {
+  const itemCandidates = Array.isArray(props.items)
+    ? props.items
+      .reduce<GalleryItem[]>((accumulator, item) => {
+        if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+          return accumulator;
+        }
+
+        const itemRecord = item as UnknownRecord;
+        const src = tryNormalizeGalleryUrl(itemRecord.src);
+        if (!src) {
+          return accumulator;
+        }
+
+        accumulator.push({
+          src,
+          assetId: toOptionalObjectId(itemRecord.assetId),
+        });
+        return accumulator;
+      }, [])
+    : [];
+
+  if (itemCandidates.length > 0) {
+    return dedupeGalleryItems(itemCandidates);
+  }
+
+  const legacyCandidates = Array.isArray(props.images)
+    ? props.images
+      .reduce<GalleryItem[]>((accumulator, item) => {
+        const src = tryNormalizeGalleryUrl(item);
+        if (!src) {
+          return accumulator;
+        }
+
+        accumulator.push({ src });
+        return accumulator;
+      }, [])
+    : [];
+
+  return dedupeGalleryItems(legacyCandidates);
 }
 
 function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): UnknownRecord {
@@ -85,36 +206,7 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       };
     }
     case 'gallery': {
-      const images = Array.isArray(props.images)
-        ? props.images
-          .filter((item): item is string => typeof item === 'string')
-          .map((url) => ensureSafeUrl(url, 'URL da galeria'))
-          .slice(0, 10)
-        : [];
-      const items = Array.isArray(props.items)
-        ? props.items
-          .reduce<Array<{ src: string; assetId?: string }>>((accumulator, item) => {
-            if (typeof item !== 'object' || item === null || Array.isArray(item)) {
-              return accumulator;
-            }
-
-            const itemRecord = item as UnknownRecord;
-            if (typeof itemRecord.src !== 'string') {
-              return accumulator;
-            }
-
-            const src = ensureSafeUrl(itemRecord.src, 'URL da galeria');
-            accumulator.push({
-              src,
-              assetId: typeof itemRecord.assetId === 'string' && /^[a-f\d]{24}$/i.test(itemRecord.assetId)
-                ? itemRecord.assetId
-                : undefined,
-            });
-
-            return accumulator;
-          }, [])
-          .slice(0, 10)
-        : images.map((src) => ({ src }));
+      const items = sanitizeGalleryItems(props);
       return {
         images: items.map((item) => item.src),
         items,

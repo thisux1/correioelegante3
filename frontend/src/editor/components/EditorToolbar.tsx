@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Check,
   Eye,
@@ -45,7 +45,7 @@ interface ToolbarControlsProps {
   isThemeMenuOpen: boolean
   isAtBlockLimit: boolean
   menuPlacement: 'down' | 'up'
-  isSaving: boolean
+  saveState: 'idle' | 'saving' | 'saved' | 'error'
   hasPageId: boolean
   selectedThemeId: string
   toggleMode: () => void
@@ -77,24 +77,37 @@ function AddMenu({
       : 'absolute left-0 top-full z-30 mt-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
 
   return (
-    <div className={positionClassName}>
-      {addBlockOptions.map((option) => {
+    <motion.div
+      className={positionClassName}
+      role="menu"
+      style={{ originY: placement === 'up' ? 1 : 0 }}
+      initial={{ opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
+      transition={{ type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
+    >
+      {addBlockOptions.map((option, optionIndex) => {
         const Icon = option.icon
 
         return (
-          <button
+          <motion.button
             key={option.type}
             type="button"
             onClick={() => onSelect(option.type)}
             disabled={isDisabled}
+            role="menuitem"
+            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            whileHover={{ x: 2 }}
+            transition={{ type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.035 * optionIndex }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon size={15} className="text-primary" />
             {option.label}
-          </button>
+          </motion.button>
         )
       })}
-    </div>
+    </motion.div>
   )
 }
 
@@ -146,16 +159,21 @@ function ThemeMenu({
       : 'absolute left-0 top-full z-30 mt-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
 
   return (
-    <div
+    <motion.div
       className={positionClassName}
       role="menu"
       aria-label="Escolher tema"
+      style={{ originY: placement === 'up' ? 1 : 0 }}
+      initial={{ opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
+      transition={{ type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
     >
       {themeCatalog.map((theme, index) => {
         const isSelected = selectedThemeId === theme.id
 
         return (
-          <button
+          <motion.button
             key={theme.id}
             type="button"
             onClick={() => onSelect(theme.id)}
@@ -181,6 +199,10 @@ function ThemeMenu({
             aria-checked={isSelected}
             aria-label={`Tema ${theme.name}`}
             tabIndex={isSelected ? 0 : -1}
+            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            whileHover={{ x: 2 }}
+            transition={{ type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.03 * index }}
             className={`flex w-full items-center gap-3 rounded-lg border px-2 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 hover:bg-primary/5 ${
               isSelected
                 ? 'border-primary/35 bg-primary/10 text-primary'
@@ -197,10 +219,10 @@ function ThemeMenu({
               <span className="block text-xs text-text-light">Fonte e paleta</span>
             </span>
             {isSelected ? <Check size={14} /> : null}
-          </button>
+          </motion.button>
         )
       })}
-    </div>
+    </motion.div>
   )
 }
 
@@ -212,7 +234,7 @@ function ToolbarControls({
   isThemeMenuOpen,
   isAtBlockLimit,
   menuPlacement,
-  isSaving,
+  saveState,
   hasPageId,
   selectedThemeId,
   toggleMode,
@@ -224,6 +246,9 @@ function ToolbarControls({
 }: ToolbarControlsProps) {
   const normalizedSelectedThemeId = resolveThemeId(selectedThemeId)
   const selectedTheme = getThemeById(normalizedSelectedThemeId)
+
+  const isSaving = saveState === 'saving'
+  const saveLabel = isSaving ? 'Salvando...' : saveState === 'saved' ? 'Salvo' : saveState === 'error' ? 'Erro ao salvar' : 'Salvar'
 
   return (
     <>
@@ -300,20 +325,54 @@ function ToolbarControls({
         </button>
       )}
 
-      <button
+      <motion.button
         type="button"
         onClick={onSave}
         disabled={isSaving}
+        whileTap={{ scale: isSaving ? 1 : 0.97 }}
+        animate={saveState === 'saved'
+          ? { scale: [1, 1.03, 1], borderColor: 'rgba(16,185,129,0.45)' }
+          : saveState === 'error'
+            ? { x: [0, -2, 2, 0], borderColor: 'rgba(239,68,68,0.45)' }
+            : { scale: 1, x: 0 }}
+        transition={{ duration: 0.26, ease: [0.19, 1, 0.22, 1] }}
         className={`${isMobile
           ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-white/90 text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
           : 'inline-flex h-11 items-center gap-2 rounded-xl border border-primary/30 bg-white/90 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
           }`}
         aria-label={isSaving ? 'Salvando pagina' : 'Salvar pagina'}
-        title={isSaving ? 'Salvando...' : hasPageId ? 'Salvar' : 'Salvar'}
+        title={saveLabel}
       >
-        {isSaving ? <LoaderCircle size={16} className="animate-spin" /> : <Save size={16} />}
-        {!isMobile ? (isSaving ? 'Salvando...' : 'Salvar') : null}
-      </button>
+        <AnimatePresence mode="wait" initial={false}>
+          {isSaving ? (
+            <motion.span key="saving-icon" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+              <LoaderCircle size={16} className="animate-spin" />
+            </motion.span>
+          ) : saveState === 'saved' ? (
+            <motion.span key="saved-icon" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+              <Check size={16} />
+            </motion.span>
+          ) : (
+            <motion.span key="default-icon" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+              <Save size={16} />
+            </motion.span>
+          )}
+        </AnimatePresence>
+        {!isMobile ? saveLabel : null}
+      </motion.button>
+
+      <span
+        className={`rounded-xl border px-3 py-2 text-xs font-medium ${saveState === 'error'
+          ? 'border-red-200 bg-red-50 text-red-600'
+          : saveState === 'saved'
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            : isSaving
+              ? 'border-primary/30 bg-primary/10 text-primary'
+              : 'border-primary/15 bg-white/70 text-text-light'}`}
+        aria-live="polite"
+      >
+        {saveState === 'error' ? 'Erro ao salvar' : isSaving ? 'Salvando...' : saveState === 'saved' ? 'Salvo agora' : hasPageId ? 'Auto-save ativo' : 'Nao salvo'}
+      </span>
 
       <span className="rounded-xl border border-primary/15 bg-white/70 px-3 py-2 text-xs font-medium text-text-light">
         {blocksCount}/{MAX_BLOCKS}
@@ -324,12 +383,12 @@ function ToolbarControls({
 
 interface EditorToolbarProps {
   onSave: () => void
-  isSaving: boolean
+  saveState: 'idle' | 'saving' | 'saved' | 'error'
   hasPageId: boolean
   selectedThemeId: string
 }
 
-export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: EditorToolbarProps) {
+export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }: EditorToolbarProps) {
   const blocksCount = useEditorStore((state) => state.blocks.length)
   const mode = useEditorStore((state) => state.mode)
   const addBlock = useEditorStore((state) => state.addBlock)
@@ -475,7 +534,7 @@ export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: 
                 isThemeMenuOpen={isThemeVisible}
                 isAtBlockLimit={isAtBlockLimit}
                 menuPlacement="down"
-                isSaving={isSaving}
+                saveState={saveState}
                 hasPageId={hasPageId}
                 selectedThemeId={selectedThemeId}
                 toggleMode={toggleMode}
@@ -498,9 +557,9 @@ export function EditorToolbar({ onSave, isSaving, hasPageId, selectedThemeId }: 
               isAddMenuOpen={isMenuVisible}
               isThemeMenuOpen={isThemeVisible}
               isAtBlockLimit={isAtBlockLimit}
-              menuPlacement="up"
-              isSaving={isSaving}
-              hasPageId={hasPageId}
+                menuPlacement="up"
+                saveState={saveState}
+                hasPageId={hasPageId}
               selectedThemeId={selectedThemeId}
               toggleMode={toggleMode}
               toggleAddMenu={toggleAddMenu}

@@ -46,8 +46,8 @@ function parseDurationEnv(name: string, fallback: number): number {
 export const mediaPolicyByKind: Record<AssetKind, AssetLimitRule> = {
   image: {
     maxSizeBytes: parseBytesEnv('MEDIA_IMAGE_MAX_SIZE_BYTES', 8 * MB),
-    mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-    extensions: ['jpg', 'jpeg', 'png', 'webp'],
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+    extensions: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
   },
   audio: {
     maxSizeBytes: parseBytesEnv('MEDIA_AUDIO_MAX_SIZE_BYTES', 15 * MB),

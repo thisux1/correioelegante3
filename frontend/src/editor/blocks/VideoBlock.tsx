@@ -1,9 +1,10 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Film, LoaderCircle, Pause, Play, TriangleAlert, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 import { assetService, type AssetSummary } from '@/services/assetService'
-
-type UploadState = 'idle' | 'sending' | 'processing' | 'ready' | 'error'
+import { MediaField } from '@/editor/components/MediaField'
+import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 
 function isValidVideoUrl(value: string): boolean {
   const normalized = value.trim()
@@ -40,7 +41,7 @@ function AssetSelect({ assets, selectedAssetId, onSelect }: AssetSelectProps) {
     <select
       value={selectedAssetId}
       onChange={(event) => onSelect(event.target.value)}
-      className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50"
+      className={EDITOR_FIELD_BASE_CLASS}
     >
       <option value="">Sem asset selecionado</option>
       {assets.map((asset) => (
@@ -57,19 +58,15 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const src = isVideoBlock ? block.props.src : ''
   const assetId = isVideoBlock ? block.props.assetId ?? '' : ''
 
-  const [uploadState, setUploadState] = useState<UploadState>('idle')
-  const [uploadError, setUploadError] = useState<string | null>(null)
   const [assets, setAssets] = useState<AssetSummary[]>([])
-  const [assetLoading, setAssetLoading] = useState(false)
+  const [assetLoading, setAssetLoading] = useState(true)
   const [selectedAsset, setSelectedAsset] = useState<AssetSummary | null>(null)
-  const [draftSrc, setDraftSrc] = useState(src)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [isVideoLoading, setIsVideoLoading] = useState(true)
   const videoRef = useRef<HTMLVideoElement | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const updateVideoProps = useCallback((next: { assetId?: string; src?: string }) => {
     onUpdate?.((current) => {
@@ -89,16 +86,11 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }, [onUpdate])
 
   useEffect(() => {
-    setDraftSrc(src)
-  }, [src])
-
-  useEffect(() => {
     if (mode !== 'edit') {
       return
     }
 
     let alive = true
-    setAssetLoading(true)
     assetService.list('video')
       .then(({ data }) => {
         if (!alive) {
@@ -125,17 +117,10 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return () => {
       alive = false
     }
-  }, [mode, uploadState])
+  }, [mode, assetId])
 
   useEffect(() => {
     if (!assetId) {
-      setSelectedAsset(null)
-      return
-    }
-
-    const fromList = assets.find((item) => item.id === assetId)
-    if (fromList) {
-      setSelectedAsset(fromList)
       return
     }
 
@@ -161,6 +146,10 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     }
   }, [assetId, assets])
 
+  const effectiveSelectedAsset = assetId && selectedAsset?.id === assetId
+    ? selectedAsset
+    : null
+
   useEffect(() => {
     if (!selectedAsset || (selectedAsset.processingStatus !== 'pending' && selectedAsset.processingStatus !== 'processing')) {
       return
@@ -183,52 +172,16 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }, [selectedAsset, updateVideoProps])
 
   const resolvedSource = useMemo(() => {
-    if (selectedAsset?.publicUrl) {
-      return selectedAsset.publicUrl
+    if (effectiveSelectedAsset?.publicUrl) {
+      return effectiveSelectedAsset.publicUrl
     }
 
     return src.trim()
-  }, [selectedAsset, src])
+  }, [effectiveSelectedAsset, src])
 
-  const posterUrl = selectedAsset?.posterUrl ?? null
+  const posterUrl = effectiveSelectedAsset?.posterUrl ?? null
   const canPlay = isValidVideoUrl(resolvedSource)
   const progressRatio = duration > 0 ? Math.min(currentTime / duration, 1) : 0
-
-  const triggerPicker = () => {
-    fileInputRef.current?.click()
-  }
-
-  const onFilePicked = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!isVideoBlock) {
-      return
-    }
-
-    const file = event.target.files?.[0]
-    if (!file) {
-      return
-    }
-
-    setUploadState('sending')
-    setUploadError(null)
-
-    try {
-      const uploaded = await assetService.uploadFileFlow({ file, kind: 'video' })
-      setUploadState('processing')
-
-      updateVideoProps({
-        assetId: uploaded.id,
-        src: uploaded.publicUrl ?? src,
-      })
-
-      setSelectedAsset(uploaded)
-      setUploadState(uploaded.processingStatus === 'ready' ? 'ready' : 'processing')
-    } catch (error) {
-      setUploadState('error')
-      setUploadError(error instanceof Error ? error.message : 'Falha ao enviar video.')
-    } finally {
-      event.target.value = ''
-    }
-  }
 
   if (!isVideoBlock) {
     return null
@@ -237,53 +190,27 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   if (mode === 'edit') {
     return (
       <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="video/mp4,video/webm"
-          className="hidden"
-          onChange={onFilePicked}
+        <MediaField
+          kind="video"
+          label="Video principal"
+          value={{ src, assetId: assetId || undefined }}
+          onChange={(nextValue) => {
+            updateVideoProps({
+              src: nextValue.src,
+              assetId: nextValue.assetId,
+            })
+          }}
+          onRemove={() => {
+            updateVideoProps({
+              src: '',
+              assetId: '',
+            })
+            setSelectedAsset(null)
+          }}
+          helperText="Adicione o video por arquivo ou URL."
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={triggerPicker}
-            className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-          >
-            Upload de video
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              updateVideoProps({ assetId: '', src: '' })
-              setSelectedAsset(null)
-              setDraftSrc('')
-            }}
-            className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-          >
-            Remover video
-          </button>
-          {selectedAsset?.processingStatus === 'failed' ? (
-            <button
-              type="button"
-              onClick={async () => {
-                if (!selectedAsset) {
-                  return
-                }
-
-                await assetService.reprocess(selectedAsset.id)
-                setUploadState('processing')
-              }}
-              className="rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-50"
-            >
-              Reprocessar
-            </button>
-          ) : null}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-light">Biblioteca de videos</label>
+        <EditorInputSection title="Biblioteca de videos" helperText="Opcional: escolha um video ja enviado.">
           <AssetSelect
             assets={assets}
             selectedAssetId={assetId}
@@ -299,27 +226,11 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           {assetLoading ? (
             <p className="mt-1 text-xs text-text-light">Carregando biblioteca...</p>
           ) : null}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-light">URL fallback do video</label>
-          <input
-            type="url"
-            value={draftSrc}
-            onChange={(event) => setDraftSrc(event.target.value)}
-            onBlur={() => updateVideoProps({ src: draftSrc.trim() })}
-            placeholder="https://..."
-            className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50"
-          />
-        </div>
+        </EditorInputSection>
 
         <div className="rounded-lg border border-primary/20 bg-white/70 px-3 py-2 text-xs text-text-light">
-          {uploadState === 'sending' ? 'Enviando video...' : null}
-          {uploadState === 'processing' ? 'Processando video...' : null}
-          {uploadState === 'ready' ? 'Video pronto para uso.' : null}
-          {uploadState === 'error' ? `Erro no upload: ${uploadError ?? 'tente novamente.'}` : null}
-          {selectedAsset
-            ? ` Status do asset: ${selectedAsset.processingStatus}${selectedAsset.errorMessage ? ` (${selectedAsset.errorMessage})` : ''}`
+          {effectiveSelectedAsset
+            ? ` Status do asset: ${effectiveSelectedAsset.processingStatus}${effectiveSelectedAsset.errorMessage ? ` (${effectiveSelectedAsset.errorMessage})` : ''}`
             : ' Sem asset selecionado.'}
         </div>
       </div>
@@ -334,21 +245,27 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     )
   }
 
-  if (selectedAsset?.processingStatus === 'processing' || selectedAsset?.processingStatus === 'pending') {
+  if (effectiveSelectedAsset?.processingStatus === 'processing' || effectiveSelectedAsset?.processingStatus === 'pending') {
     return (
-      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light">
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
+        className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light"
+      >
         <LoaderCircle size={20} className="animate-spin" />
-        <p className="text-sm">Video em processamento...</p>
-      </div>
+        <p className="text-sm">Estamos finalizando o video. Aguarde um instante.</p>
+      </motion.div>
     )
   }
 
-  if (selectedAsset?.processingStatus === 'failed') {
+  if (effectiveSelectedAsset?.processingStatus === 'failed') {
     return (
       <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-amber-700">
         <TriangleAlert size={20} />
         <p className="text-sm font-medium">Falha no processamento do video</p>
-        <p className="text-xs">{selectedAsset.errorMessage ?? 'Tente substituir por outro arquivo.'}</p>
+        <p className="text-xs">{effectiveSelectedAsset.errorMessage ?? 'Tente substituir por outro arquivo.'}</p>
+        <p className="text-xs">Volte ao modo de edicao e escolha outro arquivo ou URL valida.</p>
       </div>
     )
   }
@@ -410,7 +327,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         <div className="absolute inset-x-3 bottom-3 rounded-xl border border-white/15 bg-black/55 px-3 py-2 backdrop-blur-sm">
           <div className="mb-2 flex items-center justify-between text-[11px] text-white/90">
             <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration || (selectedAsset?.durationMs ? selectedAsset.durationMs / 1000 : 0))}</span>
+            <span>{formatTime(duration || (effectiveSelectedAsset?.durationMs ? effectiveSelectedAsset.durationMs / 1000 : 0))}</span>
           </div>
 
           <div className="mb-2 h-1.5 w-full rounded-full bg-white/20">

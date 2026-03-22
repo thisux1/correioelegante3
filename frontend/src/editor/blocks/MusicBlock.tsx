@@ -1,8 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { ChevronDown, ChevronUp, LoaderCircle, Music2, Pause, Play, Plus, Settings2, Shuffle, SkipBack, SkipForward, Trash2, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 import { assetService, type AssetSummary } from '@/services/assetService'
 import { MediaField } from '@/editor/components/MediaField'
+import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 import { getMusicPlayerUIMode } from '@/editor/blocks/music/getMusicPlayerUIMode'
 import { normalizeMusicTracks } from '@/editor/blocks/music/normalizeMusicTracks'
 import { resolveIsActuallyPlaying, useMusicPlayback } from '@/editor/blocks/music/useMusicPlayback'
@@ -385,38 +387,36 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     assetId: undefined,
                   })
                 }}
-                helperText="Upload por faixa com estado individual de envio e processamento."
+                helperText="Adicione o audio desta faixa por arquivo ou URL."
               />
 
-              <div>
-                <label className="mb-1 block text-xs font-medium text-text-light">Titulo (opcional)</label>
-                <input
+                <EditorInputSection title="Titulo da faixa" helperText="Opcional. Ajuda o usuario a reconhecer a musica.">
+                  <input
                   type="text"
                   value={activeEditableTrack?.title ?? ''}
                   onChange={(event) => {
                     handlePatchTrack(safeEditTrackIndex, {
                       title: event.target.value,
                     })
-                  }}
-                  placeholder="Nome da faixa"
-                  className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
-                />
-              </div>
+                    }}
+                    placeholder="Nome da faixa"
+                    className={EDITOR_FIELD_BASE_CLASS}
+                  />
+                </EditorInputSection>
 
-              <div>
-                <label className="mb-1 block text-xs font-medium text-text-light">Artista (opcional)</label>
-                <input
+                <EditorInputSection title="Artista" helperText="Opcional. Mostrado no player e na playlist.">
+                  <input
                   type="text"
                   value={activeEditableTrack?.artist ?? ''}
                   onChange={(event) => {
                     handlePatchTrack(safeEditTrackIndex, {
                       artist: event.target.value,
                     })
-                  }}
-                  placeholder="Quem canta"
-                  className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
-                />
-              </div>
+                    }}
+                    placeholder="Quem canta"
+                    className={EDITOR_FIELD_BASE_CLASS}
+                  />
+                </EditorInputSection>
 
               <MediaField
                 kind="image"
@@ -434,7 +434,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     coverAssetId: undefined,
                   })
                 }}
-                helperText="Capa opcional por faixa para o player e playlist."
+                helperText="Imagem de capa opcional para esta faixa."
               />
             </div>
           </div>
@@ -444,9 +444,6 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           </div>
         )}
 
-        <div className="rounded-xl border border-primary/15 bg-white/70 p-3 text-xs text-text-light">
-          O espelho legado (`src`, `assetId`, `title`, `artist`, `coverSrc`, `coverAssetId`) e sincronizado automaticamente com a faixa ativa para manter compatibilidade.
-        </div>
       </div>
     )
   }
@@ -457,17 +454,22 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (activeSelectedAsset && (activeSelectedAsset.processingStatus === 'pending' || activeSelectedAsset.processingStatus === 'processing')) {
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light">
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
+        className="relative overflow-hidden rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light"
+      >
         <div className="mb-4 flex items-center gap-2">
           <LoaderCircle size={18} className="animate-spin" />
-          <p className="text-sm">Audio em processamento...</p>
+          <p className="text-sm">Estamos preparando o audio para tocar com qualidade.</p>
         </div>
         <div className="space-y-2" aria-hidden="true">
           <div className="h-4 w-1/3 animate-pulse rounded bg-primary/15" />
           <div className="h-10 w-full animate-pulse rounded-xl bg-primary/10" />
           <div className="h-8 w-2/3 animate-pulse rounded-lg bg-primary/10" />
         </div>
-      </div>
+      </motion.div>
     )
   }
 
@@ -494,7 +496,11 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         onError={playback.onError}
       />
 
-      {playback.state.hasPlaybackError ? <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">Nao foi possivel carregar este audio. Verifique a URL.</p> : null}
+      {playback.state.hasPlaybackError ? (
+        <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Nao foi possivel carregar este audio. Volte ao modo de edicao e troque o arquivo ou URL.
+        </p>
+      ) : null}
 
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-5">
         <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/45 bg-white/70 px-3 py-1.5 text-xs text-text-light">

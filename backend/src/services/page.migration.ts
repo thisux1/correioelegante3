@@ -6,6 +6,10 @@ import {
 } from './page.constants';
 
 type UnknownRecord = Record<string, unknown>;
+type GalleryItem = { src: string; assetId?: string };
+
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+const MAX_GALLERY_ITEMS = 10;
 
 export interface PersistedBlock {
   id: string;
@@ -82,6 +86,19 @@ function asOptionalText(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+function asOptionalObjectId(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  if (!OBJECT_ID_PATTERN.test(normalized)) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -104,11 +121,37 @@ function asGalleryItems(value: unknown): Array<{ src: string; assetId?: string }
 
     accumulator.push({
       src,
-      assetId: asOptionalText(record.assetId),
+      assetId: asOptionalObjectId(record.assetId),
     });
 
     return accumulator;
   }, []);
+}
+
+function asGalleryLegacyImages(value: unknown): string[] {
+  return asStringArray(value)
+    .map((item) => asText(item))
+    .filter((item) => item.length > 0);
+}
+
+function dedupeGalleryItems(items: GalleryItem[]): GalleryItem[] {
+  const seen = new Set<string>();
+  const deduped: GalleryItem[] = [];
+
+  for (const item of items) {
+    if (seen.has(item.src)) {
+      continue;
+    }
+
+    seen.add(item.src);
+    deduped.push(item);
+
+    if (deduped.length >= MAX_GALLERY_ITEMS) {
+      break;
+    }
+  }
+
+  return deduped;
 }
 
 function asBlockType(value: unknown): SupportedBlockType {
@@ -142,11 +185,14 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       };
     case 'gallery': {
       const transition = props.transition === 'slide' ? 'slide' : 'fade';
-      const legacyImages = asStringArray(props.images);
-      const items = asGalleryItems(props.items);
-      const mergedItems = items.length > 0
-        ? items
-        : legacyImages.map((src) => ({ src }));
+      const normalizedItems = dedupeGalleryItems(asGalleryItems(props.items));
+      const fallbackItems = dedupeGalleryItems(
+        asGalleryLegacyImages(props.images).map((src) => ({ src })),
+      );
+      const mergedItems = normalizedItems.length > 0
+        ? normalizedItems
+        : fallbackItems;
+
       return {
         images: mergedItems.map((item) => item.src),
         items: mergedItems,

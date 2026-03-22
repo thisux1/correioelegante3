@@ -1,8 +1,10 @@
-import { useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { CheckCircle2, ImagePlus, LoaderCircle, RotateCcw, Trash2, Upload } from 'lucide-react'
 import { assetService, type AssetKind, type AssetSummary } from '@/services/assetService'
+import { EDITOR_FIELD_BASE_CLASS, EDITOR_FIELD_LABEL_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 
-type UploadState = 'idle' | 'sending' | 'processing' | 'ready' | 'error'
+export type MediaUploadState = 'idle' | 'sending' | 'processing' | 'ready' | 'error'
 
 interface MediaFieldValue {
   src: string
@@ -18,6 +20,8 @@ interface MediaFieldProps {
   onRemove?: () => void
   accept?: string
   helperText?: string
+  multiple?: boolean
+  onStatusChange?: (status: { state: MediaUploadState; error?: string | null }) => void
 }
 
 function isValidUrl(value: string): boolean {
@@ -34,6 +38,36 @@ function isValidUrl(value: string): boolean {
   }
 }
 
+function toFriendlyUploadErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : 'Falha no upload.'
+  if (raw.includes('EDITOR_MEDIA_UPLOAD_FEATURE_DISABLED')) {
+    return 'Upload indisponivel no momento. Use o campo de URL.'
+  }
+  if (raw.includes('MEDIA_UNSUPPORTED_TYPE')) {
+    return 'Formato nao suportado. Escolha outro arquivo.'
+  }
+  if (raw.includes('MEDIA_FILE_TOO_LARGE')) {
+    return 'Arquivo muito grande. Envie um arquivo menor.'
+  }
+  if (raw.includes('MEDIA_PROVIDER_UPLOAD_FAILED') || raw.includes('MEDIA_PROVIDER_MISCONFIGURED')) {
+    return 'Upload indisponivel no momento. Tente novamente.'
+  }
+  if (raw.includes('MEDIA_PROCESSING_FAILED')) {
+    return 'Nao foi possivel processar este arquivo. Tente outro.'
+  }
+  return raw
+}
+
+function getDefaultAccept(kind: AssetKind): string {
+  if (kind === 'image') {
+    return 'image/jpeg,image/png,image/webp,image/avif'
+  }
+  if (kind === 'video') {
+    return 'video/mp4,video/webm'
+  }
+  return 'audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/x-wav'
+}
+
 export function MediaField({
   kind,
   label,
@@ -43,34 +77,42 @@ export function MediaField({
   onRemove,
   accept,
   helperText,
+  multiple = false,
+  onStatusChange,
 }: MediaFieldProps) {
-  const [uploadState, setUploadState] = useState<UploadState>('idle')
+  const [uploadState, setUploadState] = useState<MediaUploadState>('idle')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [libraryCount, setLibraryCount] = useState<number | null>(null)
   const [currentAsset, setCurrentAsset] = useState<AssetSummary | null>(null)
+  const [isDragActive, setIsDragActive] = useState(false)
+  const [, setDragDepth] = useState(0)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const normalizedSrc = value.src.trim()
   const hasValue = normalizedSrc.length > 0
 
   const statusText = useMemo(() => {
     if (uploadState === 'sending') {
-      return 'Enviando arquivo...'
+      return 'Enviando seu arquivo...'
     }
     if (uploadState === 'processing') {
-      return 'Processando arquivo...'
+      return 'Quase la: estamos processando o arquivo.'
     }
     if (uploadState === 'ready') {
-      return 'Arquivo pronto para uso.'
+      return 'Pronto! O arquivo ja pode ser usado.'
     }
     if (uploadState === 'error') {
-      return `Erro no upload: ${uploadError ?? 'tente novamente.'}`
+      return uploadError ?? 'Nao conseguimos enviar. Tente novamente ou use a URL manual.'
     }
     return null
   }, [uploadError, uploadState])
 
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) {
+  useEffect(() => {
+    onStatusChange?.({ state: uploadState, error: uploadError })
+  }, [onStatusChange, uploadError, uploadState])
+
+  const handleFilesUpload = async (files: File[]) => {
+    const queue = multiple ? files : files.slice(0, 1)
+    if (queue.length === 0) {
       return
     }
 
@@ -78,73 +120,191 @@ export function MediaField({
     setUploadState('sending')
 
     try {
-      const asset = await assetService.uploadFileFlow({ file, kind })
+      const firstAsset = await assetService.uploadFileFlow({ file: queue[0], kind })
       setUploadState('processing')
-      setCurrentAsset(asset)
+      setCurrentAsset(firstAsset)
       onChange({
-        src: asset.publicUrl ?? normalizedSrc,
-        assetId: asset.id,
+        src: firstAsset.publicUrl ?? normalizedSrc,
+        assetId: firstAsset.id,
       })
 
       const { data } = await assetService.list(kind)
       setLibraryCount(data.assets.length)
-      const refreshedAsset = data.assets.find((item) => item.id === asset.id) ?? asset
+      const refreshedAsset = data.assets.find((item) => item.id === firstAsset.id) ?? firstAsset
       setCurrentAsset(refreshedAsset)
       setUploadState('ready')
     } catch (error) {
       setUploadState('error')
-      setUploadError(error instanceof Error ? error.message : 'Falha no upload.')
-    } finally {
-      event.target.value = ''
+      setUploadError(toFriendlyUploadErrorMessage(error))
     }
   }
 
-  return (
-    <div className="space-y-2 rounded-xl border border-primary/15 bg-white/70 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <label className="text-xs font-medium text-text-light">{label}</label>
-        {hasValue && onRemove ? (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="inline-flex items-center gap-1 rounded-md border border-primary/25 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/10"
-          >
-            <Trash2 size={12} />
-            Remover
-          </button>
-        ) : null}
-      </div>
+  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? [])
+    await handleFilesUpload(selected)
+    event.target.value = ''
+  }
 
-      <div className="flex flex-wrap gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={accept ?? (kind === 'image' ? 'image/jpeg,image/png,image/webp' : 'audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/x-wav')}
-          className="hidden"
-          onChange={handleUpload}
-        />
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragDepth(0)
+    setIsDragActive(false)
+    const dropped = Array.from(event.dataTransfer.files ?? [])
+    await handleFilesUpload(dropped)
+  }
+
+  const sectionState = uploadState === 'error'
+    ? 'error'
+    : uploadState === 'ready'
+      ? 'success'
+      : uploadState === 'sending' || uploadState === 'processing'
+        ? 'loading'
+        : 'idle'
+
+  const resolvedHelperText = helperText
+    ?? 'Primeiro use upload/arraste e solte. Se precisar, use URL manual logo abaixo.'
+
+  const shouldShowUploadedPreview = !multiple && uploadState === 'ready' && Boolean(currentAsset) && hasValue
+
+  return (
+    <EditorInputSection
+      title={label}
+      helperText={resolvedHelperText}
+      state={sectionState}
+      stateText={statusText}
+      actions={hasValue && onRemove ? (
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="inline-flex items-center gap-1 rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+          onClick={onRemove}
+          className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+          aria-label={`Remover item de ${label}`}
         >
-          <Upload size={13} />
-          Upload
+          <Trash2 size={14} />
+          Remover item
         </button>
-      </div>
-
+      ) : null}
+    >
       <input
-        type="url"
-        value={value.src}
-        onChange={(event) => {
-          onChange({
-            src: event.target.value,
-            assetId: undefined,
-          })
-        }}
-        placeholder={placeholder}
-        className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/30"
+        ref={fileInputRef}
+        type="file"
+        accept={accept ?? getDefaultAccept(kind)}
+        multiple={multiple}
+        className="hidden"
+        onChange={handleUpload}
       />
+
+      {shouldShowUploadedPreview ? (
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.99 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.16, ease: [0.19, 1, 0.22, 1] }}
+          className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 transition-all duration-300"
+          aria-label={`Upload confirmado para ${label}`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              {kind === 'image' ? (
+                <img src={normalizedSrc} alt="Preview do arquivo enviado" className="h-14 w-14 rounded-lg object-cover" loading="lazy" />
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10">
+                  <CheckCircle2 size={20} className="text-emerald-600" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-text">Upload concluido</p>
+                <p className="text-xs text-text-light">Arquivo enviado com sucesso. Voce pode trocar quando quiser.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl border border-primary/30 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              aria-label={`Trocar arquivo de ${label}`}
+            >
+              <Upload size={14} />
+              Trocar arquivo
+            </button>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.99 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.16, ease: [0.19, 1, 0.22, 1] }}
+          className={`space-y-2 rounded-xl border border-dashed p-3 transition-colors ${isDragActive ? 'border-primary/55 bg-primary/10' : 'border-primary/25 bg-white/85'}`}
+          onDragEnter={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            setDragDepth((current) => current + 1)
+            setIsDragActive(true)
+          }}
+          onDragOver={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            event.dataTransfer.dropEffect = 'copy'
+          }}
+          onDragLeave={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            setDragDepth((current) => {
+              const nextDepth = Math.max(0, current - 1)
+              setIsDragActive(nextDepth > 0)
+              return nextDepth
+            })
+          }}
+          onDrop={handleDrop}
+          aria-label={`Area de upload para ${label}`}
+        >
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-primary/35 bg-primary/10 px-5 py-3 text-base font-semibold text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              aria-label={`Upload de arquivo para ${label}`}
+            >
+              <Upload size={18} />
+              {kind === 'image' ? 'Upload de imagem' : kind === 'video' ? 'Upload de video' : 'Upload de audio'}
+            </button>
+          </div>
+          <AnimatePresence initial={false}>
+            {uploadState === 'sending' || uploadState === 'processing' || uploadState === 'error' || uploadState === 'ready' ? (
+              <motion.p
+                key={`drop-status-${uploadState}`}
+                initial={{ opacity: 0, y: 6, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.99 }}
+                transition={{ duration: 0.14, ease: [0.19, 1, 0.22, 1] }}
+                className={`text-center text-xs ${uploadState === 'error' ? 'text-red-600' : uploadState === 'ready' ? 'text-emerald-700' : 'text-text-light'}`}
+                role={uploadState === 'error' ? 'alert' : 'status'}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {uploadState === 'error' ? <RotateCcw size={12} aria-hidden="true" /> : uploadState === 'ready' ? <CheckCircle2 size={12} aria-hidden="true" /> : <LoaderCircle size={12} className="animate-spin" aria-hidden="true" />}
+                  {statusText}
+                </span>
+              </motion.p>
+            ) : null}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      <div className="space-y-1">
+        <label className={EDITOR_FIELD_LABEL_CLASS}>URL manual (opcional)</label>
+        <input
+          type="url"
+          value={value.src}
+          onChange={(event) => {
+            onChange({
+              src: event.target.value,
+              assetId: undefined,
+            })
+          }}
+          placeholder={placeholder}
+          className={EDITOR_FIELD_BASE_CLASS}
+          aria-label={`Colar URL para ${label}`}
+        />
+        <p className="text-[11px] text-text-light">Use URL apenas quando nao quiser enviar arquivo.</p>
+      </div>
 
       {kind === 'image' ? (
         <div className="flex items-center gap-2 rounded-lg border border-primary/10 bg-white/70 p-2">
@@ -157,37 +317,44 @@ export function MediaField({
           )}
           <p className="text-[11px] text-text-light">
             {helperText
-              ?? (isValidUrl(normalizedSrc) ? 'Midia valida pronta para preview.' : 'Sem midia valida. Use upload ou URL HTTPS.')}
+              ?? (isValidUrl(normalizedSrc) ? 'Midia pronta para visualizacao.' : 'Sem midia valida. Envie arquivo ou cole URL segura.')}
           </p>
         </div>
       ) : null}
 
-      {(statusText || libraryCount !== null || currentAsset) ? (
-        <div className="rounded-lg border border-primary/20 bg-white/75 px-3 py-2 text-xs text-text-light">
-          {statusText ? <p>{statusText}</p> : null}
-          {currentAsset ? (
-            <p className="mt-1 inline-flex items-center gap-1">
-              {currentAsset.processingStatus === 'ready' ? <CheckCircle2 size={12} /> : <LoaderCircle size={12} className="animate-spin" />}
-              Asset {currentAsset.id.slice(-6)} | status: {currentAsset.processingStatus}
-              {currentAsset.processingStatus === 'failed' ? (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const { data } = await assetService.reprocess(currentAsset.id)
-                    setCurrentAsset(data.asset)
-                    setUploadState('processing')
-                  }}
-                  className="ml-1 inline-flex items-center gap-1 rounded border border-amber-300 px-1.5 py-0.5 text-amber-700 hover:bg-amber-50"
-                >
-                  <RotateCcw size={10} />
-                  Reprocessar
-                </button>
-              ) : null}
-            </p>
-          ) : null}
-          {libraryCount !== null ? <p className="mt-1">Biblioteca: {libraryCount} asset(s).</p> : null}
-        </div>
-      ) : null}
-    </div>
+      <AnimatePresence initial={false}>
+        {(libraryCount !== null || currentAsset) ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.99 }}
+            transition={{ duration: 0.16, ease: [0.19, 1, 0.22, 1] }}
+            className="rounded-lg border border-primary/20 bg-white/75 px-3 py-2 text-xs text-text-light"
+          >
+            {currentAsset ? (
+              <p className="mt-1 inline-flex items-center gap-1">
+                {currentAsset.processingStatus === 'ready' ? <CheckCircle2 size={12} /> : <LoaderCircle size={12} className="animate-spin" />}
+                Asset {currentAsset.id.slice(-6)} | status: {currentAsset.processingStatus}
+                {currentAsset.processingStatus === 'failed' ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const { data } = await assetService.reprocess(currentAsset.id)
+                      setCurrentAsset(data.asset)
+                      setUploadState('processing')
+                    }}
+                    className="ml-1 inline-flex min-h-11 items-center gap-1 rounded border border-amber-300 px-2 py-1 text-amber-700 hover:bg-amber-50"
+                  >
+                    <RotateCcw size={10} />
+                    Reprocessar
+                  </button>
+                ) : null}
+              </p>
+            ) : null}
+            {libraryCount !== null ? <p className="mt-1">Biblioteca: {libraryCount} arquivo(s).</p> : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </EditorInputSection>
   )
 }
