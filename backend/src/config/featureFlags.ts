@@ -88,10 +88,10 @@ function resolveFlagAccessForUser(params: {
 }
 
 export const featureFlags = {
-  editor_modular_enabled: parseBooleanEnv(process.env.EDITOR_MODULAR_ENABLED, !isProduction),
-  editor_modular_rollout_percent: parsePercentEnv(process.env.EDITOR_MODULAR_ROLLOUT_PERCENT, !isProduction ? 100 : 0),
-  editor_media_upload_enabled: parseBooleanEnv(process.env.EDITOR_MEDIA_UPLOAD_ENABLED, !isProduction),
-  editor_media_upload_rollout_percent: parsePercentEnv(process.env.EDITOR_MEDIA_UPLOAD_ROLLOUT_PERCENT, !isProduction ? 100 : 0),
+  editor_modular_enabled: parseBooleanEnv(process.env.EDITOR_MODULAR_ENABLED, true),
+  editor_modular_rollout_percent: parsePercentEnv(process.env.EDITOR_MODULAR_ROLLOUT_PERCENT, 100),
+  editor_media_upload_enabled: parseBooleanEnv(process.env.EDITOR_MEDIA_UPLOAD_ENABLED, true),
+  editor_media_upload_rollout_percent: parsePercentEnv(process.env.EDITOR_MEDIA_UPLOAD_ROLLOUT_PERCENT, 100),
 };
 
 export function resolveEditorAccessForUser(userId?: string): EditorFlagDecision {

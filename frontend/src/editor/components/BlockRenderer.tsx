@@ -1,11 +1,23 @@
-import { memo } from 'react'
+import { Suspense, lazy, memo } from 'react'
 import type { Block, BlockComponentProps, BlockMap, EditorMode } from '@/editor/types'
 import { TextBlock } from '@/editor/blocks/TextBlock'
 import { ImageBlock } from '@/editor/blocks/ImageBlock'
 import { TimerBlock } from '@/editor/blocks/TimerBlock'
-import { GalleryBlock } from '@/editor/blocks/GalleryBlock'
-import { MusicBlock } from '@/editor/blocks/MusicBlock'
-import { VideoBlock } from '@/editor/blocks/VideoBlock'
+
+const GalleryBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/GalleryBlock')
+  return { default: module.GalleryBlock }
+})
+
+const MusicBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/MusicBlock')
+  return { default: module.MusicBlock }
+})
+
+const VideoBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/VideoBlock')
+  return { default: module.VideoBlock }
+})
 
 interface BlockRendererProps {
   block: Block
@@ -30,6 +42,16 @@ function renderFallback(block: Block) {
   )
 }
 
+function renderLoadingFallback(block: Block) {
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-white/75 p-4" role="status" aria-live="polite">
+      <div className="mb-2 h-4 w-32 animate-pulse rounded bg-primary/15" />
+      <div className="h-20 animate-pulse rounded-xl bg-primary/10" />
+      <p className="mt-2 text-xs text-text-light">Carregando bloco de {block.type}...</p>
+    </div>
+  )
+}
+
 function BlockRendererComponent({ block, mode, onUpdate }: BlockRendererProps) {
   const Component = blockMap[block.type]
 
@@ -38,14 +60,18 @@ function BlockRendererComponent({ block, mode, onUpdate }: BlockRendererProps) {
   }
 
   if (!onUpdate) {
-    return <Component block={block} mode={mode} />
+    return (
+      <Suspense fallback={renderLoadingFallback(block)}>
+        <Component block={block} mode={mode} />
+      </Suspense>
+    )
   }
 
   const handleUpdate: BlockComponentProps['onUpdate'] = (updater) => {
     onUpdate(block.id, updater)
   }
 
-  return <Component block={block} mode={mode} onUpdate={handleUpdate} />
+  return <Suspense fallback={renderLoadingFallback(block)}><Component block={block} mode={mode} onUpdate={handleUpdate} /></Suspense>
 }
 
 function areBlockRendererPropsEqual(prev: BlockRendererProps, next: BlockRendererProps) {

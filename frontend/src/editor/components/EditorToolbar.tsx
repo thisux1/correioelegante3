@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Check,
   Eye,
@@ -19,6 +19,7 @@ import { MAX_BLOCKS, type BlockType } from '@/editor/types'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
 import { getThemeById, resolveThemeId, themeCatalog } from '@/editor/themes'
+import { useShallow } from 'zustand/react/shallow'
 
 type AvailableBlockType = Extract<BlockType, 'text' | 'image' | 'timer' | 'gallery' | 'music' | 'video'>
 
@@ -38,6 +39,7 @@ const addBlockOptions: AddBlockOption[] = [
 ]
 
 interface ToolbarControlsProps {
+  shouldReduceMotion: boolean
   isMobile: boolean
   mode: 'edit' | 'preview'
   blocksCount: number
@@ -61,11 +63,13 @@ function AddMenu({
   isDisabled,
   placement,
   onSelect,
+  shouldReduceMotion,
 }: {
   isOpen: boolean
   isDisabled: boolean
   placement: 'down' | 'up'
   onSelect: (type: AvailableBlockType) => void
+  shouldReduceMotion: boolean
 }) {
   if (!isOpen) {
     return null
@@ -81,10 +85,10 @@ function AddMenu({
       className={positionClassName}
       role="menu"
       style={{ originY: placement === 'up' ? 1 : 0 }}
-      initial={{ opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
-      transition={{ type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
+      transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
     >
       {addBlockOptions.map((option, optionIndex) => {
         const Icon = option.icon
@@ -96,10 +100,10 @@ function AddMenu({
             onClick={() => onSelect(option.type)}
             disabled={isDisabled}
             role="menuitem"
-            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            whileHover={{ x: 2 }}
-            transition={{ type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.035 * optionIndex }}
+            whileHover={shouldReduceMotion ? undefined : { x: 2 }}
+            transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.035 * optionIndex }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon size={15} className="text-primary" />
@@ -116,11 +120,13 @@ function ThemeMenu({
   placement,
   selectedThemeId,
   onSelect,
+  shouldReduceMotion,
 }: {
   isOpen: boolean
   placement: 'down' | 'up'
   selectedThemeId: string
   onSelect: (themeId: string) => void
+  shouldReduceMotion: boolean
 }) {
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
 
@@ -164,10 +170,10 @@ function ThemeMenu({
       role="menu"
       aria-label="Escolher tema"
       style={{ originY: placement === 'up' ? 1 : 0 }}
-      initial={{ opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
-      transition={{ type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
+      transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
     >
       {themeCatalog.map((theme, index) => {
         const isSelected = selectedThemeId === theme.id
@@ -199,10 +205,10 @@ function ThemeMenu({
             aria-checked={isSelected}
             aria-label={`Tema ${theme.name}`}
             tabIndex={isSelected ? 0 : -1}
-            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            whileHover={{ x: 2 }}
-            transition={{ type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.03 * index }}
+            whileHover={shouldReduceMotion ? undefined : { x: 2 }}
+            transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.03 * index }}
             className={`flex w-full items-center gap-3 rounded-lg border px-2 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 hover:bg-primary/5 ${
               isSelected
                 ? 'border-primary/35 bg-primary/10 text-primary'
@@ -227,6 +233,7 @@ function ThemeMenu({
 }
 
 function ToolbarControls({
+  shouldReduceMotion,
   isMobile,
   mode,
   blocksCount,
@@ -271,6 +278,7 @@ function ToolbarControls({
             isDisabled={isAtBlockLimit}
             placement={menuPlacement}
             onSelect={addFromOption}
+            shouldReduceMotion={shouldReduceMotion}
           />
         </AnimatePresence>
       </div>
@@ -300,6 +308,7 @@ function ToolbarControls({
             placement={menuPlacement}
             selectedThemeId={normalizedSelectedThemeId}
             onSelect={onSelectTheme}
+            shouldReduceMotion={shouldReduceMotion}
           />
         </AnimatePresence>
       </div>
@@ -329,13 +338,15 @@ function ToolbarControls({
         type="button"
         onClick={onSave}
         disabled={isSaving}
-        whileTap={{ scale: isSaving ? 1 : 0.97 }}
-        animate={saveState === 'saved'
-          ? { scale: [1, 1.03, 1], borderColor: 'rgba(16,185,129,0.45)' }
-          : saveState === 'error'
-            ? { x: [0, -2, 2, 0], borderColor: 'rgba(239,68,68,0.45)' }
-            : { scale: 1, x: 0 }}
-        transition={{ duration: 0.26, ease: [0.19, 1, 0.22, 1] }}
+        whileTap={shouldReduceMotion ? undefined : { scale: isSaving ? 1 : 0.97 }}
+        animate={shouldReduceMotion
+          ? { borderColor: saveState === 'saved' ? 'rgba(16,185,129,0.45)' : saveState === 'error' ? 'rgba(239,68,68,0.45)' : 'rgba(236,72,153,0.3)' }
+          : saveState === 'saved'
+            ? { scale: [1, 1.03, 1], borderColor: 'rgba(16,185,129,0.45)' }
+            : saveState === 'error'
+              ? { x: [0, -2, 2, 0], borderColor: 'rgba(239,68,68,0.45)' }
+              : { scale: 1, x: 0 }}
+        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: [0.19, 1, 0.22, 1] }}
         className={`${isMobile
           ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-white/90 text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
           : 'inline-flex h-11 items-center gap-2 rounded-xl border border-primary/30 bg-white/90 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
@@ -388,20 +399,8 @@ interface EditorToolbarProps {
   selectedThemeId: string
 }
 
-export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }: EditorToolbarProps) {
-  const blocksCount = useEditorStore((state) => state.blocks.length)
-  const mode = useEditorStore((state) => state.mode)
-  const addBlock = useEditorStore((state) => state.addBlock)
-  const setTheme = useEditorStore((state) => state.setTheme)
-  const selectBlock = useEditorStore((state) => state.selectBlock)
-  const setMode = useEditorStore((state) => state.setMode)
-
-  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
-  const toolbarRef = useRef<HTMLDivElement>(null)
+function useIsMobileToolbar() {
   const [isMobile, setIsMobile] = useState(false)
-
-  const isAtBlockLimit = blocksCount >= MAX_BLOCKS
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -420,6 +419,13 @@ export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }:
     media.addListener(sync)
     return () => media.removeListener(sync)
   }, [])
+
+  return isMobile
+}
+
+function useToolbarMenus(toolbarRef: RefObject<HTMLDivElement | null>) {
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!isAddMenuOpen && !isThemeMenuOpen) {
@@ -442,7 +448,59 @@ export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }:
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick)
     }
-  }, [isAddMenuOpen, isThemeMenuOpen])
+  }, [isAddMenuOpen, isThemeMenuOpen, toolbarRef])
+
+  const closeAllMenus = useCallback(() => {
+    setIsAddMenuOpen(false)
+    setIsThemeMenuOpen(false)
+  }, [])
+
+  const toggleAddMenu = useCallback(() => {
+    setIsThemeMenuOpen(false)
+    setIsAddMenuOpen((current) => !current)
+  }, [])
+
+  const toggleThemeMenu = useCallback(() => {
+    setIsAddMenuOpen(false)
+    setIsThemeMenuOpen((current) => !current)
+  }, [])
+
+  return {
+    isAddMenuOpen,
+    isThemeMenuOpen,
+    setIsAddMenuOpen,
+    setIsThemeMenuOpen,
+    closeAllMenus,
+    toggleAddMenu,
+    toggleThemeMenu,
+  }
+}
+
+export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }: EditorToolbarProps) {
+  const shouldReduceMotion = useReducedMotion()
+  const { blocksCount, mode, addBlock, setTheme, selectBlock, setMode } = useEditorStore(
+    useShallow((state) => ({
+      blocksCount: state.blocks.length,
+      mode: state.mode,
+      addBlock: state.addBlock,
+      setTheme: state.setTheme,
+      selectBlock: state.selectBlock,
+      setMode: state.setMode,
+    })),
+  )
+
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobileToolbar()
+  const {
+    isAddMenuOpen,
+    isThemeMenuOpen,
+    setIsThemeMenuOpen,
+    closeAllMenus,
+    toggleAddMenu,
+    toggleThemeMenu,
+  } = useToolbarMenus(toolbarRef)
+
+  const isAtBlockLimit = blocksCount >= MAX_BLOCKS
 
   const focusBlockEditor = useCallback((blockId: string, type: AvailableBlockType) => {
     if (typeof document === 'undefined') {
@@ -491,30 +549,18 @@ export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }:
     addBlock(newBlock)
     selectBlock(newBlock.id)
     focusBlockEditor(newBlock.id, type)
-    setIsAddMenuOpen(false)
-    setIsThemeMenuOpen(false)
-  }, [addBlock, focusBlockEditor, selectBlock])
+    closeAllMenus()
+  }, [addBlock, closeAllMenus, focusBlockEditor, selectBlock])
 
   const handleSelectTheme = useCallback((themeId: string) => {
     setTheme(themeId)
     setIsThemeMenuOpen(false)
-  }, [setTheme])
+  }, [setIsThemeMenuOpen, setTheme])
 
   const toggleMode = useCallback(() => {
-    setIsAddMenuOpen(false)
-    setIsThemeMenuOpen(false)
+    closeAllMenus()
     setMode(mode === 'edit' ? 'preview' : 'edit')
-  }, [mode, setMode])
-
-  const toggleAddMenu = useCallback(() => {
-    setIsThemeMenuOpen(false)
-    setIsAddMenuOpen((current) => !current)
-  }, [])
-
-  const toggleThemeMenu = useCallback(() => {
-    setIsAddMenuOpen(false)
-    setIsThemeMenuOpen((current) => !current)
-  }, [])
+  }, [closeAllMenus, mode, setMode])
 
   const isMenuVisible = isAddMenuOpen
   const isThemeVisible = isThemeMenuOpen
@@ -527,6 +573,7 @@ export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }:
             <p className="text-sm text-text-light">Monte sua carta com blocos</p>
             <div className="flex items-center gap-2">
               <ToolbarControls
+                shouldReduceMotion={!!shouldReduceMotion}
                 isMobile={false}
                 mode={mode}
                 blocksCount={blocksCount}
@@ -551,6 +598,7 @@ export function EditorToolbar({ onSave, saveState, hasPageId, selectedThemeId }:
         <div className="fixed inset-x-0 bottom-24 z-[60] px-4 md:hidden">
           <div className="glass mx-auto flex w-full max-w-sm items-center justify-between rounded-2xl px-2.5 py-2.5 shadow-[0_14px_35px_-20px_rgba(0,0,0,0.45)]">
             <ToolbarControls
+              shouldReduceMotion={!!shouldReduceMotion}
               isMobile={isMobile}
               mode={mode}
               blocksCount={blocksCount}

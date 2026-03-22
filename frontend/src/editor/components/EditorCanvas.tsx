@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   closestCenter,
   DndContext,
@@ -17,7 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { CalendarDays, Film, Image as ImageIcon, Music2, Sparkles, Type } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { Modal } from '@/components/ui/Modal'
@@ -240,6 +240,60 @@ interface CanvasBlockProps {
   onRequestDelete: (id: string) => void
 }
 
+function useAnimatedBlockHeight(isCollapsed: boolean, blockUpdatedAt?: string | number) {
+  const expandedRef = useRef<HTMLDivElement | null>(null)
+  const collapsedRef = useRef<HTMLDivElement | null>(null)
+  const [animatedHeight, setAnimatedHeight] = useState<number | null>(null)
+
+  const syncAnimatedHeight = useCallback(() => {
+    const nextHeight = isCollapsed
+      ? collapsedRef.current?.offsetHeight ?? 0
+      : expandedRef.current?.offsetHeight ?? 0
+
+    if (nextHeight > 0) {
+      setAnimatedHeight(nextHeight)
+    }
+  }, [isCollapsed])
+
+  const setExpandedNode = useCallback((node: HTMLDivElement | null) => {
+    expandedRef.current = node
+    syncAnimatedHeight()
+  }, [syncAnimatedHeight])
+
+  const setCollapsedNode = useCallback((node: HTMLDivElement | null) => {
+    collapsedRef.current = node
+    syncAnimatedHeight()
+  }, [syncAnimatedHeight])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    const observer = new ResizeObserver(() => {
+      syncAnimatedHeight()
+    })
+
+    if (expandedRef.current) {
+      observer.observe(expandedRef.current)
+    }
+
+    if (collapsedRef.current) {
+      observer.observe(collapsedRef.current)
+    }
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [syncAnimatedHeight, blockUpdatedAt])
+
+  return {
+    animatedHeight,
+    setExpandedNode,
+    setCollapsedNode,
+  }
+}
+
 function CanvasBlockComponent({
   blockId,
   index,
@@ -261,9 +315,12 @@ function CanvasBlockComponent({
   const setBlockCollapsed = useEditorStore((state) => state.setBlockCollapsed)
 
   const collapseContentId = `editor-block-content-${blockId}`
-  const expandedRef = useRef<HTMLDivElement | null>(null)
-  const collapsedRef = useRef<HTMLDivElement | null>(null)
-  const [animatedHeight, setAnimatedHeight] = useState<number | null>(null)
+  const blockUpdatedAt = block?.meta.updatedAt
+  const {
+    animatedHeight,
+    setExpandedNode,
+    setCollapsedNode,
+  } = useAnimatedBlockHeight(isCollapsed, blockUpdatedAt)
 
   const handleSelect = useCallback((id: string) => {
     selectBlock(id)
@@ -293,42 +350,6 @@ function CanvasBlockComponent({
     setBlockCollapsed(blockId, false)
     selectBlock(blockId)
   }, [blockId, selectBlock, setBlockCollapsed])
-
-  const syncAnimatedHeight = useCallback(() => {
-    const nextHeight = isCollapsed
-      ? collapsedRef.current?.offsetHeight ?? 0
-      : expandedRef.current?.offsetHeight ?? 0
-
-    if (nextHeight > 0) {
-      setAnimatedHeight(nextHeight)
-    }
-  }, [isCollapsed])
-
-  useLayoutEffect(() => {
-    syncAnimatedHeight()
-  }, [syncAnimatedHeight, block.meta.updatedAt])
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
-      return
-    }
-
-    const observer = new ResizeObserver(() => {
-      syncAnimatedHeight()
-    })
-
-    if (expandedRef.current) {
-      observer.observe(expandedRef.current)
-    }
-
-    if (collapsedRef.current) {
-      observer.observe(collapsedRef.current)
-    }
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [syncAnimatedHeight])
 
   if (!block) {
     return null
@@ -369,13 +390,12 @@ function CanvasBlockComponent({
         transition={{ type: 'spring', stiffness: 190, damping: 28, mass: 1.02 }}
       >
         <motion.div
-          ref={expandedRef}
+          ref={setExpandedNode}
           initial={false}
           animate={{
             opacity: isCollapsed ? 0 : 1,
             y: isCollapsed ? -10 : 0,
             scale: isCollapsed ? 0.995 : 1,
-            filter: isCollapsed ? 'blur(0.6px)' : 'blur(0px)',
           }}
           transition={{ duration: 0.42, ease: [0.19, 1, 0.22, 1] }}
           style={{
@@ -390,13 +410,12 @@ function CanvasBlockComponent({
         </motion.div>
 
         <motion.div
-          ref={collapsedRef}
+          ref={setCollapsedNode}
           initial={false}
           animate={{
             opacity: isCollapsed ? 1 : 0,
             y: isCollapsed ? 0 : 10,
             scale: isCollapsed ? 1 : 0.995,
-            filter: isCollapsed ? 'blur(0px)' : 'blur(0.6px)',
           }}
           transition={{ duration: 0.42, ease: [0.19, 1, 0.22, 1] }}
           style={{
@@ -417,8 +436,8 @@ function CanvasBlockComponent({
 const CanvasBlock = memo(CanvasBlockComponent)
 
 export function EditorCanvas() {
-  const blocks = useEditorStore((state) => state.blocks)
-  const blockIds = useMemo(() => blocks.map((block) => block.id), [blocks])
+  const shouldReduceMotion = useReducedMotion()
+  const blockIds = useEditorStore(useShallow((state) => state.blocks.map((block) => block.id)))
   const {
     selectedBlockId,
     isDragging,
@@ -441,9 +460,11 @@ export function EditorCanvas() {
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null)
   const isMobile = useIsCoarsePointer()
 
-  const activeBlock = useMemo(
-    () => blocks.find((block) => block.id === activeId) ?? null,
-    [activeId, blocks],
+  const activeBlock = useEditorStore(
+    useCallback(
+      (state) => (activeId ? state.blocks.find((block) => block.id === activeId) ?? null : null),
+      [activeId],
+    ),
   )
 
   const sensors = useSensors(
@@ -476,17 +497,18 @@ export function EditorCanvas() {
     const overBlockId = event.over ? normalizeId(event.over.id) : null
 
     if (overBlockId && activeBlockId !== overBlockId) {
-      const oldIndex = blocks.findIndex((block) => block.id === activeBlockId)
-      const newIndex = blocks.findIndex((block) => block.id === overBlockId)
+      const currentBlocks = useEditorStore.getState().blocks
+      const oldIndex = currentBlocks.findIndex((block) => block.id === activeBlockId)
+      const newIndex = currentBlocks.findIndex((block) => block.id === overBlockId)
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        reorderBlocks(arrayMove(blocks, oldIndex, newIndex))
+        reorderBlocks(arrayMove(currentBlocks, oldIndex, newIndex))
       }
     }
 
     setDragging(false)
     setActiveId(null)
-  }, [blocks, isMobile, reorderBlocks, setDragging])
+  }, [isMobile, reorderBlocks, setDragging])
 
   const handleDragCancel = useCallback(() => {
     setDragging(false)
@@ -545,11 +567,11 @@ export function EditorCanvas() {
         {blockIds.map((blockId, index) => (
           <motion.div
             key={blockId}
-            layout
-            initial={{ opacity: 0, y: 12, scale: 0.995 }}
+            layout={!shouldReduceMotion}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 12, scale: 0.995 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.99 }}
-            transition={{ duration: 0.18 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.99 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
           >
             <CanvasBlock
               blockId={blockId}
@@ -563,7 +585,7 @@ export function EditorCanvas() {
         ))}
       </AnimatePresence>
     </div>
-  ), [blockIds, isDragging, isMobile, requestDelete, selectBlock])
+  ), [blockIds, isDragging, isMobile, requestDelete, selectBlock, shouldReduceMotion])
 
   if (blockIds.length === 0) {
     return (

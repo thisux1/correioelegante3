@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
@@ -51,6 +51,12 @@ interface TemplateConflictState {
   theme?: string
 }
 
+interface PageMetaState {
+  status: PageStatus
+  visibility: PageVisibility
+  pageVersion: number | undefined
+}
+
 function toDraftSnapshot(page: PageSummary): LocalDraftSnapshot {
   return {
     pageId: page.id,
@@ -80,6 +86,311 @@ function toPageSignature(input: {
     status: input.status,
     visibility: input.visibility,
   })
+}
+
+function buildLocalSnapshot(params: {
+  pageIdFromRoute: string
+  localDraftPageId: string | null
+  localDraftUpdatedAt: string | null
+  localBlocks: PageSummary['blocks']
+  localTheme?: string
+  localStatus: PageStatus
+  localVisibility: PageVisibility
+  localVersion: number | undefined
+}): LocalDraftSnapshot | null {
+  if (params.localDraftPageId !== params.pageIdFromRoute || !params.localDraftUpdatedAt) {
+    return null
+  }
+
+  return {
+    pageId: params.pageIdFromRoute,
+    updatedAt: params.localDraftUpdatedAt,
+    page: {
+      id: params.pageIdFromRoute,
+      blocks: params.localBlocks,
+      theme: params.localTheme,
+      status: params.localStatus,
+      visibility: params.localVisibility,
+      publishedAt: null,
+      version: params.localVersion ?? PAGE_VERSION,
+      updatedAt: params.localDraftUpdatedAt,
+    },
+  }
+}
+
+function useFeedbackAutoDismiss(feedback: string | null, setFeedback: (value: string | null) => void) {
+  useEffect(() => {
+    if (!feedback) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setFeedback(null)
+    }, 4000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [feedback, setFeedback])
+}
+
+function useSaveStateAutoReset(saveState: SaveState, setSaveState: (value: SaveState) => void) {
+  useEffect(() => {
+    if (saveState !== 'saved') {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSaveState('idle')
+    }, 2200)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [saveState, setSaveState])
+}
+
+function useTemplateBootstrap(params: {
+  pageIdFromRoute?: string
+  templateIdFromQuery: string | null
+  blocksLength: number
+  handledTemplateKeyRef: MutableRefObject<string>
+  applyTemplate: (templateBlocks: Block[], templateName: string, templateTheme?: string) => void
+  setTemplateConflict: (next: TemplateConflictState | null) => void
+  setFeedback: (next: string | null) => void
+}) {
+  const {
+    pageIdFromRoute,
+    templateIdFromQuery,
+    blocksLength,
+    handledTemplateKeyRef,
+    applyTemplate,
+    setTemplateConflict,
+    setFeedback,
+  } = params
+
+  useEffect(() => {
+    const templateKey = `${pageIdFromRoute ?? 'new'}:${templateIdFromQuery ?? ''}`
+    if (handledTemplateKeyRef.current === templateKey) {
+      return
+    }
+
+    handledTemplateKeyRef.current = templateKey
+
+    if (pageIdFromRoute || !templateIdFromQuery) {
+      return
+    }
+
+    const template = getTemplateById(templateIdFromQuery)
+    if (!template) {
+      setFeedback('Template nao encontrado. O editor foi aberto sem modelo.')
+      return
+    }
+
+    const clonedBlocks = cloneTemplateBlocks(template.blocks)
+    if (blocksLength > 0) {
+      setTemplateConflict({
+        templateName: template.name,
+        blocks: clonedBlocks,
+        theme: template.theme,
+      })
+      return
+    }
+
+    applyTemplate(clonedBlocks, template.name, template.theme)
+  }, [
+    applyTemplate,
+    blocksLength,
+    handledTemplateKeyRef,
+    pageIdFromRoute,
+    setFeedback,
+    setTemplateConflict,
+    templateIdFromQuery,
+  ])
+}
+
+function usePageHydration(params: {
+  pageIdFromRoute?: string
+  navigate: ReturnType<typeof useNavigate>
+  pageMetaRef: MutableRefObject<PageMetaState>
+  applyBackendPage: (backendPage: PageSummary) => void
+  applyLocalDraft: (localSnapshot: LocalDraftSnapshot) => void
+  setDraftConflict: (next: DraftConflictState | null) => void
+  setFeedback: (next: string | null) => void
+  setCurrentPageId: (next: string | undefined) => void
+  setPageVersion: (next: number | undefined) => void
+  setIsLoadingPage: (next: boolean) => void
+}) {
+  const {
+    pageIdFromRoute,
+    navigate,
+    pageMetaRef,
+    applyBackendPage,
+    applyLocalDraft,
+    setDraftConflict,
+    setFeedback,
+    setCurrentPageId,
+    setPageVersion,
+    setIsLoadingPage,
+  } = params
+
+  useEffect(() => {
+    let active = true
+
+    const run = async () => {
+      if (!pageIdFromRoute) {
+        setCurrentPageId(undefined)
+        setPageVersion(undefined)
+        return
+      }
+
+      setIsLoadingPage(true)
+      const startedAt = Date.now()
+      try {
+        const backendPage = await pageService.loadPage(pageIdFromRoute)
+        if (!active) {
+          return
+        }
+
+        const editorState = useEditorStore.getState()
+        const localSnapshot = buildLocalSnapshot({
+          pageIdFromRoute,
+          localDraftPageId: editorState.draftPageId,
+          localDraftUpdatedAt: editorState.draftUpdatedAt,
+          localBlocks: editorState.blocks,
+          localTheme: editorState.theme,
+          localStatus: pageMetaRef.current.status,
+          localVisibility: pageMetaRef.current.visibility,
+          localVersion: pageMetaRef.current.pageVersion,
+        })
+
+        const backendSnapshot = toDraftSnapshot(backendPage)
+        const precedence = resolveDraftPrecedence({
+          pageId: pageIdFromRoute,
+          localDraft: localSnapshot,
+          backendPage: backendSnapshot,
+        })
+
+        if (precedence.decision === 'use-local' && localSnapshot) {
+          applyLocalDraft(localSnapshot)
+          return
+        }
+
+        if (precedence.decision === 'ask-user' && localSnapshot) {
+          setDraftConflict({ localSnapshot, backendPage })
+          return
+        }
+
+        applyBackendPage(backendPage)
+        trackEditorEvent({
+          event: 'load_success',
+          pageId: backendPage.id,
+          durationMs: Date.now() - startedAt,
+        })
+      } catch (error) {
+        if (!active) {
+          return
+        }
+
+        const isFeatureDisabled =
+          isAxiosError<{ code?: string; reason?: string; rolloutPercent?: number }>(error)
+          && error.response?.data?.code === 'EDITOR_MODULAR_FEATURE_DISABLED'
+
+        if (isFeatureDisabled) {
+          navigate('/create', {
+            replace: true,
+            state: {
+              editorBlockedReason: error.response?.data?.reason,
+              rolloutPercent: error.response?.data?.rolloutPercent,
+            },
+          })
+          return
+        }
+
+        setFeedback(
+          isAxiosError<{ error?: string }>(error)
+            ? error.response?.data?.error ?? 'Nao foi possivel carregar a pagina.'
+            : 'Nao foi possivel carregar a pagina.',
+        )
+
+        trackEditorEvent({
+          event: 'load_error',
+          pageId: pageIdFromRoute,
+          durationMs: Date.now() - startedAt,
+          detail: isAxiosError<{ error?: string }>(error) ? error.response?.data?.error : undefined,
+        })
+      } finally {
+        if (active) {
+          setIsLoadingPage(false)
+        }
+      }
+    }
+
+    void run()
+
+    return () => {
+      active = false
+    }
+  }, [
+    pageIdFromRoute,
+    navigate,
+    pageMetaRef,
+    applyBackendPage,
+    applyLocalDraft,
+    setCurrentPageId,
+    setDraftConflict,
+    setFeedback,
+    setIsLoadingPage,
+    setPageVersion,
+  ])
+}
+
+function useEditorAutosave(params: {
+  hasPageId: boolean
+  pageVersion: number | undefined
+  currentSignature: string
+  lastSyncedSignature: string
+  saveState: SaveState
+  isLoadingPage: boolean
+  savePage: () => Promise<void>
+}) {
+  const {
+    hasPageId,
+    pageVersion,
+    currentSignature,
+    lastSyncedSignature,
+    saveState,
+    isLoadingPage,
+    savePage,
+  } = params
+
+  useEffect(() => {
+    if (!hasPageId || pageVersion === undefined || typeof window === 'undefined') {
+      return
+    }
+
+    if (currentSignature === lastSyncedSignature) {
+      return
+    }
+
+    if (saveState === 'saving' || isLoadingPage) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void savePage()
+    }, AUTOSAVE_DEBOUNCE_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [
+    currentSignature,
+    hasPageId,
+    isLoadingPage,
+    lastSyncedSignature,
+    pageVersion,
+    savePage,
+    saveState,
+  ])
 }
 
 export function Editor() {
@@ -313,219 +624,38 @@ export function Editor() {
     visibility,
   ])
 
-  useEffect(() => {
-    if (!feedback) {
-      return
-    }
-
-    const timeoutId = setTimeout(() => {
-      setFeedback(null)
-    }, 4000)
-
-    return () => clearTimeout(timeoutId)
-  }, [feedback])
-
-  useEffect(() => {
-    if (saveState !== 'saved') {
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSaveState('idle')
-    }, 2200)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [saveState])
-
-  useEffect(() => {
-    const templateKey = `${pageIdFromRoute ?? 'new'}:${templateIdFromQuery ?? ''}`
-    if (handledTemplateKeyRef.current === templateKey) {
-      return
-    }
-
-    handledTemplateKeyRef.current = templateKey
-
-    if (pageIdFromRoute || !templateIdFromQuery) {
-      return
-    }
-
-    const template = getTemplateById(templateIdFromQuery)
-    if (!template) {
-      setFeedback('Template nao encontrado. O editor foi aberto sem modelo.')
-      return
-    }
-
-    const clonedBlocks = cloneTemplateBlocks(template.blocks)
-    if (blocks.length > 0) {
-      setTemplateConflict({
-        templateName: template.name,
-        blocks: clonedBlocks,
-        theme: template.theme,
-      })
-      return
-    }
-
-    applyTemplate(clonedBlocks, template.name, template.theme)
-  }, [
-    applyTemplate,
-    blocks.length,
+  useFeedbackAutoDismiss(feedback, setFeedback)
+  useSaveStateAutoReset(saveState, setSaveState)
+  useTemplateBootstrap({
     pageIdFromRoute,
     templateIdFromQuery,
-  ])
-
-  useEffect(() => {
-    let active = true
-
-    const run = async () => {
-      if (!pageIdFromRoute) {
-        setCurrentPageId(undefined)
-        setPageVersion(undefined)
-        return
-      }
-
-      setIsLoadingPage(true)
-      const startedAt = Date.now()
-      try {
-        const backendPage = await pageService.loadPage(pageIdFromRoute)
-        if (!active) {
-          return
-        }
-
-        const editorState = useEditorStore.getState()
-        const localBlocks = editorState.blocks
-        const localStatus = pageMetaRef.current.status
-        const localVisibility = pageMetaRef.current.visibility
-        const localVersion = pageMetaRef.current.pageVersion
-        const localDraftPageId = editorState.draftPageId
-        const localDraftUpdatedAt = editorState.draftUpdatedAt
-        const localTheme = editorState.theme
-
-        const localSnapshot: LocalDraftSnapshot | null =
-          localDraftPageId === pageIdFromRoute && localDraftUpdatedAt
-            ? {
-                pageId: pageIdFromRoute,
-                updatedAt: localDraftUpdatedAt,
-                page: {
-                  id: pageIdFromRoute,
-                  blocks: localBlocks,
-                  theme: localTheme,
-                  status: localStatus,
-                  visibility: localVisibility,
-                  publishedAt: null,
-                  version: localVersion ?? PAGE_VERSION,
-                  updatedAt: localDraftUpdatedAt,
-                },
-              }
-            : null
-
-        const backendSnapshot = toDraftSnapshot(backendPage)
-        const precedence = resolveDraftPrecedence({
-          pageId: pageIdFromRoute,
-          localDraft: localSnapshot,
-          backendPage: backendSnapshot,
-        })
-
-        const shouldUseLocal =
-          precedence.decision === 'use-local'
-
-        if (shouldUseLocal && localSnapshot) {
-          applyLocalDraft(localSnapshot)
-          return
-        }
-
-        if (precedence.decision === 'ask-user' && localSnapshot) {
-          setDraftConflict({ localSnapshot, backendPage })
-          return
-        }
-
-        applyBackendPage(backendPage)
-        trackEditorEvent({
-          event: 'load_success',
-          pageId: backendPage.id,
-          durationMs: Date.now() - startedAt,
-        })
-      } catch (error) {
-        if (!active) {
-          return
-        }
-
-        const isFeatureDisabled =
-          isAxiosError<{ code?: string; reason?: string; rolloutPercent?: number }>(error)
-          && error.response?.data?.code === 'EDITOR_MODULAR_FEATURE_DISABLED'
-
-        if (isFeatureDisabled) {
-          navigate('/create', {
-            replace: true,
-            state: {
-              editorBlockedReason: error.response?.data?.reason,
-              rolloutPercent: error.response?.data?.rolloutPercent,
-            },
-          })
-          return
-        }
-
-        setFeedback(
-          isAxiosError<{ error?: string }>(error)
-            ? error.response?.data?.error ?? 'Nao foi possivel carregar a pagina.'
-            : 'Nao foi possivel carregar a pagina.',
-        )
-
-        trackEditorEvent({
-          event: 'load_error',
-          pageId: pageIdFromRoute,
-          durationMs: Date.now() - startedAt,
-          detail: isAxiosError<{ error?: string }>(error) ? error.response?.data?.error : undefined,
-        })
-      } finally {
-        if (active) {
-          setIsLoadingPage(false)
-        }
-      }
-    }
-
-    run()
-
-    return () => {
-      active = false
-    }
-  }, [
+    blocksLength: blocks.length,
+    handledTemplateKeyRef,
+    applyTemplate,
+    setTemplateConflict,
+    setFeedback,
+  })
+  usePageHydration({
     pageIdFromRoute,
     navigate,
+    pageMetaRef,
     applyBackendPage,
     applyLocalDraft,
-  ])
-
-  useEffect(() => {
-    if (!hasPageId || pageVersion === undefined || typeof window === 'undefined') {
-      return
-    }
-
-    if (currentSignature === lastSyncedSignature) {
-      return
-    }
-
-    if (saveState === 'saving' || isLoadingPage) {
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void savePage()
-    }, AUTOSAVE_DEBOUNCE_MS)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [
-    currentSignature,
+    setDraftConflict,
+    setFeedback,
+    setCurrentPageId,
+    setPageVersion,
+    setIsLoadingPage,
+  })
+  useEditorAutosave({
     hasPageId,
-    isLoadingPage,
-    lastSyncedSignature,
     pageVersion,
-    savePage,
+    currentSignature,
+    lastSyncedSignature,
     saveState,
-  ])
+    isLoadingPage,
+    savePage,
+  })
 
   const feedbackClassName = useMemo(() => {
     if (saveState === 'error') {

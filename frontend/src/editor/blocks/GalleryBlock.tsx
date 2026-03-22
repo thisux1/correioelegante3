@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, LoaderCircle, Upload, X } from 'lucide-react'
 import type { BlockComponentProps, GalleryItem } from '@/editor/types'
 import { MediaField, type MediaUploadState } from '@/editor/components/MediaField'
@@ -15,6 +15,7 @@ import {
 type BatchUploadState = 'idle' | 'sending' | 'processing' | 'done' | 'done_with_errors'
 
 function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
+  const shouldReduceMotion = useReducedMotion()
   const isGalleryBlock = block.type === 'gallery'
   const [activeIndex, setActiveIndex] = useState(0)
   const [batchState, setBatchState] = useState<BatchUploadState>('idle')
@@ -108,6 +109,10 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     }
 
     const intervalId = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return
+      }
+
       setActiveIndex((current) => (current + 1) % items.length)
     }, 3500)
 
@@ -287,16 +292,16 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             </button>
           </div>
         ) : (
-          <motion.ul layout className="space-y-2">
+          <motion.ul layout={!shouldReduceMotion} className="space-y-2">
             <AnimatePresence initial={false}>
               {visibleItems.map((item, index) => (
                 <motion.li
                   key={`${item.src}-${index}`}
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
+                  layout={!shouldReduceMotion}
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.18, layout: { type: 'spring', stiffness: 420, damping: 34 } }}
+                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                  transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.18, layout: { type: 'spring', stiffness: 420, damping: 34 } }}
                   className="rounded-xl border border-primary/15 bg-white/80 p-2"
                 >
                   <MediaField
@@ -461,8 +466,8 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               src={item.src}
               alt={`Imagem ${index + 1}`}
               loading="lazy"
-              className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ${transitionClass}`}
-            />
+               className={`absolute inset-0 h-full w-full object-cover ${shouldReduceMotion ? '' : 'transition-all duration-700'} ${transitionClass}`}
+             />
           )
         })}
       </div>

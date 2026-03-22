@@ -96,14 +96,7 @@ export function useMusicVisualizer({ audioElement, isPlaying, barsCount = 16, vo
   const barsCountRef = useRef(barsCount)
   const volumeRef = useRef(volume)
   const isMutedRef = useRef(isMuted)
-
-  const [hasStartedPlaying, setHasStartedPlaying] = useState(isPlaying)
-
-  useEffect(() => {
-    if (isPlaying && !hasStartedPlaying) {
-      setHasStartedPlaying(true)
-    }
-  }, [isPlaying, hasStartedPlaying])
+  const hasStartedPlaying = isPlaying || (audioElement?.currentTime ?? 0) > 0
 
   const [reducedMotion, setReducedMotion] = useState<boolean>(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
