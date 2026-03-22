@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { act } from 'react-dom/test-utils'
 import { MediaField } from '@/editor/components/MediaField'
 import { assetService } from '@/services/assetService'
+import type { AssetSummary } from '@/services/assetService'
+import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
 vi.mock('@/services/assetService', () => ({
   assetService: {
@@ -13,6 +15,18 @@ vi.mock('@/services/assetService', () => ({
 }))
 
 const mockedAssetService = vi.mocked(assetService)
+
+function createAssetListResponse(assets: AssetSummary[]): AxiosResponse<{ assets: AssetSummary[] }> {
+  return {
+    data: { assets },
+    status: 200,
+    statusText: 'OK',
+    headers: {},
+    config: {
+      headers: {},
+    } as InternalAxiosRequestConfig,
+  }
+}
 
 async function waitForCondition(assertion: () => void, timeoutMs = 1500) {
   const startedAt = Date.now()
@@ -93,11 +107,7 @@ describe('MediaField', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
-    mockedAssetService.list.mockResolvedValue({
-      data: {
-        assets: [],
-      },
-    } as any)
+    mockedAssetService.list.mockResolvedValue(createAssetListResponse([]))
 
     const onChange = vi.fn()
 

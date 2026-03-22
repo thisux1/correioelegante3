@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Film, LoaderCircle, Pause, Play, TriangleAlert, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 import { assetService, type AssetSummary } from '@/services/assetService'
@@ -54,6 +54,7 @@ function AssetSelect({ assets, selectedAssetId, onSelect }: AssetSelectProps) {
 }
 
 function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
+  const shouldReduceMotion = useReducedMotion()
   const isVideoBlock = block.type === 'video'
   const src = isVideoBlock ? block.props.src : ''
   const assetId = isVideoBlock ? block.props.assetId ?? '' : ''
@@ -66,6 +67,8 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [isVideoLoading, setIsVideoLoading] = useState(true)
+  const pollTimeoutRef = useRef<number | null>(null)
+  const pollingInFlightRef = useRef(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   const updateVideoProps = useCallback((next: { assetId?: string; src?: string }) => {
@@ -86,10 +89,6 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }, [onUpdate])
 
   useEffect(() => {
-    if (mode !== 'edit') {
-      return
-    }
-
     let alive = true
     assetService.list('video')
       .then(({ data }) => {
@@ -117,10 +116,14 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return () => {
       alive = false
     }
-  }, [mode, assetId])
+  }, [])
 
   useEffect(() => {
     if (!assetId) {
+      return
+    }
+
+    if (selectedAsset?.id === assetId) {
       return
     }
 
@@ -144,7 +147,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return () => {
       alive = false
     }
-  }, [assetId, assets])
+  }, [assetId, selectedAsset?.id])
 
   const effectiveSelectedAsset = assetId && selectedAsset?.id === assetId
     ? selectedAsset
@@ -155,19 +158,63 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       return
     }
 
-    const timer = window.setInterval(() => {
+    let cancelled = false
+
+    const clearPollingTimeout = () => {
+      if (pollTimeoutRef.current !== null) {
+        window.clearTimeout(pollTimeoutRef.current)
+        pollTimeoutRef.current = null
+      }
+    }
+
+    const poll = () => {
+      if (cancelled) {
+        return
+      }
+
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        pollTimeoutRef.current = window.setTimeout(poll, 5000)
+        return
+      }
+
+      if (pollingInFlightRef.current) {
+        pollTimeoutRef.current = window.setTimeout(poll, 3000)
+        return
+      }
+
+      pollingInFlightRef.current = true
+      let shouldScheduleNextPoll = true
+
       assetService.getById(selectedAsset.id)
         .then(({ data }) => {
+          if (cancelled) {
+            return
+          }
+
           setSelectedAsset(data.asset)
           if (data.asset.publicUrl) {
             updateVideoProps({ src: data.asset.publicUrl })
           }
+
+          if (data.asset.processingStatus === 'ready' || data.asset.processingStatus === 'failed') {
+            shouldScheduleNextPoll = false
+          }
         })
         .catch(() => undefined)
-    }, 3000)
+        .finally(() => {
+          pollingInFlightRef.current = false
+          if (!cancelled && shouldScheduleNextPoll) {
+            pollTimeoutRef.current = window.setTimeout(poll, 3000)
+          }
+        })
+    }
+
+    poll()
 
     return () => {
-      window.clearInterval(timer)
+      cancelled = true
+      clearPollingTimeout()
+      pollingInFlightRef.current = false
     }
   }, [selectedAsset, updateVideoProps])
 
@@ -248,9 +295,9 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   if (effectiveSelectedAsset?.processingStatus === 'processing' || effectiveSelectedAsset?.processingStatus === 'pending') {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.99 }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.99 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
+        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
         className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light"
       >
         <LoaderCircle size={20} className="animate-spin" />

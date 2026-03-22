@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronDown, ChevronUp, LoaderCircle, Music2, Pause, Play, Plus, Settings2, Shuffle, SkipBack, SkipForward, Trash2, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 import { assetService, type AssetSummary } from '@/services/assetService'
@@ -57,6 +57,7 @@ function formatTime(totalSeconds: number): string {
 }
 
 function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
+  const shouldReduceMotion = useReducedMotion()
   const isMusicBlock = block.type === 'music'
   const src = isMusicBlock ? block.props.src : ''
   const assetId = isMusicBlock ? block.props.assetId ?? '' : ''
@@ -67,6 +68,8 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const artist = isMusicBlock ? block.props.artist ?? '' : ''
 
   const [selectedAsset, setSelectedAsset] = useState<AssetSummary | null>(null)
+  const pollTimeoutRef = useRef<number | null>(null)
+  const pollingInFlightRef = useRef(false)
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null)
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [editActiveTrackIndex, setEditActiveTrackIndex] = useState(0)
@@ -162,13 +165,53 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       return
     }
 
-    const timer = window.setInterval(() => {
-      assetService.getById(activeSelectedAsset.id)
-        .then(({ data }) => setSelectedAsset(data.asset))
-        .catch(() => undefined)
-    }, 3000)
+    let cancelled = false
 
-    return () => window.clearInterval(timer)
+    const clearPollingTimeout = () => {
+      if (pollTimeoutRef.current !== null) {
+        window.clearTimeout(pollTimeoutRef.current)
+        pollTimeoutRef.current = null
+      }
+    }
+
+    const poll = () => {
+      if (cancelled) {
+        return
+      }
+
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        pollTimeoutRef.current = window.setTimeout(poll, 5000)
+        return
+      }
+
+      if (pollingInFlightRef.current) {
+        pollTimeoutRef.current = window.setTimeout(poll, 3000)
+        return
+      }
+
+      pollingInFlightRef.current = true
+      assetService.getById(activeSelectedAsset.id)
+        .then(({ data }) => {
+          if (!cancelled) {
+            setSelectedAsset(data.asset)
+          }
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          pollingInFlightRef.current = false
+          if (!cancelled) {
+            pollTimeoutRef.current = window.setTimeout(poll, 3000)
+          }
+        })
+    }
+
+    poll()
+
+    return () => {
+      cancelled = true
+      clearPollingTimeout()
+      pollingInFlightRef.current = false
+    }
   }, [activeSelectedAsset])
 
   useEffect(() => {
@@ -455,9 +498,9 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   if (activeSelectedAsset && (activeSelectedAsset.processingStatus === 'pending' || activeSelectedAsset.processingStatus === 'processing')) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.99 }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.99 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
+        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
         className="relative overflow-hidden rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light"
       >
         <div className="mb-4 flex items-center gap-2">

@@ -74,3 +74,16 @@ AGENTS.md
 future_interations.md
 plan-upload-galeria-cloudinary.md
 .opencode.json
+plan-refatoracao-massiva.md
+docs/refactor-baseline-checklist.md
+docs/refactor-baseline.md
+docs/refactor-performance-frontend-etapa2.md
+plan-refatoracao-massiva/etapa-0-baseline-auditoria.md
+plan-refatoracao-massiva/etapa-1-normalizacao-estrutura.md
+plan-refatoracao-massiva/etapa-2-performance-frontend.md
+plan-refatoracao-massiva/etapa-3-performance-backend.md
+plan-refatoracao-massiva/etapa-4-clean-code-padroes.md
+plan-refatoracao-massiva/etapa-5-testes-confiabilidade.md
+plan-refatoracao-massiva/etapa-6-observabilidade-ci.md
+plan-refatoracao-massiva/etapa-7-hardening-rollout.md
+plan-refatoracao-massiva/README.md

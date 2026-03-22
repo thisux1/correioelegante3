@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CheckCircle2, ImagePlus, LoaderCircle, RotateCcw, Trash2, Upload } from 'lucide-react'
 import { assetService, type AssetKind, type AssetSummary } from '@/services/assetService'
@@ -22,6 +22,228 @@ interface MediaFieldProps {
   helperText?: string
   multiple?: boolean
   onStatusChange?: (status: { state: MediaUploadState; error?: string | null }) => void
+}
+
+interface UploadStatus {
+  state: MediaUploadState
+  error: string | null
+}
+
+function deriveSectionState(uploadState: MediaUploadState) {
+  if (uploadState === 'error') {
+    return 'error'
+  }
+  if (uploadState === 'ready') {
+    return 'success'
+  }
+  if (uploadState === 'sending' || uploadState === 'processing') {
+    return 'loading'
+  }
+  return 'idle'
+}
+
+function useMediaDragState() {
+  const [isDragActive, setIsDragActive] = useState(false)
+  const [, setDragDepth] = useState(0)
+
+  const handleDragEnter = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragDepth((current) => current + 1)
+    setIsDragActive(true)
+  }, [])
+
+  const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.dataTransfer.dropEffect = 'copy'
+  }, [])
+
+  const handleDragLeave = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setDragDepth((current) => {
+      const nextDepth = Math.max(0, current - 1)
+      setIsDragActive(nextDepth > 0)
+      return nextDepth
+    })
+  }, [])
+
+  const resetDragState = useCallback(() => {
+    setDragDepth(0)
+    setIsDragActive(false)
+  }, [])
+
+  return {
+    isDragActive,
+    handleDragEnter,
+    handleDragOver,
+    handleDragLeave,
+    resetDragState,
+  }
+}
+
+function useMediaUploadQueue(params: {
+  kind: AssetKind
+  multiple: boolean
+  normalizedSrc: string
+  onChange: (nextValue: MediaFieldValue) => void
+  onStatusChange?: (status: { state: MediaUploadState; error?: string | null }) => void
+}) {
+  const { kind, multiple, normalizedSrc, onChange, onStatusChange } = params
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ state: 'idle', error: null })
+  const [libraryCount, setLibraryCount] = useState<number | null>(null)
+  const [currentAsset, setCurrentAsset] = useState<AssetSummary | null>(null)
+  const pollingTimeoutRef = useRef<number | null>(null)
+  const pollingInFlightRef = useRef(false)
+
+  const setState = useCallback((nextState: MediaUploadState, nextError: string | null = null) => {
+    setUploadStatus({ state: nextState, error: nextError })
+  }, [])
+
+  useEffect(() => {
+    onStatusChange?.({ state: uploadStatus.state, error: uploadStatus.error })
+  }, [onStatusChange, uploadStatus])
+
+  useEffect(() => {
+    if (!currentAsset || (currentAsset.processingStatus !== 'pending' && currentAsset.processingStatus !== 'processing')) {
+      return
+    }
+
+    let cancelled = false
+
+    const clearTimer = () => {
+      if (pollingTimeoutRef.current !== null) {
+        window.clearTimeout(pollingTimeoutRef.current)
+        pollingTimeoutRef.current = null
+      }
+    }
+
+    const pollAsset = () => {
+      if (cancelled) {
+        return
+      }
+
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        pollingTimeoutRef.current = window.setTimeout(pollAsset, 5000)
+        return
+      }
+
+      if (pollingInFlightRef.current) {
+        pollingTimeoutRef.current = window.setTimeout(pollAsset, 3000)
+        return
+      }
+
+      pollingInFlightRef.current = true
+      let shouldScheduleNextPoll = true
+      assetService.getById(currentAsset.id)
+        .then(({ data }) => {
+          if (cancelled) {
+            return
+          }
+
+          setCurrentAsset(data.asset)
+          if (data.asset.publicUrl) {
+            onChange({
+              src: data.asset.publicUrl,
+              assetId: data.asset.id,
+            })
+          }
+
+          if (data.asset.processingStatus === 'failed') {
+            setState('error', data.asset.errorMessage ?? 'Falha ao processar arquivo enviado.')
+            shouldScheduleNextPoll = false
+            return
+          }
+
+          if (data.asset.processingStatus === 'ready') {
+            setState('ready')
+            shouldScheduleNextPoll = false
+            return
+          }
+
+          setState('processing')
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          pollingInFlightRef.current = false
+          if (!cancelled && shouldScheduleNextPoll) {
+            pollingTimeoutRef.current = window.setTimeout(pollAsset, 3000)
+          }
+        })
+    }
+
+    pollAsset()
+
+    return () => {
+      cancelled = true
+      clearTimer()
+      pollingInFlightRef.current = false
+    }
+  }, [currentAsset, onChange, setState])
+
+  const handleFilesUpload = useCallback(async (files: File[]) => {
+    const queue = multiple ? files : files.slice(0, 1)
+    if (queue.length === 0) {
+      return
+    }
+
+    setState('sending')
+
+    try {
+      const firstAsset = await assetService.uploadFileFlow({ file: queue[0], kind })
+      setState('processing')
+      setCurrentAsset(firstAsset)
+      onChange({
+        src: firstAsset.publicUrl ?? normalizedSrc,
+        assetId: firstAsset.id,
+      })
+
+      const { data } = await assetService.list(kind)
+      setLibraryCount(data.assets.length)
+      const refreshedAsset = data.assets.find((item) => item.id === firstAsset.id) ?? firstAsset
+      setCurrentAsset(refreshedAsset)
+      if (refreshedAsset.processingStatus === 'failed') {
+        setState('error', refreshedAsset.errorMessage ?? 'Nao foi possivel processar este arquivo.')
+        return
+      }
+
+      if (refreshedAsset.processingStatus === 'ready') {
+        setState('ready')
+        return
+      }
+
+      setState('processing')
+    } catch (error) {
+      setState('error', toFriendlyUploadErrorMessage(error))
+    }
+  }, [kind, multiple, normalizedSrc, onChange, setState])
+
+  const handleUploadInput = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? [])
+    await handleFilesUpload(selected)
+    event.target.value = ''
+  }, [handleFilesUpload])
+
+  const handleReprocessAsset = useCallback(async () => {
+    if (!currentAsset) {
+      return
+    }
+
+    const { data } = await assetService.reprocess(currentAsset.id)
+    setCurrentAsset(data.asset)
+    setState('processing')
+  }, [currentAsset, setState])
+
+  return {
+    uploadState: uploadStatus.state,
+    uploadError: uploadStatus.error,
+    libraryCount,
+    currentAsset,
+    handleFilesUpload,
+    handleUploadInput,
+    handleReprocessAsset,
+  }
 }
 
 function isValidUrl(value: string): boolean {
@@ -80,15 +302,31 @@ export function MediaField({
   multiple = false,
   onStatusChange,
 }: MediaFieldProps) {
-  const [uploadState, setUploadState] = useState<MediaUploadState>('idle')
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [libraryCount, setLibraryCount] = useState<number | null>(null)
-  const [currentAsset, setCurrentAsset] = useState<AssetSummary | null>(null)
-  const [isDragActive, setIsDragActive] = useState(false)
-  const [, setDragDepth] = useState(0)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const normalizedSrc = value.src.trim()
   const hasValue = normalizedSrc.length > 0
+  const {
+    isDragActive,
+    handleDragEnter,
+    handleDragOver,
+    handleDragLeave,
+    resetDragState,
+  } = useMediaDragState()
+  const {
+    uploadState,
+    uploadError,
+    libraryCount,
+    currentAsset,
+    handleFilesUpload,
+    handleUploadInput,
+    handleReprocessAsset,
+  } = useMediaUploadQueue({
+    kind,
+    multiple,
+    normalizedSrc,
+    onChange,
+    onStatusChange,
+  })
 
   const statusText = useMemo(() => {
     if (uploadState === 'sending') {
@@ -106,61 +344,15 @@ export function MediaField({
     return null
   }, [uploadError, uploadState])
 
-  useEffect(() => {
-    onStatusChange?.({ state: uploadState, error: uploadError })
-  }, [onStatusChange, uploadError, uploadState])
-
-  const handleFilesUpload = async (files: File[]) => {
-    const queue = multiple ? files : files.slice(0, 1)
-    if (queue.length === 0) {
-      return
-    }
-
-    setUploadError(null)
-    setUploadState('sending')
-
-    try {
-      const firstAsset = await assetService.uploadFileFlow({ file: queue[0], kind })
-      setUploadState('processing')
-      setCurrentAsset(firstAsset)
-      onChange({
-        src: firstAsset.publicUrl ?? normalizedSrc,
-        assetId: firstAsset.id,
-      })
-
-      const { data } = await assetService.list(kind)
-      setLibraryCount(data.assets.length)
-      const refreshedAsset = data.assets.find((item) => item.id === firstAsset.id) ?? firstAsset
-      setCurrentAsset(refreshedAsset)
-      setUploadState('ready')
-    } catch (error) {
-      setUploadState('error')
-      setUploadError(toFriendlyUploadErrorMessage(error))
-    }
-  }
-
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(event.target.files ?? [])
-    await handleFilesUpload(selected)
-    event.target.value = ''
-  }
-
   const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     event.stopPropagation()
-    setDragDepth(0)
-    setIsDragActive(false)
+    resetDragState()
     const dropped = Array.from(event.dataTransfer.files ?? [])
     await handleFilesUpload(dropped)
   }
 
-  const sectionState = uploadState === 'error'
-    ? 'error'
-    : uploadState === 'ready'
-      ? 'success'
-      : uploadState === 'sending' || uploadState === 'processing'
-        ? 'loading'
-        : 'idle'
+  const sectionState = deriveSectionState(uploadState)
 
   const resolvedHelperText = helperText
     ?? 'Primeiro use upload/arraste e solte. Se precisar, use URL manual logo abaixo.'
@@ -191,7 +383,7 @@ export function MediaField({
         accept={accept ?? getDefaultAccept(kind)}
         multiple={multiple}
         className="hidden"
-        onChange={handleUpload}
+        onChange={handleUploadInput}
       />
 
       {shouldShowUploadedPreview ? (
@@ -233,26 +425,9 @@ export function MediaField({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.16, ease: [0.19, 1, 0.22, 1] }}
           className={`space-y-2 rounded-xl border border-dashed p-3 transition-colors ${isDragActive ? 'border-primary/55 bg-primary/10' : 'border-primary/25 bg-white/85'}`}
-          onDragEnter={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            setDragDepth((current) => current + 1)
-            setIsDragActive(true)
-          }}
-          onDragOver={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            event.dataTransfer.dropEffect = 'copy'
-          }}
-          onDragLeave={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            setDragDepth((current) => {
-              const nextDepth = Math.max(0, current - 1)
-              setIsDragActive(nextDepth > 0)
-              return nextDepth
-            })
-          }}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           aria-label={`Area de upload para ${label}`}
         >
@@ -338,10 +513,8 @@ export function MediaField({
                 {currentAsset.processingStatus === 'failed' ? (
                   <button
                     type="button"
-                    onClick={async () => {
-                      const { data } = await assetService.reprocess(currentAsset.id)
-                      setCurrentAsset(data.asset)
-                      setUploadState('processing')
+                    onClick={() => {
+                      void handleReprocessAsset()
                     }}
                     className="ml-1 inline-flex min-h-11 items-center gap-1 rounded border border-amber-300 px-2 py-1 text-amber-700 hover:bg-amber-50"
                   >
