@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { Heart, Menu, X, User } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { MagneticButton } from '@/components/animations/MagneticButton'
@@ -19,6 +19,14 @@ export function Header() {
   const { isAuthenticated } = useAuthStore()
   const isEditorRoute = location.pathname.startsWith('/editor')
   const useMobileLiteGlass = isEditorRoute
+  const { scrollYProgress } = useScroll()
+  const smoothScrollProgress = useSpring(scrollYProgress, {
+    stiffness: 190,
+    damping: 30,
+    mass: 0.7,
+  })
+  const progressOpacity = useTransform(smoothScrollProgress, [0, 0.04], [0, 1])
+  const progressScale = useTransform(smoothScrollProgress, [0, 1], [0.9, 1])
 
   const mobileSurfaceClass = useMobileLiteGlass
     ? 'glass border border-primary/12 bg-white/85 shadow-[0_14px_34px_-22px_rgba(0,0,0,0.34)] backdrop-blur-sm'
@@ -70,6 +78,29 @@ export function Header() {
               <span className="font-display text-xl font-bold text-text">
                 Correio <span className="text-gradient">Elegante</span>
               </span>
+              <motion.span
+                style={{ opacity: progressOpacity, scale: progressScale }}
+                className="inline-flex h-5 w-5 items-center justify-center"
+                aria-hidden="true"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" shapeRendering="geometricPrecision" style={{ transform: 'translateZ(0)' }}>
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" className="text-primary/20" />
+                  <motion.circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                    className="text-primary"
+                    style={{ pathLength: smoothScrollProgress }}
+                    transform="rotate(-90 12 12)"
+                  />
+                </svg>
+              </motion.span>
             </Link>
 
             <nav className="flex items-center gap-8">
@@ -118,6 +149,29 @@ export function Header() {
             <Link to="/" className="flex items-center gap-2.5 group">
               <Heart className="h-5 w-5 text-primary fill-primary transition-transform group-active:scale-95" />
               <span className="font-display text-base font-bold text-text">Correio Elegante</span>
+              <motion.span
+                style={{ opacity: progressOpacity, scale: progressScale }}
+                className="inline-flex h-4.5 w-4.5 items-center justify-center"
+                aria-hidden="true"
+              >
+                <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" shapeRendering="geometricPrecision" style={{ transform: 'translateZ(0)' }}>
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" className="text-primary/20" />
+                  <motion.circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                    className="text-primary"
+                    style={{ pathLength: smoothScrollProgress }}
+                    transform="rotate(-90 12 12)"
+                  />
+                </svg>
+              </motion.span>
             </Link>
 
             <button
