@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react'
 import type { BlockComponentProps } from '@/editor/types'
+import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 
 interface TimerParts {
   years: number
@@ -124,8 +125,7 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   if (mode === 'edit') {
     return (
       <div className="space-y-3 rounded-2xl border border-primary/25 bg-white/80 p-4">
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-light">Data alvo</label>
+        <EditorInputSection title="Data alvo" helperText="Escolha quando a contagem deve terminar (ou comecar).">
           <input
             type="datetime-local"
             value={toDateTimeLocalValue(targetDate)}
@@ -145,12 +145,12 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                 }
               })
             }}
-            className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50"
+            className={EDITOR_FIELD_BASE_CLASS}
+            aria-label="Definir data alvo do timer"
           />
-        </div>
+        </EditorInputSection>
 
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-light">Legenda</label>
+        <EditorInputSection title="Legenda" helperText="Texto curto para explicar o contador.">
           <input
             type="text"
             value={label ?? ''}
@@ -171,9 +171,10 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               })
             }}
             placeholder="Ex: Nosso aniversario"
-            className="w-full rounded-lg border border-primary/20 bg-white px-3 py-2 text-sm text-text outline-none transition-colors focus:border-primary/50"
+            className={EDITOR_FIELD_BASE_CLASS}
+            aria-label="Definir legenda do timer"
           />
-        </div>
+        </EditorInputSection>
       </div>
     )
   }

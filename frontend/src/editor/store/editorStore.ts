@@ -16,6 +16,7 @@ interface EditorStoreState {
   blocks: Block[]
   theme: string
   selectedBlockId: string | null
+  collapsedById: Record<string, boolean>
   isDragging: boolean
   mode: EditorMode
   draftPageId: string | null
@@ -33,6 +34,8 @@ interface EditorStoreActions {
   setTheme: (themeId: string) => void
   setPage: (page: { blocks: Block[]; theme?: string }) => void
   selectBlock: (id: string | null) => void
+  toggleBlockCollapsed: (id: string) => void
+  setBlockCollapsed: (id: string, collapsed: boolean) => void
   setDragging: (isDragging: boolean) => void
   setMode: (mode: EditorMode) => void
   setDraftContext: (pageId: string | null, updatedAt?: string | null) => void
@@ -68,10 +71,28 @@ const initialEditorState: EditorStoreState = {
   blocks: [],
   theme: DEFAULT_THEME_ID,
   selectedBlockId: null,
+  collapsedById: {},
   isDragging: false,
   mode: 'edit',
   draftPageId: null,
   draftUpdatedAt: null,
+}
+
+function pruneCollapsedById(collapsedById: Record<string, boolean>, blocks: Block[]) {
+  if (Object.keys(collapsedById).length === 0) {
+    return collapsedById
+  }
+
+  const validIds = new Set(blocks.map((block) => block.id))
+  const next: Record<string, boolean> = {}
+
+  for (const [id, isCollapsed] of Object.entries(collapsedById)) {
+    if (isCollapsed && validIds.has(id)) {
+      next[id] = true
+    }
+  }
+
+  return next
 }
 
 function nowIsoString() {
@@ -191,11 +212,17 @@ export const useEditorStore = create<EditorStore>()(
           draftUpdatedAt: nowIsoString(),
         })),
       removeBlock: (id) =>
-        set((state) => ({
-          blocks: state.blocks.filter((block) => block.id !== id),
-          selectedBlockId: state.selectedBlockId === id ? null : state.selectedBlockId,
-          draftUpdatedAt: nowIsoString(),
-        })),
+        set((state) => {
+          const nextCollapsedById = { ...state.collapsedById }
+          delete nextCollapsedById[id]
+
+          return {
+            blocks: state.blocks.filter((block) => block.id !== id),
+            selectedBlockId: state.selectedBlockId === id ? null : state.selectedBlockId,
+            collapsedById: nextCollapsedById,
+            draftUpdatedAt: nowIsoString(),
+          }
+        }),
       moveBlockUp: (id) =>
         set((state) => {
           const nextBlocks = moveBlockByOffset(state.blocks, id, -1)
@@ -221,7 +248,13 @@ export const useEditorStore = create<EditorStore>()(
           }
         }),
       reorderBlocks: (blocks) => set({ blocks, draftUpdatedAt: nowIsoString() }),
-      setBlocks: (blocks) => set({ blocks, selectedBlockId: null, draftUpdatedAt: nowIsoString() }),
+      setBlocks: (blocks) =>
+        set((state) => ({
+          blocks,
+          selectedBlockId: null,
+          collapsedById: pruneCollapsedById(state.collapsedById, blocks),
+          draftUpdatedAt: nowIsoString(),
+        })),
       setTheme: (themeId) =>
         set((state) => {
           const normalizedThemeId = resolveThemeId(themeId)
@@ -235,13 +268,61 @@ export const useEditorStore = create<EditorStore>()(
           }
         }),
       setPage: (page) =>
-        set({
+        set((state) => ({
           blocks: page.blocks,
           theme: resolveThemeId(page.theme),
           selectedBlockId: null,
+          collapsedById: pruneCollapsedById(state.collapsedById, page.blocks),
           draftUpdatedAt: nowIsoString(),
-        }),
+        })),
       selectBlock: (selectedBlockId) => set({ selectedBlockId }),
+      toggleBlockCollapsed: (id) =>
+        set((state) => {
+          if (!state.blocks.some((block) => block.id === id)) {
+            return state
+          }
+
+          const isCollapsed = Boolean(state.collapsedById[id])
+          if (isCollapsed) {
+            const nextCollapsedById = { ...state.collapsedById }
+            delete nextCollapsedById[id]
+            return { collapsedById: nextCollapsedById }
+          }
+
+          return {
+            collapsedById: {
+              ...state.collapsedById,
+              [id]: true,
+            },
+          }
+        }),
+      setBlockCollapsed: (id, collapsed) =>
+        set((state) => {
+          if (!state.blocks.some((block) => block.id === id)) {
+            return state
+          }
+
+          if (!collapsed) {
+            if (!state.collapsedById[id]) {
+              return state
+            }
+
+            const nextCollapsedById = { ...state.collapsedById }
+            delete nextCollapsedById[id]
+            return { collapsedById: nextCollapsedById }
+          }
+
+          if (state.collapsedById[id]) {
+            return state
+          }
+
+          return {
+            collapsedById: {
+              ...state.collapsedById,
+              [id]: true,
+            },
+          }
+        }),
       setDragging: (isDragging) => set({ isDragging }),
       setMode: (mode) => set({ mode }),
       setDraftContext: (draftPageId, updatedAt) =>
@@ -257,6 +338,7 @@ export const useEditorStore = create<EditorStore>()(
       partialize: (state) => ({
         blocks: state.blocks,
         theme: state.theme,
+        collapsedById: state.collapsedById,
         draftPageId: state.draftPageId,
         draftUpdatedAt: state.draftUpdatedAt,
       }),

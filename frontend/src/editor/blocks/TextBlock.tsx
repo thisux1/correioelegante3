@@ -95,19 +95,21 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   return (
-    <div className="relative rounded-2xl border border-dashed border-primary/30 bg-white/75 p-4">
+    <div className="relative rounded-2xl border border-primary/20 bg-white/80 p-4">
+      <p className="mb-2 text-xs font-medium text-text-light">Texto principal</p>
       <div
         ref={editableRef}
         contentEditable
         suppressContentEditableWarning
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className={`min-h-[3rem] whitespace-pre-wrap break-words font-cursive text-xl leading-relaxed text-text outline-none ${alignClass}`}
+        className={`min-h-[3rem] whitespace-pre-wrap break-words rounded-xl border border-primary/20 bg-white px-3 py-2 font-cursive text-xl leading-relaxed text-text outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${alignClass}`}
+        aria-label="Texto do bloco"
       />
 
       {showPlaceholder ? (
         <span
-          className={`pointer-events-none absolute inset-x-4 top-4 font-cursive text-xl leading-relaxed text-text-light/70 ${alignClass}`}
+          className={`pointer-events-none absolute inset-x-7 top-[2.65rem] font-cursive text-xl leading-relaxed text-text-light/70 ${alignClass}`}
         >
           Clique para escrever...
         </span>

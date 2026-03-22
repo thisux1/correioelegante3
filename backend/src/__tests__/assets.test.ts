@@ -3,26 +3,25 @@ import request from 'supertest';
 import app from '../app';
 import { prisma } from '../utils/prisma';
 import { generateAccessToken } from '../utils/jwt';
+import { AppError } from '../utils/AppError';
+
+const {
+  createUploadUrlMock,
+  completeUploadMock,
+  deleteAssetMock,
+} = vi.hoisted(() => ({
+  createUploadUrlMock: vi.fn(),
+  completeUploadMock: vi.fn(),
+  deleteAssetMock: vi.fn(),
+}));
 
 vi.mock('../services/cloudinaryMediaProvider', () => {
   class MockCloudinaryMediaProvider {
-    createUploadUrl = vi.fn().mockResolvedValue({
-      uploadUrl: 'https://upload.example.com',
-      publicUrl: 'https://cdn.example.com/asset.jpg',
-      storageKey: 'image/user/asset-key',
-      method: 'POST',
-      headers: {},
-      formFields: { signature: 'sig', api_key: 'key' },
-      expiresAt: new Date(Date.now() + 60_000).toISOString(),
-    });
+    createUploadUrl = createUploadUrlMock;
 
-    completeUpload = vi.fn().mockResolvedValue({
-      publicUrl: 'https://cdn.example.com/asset-ready.jpg',
-      width: 1200,
-      height: 800,
-    });
+    completeUpload = completeUploadMock;
 
-    deleteAsset = vi.fn().mockResolvedValue(undefined);
+    deleteAsset = deleteAssetMock;
   }
 
   return {
@@ -63,6 +62,24 @@ const baseAsset = {
 beforeEach(() => {
   process.env.EDITOR_MEDIA_UPLOAD_ENABLED = 'true';
   process.env.EDITOR_MEDIA_UPLOAD_ROLLOUT_PERCENT = '100';
+  createUploadUrlMock.mockClear();
+  completeUploadMock.mockClear();
+  deleteAssetMock.mockClear();
+  createUploadUrlMock.mockResolvedValue({
+    uploadUrl: 'https://upload.example.com',
+    publicUrl: 'https://cdn.example.com/asset.jpg',
+    storageKey: 'image/user/asset-key',
+    method: 'POST',
+    headers: {},
+    formFields: { signature: 'sig', api_key: 'key' },
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  });
+  completeUploadMock.mockResolvedValue({
+    publicUrl: 'https://cdn.example.com/asset-ready.jpg',
+    width: 1200,
+    height: 800,
+  });
+  deleteAssetMock.mockResolvedValue(undefined);
 });
 
 describe('POST /api/assets/upload-url', () => {
@@ -98,6 +115,40 @@ describe('POST /api/assets/upload-url', () => {
     expect(res.status).toBe(400);
     expect(res.body.code).toBe('MEDIA_UNSUPPORTED_TYPE');
   });
+
+  it('400 - rejeita arquivo acima do limite', async () => {
+    const res = await request(app)
+      .post('/api/assets/upload-url')
+      .set('Authorization', `Bearer ${makeToken()}`)
+      .send({
+        kind: 'image',
+        fileName: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 9 * 1024 * 1024,
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('MEDIA_FILE_TOO_LARGE');
+  });
+
+  it('503 - retorna erro previsivel em misconfiguration do provider', async () => {
+    createUploadUrlMock.mockRejectedValueOnce(
+      new AppError('Configuracao ausente', 503, 'MEDIA_PROVIDER_MISCONFIGURED'),
+    );
+
+    const res = await request(app)
+      .post('/api/assets/upload-url')
+      .set('Authorization', `Bearer ${makeToken()}`)
+      .send({
+        kind: 'image',
+        fileName: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1024,
+      });
+
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('MEDIA_PROVIDER_MISCONFIGURED');
+  });
 });
 
 describe('POST /api/assets/complete', () => {
@@ -119,6 +170,21 @@ describe('POST /api/assets/complete', () => {
     expect(res.status).toBe(200);
     expect(res.body.asset.processingStatus).toBe('ready');
   });
+
+  it('403 - bloqueia complete para outro usuario', async () => {
+    vi.mocked(prisma.asset.findUnique).mockResolvedValue({
+      ...baseAsset,
+      userId: otherUserId,
+    });
+
+    const res = await request(app)
+      .post('/api/assets/complete')
+      .set('Authorization', `Bearer ${makeToken()}`)
+      .send({ assetId });
+
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('MEDIA_OWNER_MISMATCH');
+  });
 });
 
 describe('GET /api/assets and GET /api/assets/:id', () => {
@@ -131,6 +197,10 @@ describe('GET /api/assets and GET /api/assets/:id', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.assets).toHaveLength(1);
+    expect(vi.mocked(prisma.asset.findMany)).toHaveBeenCalledWith({
+      where: { userId: ownerUserId },
+      orderBy: { createdAt: 'desc' },
+    });
   });
 
   it('403 - bloqueia acesso a asset de outro usuario', async () => {
@@ -142,6 +212,35 @@ describe('GET /api/assets and GET /api/assets/:id', () => {
     const res = await request(app)
       .get(`/api/assets/${assetId}`)
       .set('Authorization', `Bearer ${makeToken()}`);
+
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('MEDIA_OWNER_MISMATCH');
+  });
+});
+
+describe('POST /api/assets/reprocess', () => {
+  it('200 - retorna asset quando kind nao exige jobs', async () => {
+    vi.mocked(prisma.asset.findUnique).mockResolvedValue(baseAsset);
+
+    const res = await request(app)
+      .post('/api/assets/reprocess')
+      .set('Authorization', `Bearer ${makeToken()}`)
+      .send({ assetId });
+
+    expect(res.status).toBe(200);
+    expect(res.body.asset.id).toBe(assetId);
+  });
+
+  it('403 - bloqueia reprocess de outro usuario', async () => {
+    vi.mocked(prisma.asset.findUnique).mockResolvedValue({
+      ...baseAsset,
+      userId: otherUserId,
+    });
+
+    const res = await request(app)
+      .post('/api/assets/reprocess')
+      .set('Authorization', `Bearer ${makeToken()}`)
+      .send({ assetId });
 
     expect(res.status).toBe(403);
     expect(res.body.code).toBe('MEDIA_OWNER_MISMATCH');

@@ -201,6 +201,167 @@ describe('POST /api/pages', () => {
     });
   });
 
+  it('galeria preserva ordem e assetId valido em items', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'g-ordered',
+              type: 'gallery',
+              version: 1,
+              props: {
+                items: [
+                  { src: '  https://cdn.example.com/b.jpg  ', assetId: '507f1f77bcf86cd799439101' },
+                  { src: 'https://cdn.example.com/a.jpg', assetId: '507f1f77bcf86cd799439102' },
+                ],
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(201);
+    const createCall = vi.mocked(prisma.page.create).mock.calls.at(0);
+    const payload = (createCall?.[0] as { data?: { content?: unknown } })?.data?.content as {
+      blocks: Array<{ type: string; props: Record<string, unknown> }>;
+    };
+    const galleryBlock = payload.blocks.find((item) => item.type === 'gallery');
+
+    expect(galleryBlock?.props.items).toEqual([
+      { src: 'https://cdn.example.com/b.jpg', assetId: '507f1f77bcf86cd799439101' },
+      { src: 'https://cdn.example.com/a.jpg', assetId: '507f1f77bcf86cd799439102' },
+    ]);
+    expect(galleryBlock?.props.images).toEqual([
+      'https://cdn.example.com/b.jpg',
+      'https://cdn.example.com/a.jpg',
+    ]);
+  });
+
+  it('galeria aplica dedupe por src e limite de 10 itens', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
+
+    const items = [
+      { src: 'https://cdn.example.com/0.jpg', assetId: '507f1f77bcf86cd799439130' },
+      { src: 'https://cdn.example.com/1.jpg' },
+      { src: 'https://cdn.example.com/2.jpg' },
+      { src: 'https://cdn.example.com/2.jpg', assetId: '507f1f77bcf86cd799439131' },
+      { src: 'https://cdn.example.com/3.jpg' },
+      { src: 'https://cdn.example.com/4.jpg' },
+      { src: 'https://cdn.example.com/5.jpg' },
+      { src: 'https://cdn.example.com/6.jpg' },
+      { src: 'https://cdn.example.com/7.jpg' },
+      { src: 'https://cdn.example.com/8.jpg' },
+      { src: 'https://cdn.example.com/9.jpg' },
+      { src: 'https://cdn.example.com/10.jpg' },
+    ];
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'g-dedupe',
+              type: 'gallery',
+              version: 1,
+              props: { items },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(201);
+    const createCall = vi.mocked(prisma.page.create).mock.calls.at(0);
+    const payload = (createCall?.[0] as { data?: { content?: unknown } })?.data?.content as {
+      blocks: Array<{ type: string; props: Record<string, unknown> }>;
+    };
+    const galleryBlock = payload.blocks.find((item) => item.type === 'gallery');
+    const normalizedItems = (galleryBlock?.props.items as Array<Record<string, unknown>>) ?? [];
+    const normalizedImages = (galleryBlock?.props.images as string[]) ?? [];
+
+    expect(normalizedItems).toHaveLength(10);
+    expect(normalizedItems[0]).toEqual({ src: 'https://cdn.example.com/0.jpg', assetId: '507f1f77bcf86cd799439130' });
+    expect(normalizedItems[2]).toEqual({ src: 'https://cdn.example.com/2.jpg', assetId: undefined });
+    expect(normalizedItems[9]).toEqual({ src: 'https://cdn.example.com/9.jpg', assetId: undefined });
+    expect(normalizedImages).toEqual(normalizedItems.map((item) => item.src));
+  });
+
+  it('galeria ignora items invalidos e usa fallback de images legado', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'g-fallback',
+              type: 'gallery',
+              version: 1,
+              props: {
+                items: [{ src: '   ' }, { nope: true }],
+                images: ['https://cdn.example.com/legacy-1.jpg', 'https://cdn.example.com/legacy-2.jpg'],
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(201);
+    const createCall = vi.mocked(prisma.page.create).mock.calls.at(0);
+    const payload = (createCall?.[0] as { data?: { content?: unknown } })?.data?.content as {
+      blocks: Array<{ type: string; props: Record<string, unknown> }>;
+    };
+    const galleryBlock = payload.blocks.find((item) => item.type === 'gallery');
+
+    expect(galleryBlock?.props.items).toEqual([
+      { src: 'https://cdn.example.com/legacy-1.jpg' },
+      { src: 'https://cdn.example.com/legacy-2.jpg' },
+    ]);
+    expect(galleryBlock?.props.images).toEqual([
+      'https://cdn.example.com/legacy-1.jpg',
+      'https://cdn.example.com/legacy-2.jpg',
+    ]);
+  });
+
+  it('400 — galeria rejeita URL insegura em items', async () => {
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'g-insecure',
+              type: 'gallery',
+              version: 1,
+              props: {
+                items: [{ src: 'javascript:alert(1)' }],
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('INVALID_MEDIA_URL');
+  });
+
   it('normaliza legacy->tracks, preserva ordem, limita em 30 e mantem capa por track', async () => {
     vi.mocked(prisma.page.create).mockResolvedValue(makePage());
 

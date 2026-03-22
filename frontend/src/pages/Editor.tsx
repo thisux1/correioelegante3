@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
+import { AlertTriangle, CheckCircle2, LoaderCircle, RefreshCcw } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { EditorCanvas } from '@/editor/components/EditorCanvas'
@@ -325,6 +326,20 @@ export function Editor() {
   }, [feedback])
 
   useEffect(() => {
+    if (saveState !== 'saved') {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSaveState('idle')
+    }, 2200)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [saveState])
+
+  useEffect(() => {
     const templateKey = `${pageIdFromRoute ?? 'new'}:${templateIdFromQuery ?? ''}`
     if (handledTemplateKeyRef.current === templateKey) {
       return
@@ -532,28 +547,57 @@ export function Editor() {
           <p className="mt-1 text-sm text-text-light">Arraste blocos, reorganize e visualize o resultado em tempo real.</p>
         </div>
 
-        {feedback ? (
-          <div className={`mb-4 rounded-xl border px-4 py-3 text-sm ${feedbackClassName}`} role="status">
-            {feedback}
-            {saveState === 'error' && hasPageId ? (
-              <button
-                type="button"
-                onClick={() => {
-                  void handleLoadServerVersion()
-                }}
-                className="ml-3 rounded-md border border-current/30 px-2 py-1 text-xs font-medium"
-              >
-                Recarregar servidor
-              </button>
-            ) : null}
+        <div className="mb-4">
+          <div className={`mb-2 inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${saveState === 'error'
+            ? 'border-red-200 bg-red-50 text-red-600'
+            : saveState === 'saving'
+              ? 'border-primary/30 bg-primary/10 text-primary'
+              : saveState === 'saved'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-primary/20 bg-white/80 text-text-light'}`}
+            role="status"
+            aria-live="polite"
+          >
+            {saveState === 'saving' ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : saveState === 'saved' ? <CheckCircle2 size={14} aria-hidden="true" /> : saveState === 'error' ? <AlertTriangle size={14} aria-hidden="true" /> : <CheckCircle2 size={14} aria-hidden="true" className="text-text-muted" />}
+            {saveState === 'saving' ? 'Salvando alteracoes...' : saveState === 'saved' ? 'Tudo salvo' : saveState === 'error' ? 'Erro ao salvar' : hasPageId ? 'Auto-save ativo' : 'Novo rascunho ainda nao salvo'}
           </div>
-        ) : null}
+
+          <AnimatePresence initial={false}>
+            {feedback ? (
+              <motion.div
+                key={feedback}
+                initial={{ opacity: 0, y: 8, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.99 }}
+                transition={{ duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
+                className={`rounded-xl border px-4 py-3 text-sm ${feedbackClassName}`}
+                role={saveState === 'error' ? 'alert' : 'status'}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span>{feedback}</span>
+                  {saveState === 'error' && hasPageId ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleLoadServerVersion()
+                      }}
+                      className="inline-flex min-h-11 items-center gap-1 rounded-md border border-current/30 px-3 py-2 text-xs font-medium"
+                    >
+                      <RefreshCcw size={12} />
+                      Recarregar servidor
+                    </button>
+                  ) : null}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
 
         <EditorToolbar
           onSave={() => {
             void savePage()
           }}
-          isSaving={saveState === 'saving'}
+          saveState={saveState}
           hasPageId={hasPageId}
           selectedThemeId={theme}
         />

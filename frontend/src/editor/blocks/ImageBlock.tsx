@@ -2,6 +2,7 @@ import { memo, useState } from 'react'
 import { ImageOff, ImagePlus } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 import { MediaField } from '@/editor/components/MediaField'
+import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 
 function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const isImageBlock = block.type === 'image'
@@ -81,6 +82,32 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         }}
         helperText="Use upload direto ou URL manual para persistir a imagem."
       />
+
+        <EditorInputSection title="Descricao da imagem" helperText="Opcional. Descreva a imagem em uma frase curta.">
+          <input
+            type="text"
+          value={alt}
+          onChange={(event) => {
+            const nextAlt = event.target.value
+            onUpdate?.((currentBlock) => {
+              if (currentBlock.type !== 'image') {
+                return currentBlock
+              }
+
+              return {
+                ...currentBlock,
+                props: {
+                  ...currentBlock.props,
+                  alt: nextAlt,
+                },
+              }
+            })
+            }}
+            placeholder="Ex: Casal sorrindo na festa"
+            className={EDITOR_FIELD_BASE_CLASS}
+            aria-label="Texto alternativo da imagem"
+          />
+        </EditorInputSection>
     </div>
   )
 }

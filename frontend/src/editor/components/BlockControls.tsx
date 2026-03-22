@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react'
-import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, GripVertical, Trash2 } from 'lucide-react'
 import type { BlockType, EditorMode } from '@/editor/types'
 import type { SortableHandleProps } from '@/editor/components/BlockWrapper'
 
@@ -11,10 +11,13 @@ interface BlockControlsProps {
   isMobile: boolean
   canMoveUp: boolean
   canMoveDown: boolean
+  isCollapsed: boolean
+  collapseContentId?: string
   handleProps?: SortableHandleProps
   onDelete: () => void
   onMoveUp: () => void
   onMoveDown: () => void
+  onToggleCollapsed: () => void
 }
 
 const blockTypeLabels: Record<BlockType, string> = {
@@ -34,10 +37,13 @@ function BlockControlsComponent({
   isMobile,
   canMoveUp,
   canMoveDown,
+  isCollapsed,
+  collapseContentId,
   handleProps,
   onDelete,
   onMoveUp,
   onMoveDown,
+  onToggleCollapsed,
 }: BlockControlsProps) {
   const shouldRender = mode === 'edit' && (isSelected || isHovered)
 
@@ -104,6 +110,20 @@ function BlockControlsComponent({
           </>
         ) : null}
 
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onToggleCollapsed()
+          }}
+          className="flex h-11 min-w-11 items-center justify-center rounded-lg border border-primary/20 px-2 text-text-light transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          aria-label={isCollapsed ? 'Expandir bloco' : 'Colapsar bloco'}
+          aria-expanded={!isCollapsed}
+          aria-controls={collapseContentId}
+        >
+          {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+        </button>
+
         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
           {blockTypeLabels[blockType]}
         </span>
@@ -133,10 +153,13 @@ function areControlsEqual(prev: BlockControlsProps, next: BlockControlsProps) {
     && prev.isMobile === next.isMobile
     && prev.canMoveUp === next.canMoveUp
     && prev.canMoveDown === next.canMoveDown
+    && prev.isCollapsed === next.isCollapsed
+    && prev.collapseContentId === next.collapseContentId
     && prev.handleProps === next.handleProps
     && prev.onDelete === next.onDelete
     && prev.onMoveUp === next.onMoveUp
     && prev.onMoveDown === next.onMoveDown
+    && prev.onToggleCollapsed === next.onToggleCollapsed
   )
 }
 
