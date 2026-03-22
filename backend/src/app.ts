@@ -27,16 +27,18 @@ app.use(cors({
   origin: frontendUrl,
   credentials: true,
 }));
+
+// Rate Limiting
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000, // Aumentado para 1000 para evitar alarmes falsos em SPA com polling
   standardHeaders: true,
   legacyHeaders: false,
 }));
 
 // Parsing — express.json() é aplicado globalmente.
-// ATENÇÃO: a rota POST /api/payments/webhook usa express.raw() próprio
-// e é registrada ANTES deste middleware para que o rawBody seja preservado.
+// ATENÇÃO: a rota POST /api/payments/webhook utiliza rawBody se necessário, 
+// mas aqui registramos o parser JSON global.
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
