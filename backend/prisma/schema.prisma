@@ -43,18 +43,24 @@ model Message {
 }
 
 model Page {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  content    Json
-  status     String   @default("draft")
-  visibility String   @default("public")
-  publishedAt DateTime?
-  version    Int      @default(1)
-  userId     String   @db.ObjectId
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  content         Json
+  status          String   @default("draft")
+  visibility      String   @default("public")
+  publishedAt     DateTime?
+  paymentStatus   String   @default("pending")
+  paymentId       String?
+  paymentProvider String?
+  paymentMethod   String?
+  version         Int      @default(1)
+  userId          String   @db.ObjectId
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, paymentStatus])
+  @@index([paymentId])
   @@index([status, visibility])
 }
 

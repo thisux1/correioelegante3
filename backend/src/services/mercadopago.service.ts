@@ -6,6 +6,13 @@ import { AppError } from '../utils/AppError';
 // R$ 4,99
 const AMOUNT = 4.99;
 
+type PaymentResourceType = 'message' | 'page';
+
+interface PaymentTarget {
+    resourceType: PaymentResourceType;
+    resourceId: string;
+}
+
 function getMercadoPagoClient(): MercadoPagoConfig {
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
     if (!token) {
@@ -15,15 +22,98 @@ function getMercadoPagoClient(): MercadoPagoConfig {
 }
 
 export async function createPixPayment(messageId: string, userId: string) {
-    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    return createPixPaymentForResource({ resourceType: 'message', resourceId: messageId }, userId);
+}
 
-    if (!message) {
-        throw new AppError('Mensagem não encontrada', 404);
+async function resolveResource(target: PaymentTarget) {
+    if (target.resourceType === 'message') {
+        const message = await prisma.message.findUnique({ where: { id: target.resourceId } });
+        return {
+            resourceType: 'message' as const,
+            data: message,
+        };
     }
-    if (message.userId !== userId) {
+
+    const page = await prisma.page.findUnique({ where: { id: target.resourceId } });
+    return {
+        resourceType: 'page' as const,
+        data: page,
+    };
+}
+
+async function markResourcePaymentPending(params: {
+    resourceType: PaymentResourceType;
+    resourceId: string;
+    paymentId: string;
+}) {
+    if (params.resourceType === 'message') {
+        await prisma.message.update({
+            where: { id: params.resourceId },
+            data: {
+                paymentId: params.paymentId,
+                paymentProvider: 'mercadopago',
+                paymentMethod: 'pix',
+            },
+        });
+        return;
+    }
+
+    await prisma.page.update({
+        where: { id: params.resourceId },
+        data: {
+            paymentId: params.paymentId,
+            paymentProvider: 'mercadopago',
+            paymentMethod: 'pix',
+        },
+    });
+}
+
+async function markResourcePaymentPaid(target: PaymentTarget) {
+    if (target.resourceType === 'message') {
+        await prisma.message.updateMany({
+            where: {
+                id: target.resourceId,
+                paymentStatus: { not: 'paid' },
+            },
+            data: {
+                paymentStatus: 'paid',
+                status: 'published',
+                publishedAt: new Date(),
+            },
+        });
+        return;
+    }
+
+    await prisma.page.updateMany({
+        where: {
+            id: target.resourceId,
+            paymentStatus: { not: 'paid' },
+        },
+        data: {
+            paymentStatus: 'paid',
+            status: 'published',
+            publishedAt: new Date(),
+        },
+    });
+}
+
+function resolveDescription(resourceType: PaymentResourceType) {
+    return resourceType === 'message' ? 'Correio Elegante' : 'Correio Elegante - Pagina personalizada';
+}
+
+export async function createPixPaymentForResource(target: PaymentTarget, userId: string) {
+    const resource = await resolveResource(target);
+
+    if (!resource.data) {
+        throw new AppError(
+            target.resourceType === 'message' ? 'Mensagem não encontrada' : 'Pagina nao encontrada',
+            404,
+        );
+    }
+    if (resource.data.userId !== userId) {
         throw new AppError('Sem permissão', 403);
     }
-    if (message.paymentStatus === 'paid') {
+    if (resource.data.paymentStatus === 'paid') {
         throw new AppError('Pagamento já realizado', 400);
     }
 
@@ -33,14 +123,17 @@ export async function createPixPayment(messageId: string, userId: string) {
     const result = await payment.create({
         body: {
             transaction_amount: AMOUNT,
-            description: 'Correio Elegante',
+            description: resolveDescription(target.resourceType),
             payment_method_id: 'pix',
             payer: {
                 // Endereço de e-mail genérico para pagamentos sem identificação do pagador
                 email: 'pagador@correioelegante.com.br',
             },
             metadata: {
-                message_id: messageId,
+                resource_type: target.resourceType,
+                resource_id: target.resourceId,
+                message_id: target.resourceType === 'message' ? target.resourceId : undefined,
+                page_id: target.resourceType === 'page' ? target.resourceId : undefined,
                 user_id: userId,
             },
         },
@@ -50,13 +143,10 @@ export async function createPixPayment(messageId: string, userId: string) {
         throw new AppError('Erro ao criar pagamento no Mercado Pago', 500);
     }
 
-    await prisma.message.update({
-        where: { id: messageId },
-        data: {
-            paymentId: String(result.id),
-            paymentProvider: 'mercadopago',
-            paymentMethod: 'pix',
-        },
+    await markResourcePaymentPending({
+        resourceType: target.resourceType,
+        resourceId: target.resourceId,
+        paymentId: String(result.id),
     });
 
     const pixData = result.point_of_interaction?.transaction_data;
@@ -74,10 +164,16 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
     if (!webhookSecret) {
         throw new AppError('MERCADOPAGO_WEBHOOK_SECRET não configurado', 500);
     }
+    if (!signature) {
+        throw new AppError('Header x-signature obrigatorio', 400);
+    }
+    if (!requestId) {
+        throw new AppError('Header x-request-id obrigatorio', 400);
+    }
 
     // Validação de assinatura do Mercado Pago
     // Formato: ts=<timestamp>,v1=<hash>
-    const parts = signature.split(',');
+    const parts = signature.split(',').map(part => part.trim());
     const tsPart = parts.find(p => p.startsWith('ts='));
     const v1Part = parts.find(p => p.startsWith('v1='));
 
@@ -89,7 +185,10 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
     const v1 = v1Part.split('=')[1];
 
     // Template: id:<data.id>;request-id:<x-request-id>;ts:<ts>
-    const dataId = (body.data as Record<string, unknown>)?.id as string | undefined;
+    const rawDataId = (body.data as Record<string, unknown> | undefined)?.id;
+    const dataId = typeof rawDataId === 'string' || typeof rawDataId === 'number'
+        ? String(rawDataId)
+        : undefined;
     const manifest = `id:${dataId};request-id:${requestId};ts:${ts}`;
     const expectedHash = crypto
         .createHmac('sha256', webhookSecret)
@@ -107,16 +206,18 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
         const result = await paymentClient.get({ id: dataId });
 
         if (result.status === 'approved') {
+            const resourceType = result.metadata?.resource_type as PaymentResourceType | undefined;
+            const resourceId = result.metadata?.resource_id as string | undefined;
             const messageId = result.metadata?.message_id as string | undefined;
-            if (messageId) {
-                await prisma.message.update({
-                    where: { id: messageId },
-                    data: {
-                        paymentStatus: 'paid',
-                        status: 'published',
-                        publishedAt: new Date(),
-                    },
-                });
+
+            const target = resourceType && resourceId
+                ? { resourceType, resourceId }
+                : messageId
+                    ? { resourceType: 'message' as const, resourceId: messageId }
+                    : null;
+
+            if (target) {
+                await markResourcePaymentPaid(target);
             }
         }
     }

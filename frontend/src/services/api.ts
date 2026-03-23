@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { navigateTo } from '@/app/navigation'
 import { useAuthStore } from '@/store/authStore'
 
 const api = axios.create({
@@ -74,7 +75,11 @@ api.interceptors.response.use(
       } catch {
         localStorage.removeItem('@ce:session')
         useAuthStore.getState().clearAuth()
-        window.location.href = '/session-expired'
+
+        if (typeof window !== 'undefined' && window.location.pathname !== '/session-expired') {
+          navigateTo('/session-expired', { replace: true })
+        }
+
         return Promise.reject(error)
       }
     }

@@ -51,13 +51,47 @@ export const changePasswordSchema = z.object({
 });
 
 export const createPaymentSchema = z.object({
-  messageId: z
-    .string({ required_error: 'messageId é obrigatório' })
-    .min(1, 'messageId é obrigatório')
-    .regex(/^[a-f\d]{24}$/i, 'messageId inválido'),
   paymentMethod: z.enum(['pix', 'credit_card'], {
     errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix" ou "credit_card".' }),
   }),
+  messageId: z
+    .string()
+    .min(1, 'messageId é obrigatório')
+    .regex(/^[a-f\d]{24}$/i, 'messageId inválido')
+    .optional(),
+  resourceType: z.enum(['message', 'page']).optional(),
+  resourceId: z
+    .string()
+    .min(1, 'resourceId é obrigatório')
+    .regex(/^[a-f\d]{24}$/i, 'resourceId inválido')
+    .optional(),
+}).superRefine((value, ctx) => {
+  const hasLegacy = Boolean(value.messageId);
+  const hasNew = Boolean(value.resourceType && value.resourceId);
+
+  if (!hasLegacy && !hasNew) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Informe messageId (legado) ou resourceType/resourceId.',
+      path: ['resourceId'],
+    });
+  }
+
+  if (value.resourceType && !value.resourceId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'resourceId é obrigatório quando resourceType for informado.',
+      path: ['resourceId'],
+    });
+  }
+
+  if (!value.resourceType && value.resourceId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'resourceType é obrigatório quando resourceId for informado.',
+      path: ['resourceType'],
+    });
+  }
 });
 
 const blockMetaSchema = z.object({

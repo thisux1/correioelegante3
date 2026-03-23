@@ -38,6 +38,10 @@ function toPageResponse(page: {
   status: string;
   visibility: string;
   publishedAt: Date | null;
+  paymentStatus: string;
+  paymentId: string | null;
+  paymentProvider: string | null;
+  paymentMethod: string | null;
   version: number;
   updatedAt: Date;
   createdAt: Date;
@@ -48,6 +52,10 @@ function toPageResponse(page: {
     status: page.status,
     visibility: page.visibility,
     publishedAt: page.publishedAt,
+    paymentStatus: page.paymentStatus,
+    paymentId: page.paymentId,
+    paymentProvider: page.paymentProvider,
+    paymentMethod: page.paymentMethod,
     version: page.version,
     updatedAt: page.updatedAt,
     createdAt: page.createdAt,
@@ -91,6 +99,7 @@ export async function createPage(userId: string, data: CreatePageInput) {
       status: lifecycle.status,
       visibility: lifecycle.visibility,
       publishedAt: lifecycle.publishedAt,
+      paymentStatus: 'pending',
       version: 1,
       userId,
     },

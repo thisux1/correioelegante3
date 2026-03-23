@@ -1,30 +1,53 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion } from 'framer-motion'
 import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { paymentService, type PaymentMethod, type PixPaymentResponse } from '@/services/messageService'
+import {
+  paymentService,
+  type PaymentMethod,
+  type PixPaymentResponse,
+  type PaymentTarget,
+} from '@/services/paymentService'
 
 type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 
 export function Payment() {
-  const { messageId } = useParams<{ messageId: string }>()
+  const location = useLocation()
+  const { messageId, pageId } = useParams<{ messageId?: string; pageId?: string }>()
   const [step, setStep] = useState<Step>('select')
   const [pixData, setPixData] = useState<PixPaymentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
+  const isPageFlow = location.pathname.includes('/payment/page/')
+  const target = useMemo<PaymentTarget | null>(() => {
+    if (isPageFlow) {
+      return pageId ? { resourceType: 'page', resourceId: pageId } : null
+    }
+
+    return messageId ? { resourceType: 'message', resourceId: messageId } : null
+  }, [isPageFlow, messageId, pageId])
+
+  const backHref = isPageFlow && pageId ? `/editor/${pageId}` : '/create'
+
+  const cardHref = isPageFlow && pageId
+    ? `/card/page/${pageId}`
+    : messageId
+      ? `/card/${messageId}`
+      : '/profile'
+
   // Polling de status (ativo quando aguardando confirmação do Pix)
   useEffect(() => {
-    if (!messageId || step !== 'pix') return
+    if (!target || step !== 'pix') return
 
     const interval = setInterval(async () => {
       try {
-        const response = await paymentService.getStatus(messageId)
+        const response = await paymentService.getStatus(target)
         if (response.data.status === 'paid') {
           setStep('paid')
           clearInterval(interval)
@@ -33,20 +56,20 @@ export function Payment() {
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [messageId, step])
+  }, [step, target])
 
   async function handleSelectMethod(method: PaymentMethod) {
-    if (!messageId) return
+    if (!target) return
     setIsLoading(true)
     setError(null)
 
     try {
       if (method === 'pix') {
-        const response = await paymentService.createPix(messageId)
+        const response = await paymentService.createPix(target)
         setPixData(response.data)
         setStep('pix')
       } else {
-        const response = await paymentService.createCard(messageId)
+        const response = await paymentService.createCard(target)
         if (response.data.checkoutUrl) {
           // Redireciona para o Stripe Checkout
           window.location.href = response.data.checkoutUrl
@@ -114,7 +137,7 @@ export function Payment() {
                 Seu correio elegante está pronto para ser compartilhado.
               </p>
               <div className="flex flex-col gap-3">
-                <Link to={`/card/${messageId}`}>
+                <Link to={cardHref}>
                   <Button size="lg" className="w-full">Ver Cartão</Button>
                 </Link>
                 <Link to="/create">
@@ -178,7 +201,7 @@ export function Payment() {
                 </button>
               </div>
 
-              <Link to="/create" className="inline-flex mt-2">
+              <Link to={backHref} className="inline-flex mt-2">
                 <Button variant="ghost" size="sm">
                   <ArrowLeft size={16} />
                   Voltar

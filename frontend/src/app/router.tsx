@@ -1,5 +1,6 @@
-import { lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense, useEffect, type ReactNode } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { registerNavigator } from '@/app/navigation'
 import { Layout } from '@/components/layout/Layout'
 import { ScrollToTop } from '@/components/layout/ScrollToTop'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -15,6 +16,7 @@ const Contact = lazy(() => import('@/pages/Contact').then(m => ({ default: m.Con
 const Payment = lazy(() => import('@/pages/Payment').then(m => ({ default: m.Payment })))
 const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })))
 const Card = lazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
+const PageCard = lazy(() => import('@/pages/PageCard').then(m => ({ default: m.PageCard })))
 const Error404 = lazy(() => import('@/pages/Error404').then(m => ({ default: m.Error404 })))
 const Error500 = lazy(() => import('@/pages/Error500').then(m => ({ default: m.Error500 })))
 const ErrorSession = lazy(() => import('@/pages/ErrorSession').then(m => ({ default: m.ErrorSession })))
@@ -69,9 +71,23 @@ function EditorFeatureRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+function RouterNavigationBridge() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    registerNavigator(navigate)
+    return () => {
+      registerNavigator(null)
+    }
+  }, [navigate])
+
+  return null
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <RouterNavigationBridge />
       <ScrollToTop />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
@@ -81,12 +97,15 @@ export function AppRouter() {
               <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/card/:id" element={<Card />} />
+              <Route path="/card/page/:pageId" element={<PageCard />} />
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
               <Route path="/editor" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/editor/:pageId" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
               <Route path="/payment/:messageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+              <Route path="/payment/page/:pageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
+              <Route path="/payment/page/:pageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
               <Route path="/500" element={<Error500 />} />
               <Route path="/session-expired" element={<ErrorSession />} />
               <Route path="*" element={<Error404 />} />
