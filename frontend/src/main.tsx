@@ -2,9 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals'
-import { Providers } from './app/providers'
-import { AppRouter } from './app/router'
-import { SmoothScroll } from './components/layout/SmoothScroll'
+import { BootLoadingGate } from './components/layout/BootLoadingGate'
 import './index.css'
 import heart1 from './assets/heart1.svg'
 import heart2 from './assets/heart2.svg'
@@ -14,7 +12,6 @@ import heart5 from './assets/heart5.svg'
 const HEARTBEAT_FRAMES = [heart1, heart2, heart3]
 const INACTIVE_HEART_FRAME = heart5
 const HEARTBEAT_INTERVAL_MS = 260
-
 function setupAnimatedFavicon() {
   let favicon = document.querySelector('link[rel*="icon"]') as HTMLLinkElement | null
   if (!favicon) {
@@ -83,11 +80,7 @@ if (import.meta.hot) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Providers>
-      <SmoothScroll>
-        <AppRouter />
-      </SmoothScroll>
-    </Providers>
+    <BootLoadingGate />
     <SpeedInsights />
   </StrictMode>,
 )

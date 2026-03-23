@@ -77,8 +77,7 @@ function BlockRendererComponent({ block, mode, onUpdate }: BlockRendererProps) {
 function areBlockRendererPropsEqual(prev: BlockRendererProps, next: BlockRendererProps) {
   return (
     prev.mode === next.mode
-    && prev.block.id === next.block.id
-    && prev.block.meta.updatedAt === next.block.meta.updatedAt
+    && prev.block === next.block
     && prev.onUpdate === next.onUpdate
   )
 }

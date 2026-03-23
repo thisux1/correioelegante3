@@ -29,12 +29,12 @@ export function Header() {
   const progressScale = useTransform(smoothScrollProgress, [0, 1], [0.9, 1])
 
   const mobileSurfaceClass = useMobileLiteGlass
-    ? 'glass border border-primary/12 bg-white/85 shadow-[0_14px_34px_-22px_rgba(0,0,0,0.34)] backdrop-blur-sm'
-    : 'glass border border-primary/15 shadow-[0_16px_40px_-22px_rgba(0,0,0,0.35)]'
+    ? 'border border-white/55 bg-white/92 shadow-[0_14px_34px_-22px_rgba(0,0,0,0.34)] supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-sm'
+    : 'border border-white/55 bg-white/92 shadow-[0_16px_40px_-22px_rgba(0,0,0,0.35)] supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-md'
 
   const mobilePanelClass = useMobileLiteGlass
-    ? 'glass mx-auto w-full max-w-sm rounded-3xl border border-primary/12 bg-white/85 shadow-[0_18px_42px_-24px_rgba(0,0,0,0.38)] backdrop-blur-sm'
-    : 'glass mx-auto w-full max-w-sm rounded-3xl border border-primary/15 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.45)]'
+    ? 'mx-auto w-full max-w-sm rounded-3xl border border-white/55 bg-white/94 shadow-[0_18px_42px_-24px_rgba(0,0,0,0.38)] supports-[backdrop-filter:blur(0px)]:bg-white/72 supports-[backdrop-filter:blur(0px)]:backdrop-blur-sm'
+    : 'mx-auto w-full max-w-sm rounded-3xl border border-white/55 bg-white/94 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.45)] supports-[backdrop-filter:blur(0px)]:bg-white/72 supports-[backdrop-filter:blur(0px)]:backdrop-blur-md'
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -57,18 +57,7 @@ export function Header() {
   return (
     <header className="z-40">
       <div className="fixed top-0 left-0 right-0 hidden md:block">
-        <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden glass">
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-50 rounded-2xl">
-            <rect
-              width="100%"
-              height="100%"
-              rx="16"
-              ry="16"
-              fill="none"
-              strokeWidth="4"
-              className="stroke-primary/50"
-            />
-          </svg>
+        <div className="relative mx-4 mt-4 overflow-hidden rounded-2xl border border-white/55 bg-white/92 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.24)] supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-md">
 
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between relative z-10">
             <Link to="/" className="flex items-center gap-2 group">
@@ -178,7 +167,7 @@ export function Header() {
               ref={menuButtonRef}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-text backdrop-blur-sm transition-colors hover:bg-primary/10"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/55 bg-white/92 text-text transition-colors hover:bg-primary/10 supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-sm"
             >
               {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>

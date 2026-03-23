@@ -45,7 +45,7 @@ lighthouse-desktop.html
 lighthouse-mobile.html
 localhost_*.report.html
 
-# Intencionalmente versionados (nunca ignorar)
+# project specific 
 !.gitignore
 !AGENTS.md
 !opencode.json

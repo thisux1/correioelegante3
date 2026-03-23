@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Heart, ArrowRight } from 'lucide-react'
@@ -81,10 +81,24 @@ function HeroSection() {
 }
 
 export function Home() {
+  const [showAtmosphere, setShowAtmosphere] = useState(false)
+  const lowEndMode = useMemo(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const lowCpu = (navigator.hardwareConcurrency ?? 8) <= 4
+    const lowMemory = ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4
+
+    return prefersReducedMotion || lowCpu || lowMemory
+  }, [])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowAtmosphere(true), lowEndMode ? 80 : 140)
+    return () => window.clearTimeout(timer)
+  }, [lowEndMode])
+
   return (
     <div className="relative overflow-x-clip min-h-screen">
-      <BackgroundField />
-      <SiteAtmosphere />
+      {showAtmosphere && <BackgroundField />}
+      {showAtmosphere && !lowEndMode && <SiteAtmosphere />}
       <HeroSection />
       <ProblemSection />
       <SocialProofSection />
