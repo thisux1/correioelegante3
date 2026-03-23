@@ -1,23 +1,19 @@
 # Dependencies
-node_modules
+node_modules/
 .pnp
 .pnp.js
 
-# Testing
-coverage
-
-# Production
-dist
-dist-ssr
-build
-.vercel
+# Build / cache
+dist/
+dist-ssr/
+build/
+coverage/
+.vercel/
 
 # Environment
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
 # Logs
 *.log
@@ -26,10 +22,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Editor/OS
+# Editor / OS
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 Thumbs.db
 *.suo
@@ -38,53 +34,18 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Project Specific
-future_interations.md
-SKILL.md
+# Local reports and ad-hoc artifacts
 frontend/stats.html
-relatorio-lighthouse.html
-future_interations.md
 frontend/lighthouse-report.json
 frontend/lighthouse-production.json
 frontend/lh_sum.txt
 frontend/lh_sum_prod.txt
-frontend/src/editor/README.md
-plan-etapas/README.md
-plan-etapas/backlog-jira.md
-plan-etapas/etapa-0-contrato-produto.md
-plan-etapas/etapa-1-fundacao.md
-plan-etapas/etapa-2-drag-drop-toolbar.md
-plan-etapas/etapa-3-edicao-persistencia-preview.md
-plan-etapas/etapa-4-backend-salvar-carregar.md
-plan-etapas/etapa-5-performance-ux-mobile.md
-plan-etapas/etapa-6-refatorar-create-templates.md
-plan-etapas/etapa-7-novos-blocos.md
-plan-etapas/etapa-8-sistema-temas.md
-plan-etapas/etapa-9-testes-quality-gate.md
-plan-etapas/etapa-10-rollout-feature-flag.md
-plan-etapas/plano-executivo.md
-INTERVIEW_PRESENTATION_SCRIPT.md
-plan.md
-.agents/AGENTS.md
+relatorio-lighthouse.html
 lighthouse-desktop.html
 lighthouse-mobile.html
-.gitignore
-.opencode.jsonc
-AGENTS.md
-future_interations.md
-plan-upload-galeria-cloudinary.md
-.opencode.json
-plan-refatoracao-massiva.md
-docs/refactor-baseline-checklist.md
-docs/refactor-baseline.md
-docs/refactor-performance-frontend-etapa2.md
-plan-refatoracao-massiva/etapa-0-baseline-auditoria.md
-plan-refatoracao-massiva/etapa-1-normalizacao-estrutura.md
-plan-refatoracao-massiva/etapa-2-performance-frontend.md
-plan-refatoracao-massiva/etapa-3-performance-backend.md
-plan-refatoracao-massiva/etapa-4-clean-code-padroes.md
-plan-refatoracao-massiva/etapa-5-testes-confiabilidade.md
-plan-refatoracao-massiva/etapa-6-observabilidade-ci.md
-plan-refatoracao-massiva/etapa-7-hardening-rollout.md
-plan-refatoracao-massiva/README.md
-opencode.json
+localhost_*.report.html
+
+# Intencionalmente versionados (nunca ignorar)
+!.gitignore
+!AGENTS.md
+!opencode.json
