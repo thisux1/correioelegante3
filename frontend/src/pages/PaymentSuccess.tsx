@@ -1,22 +1,38 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { paymentService } from '@/services/messageService'
+import { paymentService, type PaymentTarget } from '@/services/paymentService'
 
 export function PaymentSuccess() {
-  const { messageId } = useParams<{ messageId: string }>()
+  const location = useLocation()
+  const { messageId, pageId } = useParams<{ messageId?: string; pageId?: string }>()
   const [confirmed, setConfirmed] = useState(false)
+
+  const isPageFlow = location.pathname.includes('/payment/page/')
+  const target = useMemo<PaymentTarget | null>(() => {
+    if (isPageFlow) {
+      return pageId ? { resourceType: 'page', resourceId: pageId } : null
+    }
+
+    return messageId ? { resourceType: 'message', resourceId: messageId } : null
+  }, [isPageFlow, messageId, pageId])
+
+  const cardHref = isPageFlow && pageId
+    ? `/card/page/${pageId}`
+    : messageId
+      ? `/card/${messageId}`
+      : '/profile'
 
   // Aguarda o webhook confirmar o pagamento (pode haver delay do Stripe)
   useEffect(() => {
-    if (!messageId) return
+    if (!target) return
 
     const check = async () => {
       try {
-        const res = await paymentService.getStatus(messageId)
+        const res = await paymentService.getStatus(target)
         if (res.data.status === 'paid') {
           setConfirmed(true)
           return true
@@ -33,7 +49,7 @@ export function PaymentSuccess() {
 
     check()
     return () => clearInterval(interval)
-  }, [messageId])
+  }, [target])
 
   return (
     <div className="min-h-screen pt-28 pb-16 px-6">
@@ -54,7 +70,7 @@ export function PaymentSuccess() {
             </p>
             {confirmed ? (
               <div className="flex flex-col gap-3">
-                <Link to={`/card/${messageId}`}>
+                <Link to={cardHref}>
                   <Button size="lg" className="w-full">Ver Cartão</Button>
                 </Link>
                 <Link to="/create">

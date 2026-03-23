@@ -442,6 +442,7 @@ export function Editor() {
   }, [pageVersion, status, visibility])
 
   const hasPageId = Boolean(currentPageId)
+  const showPublishCta = Boolean(currentPageId) && status !== 'published'
   const currentSignature = useMemo(
     () => toPageSignature({ blocks, theme, status, visibility }),
     [blocks, status, theme, visibility],
@@ -730,6 +731,13 @@ export function Editor() {
           saveState={saveState}
           hasPageId={hasPageId}
           selectedThemeId={theme}
+          showPublishCta={showPublishCta}
+          onPublishCtaClick={() => {
+            if (!currentPageId) {
+              return
+            }
+            navigate(`/payment/page/${currentPageId}`)
+          }}
         />
 
         <AnimatePresence mode="wait" initial={false}>

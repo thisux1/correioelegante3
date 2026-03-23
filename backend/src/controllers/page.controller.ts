@@ -3,7 +3,6 @@ import { AuthRequest } from '../middlewares/auth';
 import * as pageService from '../services/page.service';
 import { AppError } from '../utils/AppError';
 import { logPageEvent } from '../utils/observability';
-import { resolveEditorAccessForUser } from '../config/featureFlags';
 
 function parseIfMatchHeader(value: string | undefined): number | undefined {
   if (!value) {
@@ -101,16 +100,6 @@ export async function updatePage(req: AuthRequest, res: Response): Promise<void>
 export async function getPage(req: AuthRequest, res: Response): Promise<void> {
   const startedAt = Date.now();
   const requesterId = req.userId ?? 'anonymous';
-  const decision = resolveEditorAccessForUser(req.userId);
-
-  if (!decision.enabled) {
-    const statusCode = decision.reason === 'global-disabled' ? 503 : 403;
-    throw new AppError(
-      'Editor modular indisponivel para este usuario no momento.',
-      statusCode,
-      'EDITOR_MODULAR_FEATURE_DISABLED',
-    );
-  }
 
   try {
     const page = await pageService.getPageById(req.params.id as string, req.userId);

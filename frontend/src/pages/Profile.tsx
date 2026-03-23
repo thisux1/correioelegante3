@@ -14,6 +14,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useMessageStore } from '@/store/messageStore'
 import { messageService } from '@/services/messageService'
 import { authService } from '@/services/authService'
+import { pageService, type PageSummary } from '@/services/pageService'
 
 export function Profile() {
   const navigate = useNavigate()
@@ -23,6 +24,9 @@ export function Profile() {
   const [activeTab, setActiveTab] = useState<'messages' | 'settings'>('messages')
   const [fetchError, setFetchError] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [editorPages, setEditorPages] = useState<PageSummary[]>([])
+  const [isLoadingEditorPages, setIsLoadingEditorPages] = useState(false)
+  const [editorPagesError, setEditorPagesError] = useState('')
 
   // Password Change State
   const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false)
@@ -66,7 +70,28 @@ export function Profile() {
       }
     }
 
+    async function fetchEditorPages() {
+      setEditorPagesError('')
+      setIsLoadingEditorPages(true)
+      try {
+        const pages = await pageService.listPages()
+        if (!abortController.signal.aborted) {
+          setEditorPages(pages)
+        }
+      } catch (err: unknown) {
+        if (!abortController.signal.aborted) {
+          const axiosErr = err as { response?: { data?: { error?: string } } }
+          setEditorPagesError(axiosErr.response?.data?.error || 'Erro ao carregar paginas do editor.')
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsLoadingEditorPages(false)
+        }
+      }
+    }
+
     fetchMessages()
+    fetchEditorPages()
     return () => abortController.abort()
   }, [isAuthenticated, navigate, setMessages, setLoading])
 
@@ -134,6 +159,66 @@ export function Profile() {
   }
 
   const tabButtonBase = 'flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30'
+  const editorDraftPages = editorPages.filter((page) => page.status !== 'published')
+  const editorPublishedPages = editorPages.filter((page) => page.status === 'published')
+
+  function resolvePublicPageHref(page: PageSummary): string | null {
+    const candidate = (
+      page as PageSummary & {
+        publicPath?: string
+        path?: string
+        route?: string
+        publicUrl?: string
+        slug?: string
+      }
+    )
+
+    if (typeof candidate.publicPath === 'string' && candidate.publicPath.trim()) {
+      return candidate.publicPath.trim()
+    }
+
+    if (typeof candidate.path === 'string' && candidate.path.trim()) {
+      return candidate.path.trim()
+    }
+
+    if (typeof candidate.route === 'string' && candidate.route.trim()) {
+      return candidate.route.trim()
+    }
+
+    if (typeof candidate.publicUrl === 'string' && candidate.publicUrl.trim()) {
+      return candidate.publicUrl.trim()
+    }
+
+    if (typeof candidate.slug === 'string' && candidate.slug.trim()) {
+      return `/page/${candidate.slug.trim()}`
+    }
+
+    return `/card/page/${page.id}`
+  }
+
+  function isAbsoluteUrl(value: string) {
+    return /^https?:\/\//i.test(value)
+  }
+
+  function shouldShowPayNow(page: PageSummary) {
+    const candidate = (
+      page as PageSummary & {
+        paymentStatus?: 'pending' | 'paid'
+        isPaid?: boolean
+        paid?: boolean
+      }
+    )
+
+    const isPaid = typeof candidate.paymentStatus === 'string'
+      ? candidate.paymentStatus === 'paid'
+      : typeof candidate.isPaid === 'boolean'
+        ? candidate.isPaid
+        : typeof candidate.paid === 'boolean'
+          ? candidate.paid
+          : false
+
+    return page.status !== 'published' || !isPaid
+  }
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-28 sm:px-6">
@@ -197,92 +282,247 @@ export function Profile() {
               </Link>
             </div>
 
-            {isLoading ? (
-              <div className="space-y-4" aria-live="polite">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="shimmer h-32 rounded-2xl bg-white/60" />
-                ))}
-              </div>
-            ) : fetchError ? (
-              <Card glass className="py-8 text-center sm:py-10">
-                <InlineAlert tone="danger" className="mx-auto max-w-xl text-center">
-                  {fetchError}
-                </InlineAlert>
-              </Card>
-            ) : messages.length === 0 ? (
-              <Card glass className="py-14 text-center sm:py-16">
-                <Heart className="mx-auto mb-4 h-12 w-12 text-text-muted" />
-                <h3 className="mb-2 font-display text-2xl font-bold text-text">
-                  Nenhuma mensagem ainda
+            <section className="space-y-4" aria-label="Drafts do editor">
+              <div className="flex flex-col gap-1">
+                <h3 className="font-display text-xl font-semibold text-text sm:text-2xl">
+                  Drafts do Editor ({editorDraftPages.length})
                 </h3>
-                <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-text-light sm:text-base">
-                  Que tal enviar seu primeiro correio elegante?
+                <p className="text-sm text-text-light">
+                  Continue a edição dos rascunhos ou finalize o pagamento quando necessário.
                 </p>
-                <Link to="/create" className="inline-flex w-full justify-center sm:w-auto">
-                  <Button className="w-full sm:w-auto">Escrever mensagem</Button>
-                </Link>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {deleteError ? <InlineAlert tone="danger">{deleteError}</InlineAlert> : null}
+              </div>
 
-                {messages.map((message) => (
-                  <Card
-                    key={message.id}
-                    glass
-                    hover
-                    className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6"
-                  >
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-text break-words">
-                          Para: {message.recipient}
+              {isLoadingEditorPages ? (
+                <div className="space-y-3" aria-live="polite">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="shimmer h-24 rounded-2xl bg-white/60" />
+                  ))}
+                </div>
+              ) : editorPagesError ? (
+                <InlineAlert tone="danger">{editorPagesError}</InlineAlert>
+              ) : editorDraftPages.length === 0 ? (
+                <Card glass className="py-8 text-center sm:py-10">
+                  <p className="text-sm text-text-light sm:text-base">
+                    Nenhum draft do editor encontrado.
+                  </p>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {editorDraftPages.map((page) => (
+                    <Card
+                      key={page.id}
+                      glass
+                      hover
+                      className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6"
+                    >
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium text-text break-all">Pagina #{page.id}</p>
+                          <Badge variant="warning">Draft</Badge>
+                        </div>
+                        <p className="text-xs text-text-muted">
+                          Última atualização: {new Date(page.updatedAt).toLocaleDateString('pt-BR')}
                         </p>
-                        <Badge variant={message.paymentStatus === 'paid' ? 'success' : 'warning'}>
-                          {message.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
-                        </Badge>
                       </div>
 
-                      <p className="break-words text-sm leading-relaxed text-text-light sm:text-base">
-                        {message.message}
-                      </p>
-
-                      <p className="text-xs text-text-muted">
-                        {new Date(message.createdAt).toLocaleDateString('pt-BR')}
-                      </p>
-                    </div>
-
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-                      {message.paymentStatus === 'paid' ? (
-                        <Link to={`/card/${message.id}`} className="w-full sm:w-auto">
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                        <Link to={`/editor/${page.id}`} className="w-full sm:w-auto">
                           <Button variant="ghost" size="sm" className="w-full sm:w-auto">
-                            <ExternalLink size={14} />
-                            Abrir cartão
+                            Continuar edição
                           </Button>
                         </Link>
-                      ) : (
-                        <Link to={`/payment/${message.id}`} className="w-full sm:w-auto">
-                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                            Pagar agora
-                          </Button>
-                        </Link>
-                      )}
+                        {shouldShowPayNow(page) ? (
+                          <Link to={`/payment/page/${page.id}`} className="w-full sm:w-auto">
+                            <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                              Pagar agora
+                            </Button>
+                          </Link>
+                        ) : null}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </section>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-red-600 hover:bg-red-50 hover:text-red-600 sm:w-auto"
-                        onClick={() => handleDelete(message.id)}
-                        aria-label={`Excluir mensagem para ${message.recipient}`}
-                      >
-                        <Trash2 size={14} />
-                        Excluir
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
+            <section className="space-y-4" aria-label="Publicadas do editor">
+              <div className="flex flex-col gap-1">
+                <h3 className="font-display text-xl font-semibold text-text sm:text-2xl">
+                  Publicadas do Editor ({editorPublishedPages.length})
+                </h3>
+                <p className="text-sm text-text-light">
+                  Abra o card público quando a rota estiver disponível.
+                </p>
               </div>
-            )}
+
+              {isLoadingEditorPages ? (
+                <div className="space-y-3" aria-live="polite">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="shimmer h-24 rounded-2xl bg-white/60" />
+                  ))}
+                </div>
+              ) : editorPagesError ? (
+                <InlineAlert tone="danger">{editorPagesError}</InlineAlert>
+              ) : editorPublishedPages.length === 0 ? (
+                <Card glass className="py-8 text-center sm:py-10">
+                  <p className="text-sm text-text-light sm:text-base">
+                    Nenhuma pagina publicada no editor ainda.
+                  </p>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {editorPublishedPages.map((page) => {
+                    const publicHref = resolvePublicPageHref(page)
+
+                    return (
+                      <Card
+                        key={page.id}
+                        glass
+                        hover
+                        className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6"
+                      >
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-text break-all">Pagina #{page.id}</p>
+                            <Badge variant="success">Publicada</Badge>
+                          </div>
+                          <p className="text-xs text-text-muted">
+                            Publicada em: {page.publishedAt ? new Date(page.publishedAt).toLocaleDateString('pt-BR') : 'Sem data'}
+                          </p>
+                        </div>
+
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                          <Link to={`/editor/${page.id}`} className="w-full sm:w-auto">
+                            <Button variant="ghost" size="sm" className="w-full sm:w-auto">
+                              Continuar edição
+                            </Button>
+                          </Link>
+
+                          {shouldShowPayNow(page) ? (
+                            <Link to={`/payment/page/${page.id}`} className="w-full sm:w-auto">
+                              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                                Pagar agora
+                              </Button>
+                            </Link>
+                          ) : null}
+
+                          {publicHref ? (
+                            isAbsoluteUrl(publicHref) ? (
+                              <a href={publicHref} target="_blank" rel="noreferrer" className="w-full sm:w-auto">
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                                  <ExternalLink size={14} />
+                                  Abrir card público
+                                </Button>
+                              </a>
+                            ) : (
+                              <Link to={publicHref} className="w-full sm:w-auto">
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                                  <ExternalLink size={14} />
+                                  Abrir card público
+                                </Button>
+                              </Link>
+                            )
+                          ) : null}
+                        </div>
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
+
+            <section className="space-y-4" aria-label="Mensagens legadas">
+              <h3 className="font-display text-xl font-semibold text-text sm:text-2xl">
+                Mensagens legadas
+              </h3>
+
+              {isLoading ? (
+                <div className="space-y-4" aria-live="polite">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="shimmer h-32 rounded-2xl bg-white/60" />
+                  ))}
+                </div>
+              ) : fetchError ? (
+                <Card glass className="py-8 text-center sm:py-10">
+                  <InlineAlert tone="danger" className="mx-auto max-w-xl text-center">
+                    {fetchError}
+                  </InlineAlert>
+                </Card>
+              ) : messages.length === 0 ? (
+                <Card glass className="py-14 text-center sm:py-16">
+                  <Heart className="mx-auto mb-4 h-12 w-12 text-text-muted" />
+                  <h3 className="mb-2 font-display text-2xl font-bold text-text">
+                    Nenhuma mensagem ainda
+                  </h3>
+                  <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-text-light sm:text-base">
+                    Que tal enviar seu primeiro correio elegante?
+                  </p>
+                  <Link to="/create" className="inline-flex w-full justify-center sm:w-auto">
+                    <Button className="w-full sm:w-auto">Escrever mensagem</Button>
+                  </Link>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {deleteError ? <InlineAlert tone="danger">{deleteError}</InlineAlert> : null}
+
+                  {messages.map((message) => (
+                    <Card
+                      key={message.id}
+                      glass
+                      hover
+                      className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6"
+                    >
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium text-text break-words">
+                            Para: {message.recipient}
+                          </p>
+                          <Badge variant={message.paymentStatus === 'paid' ? 'success' : 'warning'}>
+                            {message.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
+                          </Badge>
+                        </div>
+
+                        <p className="break-words text-sm leading-relaxed text-text-light sm:text-base">
+                          {message.message}
+                        </p>
+
+                        <p className="text-xs text-text-muted">
+                          {new Date(message.createdAt).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                        {message.paymentStatus === 'paid' ? (
+                          <Link to={`/card/${message.id}`} className="w-full sm:w-auto">
+                            <Button variant="ghost" size="sm" className="w-full sm:w-auto">
+                              <ExternalLink size={14} />
+                              Abrir cartão
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Link to={`/payment/${message.id}`} className="w-full sm:w-auto">
+                            <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                              Pagar agora
+                            </Button>
+                          </Link>
+                        )}
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-red-600 hover:bg-red-50 hover:text-red-600 sm:w-auto"
+                          onClick={() => handleDelete(message.id)}
+                          aria-label={`Excluir mensagem para ${message.recipient}`}
+                        >
+                          <Trash2 size={14} />
+                          Excluir
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </section>
           </section>
         ) : (
           <section className="space-y-6" aria-label="Configurações">
