@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Check,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   Image as ImageIcon,
   Images,
@@ -42,12 +44,13 @@ const addBlockOptions: AddBlockOption[] = [
 interface ToolbarControlsProps {
   shouldReduceMotion: boolean
   isMobile: boolean
+  isVerticalDock: boolean
   mode: 'edit' | 'preview'
   blocksCount: number
   isAddMenuOpen: boolean
   isThemeMenuOpen: boolean
   isAtBlockLimit: boolean
-  menuPlacement: 'down' | 'up'
+  menuPlacement: 'down' | 'up' | 'left'
   saveState: 'idle' | 'saving' | 'saved' | 'error'
   hasPageId: boolean
   selectedThemeId: string
@@ -68,23 +71,43 @@ function AddMenu({
   shouldReduceMotion,
 }: {
   isDisabled: boolean
-  placement: 'down' | 'up'
+  placement: 'down' | 'up' | 'left'
   onSelect: (type: AvailableBlockType) => void
   shouldReduceMotion: boolean
 }) {
   const positionClassName =
-    placement === 'up'
+    placement === 'left'
+      ? 'absolute right-full top-0 z-30 mr-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      : placement === 'up'
       ? 'absolute bottom-full left-0 z-30 mb-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
       : 'absolute left-0 top-full z-30 mt-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+
+  const initialMotion = shouldReduceMotion
+    ? placement === 'left'
+      ? { opacity: 0, x: 6 }
+      : { opacity: 0, y: placement === 'up' ? 6 : -6 }
+    : placement === 'left'
+      ? { opacity: 0, x: 14, scale: 0.985 }
+      : { opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }
+
+  const exitMotion = shouldReduceMotion
+    ? placement === 'left'
+      ? { opacity: 0, x: 4 }
+      : { opacity: 0, y: placement === 'up' ? 4 : -4 }
+    : placement === 'left'
+      ? { opacity: 0, x: 10, scale: 0.99 }
+      : { opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }
+
+  const animateMotion = placement === 'left' ? { opacity: 1, x: 0, scale: 1 } : { opacity: 1, y: 0, scale: 1 }
 
   return (
     <motion.div
       className={positionClassName}
       role="menu"
-      style={{ originY: placement === 'up' ? 1 : 0 }}
-      initial={shouldReduceMotion ? { opacity: 0, y: placement === 'up' ? 6 : -6 } : { opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={shouldReduceMotion ? { opacity: 0, y: placement === 'up' ? 4 : -4 } : { opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
+      style={placement === 'left' ? { originX: 1, originY: 0.5 } : { originY: placement === 'up' ? 1 : 0 }}
+      initial={initialMotion}
+      animate={animateMotion}
+      exit={exitMotion}
       transition={shouldReduceMotion ? { duration: 0.14, ease: [0.19, 1, 0.22, 1] } : { type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
     >
       {addBlockOptions.map((option, optionIndex) => {
@@ -118,7 +141,7 @@ function ThemeMenu({
   onSelect,
   shouldReduceMotion,
 }: {
-  placement: 'down' | 'up'
+  placement: 'down' | 'up' | 'left'
   selectedThemeId: string
   onSelect: (themeId: string) => void
   shouldReduceMotion: boolean
@@ -147,19 +170,39 @@ function ThemeMenu({
   }, [selectedIndex])
 
   const positionClassName =
-    placement === 'up'
+    placement === 'left'
+      ? 'absolute right-full top-0 z-30 mr-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      : placement === 'up'
       ? 'absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
       : 'absolute left-0 top-full z-30 mt-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+
+  const initialMotion = shouldReduceMotion
+    ? placement === 'left'
+      ? { opacity: 0, x: 6 }
+      : { opacity: 0, y: placement === 'up' ? 6 : -6 }
+    : placement === 'left'
+      ? { opacity: 0, x: 14, scale: 0.985 }
+      : { opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }
+
+  const exitMotion = shouldReduceMotion
+    ? placement === 'left'
+      ? { opacity: 0, x: 4 }
+      : { opacity: 0, y: placement === 'up' ? 4 : -4 }
+    : placement === 'left'
+      ? { opacity: 0, x: 10, scale: 0.99 }
+      : { opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }
+
+  const animateMotion = placement === 'left' ? { opacity: 1, x: 0, scale: 1 } : { opacity: 1, y: 0, scale: 1 }
 
   return (
     <motion.div
       className={positionClassName}
       role="menu"
       aria-label="Escolher tema"
-      style={{ originY: placement === 'up' ? 1 : 0 }}
-      initial={shouldReduceMotion ? { opacity: 0, y: placement === 'up' ? 6 : -6 } : { opacity: 0, y: placement === 'up' ? 16 : -16, scale: 0.985 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={shouldReduceMotion ? { opacity: 0, y: placement === 'up' ? 4 : -4 } : { opacity: 0, y: placement === 'up' ? 12 : -12, scale: 0.99 }}
+      style={placement === 'left' ? { originX: 1, originY: 0.5 } : { originY: placement === 'up' ? 1 : 0 }}
+      initial={initialMotion}
+      animate={animateMotion}
+      exit={exitMotion}
       transition={shouldReduceMotion ? { duration: 0.14, ease: [0.19, 1, 0.22, 1] } : { type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
     >
       {themeCatalog.map((theme, index) => {
@@ -222,6 +265,7 @@ function ThemeMenu({
 function ToolbarControls({
   shouldReduceMotion,
   isMobile,
+  isVerticalDock,
   mode,
   blocksCount,
   isAddMenuOpen,
@@ -240,6 +284,7 @@ function ToolbarControls({
   showPublishCta,
   onPublishCtaClick,
 }: ToolbarControlsProps) {
+  const useCompactButtons = isMobile || isVerticalDock
   const normalizedSelectedThemeId = resolveThemeId(selectedThemeId)
   const selectedTheme = getThemeById(normalizedSelectedThemeId)
 
@@ -304,7 +349,7 @@ function ToolbarControls({
         </AnimatePresence>
       </div>
 
-      {isMobile ? (
+      {useCompactButtons ? (
         <button
           type="button"
           onClick={toggleMode}
@@ -338,7 +383,7 @@ function ToolbarControls({
               ? { x: [0, -2, 2, 0], borderColor: 'rgba(239,68,68,0.45)' }
               : { scale: 1, x: 0 }}
         transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: [0.19, 1, 0.22, 1] }}
-        className={`${isMobile
+        className={`${useCompactButtons
           ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-white/90 text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
           : 'inline-flex h-11 items-center gap-2 rounded-xl border border-primary/30 bg-white/90 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'
           }`}
@@ -360,14 +405,14 @@ function ToolbarControls({
             </motion.span>
           )}
         </AnimatePresence>
-        {!isMobile ? saveLabel : null}
+        {!useCompactButtons ? saveLabel : null}
       </motion.button>
 
       {showPublishCta ? (
         <button
           type="button"
           onClick={onPublishCtaClick}
-          className={`${isMobile
+          className={`${useCompactButtons
             ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl border border-amber-300 bg-amber-50 text-amber-700 transition-colors hover:bg-amber-100'
             : 'inline-flex h-11 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100'
             }`}
@@ -375,7 +420,7 @@ function ToolbarControls({
           title="Pagar e publicar"
         >
           <CreditCard size={16} />
-          {!isMobile ? 'Pagar e publicar' : null}
+          {!useCompactButtons ? 'Pagar e publicar' : null}
         </button>
       ) : null}
 
@@ -430,6 +475,30 @@ function useIsMobileToolbar() {
   }, [])
 
   return isMobile
+}
+
+function useIsShortViewportToolbar() {
+  const [isShortViewport, setIsShortViewport] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const media = window.matchMedia('(min-width: 768px) and (max-height: 860px)')
+    const sync = () => setIsShortViewport(media.matches)
+    sync()
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', sync)
+      return () => media.removeEventListener('change', sync)
+    }
+
+    media.addListener(sync)
+    return () => media.removeListener(sync)
+  }, [])
+
+  return isShortViewport
 }
 
 function useToolbarMenus(toolbarRef: RefObject<HTMLDivElement | null>) {
@@ -507,6 +576,9 @@ export function EditorToolbar({
 
   const toolbarRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobileToolbar()
+  const isShortViewport = useIsShortViewportToolbar()
+  const [isVerticalDockOpen, setIsVerticalDockOpen] = useState(true)
+  const isVerticalDock = !isMobile && isShortViewport
   const {
     isAddMenuOpen,
     isThemeMenuOpen,
@@ -517,6 +589,14 @@ export function EditorToolbar({
   } = useToolbarMenus(toolbarRef)
 
   const isAtBlockLimit = blocksCount >= MAX_BLOCKS
+
+  useEffect(() => {
+    if (!isVerticalDock || isVerticalDockOpen) {
+      return
+    }
+
+    closeAllMenus()
+  }, [closeAllMenus, isVerticalDock, isVerticalDockOpen])
 
   const focusBlockEditor = useCallback((blockId: string, type: AvailableBlockType) => {
     if (typeof document === 'undefined') {
@@ -585,32 +665,89 @@ export function EditorToolbar({
     <>
       <div ref={toolbarRef}>
         <div className="sticky top-24 z-30 hidden md:block">
-          <div className="glass mx-auto mb-6 flex w-full max-w-4xl items-center justify-between rounded-2xl px-4 py-3">
-            <p className="text-sm text-text-light">Monte sua carta com blocos</p>
-            <div className="flex items-center gap-2">
-              <ToolbarControls
-                shouldReduceMotion={!!shouldReduceMotion}
-                isMobile={false}
-                mode={mode}
-                blocksCount={blocksCount}
-                isAddMenuOpen={isMenuVisible}
-                isThemeMenuOpen={isThemeVisible}
-                isAtBlockLimit={isAtBlockLimit}
-                menuPlacement="down"
-                saveState={saveState}
-                hasPageId={hasPageId}
-                selectedThemeId={selectedThemeId}
-                toggleMode={toggleMode}
-                toggleAddMenu={toggleAddMenu}
-                toggleThemeMenu={toggleThemeMenu}
-                addFromOption={addFromOption}
-                onSelectTheme={handleSelectTheme}
-                onSave={onSave}
-                showPublishCta={showPublishCta}
-                onPublishCtaClick={onPublishCtaClick}
-              />
+          {!isVerticalDock ? (
+            <div className="glass mx-auto mb-6 flex w-full max-w-4xl items-center justify-between rounded-2xl px-4 py-3">
+              <p className="text-sm text-text-light">Monte sua carta com blocos</p>
+              <div className="flex items-center gap-2">
+                <ToolbarControls
+                  shouldReduceMotion={!!shouldReduceMotion}
+                  isMobile={false}
+                  isVerticalDock={false}
+                  mode={mode}
+                  blocksCount={blocksCount}
+                  isAddMenuOpen={isMenuVisible}
+                  isThemeMenuOpen={isThemeVisible}
+                  isAtBlockLimit={isAtBlockLimit}
+                  menuPlacement="down"
+                  saveState={saveState}
+                  hasPageId={hasPageId}
+                  selectedThemeId={selectedThemeId}
+                  toggleMode={toggleMode}
+                  toggleAddMenu={toggleAddMenu}
+                  toggleThemeMenu={toggleThemeMenu}
+                  addFromOption={addFromOption}
+                  onSelectTheme={handleSelectTheme}
+                  onSave={onSave}
+                  showPublishCta={showPublishCta}
+                  onPublishCtaClick={onPublishCtaClick}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="pointer-events-none fixed right-3 top-1/2 z-40 -translate-y-1/2">
+              <div className="pointer-events-auto flex items-center gap-2">
+                <div id="editor-toolbar-vertical-dock">
+                  <AnimatePresence initial={false}>
+                    {isVerticalDockOpen ? (
+                      <motion.div
+                        key="vertical-dock"
+                        initial={{ opacity: 0, x: 18, scale: 0.985 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 12, scale: 0.99 }}
+                        transition={{ type: 'spring', stiffness: 250, damping: 24, mass: 0.95 }}
+                        className="glass flex flex-col items-center gap-2 rounded-2xl p-2 shadow-xl"
+                      >
+                        <ToolbarControls
+                          shouldReduceMotion={!!shouldReduceMotion}
+                          isMobile={false}
+                          isVerticalDock
+                          mode={mode}
+                          blocksCount={blocksCount}
+                          isAddMenuOpen={isMenuVisible}
+                          isThemeMenuOpen={isThemeVisible}
+                          isAtBlockLimit={isAtBlockLimit}
+                          menuPlacement="left"
+                          saveState={saveState}
+                          hasPageId={hasPageId}
+                          selectedThemeId={selectedThemeId}
+                          toggleMode={toggleMode}
+                          toggleAddMenu={toggleAddMenu}
+                          toggleThemeMenu={toggleThemeMenu}
+                          addFromOption={addFromOption}
+                          onSelectTheme={handleSelectTheme}
+                          onSave={onSave}
+                          showPublishCta={showPublishCta}
+                          onPublishCtaClick={onPublishCtaClick}
+                        />
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsVerticalDockOpen((current) => !current)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/25 bg-white/90 text-primary shadow-lg shadow-black/5 transition-colors hover:bg-primary/10"
+                  aria-label={isVerticalDockOpen ? 'Fechar barra de ferramentas' : 'Abrir barra de ferramentas'}
+                  aria-expanded={isVerticalDockOpen}
+                  aria-controls="editor-toolbar-vertical-dock"
+                  title={isVerticalDockOpen ? 'Fechar barra' : 'Abrir barra'}
+                >
+                  {isVerticalDockOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="fixed inset-x-0 bottom-24 z-[60] px-4 md:hidden">
@@ -618,6 +755,7 @@ export function EditorToolbar({
             <ToolbarControls
               shouldReduceMotion={!!shouldReduceMotion}
               isMobile={isMobile}
+              isVerticalDock={false}
               mode={mode}
               blocksCount={blocksCount}
               isAddMenuOpen={isMenuVisible}

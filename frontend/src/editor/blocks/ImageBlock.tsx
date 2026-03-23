@@ -7,7 +7,8 @@ import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components
 function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const isImageBlock = block.type === 'image'
   const source = isImageBlock ? block.props.src.trim() : ''
-  const alt = isImageBlock ? block.props.alt?.trim() || 'Imagem do bloco' : 'Imagem do bloco'
+  const altValue = isImageBlock && typeof block.props.alt === 'string' ? block.props.alt : ''
+  const previewAlt = altValue.trim() || 'Imagem do bloco'
   const assetId = isImageBlock ? block.props.assetId : undefined
   const hasSource = source.length > 0
   const [failedSource, setFailedSource] = useState<string | null>(null)
@@ -21,7 +22,7 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     hasSource && !hasError ? (
       <img
         src={source}
-        alt={alt}
+        alt={previewAlt}
         onLoad={() => {
           setFailedSource((current) => (current === source ? null : current))
         }}
@@ -86,22 +87,22 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         <EditorInputSection title="Descricao da imagem" helperText="Opcional. Descreva a imagem em uma frase curta.">
           <input
             type="text"
-          value={alt}
-          onChange={(event) => {
-            const nextAlt = event.target.value
-            onUpdate?.((currentBlock) => {
-              if (currentBlock.type !== 'image') {
-                return currentBlock
-              }
+            value={altValue}
+            onChange={(event) => {
+              const nextAlt = event.target.value
+              onUpdate?.((currentBlock) => {
+                if (currentBlock.type !== 'image') {
+                  return currentBlock
+                }
 
-              return {
-                ...currentBlock,
-                props: {
-                  ...currentBlock.props,
-                  alt: nextAlt,
-                },
-              }
-            })
+                return {
+                  ...currentBlock,
+                  props: {
+                    ...currentBlock.props,
+                    alt: nextAlt,
+                  },
+                }
+              })
             }}
             placeholder="Ex: Casal sorrindo na festa"
             className={EDITOR_FIELD_BASE_CLASS}
@@ -113,7 +114,7 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 }
 
 function areImageBlockPropsEqual(prev: BlockComponentProps, next: BlockComponentProps) {
-  return prev.mode === next.mode && prev.block.meta.updatedAt === next.block.meta.updatedAt
+  return prev.mode === next.mode && prev.block === next.block
 }
 
 export const ImageBlock = memo(ImageBlockComponent, areImageBlockPropsEqual)

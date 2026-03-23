@@ -11,19 +11,14 @@ import { InlineAlert } from '@/components/ui/InlineAlert'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { SettingRow } from '@/components/ui/SettingRow'
 import { useAuthStore } from '@/store/authStore'
-import { useMessageStore } from '@/store/messageStore'
-import { messageService } from '@/services/messageService'
 import { authService } from '@/services/authService'
 import { pageService, type PageSummary } from '@/services/pageService'
 
 export function Profile() {
   const navigate = useNavigate()
   const { user, isAuthenticated, clearAuth } = useAuthStore()
-  const { messages, setMessages, removeMessage, setLoading, isLoading } = useMessageStore()
 
   const [activeTab, setActiveTab] = useState<'messages' | 'settings'>('messages')
-  const [fetchError, setFetchError] = useState('')
-  const [deleteError, setDeleteError] = useState('')
   const [editorPages, setEditorPages] = useState<PageSummary[]>([])
   const [isLoadingEditorPages, setIsLoadingEditorPages] = useState(false)
   const [editorPagesError, setEditorPagesError] = useState('')
@@ -50,26 +45,6 @@ export function Profile() {
 
     const abortController = new AbortController()
 
-    async function fetchMessages() {
-      setFetchError('')
-      setLoading(true)
-      try {
-        const response = await messageService.getAll()
-        if (!abortController.signal.aborted) {
-          setMessages(response.data.messages)
-        }
-      } catch (err: unknown) {
-        if (!abortController.signal.aborted) {
-          const axiosErr = err as { response?: { data?: { error?: string } } }
-          setFetchError(axiosErr.response?.data?.error || 'Erro ao carregar mensagens.')
-        }
-      } finally {
-        if (!abortController.signal.aborted) {
-          setLoading(false)
-        }
-      }
-    }
-
     async function fetchEditorPages() {
       setEditorPagesError('')
       setIsLoadingEditorPages(true)
@@ -90,21 +65,9 @@ export function Profile() {
       }
     }
 
-    fetchMessages()
     fetchEditorPages()
     return () => abortController.abort()
-  }, [isAuthenticated, navigate, setMessages, setLoading])
-
-  async function handleDelete(id: string) {
-    setDeleteError('')
-    try {
-      await messageService.delete(id)
-      removeMessage(id)
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: string } } }
-      setDeleteError(axiosErr.response?.data?.error || 'Erro ao deletar mensagem. Tente novamente.')
-    }
-  }
+  }, [isAuthenticated, navigate])
 
   async function handleLogout() {
     try {
@@ -220,6 +183,30 @@ export function Profile() {
     return page.status !== 'published' || !isPaid
   }
 
+  function resolveDraftDisplayName(page: PageSummary, index: number) {
+    let normalizedText: string | null = null
+
+    for (const block of page.blocks) {
+      if (block.type !== 'text') {
+        continue
+      }
+
+      const trimmed = block.props.text.trim()
+      if (!trimmed) {
+        continue
+      }
+
+      normalizedText = trimmed.replace(/\s+/g, ' ')
+      break
+    }
+
+    if (normalizedText) {
+      return normalizedText.length > 64 ? `${normalizedText.slice(0, 61)}...` : normalizedText
+    }
+
+    return `Rascunho ${index + 1}`
+  }
+
   return (
     <div className="min-h-screen px-4 pb-16 pt-28 sm:px-6">
       <div className="mx-auto w-full max-w-4xl">
@@ -272,7 +259,7 @@ export function Profile() {
           <section className="space-y-6" aria-label="Mensagens">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="font-display text-2xl font-semibold text-text sm:text-3xl">
-                Minhas Mensagens ({messages.length})
+                Minhas Mensagens ({editorPages.length})
               </h2>
               <Link to="/create" className="w-full sm:w-auto">
                 <Button size="sm" className="w-full sm:w-auto">
@@ -308,7 +295,7 @@ export function Profile() {
                 </Card>
               ) : (
                 <div className="space-y-3">
-                  {editorDraftPages.map((page) => (
+                  {editorDraftPages.map((page, index) => (
                     <Card
                       key={page.id}
                       glass
@@ -317,9 +304,10 @@ export function Profile() {
                     >
                       <div className="min-w-0 flex-1 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium text-text break-all">Pagina #{page.id}</p>
+                          <p className="font-medium text-text break-words">{resolveDraftDisplayName(page, index)}</p>
                           <Badge variant="warning">Draft</Badge>
                         </div>
+                        <p className="text-xs text-text-muted break-all">ID: {page.id}</p>
                         <p className="text-xs text-text-muted">
                           Última atualização: {new Date(page.updatedAt).toLocaleDateString('pt-BR')}
                         </p>
@@ -431,98 +419,6 @@ export function Profile() {
               )}
             </section>
 
-            <section className="space-y-4" aria-label="Mensagens legadas">
-              <h3 className="font-display text-xl font-semibold text-text sm:text-2xl">
-                Mensagens legadas
-              </h3>
-
-              {isLoading ? (
-                <div className="space-y-4" aria-live="polite">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="shimmer h-32 rounded-2xl bg-white/60" />
-                  ))}
-                </div>
-              ) : fetchError ? (
-                <Card glass className="py-8 text-center sm:py-10">
-                  <InlineAlert tone="danger" className="mx-auto max-w-xl text-center">
-                    {fetchError}
-                  </InlineAlert>
-                </Card>
-              ) : messages.length === 0 ? (
-                <Card glass className="py-14 text-center sm:py-16">
-                  <Heart className="mx-auto mb-4 h-12 w-12 text-text-muted" />
-                  <h3 className="mb-2 font-display text-2xl font-bold text-text">
-                    Nenhuma mensagem ainda
-                  </h3>
-                  <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-text-light sm:text-base">
-                    Que tal enviar seu primeiro correio elegante?
-                  </p>
-                  <Link to="/create" className="inline-flex w-full justify-center sm:w-auto">
-                    <Button className="w-full sm:w-auto">Escrever mensagem</Button>
-                  </Link>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {deleteError ? <InlineAlert tone="danger">{deleteError}</InlineAlert> : null}
-
-                  {messages.map((message) => (
-                    <Card
-                      key={message.id}
-                      glass
-                      hover
-                      className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6"
-                    >
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium text-text break-words">
-                            Para: {message.recipient}
-                          </p>
-                          <Badge variant={message.paymentStatus === 'paid' ? 'success' : 'warning'}>
-                            {message.paymentStatus === 'paid' ? 'Pago' : 'Pendente'}
-                          </Badge>
-                        </div>
-
-                        <p className="break-words text-sm leading-relaxed text-text-light sm:text-base">
-                          {message.message}
-                        </p>
-
-                        <p className="text-xs text-text-muted">
-                          {new Date(message.createdAt).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-
-                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-                        {message.paymentStatus === 'paid' ? (
-                          <Link to={`/card/${message.id}`} className="w-full sm:w-auto">
-                            <Button variant="ghost" size="sm" className="w-full sm:w-auto">
-                              <ExternalLink size={14} />
-                              Abrir cartão
-                            </Button>
-                          </Link>
-                        ) : (
-                          <Link to={`/payment/${message.id}`} className="w-full sm:w-auto">
-                            <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                              Pagar agora
-                            </Button>
-                          </Link>
-                        )}
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full text-red-600 hover:bg-red-50 hover:text-red-600 sm:w-auto"
-                          onClick={() => handleDelete(message.id)}
-                          aria-label={`Excluir mensagem para ${message.recipient}`}
-                        >
-                          <Trash2 size={14} />
-                          Excluir
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </section>
           </section>
         ) : (
           <section className="space-y-6" aria-label="Configurações">
