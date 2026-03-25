@@ -209,15 +209,68 @@ const CLOUDS: CloudDef[] = [
 const getIsMobile = () => typeof window !== 'undefined' && window.innerWidth < 768
 
 // ── Component ────────────────────────────────────────────────────
-export function SiteAtmosphere() {
+interface SiteAtmosphereProps {
+    lowEndMode?: boolean
+    reducedMotionMode?: boolean
+}
+
+export function SiteAtmosphere({
+    lowEndMode = false,
+    reducedMotionMode = false,
+}: SiteAtmosphereProps) {
     const bgRef = useRef<HTMLDivElement>(null)           // cloud parallax container
     const bgStarCanvasRef = useRef<HTMLCanvasElement>(null)
     const fgStarCanvasRef = useRef<HTMLCanvasElement>(null)
     const isMobile = useMemo(() => getIsMobile(), [])
 
-    const activeClouds = useMemo(() => isMobile ? CLOUDS.slice(0, 8) : CLOUDS, [isMobile])
-    const bgParticles = useMemo(() => generateStarParticles(isMobile ? 10 : 18, 42, 14, 110), [isMobile])
-    const fgParticles = useMemo(() => generateStarParticles(isMobile ? 6 : 12, 99, 8, 48), [isMobile])
+    const cloudCount = useMemo(() => {
+        if (isMobile && (lowEndMode || reducedMotionMode)) {
+            return 5
+        }
+
+        if (isMobile) {
+            return 8
+        }
+
+        if (lowEndMode || reducedMotionMode) {
+            return 12
+        }
+
+        return CLOUDS.length
+    }, [isMobile, lowEndMode, reducedMotionMode])
+
+    const activeClouds = useMemo(() => CLOUDS.slice(0, cloudCount), [cloudCount])
+    const bgParticles = useMemo(() => {
+        if (isMobile && (lowEndMode || reducedMotionMode)) {
+            return generateStarParticles(6, 42, 14, 96)
+        }
+
+        if (isMobile) {
+            return generateStarParticles(10, 42, 14, 110)
+        }
+
+        if (lowEndMode || reducedMotionMode) {
+            return generateStarParticles(10, 42, 14, 96)
+        }
+
+        return generateStarParticles(18, 42, 14, 110)
+    }, [isMobile, lowEndMode, reducedMotionMode])
+
+    const fgParticles = useMemo(() => {
+        if (isMobile && (lowEndMode || reducedMotionMode)) {
+            return generateStarParticles(4, 99, 8, 42)
+        }
+
+        if (isMobile) {
+            return generateStarParticles(6, 99, 8, 48)
+        }
+
+        if (lowEndMode || reducedMotionMode) {
+            return generateStarParticles(8, 99, 8, 42)
+        }
+
+        return generateStarParticles(12, 99, 8, 48)
+    }, [isMobile, lowEndMode, reducedMotionMode])
 
     useEffect(() => { injectStyles() }, [])
 
