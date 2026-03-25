@@ -82,12 +82,19 @@ function HeroSection() {
 
 export function Home() {
   const [showAtmosphere, setShowAtmosphere] = useState(false)
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false
+    }
+
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  }, [])
+
   const lowEndMode = useMemo(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const lowCpu = (navigator.hardwareConcurrency ?? 8) <= 4
     const lowMemory = ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4
 
-    return prefersReducedMotion || lowCpu || lowMemory
+    return lowCpu || lowMemory
   }, [])
 
   useEffect(() => {
@@ -98,7 +105,7 @@ export function Home() {
   return (
     <div className="relative overflow-x-clip min-h-screen">
       {showAtmosphere && <BackgroundField />}
-      {showAtmosphere && !lowEndMode && <SiteAtmosphere />}
+      {showAtmosphere && <SiteAtmosphere lowEndMode={lowEndMode} reducedMotionMode={prefersReducedMotion} />}
       <HeroSection />
       <ProblemSection />
       <SocialProofSection />
