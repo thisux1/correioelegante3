@@ -45,7 +45,23 @@ lighthouse-desktop.html
 lighthouse-mobile.html
 localhost_*.report.html
 
+# Local dev/test artifacts
+backend-dev.log
+frontend-dev.log
+musicplayerexample/
+Video/
+docs/screenshots/
+docs/visual-docs/
+nul
+exit
+
 # project specific 
 !.gitignore
-!AGENTS.md
-!opencode.json
+AGENTS.md
+opencode.json
+plan-execucao-urgente/reviews/
+plan-execucao-urgente/etapas/
+plan-execucao-urgente/prompts/
+plan-execucao-urgente/prompts/*
+plan-execucao-urgente/plano-demo-video.md
+Video
