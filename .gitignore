@@ -64,4 +64,6 @@ plan-execucao-urgente/etapas/
 plan-execucao-urgente/prompts/
 plan-execucao-urgente/prompts/*
 plan-execucao-urgente/plano-demo-video.md
-Video
+# Relatórios e Scripts locais
+INTERVIEW_PRESENTATION_SCRIPT.md
+localhost_*.report.html
