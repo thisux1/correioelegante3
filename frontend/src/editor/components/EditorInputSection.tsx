@@ -19,15 +19,15 @@ export const EDITOR_FIELD_LABEL_CLASS = 'text-xs font-semibold uppercase trackin
 
 function resolveStateClasses(state: SectionState): string {
   if (state === 'loading') {
-    return 'border-primary/30 bg-primary/5'
+    return 'rounded-2xl border border-primary/30 bg-primary/5 p-3 sm:p-4'
   }
   if (state === 'error') {
-    return 'border-red-200 bg-red-50/80'
+    return 'rounded-2xl border border-red-200 bg-red-50/80 p-3 sm:p-4'
   }
   if (state === 'success') {
-    return 'border-emerald-200 bg-emerald-50/70'
+    return 'rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 sm:p-4'
   }
-  return 'border-primary/20 bg-white/80'
+  return ''
 }
 
 export function EditorInputSection({
@@ -48,7 +48,7 @@ export function EditorInputSection({
         : null
 
   return (
-    <section className={`space-y-3 rounded-2xl border p-3 sm:p-4 ${resolveStateClasses(state)} ${className ?? ''}`}>
+    <section className={`space-y-3 ${resolveStateClasses(state)} ${className ?? ''}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h4 className="text-sm font-semibold text-text">{title}</h4>

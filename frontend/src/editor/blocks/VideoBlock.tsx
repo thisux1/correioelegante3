@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Film, LoaderCircle, Pause, Play, TriangleAlert, Volume2, VolumeX } from 'lucide-react'
+import { LoaderCircle, Pause, Play, TriangleAlert, Volume2, VolumeX } from 'lucide-react'
 import type { BlockComponentProps } from '@/editor/types'
 import { assetService, type AssetSummary } from '@/services/assetService'
 import { MediaField } from '@/editor/components/MediaField'
@@ -64,6 +64,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const [selectedAsset, setSelectedAsset] = useState<AssetSummary | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
+  const [volume, setVolume] = useState(1)
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [isVideoLoading, setIsVideoLoading] = useState(true)
@@ -326,12 +327,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-primary/20 bg-black/90">
-      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-xs text-white/80">
-        <Film size={14} />
-        <span>Video</span>
-      </div>
-
+    <div className="overflow-hidden rounded-3xl border-2 border-primary/80 bg-black/90 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]">
       <div className="relative">
         <video
           ref={videoRef}
@@ -368,40 +364,22 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           onEnded={() => {
             setIsPlaying(false)
           }}
+          onVolumeChange={(event) => {
+            setIsMuted(event.currentTarget.muted)
+            setVolume(event.currentTarget.volume)
+          }}
           className="h-auto max-h-[540px] w-full bg-black"
         />
 
-        <div className="absolute inset-x-3 bottom-3 rounded-xl border border-white/15 bg-black/55 px-3 py-2 backdrop-blur-sm">
-          <div className="mb-2 flex items-center justify-between text-[11px] text-white/90">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration || (effectiveSelectedAsset?.durationMs ? effectiveSelectedAsset.durationMs / 1000 : 0))}</span>
-          </div>
-
-          <div className="mb-2 h-1.5 w-full rounded-full bg-white/20">
-            <div className="h-full rounded-full bg-primary transition-[width] duration-150" style={{ width: `${progressRatio * 100}%` }} />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
-              onClick={async () => {
-                if (!videoRef.current) {
-                  return
-                }
-
-                if (videoRef.current.paused) {
-                  await videoRef.current.play()
-                  return
-                }
-
-                videoRef.current.pause()
-              }}
-              aria-label={isPlaying ? 'Pausar video' : 'Reproduzir video'}
-            >
-              {isPlaying ? <Pause size={14} /> : <Play size={14} className="translate-x-[1px]" />}
-            </button>
-
+        <div className="absolute inset-x-3 bottom-3 rounded-2xl border border-white/15 bg-black/60 p-3 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] backdrop-blur-md">
+          {/* Barra de Progresso / Seek */}
+          <div className="group relative mb-2 flex h-5 w-full cursor-pointer items-center">
+            <div className="absolute left-0 right-0 h-1.5 overflow-hidden rounded-full bg-white/20 shadow-inner">
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${progressRatio * 100}%` }}
+              />
+            </div>
             <input
               type="range"
               min={0}
@@ -409,37 +387,90 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               step={0.1}
               value={Math.min(currentTime, duration || 0)}
               onChange={(event) => {
-                if (!videoRef.current) {
-                  return
-                }
-
+                if (!videoRef.current) return
                 const next = Number(event.target.value)
-                if (Number.isNaN(next)) {
-                  return
-                }
-
+                if (Number.isNaN(next)) return
                 videoRef.current.currentTime = next
                 setCurrentTime(next)
               }}
-              className="w-full accent-primary"
+              className="peer absolute inset-0 z-10 w-full cursor-pointer opacity-0"
+              aria-label="Progresso do video"
             />
+            <div
+              className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/20 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-[transform,box-shadow] group-hover:scale-110 group-hover:shadow-[0_2px_5px_rgba(0,0,0,0.4)] group-active:scale-95 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/65"
+              style={{ left: `${progressRatio * 100}%` }}
+            />
+          </div>
 
-            <button
-              type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
-              onClick={() => {
-                if (!videoRef.current) {
-                  return
-                }
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/20 text-white shadow-sm transition-[transform,background-color] duration-200 hover:bg-white/30 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                onClick={async () => {
+                  if (!videoRef.current) return
+                  if (videoRef.current.paused) {
+                    await videoRef.current.play()
+                    return
+                  }
+                  videoRef.current.pause()
+                }}
+                aria-label={isPlaying ? 'Pausar video' : 'Reproduzir video'}
+              >
+                {isPlaying ? <Pause size={14} /> : <Play size={14} className="translate-x-[1px]" />}
+              </button>
+              
+              <span className="text-xs font-medium tracking-wide text-white/90">
+                {formatTime(currentTime)} <span className="mx-0.5 text-white/40">/</span> {formatTime(duration || (effectiveSelectedAsset?.durationMs ? effectiveSelectedAsset.durationMs / 1000 : 0))}
+              </span>
+            </div>
 
-                const next = !isMuted
-                videoRef.current.muted = next
-                setIsMuted(next)
-              }}
-              aria-label={isMuted ? 'Ativar audio' : 'Silenciar audio'}
-            >
-              {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            </button>
+            <div className="flex min-w-0 items-center justify-end gap-2">
+              <button
+                type="button"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-[color,transform] hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65"
+                onClick={() => {
+                  if (!videoRef.current) return
+                  const next = !isMuted
+                  videoRef.current.muted = next
+                }}
+                aria-label={isMuted || volume <= 0.01 ? 'Ativar audio' : 'Silenciar audio'}
+              >
+                {isMuted || volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}
+              </button>
+
+              <div className="group relative hidden h-5 w-16 cursor-pointer items-center sm:flex">
+                <div className="absolute left-0 right-0 h-1 overflow-hidden rounded-full bg-white/20 shadow-inner">
+                  <div
+                    className="h-full bg-white transition-all duration-75 ease-out"
+                    style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
+                  />
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => {
+                    if (!videoRef.current) return
+                    const next = Number(e.target.value)
+                    videoRef.current.volume = next
+                    if (next > 0 && isMuted) {
+                      videoRef.current.muted = false
+                    } else if (next === 0 && !isMuted) {
+                      videoRef.current.muted = true
+                    }
+                  }}
+                  className="peer absolute inset-0 z-10 w-full cursor-pointer opacity-0"
+                  aria-label="Controle de volume"
+                />
+                <div
+                  className="pointer-events-none absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-[transform,box-shadow] group-hover:scale-125 group-active:scale-95 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/65"
+                  style={{ left: `${(isMuted ? 0 : volume) * 100}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

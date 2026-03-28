@@ -769,7 +769,6 @@ export function Editor() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="rounded-3xl border border-primary/20 bg-white/80 p-4 shadow-sm md:p-6"
             >
               <PageRenderer blocks={blocks} theme={theme} />
             </motion.section>
@@ -787,7 +786,7 @@ export function Editor() {
       >
         <div className="space-y-4">
           <p className="text-sm text-text-light">
-            Ja existe conteudo no editor. Deseja substituir os blocos atuais pelo template {templateConflict ? `"${templateConflict.templateName}"` : ''}?
+            Já existe conteúdo no editor. Deseja substituir os blocos atuais pelo template {templateConflict ? `"${templateConflict.templateName}"` : ''}?
           </p>
           <div className="flex flex-wrap justify-end gap-2">
             <button
@@ -833,7 +832,7 @@ export function Editor() {
       >
         <div className="space-y-4">
           <p className="text-sm text-text-light">
-            Encontramos um rascunho local mais recente para esta pagina. Deseja continuar com o rascunho local ou usar a versao salva no servidor?
+            Encontramos um rascunho local mais recente para esta página. Deseja continuar com o rascunho local ou usar a versão salva no servidor?
           </p>
           <div className="flex flex-wrap justify-end gap-2">
             <button
