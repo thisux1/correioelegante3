@@ -70,3 +70,6 @@ localhost_*.report.html
 
 # Video Project (External)
 my-video/
+
+# Plan de Execução (Local-only)
+plan-execucao-urgente/
