@@ -57,21 +57,19 @@ O frontend roda em `http://localhost:5173` e o backend em `http://localhost:3000
 
 | Variável | Descrição |
 |---|---|
-| `DATABASE_URL` | URI de conexão MongoDB Atlas |
-| `JWT_SECRET` | Segredo para tokens de acesso |
-| `JWT_REFRESH_SECRET` | Segredo para refresh tokens |
-| `CLOUDINARY_CLOUD_NAME` | Nome do cloud Cloudinary |
+| `PORT` | Porta do servidor (default: 3001) |
+| `NODE_ENV` | `development` ou `production` |
+| `FRONTEND_URL` | URL do frontend para CORS e Cookies |
+| `DATABASE_URL` | URL de conexão do Prisma (ex: MongoDB Atlas) |
+| `JWT_SECRET` | Chave secreta para Access Tokens |
+| `JWT_REFRESH_SECRET` | Chave secreta para Refresh Tokens |
+| `CLOUDINARY_CLOUD_NAME` | Cloud name do Cloudinary |
 | `CLOUDINARY_API_KEY` | API Key do Cloudinary |
 | `CLOUDINARY_API_SECRET` | API Secret do Cloudinary |
-| `STRIPE_SECRET_KEY` | Chave secreta Stripe (`sk_test_...`) |
-| `STRIPE_WEBHOOK_SECRET` | Secret do webhook Stripe (`whsec_...`) |
-| `STRIPE_CHECKOUT_SUCCESS_URL` | URL de retorno após pagamento aprovado no Stripe |
-| `STRIPE_CHECKOUT_CANCEL_URL` | URL de retorno após cancelamento no Stripe |
-| `MERCADOPAGO_ACCESS_TOKEN` | Access token do Mercado Pago (`TEST-...`) |
-| `MERCADOPAGO_WEBHOOK_SECRET` | Secret para validar webhooks do Mercado Pago |
-| `FRONTEND_URL` | URL do frontend (ex: `http://localhost:5173`) |
-| `PORT` | Porta do backend (padrão: `3000`) |
-| `NODE_ENV` | `development` ou `production` |
+| `STRIPE_SECRET_KEY` | Secret Key do Stripe (`sk_test_...`) |
+| `STRIPE_WEBHOOK_SECRET` | Webhook Secret do Stripe (`whsec_...`) |
+| `MP_ACCESS_TOKEN` | Access Token do Mercado Pago |
+| `MP_PUBLIC_KEY` | Public Key do Mercado Pago |
 
 ## Deploy na Vercel (pré-produção)
 
@@ -118,5 +116,6 @@ correioelegante3/
 - ✅ CI/CD com GitHub Actions
 - ✅ Design system com glassmorphism
 - ✅ Smooth scroll com Lenis
-- ✅ Responsivo
-- ✅ Testes automatizados (47 testes, Vitest + Supertest)
+- ✅ Responsivo (Mobile First)
+- ✅ Qualidade de Código (ESLint + Prettier + Polimento Geral)
+- ✅ Testes automatizados (Vitest + Supertest)
