@@ -6,6 +6,7 @@ import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone } fr
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { Container } from '@/components/layout/Container'
 import {
   paymentService,
   type PaymentMethod,
@@ -96,6 +97,7 @@ export function Payment() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-24 px-6">
+        <Container size="narrow" className="flex justify-center">
         <Card glass className="text-center max-w-md w-full py-12">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h2 className="font-display text-2xl font-bold text-text mb-2">
@@ -111,13 +113,14 @@ export function Payment() {
             </Link>
           </div>
         </Card>
+        </Container>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen pt-28 pb-16 px-6">
-      <div className="max-w-lg mx-auto">
+      <Container size="narrow" className="max-w-lg mx-auto">
         <Card glass className="text-center">
 
           {/* ── PAGO ── */}
@@ -283,7 +286,7 @@ export function Payment() {
           )}
 
         </Card>
-      </div>
+      </Container>
     </div>
   )
 }

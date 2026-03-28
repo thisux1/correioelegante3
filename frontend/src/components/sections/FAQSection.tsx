@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, HelpCircle } from 'lucide-react'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { ScrollSection } from '@/components/layout/ScrollSection'
+import { Container } from '@/components/layout/Container'
 
 const faqs = [
     {
@@ -27,8 +28,8 @@ export function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
-        <ScrollSection id="faq">
-            <div className="max-w-3xl mx-auto px-6">
+        <ScrollSection id="faq" className="section-spacing">
+            <Container size="narrow">
                 <SectionReveal scrollRange={[0.0, 0.10, 0.88, 1.0]}>
                     <div className="text-center mb-16">
                         <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/10 text-primary mb-4">
@@ -74,7 +75,7 @@ export function FAQSection() {
                         </SectionReveal>
                     ))}
                 </div>
-            </div>
+            </Container>
         </ScrollSection>
     )
 }

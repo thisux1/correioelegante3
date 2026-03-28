@@ -93,7 +93,7 @@ function toAssetResponse(asset: {
 }
 
 export function createAssetService(provider: MediaProvider) {
-  const prismaDb = prisma as unknown as any;
+  const prismaDb = prisma;
   const mediaWorkerService = createMediaWorkerService(provider);
 
   function triggerBackgroundProcessing(): void {

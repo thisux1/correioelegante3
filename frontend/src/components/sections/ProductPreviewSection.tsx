@@ -5,6 +5,7 @@ import { SectionReveal } from '@/components/animations/SectionReveal'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { ScrollSection } from '@/components/layout/ScrollSection'
+import { Container } from '@/components/layout/Container'
 
 const benefits = [
     'Mensagem 100% personalizada por você',
@@ -16,8 +17,8 @@ const benefits = [
 
 export function ProductPreviewSection() {
     return (
-        <ScrollSection id="product-preview">
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center px-6">
+        <ScrollSection id="product-preview" className="section-spacing">
+            <Container size="default" className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
                 <div className="order-2 lg:order-1">
                     <SectionReveal scrollRange={[0.0, 0.12, 0.88, 1.0]}>
@@ -71,7 +72,7 @@ export function ProductPreviewSection() {
                     </SectionReveal>
                 </div>
 
-            </div>
+            </Container>
         </ScrollSection>
     )
 }

@@ -18,6 +18,7 @@ import { HowItWorksSection } from '@/components/sections/HowItWorksSection'
 import { ProductPreviewSection } from '@/components/sections/ProductPreviewSection'
 import { FAQSection } from '@/components/sections/FAQSection'
 import { BackgroundField } from '@/components/animations/BackgroundField'
+import { Container } from '@/components/layout/Container'
 
 function HeroSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
@@ -38,9 +39,10 @@ function HeroSection() {
 
         <motion.div
           style={{ opacity: textOpacity, y: textY }}
-          className="max-w-5xl mx-auto text-center relative z-10 px-6"
+          className="w-full relative z-10"
           data-no-ink="true"
         >
+          <Container size="default" className="text-center">
           <TextSplit
             text="Mande um recado que faz sorrir"
             className="justify-center mb-6 gap-x-3 md:gap-x-4"
@@ -74,6 +76,7 @@ function HeroSection() {
               </MagneticButton>
             </div>
           </ScrollReveal>
+          </Container>
         </motion.div>
       </div>
     </section>
@@ -114,7 +117,7 @@ export function Home() {
       <FAQSection />
 
       <ScrollSection id="cta-section">
-        <div className="max-w-4xl mx-auto px-6">
+        <Container size="narrow">
           <Card className="relative overflow-hidden border-none shadow-2xl bg-gradient-to-tr from-primary to-secondary p-12 md:p-24 text-center rounded-3xl" data-cursor-light="true">
             <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10 pointer-events-none" />
 
@@ -125,7 +128,7 @@ export function Home() {
                   Bora mandar aquele recado?
                 </h2>
                 <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Leva menos de 5 minutos. Sério.
+                  Leva menos de 5 minutos, prometo!
                 </p>
                 <MagneticButton>
                   <Link to="/create">
@@ -142,7 +145,7 @@ export function Home() {
               </SectionReveal>
             </div>
           </Card>
-        </div>
+        </Container>
       </ScrollSection>
     </div>
   )

@@ -21,6 +21,7 @@ const MAX_GALLERY_ITEMS = 10;
 function sanitizeText(input: string): string {
   return input
     .replace(/<[^>]*>/g, '')
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001F\u007F]/g, '')
     .trim()
     .slice(0, MAX_TEXT_CHARS);

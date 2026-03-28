@@ -2,19 +2,20 @@ import { motion } from 'framer-motion'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { ScrollSection } from '@/components/layout/ScrollSection'
+import { Container } from '@/components/layout/Container'
 
 const steps = [
-    { number: 1, title: 'Criação', desc: 'Escreva sua carta e escolha um tema.' },
-    { number: 2, title: 'Personalização', desc: 'Veja a prévia e deixe do seu jeito.' },
-    { number: 3, title: 'Pagamento', desc: 'Pague R$4,00 via Pix seguro.' },
-    { number: 4, title: 'QR Code', desc: 'Receba seu código único para presentear.' },
-    { number: 5, title: 'A Surpresa', desc: 'Quem receber escaneia e lê sua carta.' },
+    { number: 1, title: 'Inspiração', desc: 'Escreva sua mensagem e escolha um tema que combine.' },
+    { number: 2, title: 'Do seu jeito', desc: 'Personalize cada detalhe e veja como ficou.' },
+    { number: 3, title: 'Pix Seguro', desc: 'Pague apenas R$4,00 de forma rápida e segura.' },
+    { number: 4, title: 'O Presente', desc: 'Receba um QR Code exclusivo para enviar.' },
+    { number: 5, title: 'A Surpresa', desc: 'Quem recebe escaneia e se emociona com sua carta.' },
 ]
 
 export function HowItWorksSection() {
     return (
-        <ScrollSection id="how-it-works">
-            <div className="max-w-6xl mx-auto relative z-10 px-6">
+        <ScrollSection id="how-it-works" className="section-spacing">
+            <Container size="default" className="relative z-10">
                 <SectionReveal scrollRange={[0.0, 0.10, 0.88, 1.0]}>
                     <div className="text-center mb-20">
                         <h2 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
@@ -50,7 +51,7 @@ export function HowItWorksSection() {
                         ))}
                     </div>
                 </div>
-            </div>
+            </Container>
         </ScrollSection>
     )
 }

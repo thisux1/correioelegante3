@@ -58,18 +58,13 @@ exit
 # project specific 
 !.gitignore
 AGENTS.md
+.agents/
 opencode.json
-plan-execucao-urgente/reviews/
-plan-execucao-urgente/etapas/
-plan-execucao-urgente/prompts/
-plan-execucao-urgente/prompts/*
-plan-execucao-urgente/plano-demo-video.md
-# Relatórios e Scripts locais
+plan-execucao-urgente/
+docs/
 INTERVIEW_PRESENTATION_SCRIPT.md
+# Relatórios e Scripts locais
 localhost_*.report.html
 
 # Video Project (External)
 my-video/
-
-# Plan de Execução (Local-only)
-plan-execucao-urgente/
