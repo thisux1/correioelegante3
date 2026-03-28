@@ -43,7 +43,7 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
       {previewImage}
       <MediaField
         kind="image"

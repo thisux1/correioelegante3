@@ -66,15 +66,15 @@ function BlockWrapperComponent({
   }, [attributes, isMobile, listeners, setActivatorNodeRef])
 
   const frameClassName = [
-    'relative rounded-2xl border p-1 transition-all duration-200',
+    'relative rounded-[20px] border-2 p-1 transition-all duration-200',
     isSelected
-      ? 'border-primary/70 bg-white/75 ring-2 ring-primary/20'
+      ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
       : isHovered
-        ? 'border-primary/30 bg-white/65'
+        ? 'border-primary/70 bg-primary/5'
         : 'border-transparent',
     isDraggingGlobal ? 'opacity-70' : 'opacity-100',
-    isDragging ? 'border-dashed border-primary/40 bg-primary/5 opacity-35' : '',
-    isOver && isDraggingGlobal ? 'border-primary/60 ring-2 ring-primary/25' : '',
+    isDragging ? 'border-dashed border-primary/50 bg-primary/10 opacity-35' : '',
+    isOver && isDraggingGlobal ? 'border-primary ring-2 ring-primary/30' : '',
   ].join(' ')
 
   return (

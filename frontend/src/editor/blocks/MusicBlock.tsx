@@ -626,7 +626,29 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <button type="button" onClick={playback.toggleMute} className="inline-flex h-11 w-11 min-h-11 min-w-11 items-center justify-center rounded-full border border-white/40 bg-white/55 text-text-light shadow-[0_10px_18px_-16px_rgba(0,0,0,0.45)] transition-[transform,background-color,border-color] duration-200 hover:border-white/60 hover:bg-white/78 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/65" aria-label={playback.state.isMuted || playback.state.volume <= 0.01 ? 'Ativar som' : 'Silenciar audio'}>{playback.state.isMuted || playback.state.volume <= 0.01 ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
-          <input type="range" min={0} max={1} step={0.01} value={playback.state.isMuted ? 0 : playback.state.volume} onChange={(event) => playback.setVolume(Number(event.target.value))} className="w-20 max-w-[26vw] accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Controle de volume" />
+          
+          <div className="group relative flex h-6 w-20 max-w-[26vw] cursor-pointer items-center">
+            <div className="absolute left-0 right-0 h-1.5 overflow-hidden rounded-full bg-black/10 shadow-inner">
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${(playback.state.isMuted ? 0 : playback.state.volume) * 100}%` }}
+              />
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={playback.state.isMuted ? 0 : playback.state.volume}
+              onChange={(event) => playback.setVolume(Number(event.target.value))}
+              className="peer absolute inset-0 z-10 w-full cursor-pointer opacity-0"
+              aria-label="Controle de volume"
+            />
+            <div
+              className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/20 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-[transform,box-shadow] group-hover:scale-110 group-hover:shadow-[0_2px_5px_rgba(0,0,0,0.25)] group-active:scale-95 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/65"
+              style={{ left: `${(playback.state.isMuted ? 0 : playback.state.volume) * 100}%` }}
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">

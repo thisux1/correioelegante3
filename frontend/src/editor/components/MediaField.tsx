@@ -305,6 +305,8 @@ export function MediaField({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const normalizedSrc = value.src.trim()
   const hasValue = normalizedSrc.length > 0
+  const [showManualUrl, setShowManualUrl] = useState(() => hasValue && !value.assetId)
+
   const {
     isDragActive,
     handleDragEnter,
@@ -463,22 +465,52 @@ export function MediaField({
         </motion.div>
       )}
 
-      <div className="space-y-1">
-        <label className={EDITOR_FIELD_LABEL_CLASS}>URL manual (opcional)</label>
-        <input
-          type="url"
-          value={value.src}
-          onChange={(event) => {
-            onChange({
-              src: event.target.value,
-              assetId: undefined,
-            })
-          }}
-          placeholder={placeholder}
-          className={EDITOR_FIELD_BASE_CLASS}
-          aria-label={`Colar URL para ${label}`}
-        />
-        <p className="text-[11px] text-text-light">Use URL apenas quando nao quiser enviar arquivo.</p>
+      <div className="pt-2">
+        <AnimatePresence initial={false}>
+          {showManualUrl ? (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-1 overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <label className={EDITOR_FIELD_LABEL_CLASS}>URL manual</label>
+                <button
+                  type="button"
+                  onClick={() => setShowManualUrl(false)}
+                  className="text-[11px] font-medium text-text-light transition-colors hover:text-text"
+                >
+                  Ocultar
+                </button>
+              </div>
+              <input
+                type="url"
+                value={value.src}
+                onChange={(event) => {
+                  onChange({
+                    src: event.target.value,
+                    assetId: undefined,
+                  })
+                }}
+                placeholder={placeholder}
+                className={EDITOR_FIELD_BASE_CLASS}
+                aria-label={`Colar URL para ${label}`}
+              />
+            </motion.div>
+          ) : (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowManualUrl(true)}
+              className="text-[11px] font-medium tracking-wide text-primary/70 transition-colors hover:text-primary hover:underline hover:underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              + Usar URL manual (para fontes externas)
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {kind === 'image' ? (
