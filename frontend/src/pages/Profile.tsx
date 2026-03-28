@@ -13,6 +13,7 @@ import { SettingRow } from '@/components/ui/SettingRow'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
 import { pageService, type PageSummary } from '@/services/pageService'
+import { Container } from '@/components/layout/Container'
 
 export function Profile() {
   const navigate = useNavigate()
@@ -208,8 +209,8 @@ export function Profile() {
   }
 
   return (
-    <div className="min-h-screen px-4 pb-16 pt-28 sm:px-6">
-      <div className="mx-auto w-full max-w-4xl">
+    <div className="min-h-screen pb-16 pt-28">
+      <Container size="narrow">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -620,7 +621,7 @@ export function Profile() {
             </Modal>
           </section>
         )}
-      </div>
+      </Container>
     </div>
   )
 }

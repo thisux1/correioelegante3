@@ -107,6 +107,29 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* Toolbar tab entrance — slides out from panel side */
+  @keyframes tab-slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(60%) scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes tab-slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-60%) scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
 }
 
 @layer utilities {
@@ -116,5 +139,13 @@
 
   .mask-reveal-visible {
     clip-path: inset(0 0 0 0);
+  }
+
+  .section-spacing {
+    @apply py-16 md:py-24;
+  }
+
+  .block-gap {
+    @apply gap-8 md:gap-12;
   }
 }

@@ -1,10 +1,12 @@
 import { Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Container } from '@/components/layout/Container'
 
 export function Footer() {
   return (
-    <footer className="relative py-8 px-6 mt-12 mb-6">
-      <div className="max-w-7xl mx-auto glass rounded-3xl p-8 md:p-12 relative overflow-hidden">
+    <footer className="relative py-8 mt-12 mb-6">
+      <Container>
+        <div className="glass rounded-3xl p-8 md:p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-tr from-white/40 to-white/10 opacity-50 pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -54,7 +56,8 @@ export function Footer() {
             Um projeto da Etec Dr. Celso Giglio <Heart className="w-3 h-3 text-primary fill-primary" />
           </p>
         </div>
-      </div>
+        </div>
+      </Container>
     </footer>
   )
 }

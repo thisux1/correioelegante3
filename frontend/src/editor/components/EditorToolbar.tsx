@@ -471,19 +471,35 @@ function ToolbarControls({
       <motion.span
         layoutId="toolbar-status-text"
         layout="position"
-        className={`${useCompactButtons ? 'w-full text-center' : ''} rounded-lg px-2.5 py-1.5 text-xs font-medium ${saveState === 'error'
-          ? 'bg-red-50/80 text-red-600'
-          : saveState === 'saved'
-            ? 'bg-emerald-50/80 text-emerald-700'
-            : isSaving
-              ? 'bg-primary/5 text-primary'
-              : 'text-text-muted'}`}
+        className={useCompactButtons
+          ? `w-full text-center rounded-lg px-2.5 py-1.5 text-xs font-medium ${saveState === 'error'
+            ? 'bg-red-50/80 text-red-600'
+            : saveState === 'saved'
+              ? 'bg-emerald-50/80 text-emerald-700'
+              : isSaving
+                ? 'bg-primary/5 text-primary'
+                : 'text-text-muted'}`
+          : `rounded-xl border px-3 py-2 text-xs font-medium ${saveState === 'error'
+            ? 'border-red-200 bg-red-50 text-red-600'
+            : saveState === 'saved'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : isSaving
+                ? 'border-primary/30 bg-primary/10 text-primary'
+                : 'border-primary/15 bg-white/70 text-text-light'}`}
         aria-live="polite"
       >
-        {saveState === 'error' ? 'Erro' : isSaving ? '...' : saveState === 'saved' ? '✓' : hasPageId ? 'Auto' : '—'}
+        {useCompactButtons
+          ? (saveState === 'error' ? 'Erro' : isSaving ? '...' : saveState === 'saved' ? '✓' : hasPageId ? 'Auto' : '—')
+          : (saveState === 'error' ? 'Erro ao salvar' : isSaving ? 'Salvando...' : saveState === 'saved' ? 'Salvo agora' : hasPageId ? 'Auto-save ativo' : 'Nao salvo')}
       </motion.span>
 
-      <motion.span layoutId="toolbar-count-text" layout="position" className={`${useCompactButtons ? 'w-full text-center' : ''} rounded-lg px-2.5 py-1.5 text-xs font-medium text-text-muted`}>
+      <motion.span
+        layoutId="toolbar-count-text"
+        layout="position"
+        className={useCompactButtons
+          ? 'w-full text-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-text-muted'
+          : 'rounded-xl border border-primary/15 bg-white/70 px-3 py-2 text-xs font-medium text-text-light'}
+      >
         {blocksCount}/{MAX_BLOCKS}
       </motion.span>
     </>
@@ -708,8 +724,9 @@ export function EditorToolbar({
             <motion.div 
                layoutId="toolbar-glass-surface"
                layout="position"
-               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+               transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1.1 }}
                className="glass mx-auto flex w-full max-w-4xl items-center justify-between rounded-2xl px-4 py-3 origin-center"
+               style={{ borderRadius: '1rem' }}
             >
               <p className="text-sm text-text-light">Monte sua carta com blocos</p>
               <div className="flex items-center gap-2">
@@ -754,8 +771,7 @@ export function EditorToolbar({
                   : { type: 'spring', stiffness: 280, damping: 28, mass: 0.9 }}
               >
                 <div style={{ position: 'relative' }}>
-                  {/* Square tab — same glass material, seamless junction */}
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setIsVerticalDockOpen((current) => !current)}
                     className="flex w-11 h-11 items-center justify-center transition-colors hover:bg-white/80 active:bg-white/90"
@@ -763,7 +779,9 @@ export function EditorToolbar({
                     aria-expanded={isVerticalDockOpen}
                     aria-controls="editor-toolbar-vertical-dock"
                     title={isVerticalDockOpen ? 'Fechar barra' : 'Abrir barra'}
+                    initial={false}
                     style={{
+                      animation: `${dockSide === 'right' ? 'tab-slide-in-right' : 'tab-slide-in-left'} 0.4s cubic-bezier(0.19, 1, 0.22, 1) 0.4s both`,
                       position: 'absolute',
                       top: '1rem',
                       ...(dockSide === 'right' ? { right: '100%', marginRight: '-1px' } : { left: '100%', marginLeft: '-1px' }),
@@ -796,13 +814,13 @@ export function EditorToolbar({
                     >
                       <ChevronRight size={15} className="text-primary/60" />
                     </motion.span>
-                  </button>
+                  </motion.button>
 
                   {/* Panel body — no left/right border to connect with the screen edge */}
                   <motion.div
                     layoutId="toolbar-glass-surface"
                     layout="position"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    transition={{ type: 'spring', stiffness: 170, damping: 26, mass: 1.1 }}
                     style={{
                       position: 'relative',
                       backdropFilter: 'blur(16px)',
@@ -812,9 +830,9 @@ export function EditorToolbar({
                       borderBottom: '1px solid var(--color-border)',
                       borderLeft: 'none',
                       borderRight: 'none',
-                      ...(dockSide === 'right' 
-                          ? { borderBottomLeftRadius: '0.875rem', borderTopLeftRadius: '0.875rem' } 
-                          : { borderBottomRightRadius: '0.875rem', borderTopRightRadius: '0.875rem' }),
+                      borderRadius: dockSide === 'right'
+                        ? '0.875rem 0 0 0.875rem'
+                        : '0 0.875rem 0.875rem 0',
                       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.08)',
                     }}
                   >
@@ -824,12 +842,12 @@ export function EditorToolbar({
                       style={{
                         position: 'absolute',
                         ...(dockSide === 'right' ? { left: '0px' } : { right: '0px' }),
-                        top: '0px',
-                        bottom: '0px',
+                        top: 0,
+                        bottom: 0,
                         width: '1px',
                         background: 'var(--color-border)',
                         pointerEvents: 'none',
-                        clipPath: 'polygon(0 0, 100% 0, 100% 1rem, 0 1rem, 0 calc(1rem + 2.75rem - 1px), 100% calc(1rem + 2.75rem - 1px), 100% 100%, 0 100%)',
+                        clipPath: 'polygon(0 0.875rem, 100% 0.875rem, 100% 1rem, 0 1rem, 0 calc(1rem + 2.75rem), 100% calc(1rem + 2.75rem), 100% calc(100% - 0.875rem), 0 calc(100% - 0.875rem))',
                       }}
                     />
 

@@ -4,6 +4,7 @@ import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { Heart, Menu, X, User } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { MagneticButton } from '@/components/animations/MagneticButton'
+import { Container } from '@/components/layout/Container'
 
 const navLinks = [
   { path: '/', label: 'Início' },
@@ -85,9 +86,10 @@ export function Header() {
   return (
     <header className="z-40">
       <div className="fixed top-0 left-0 right-0 z-[90] hidden md:block">
-        <div className="relative mx-4 mt-4 overflow-hidden rounded-2xl border border-white/55 bg-white/92 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.24)] supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-md">
+        <Container className="mt-4">
+          <div className="relative overflow-hidden rounded-2xl border border-white/55 bg-white/92 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.24)] supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-md">
 
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between relative z-10">
+            <div className="py-4 px-4 md:px-6 flex items-center justify-between relative z-10">
             {isEditorRoute ? (
               <a href="/" className="flex items-center gap-2 group">
                 <MagneticButton>
@@ -195,6 +197,7 @@ export function Header() {
             </div>
           </div>
         </div>
+        </Container>
       </div>
 
       <div className="fixed inset-x-0 bottom-4 z-[90] px-4 md:hidden">

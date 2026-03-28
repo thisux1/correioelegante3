@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
+import { Container } from '@/components/layout/Container'
 import { AlertTriangle, CheckCircle2, LoaderCircle, RefreshCcw } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
@@ -181,7 +182,7 @@ function useTemplateBootstrap(params: {
 
     const template = getTemplateById(templateIdFromQuery)
     if (!template) {
-      setFeedback('Template nao encontrado. O editor foi aberto sem modelo.')
+      setFeedback('Modelo não encontrado. O editor foi aberto sem um tema predefinido.')
       return
     }
 
@@ -307,8 +308,8 @@ function usePageHydration(params: {
 
         setFeedback(
           isAxiosError<{ error?: string }>(error)
-            ? error.response?.data?.error ?? 'Nao foi possivel carregar a pagina.'
-            : 'Nao foi possivel carregar a pagina.',
+            ? error.response?.data?.error ?? 'Não foi possível carregar sua página.'
+            : 'Não foi possível carregar sua página.',
         )
 
         trackEditorEvent({
@@ -464,7 +465,7 @@ export function Editor() {
       setDraftContext(page.id, page.updatedAt)
       setLastSyncedSignature(toPageSignature(page))
       setSaveState('idle')
-      setFeedback('Versao do servidor carregada com sucesso.')
+      setFeedback('Tudo pronto! A versão mais recente foi carregada.')
       trackEditorEvent({
         event: 'load_success',
         pageId: page.id,
@@ -499,7 +500,7 @@ export function Editor() {
     setVisibility(localSnapshot.page.visibility)
     setPageVersion(localSnapshot.page.version)
     setLastSyncedSignature(toPageSignature(localSnapshot.page))
-    setFeedback('Rascunho local carregado para continuar a edicao.')
+    setFeedback('Recuperamos seu rascunho para você continuar de onde parou!')
   }, [setDraftContext, setPage])
 
   const applyTemplate = useCallback((templateBlocks: Block[], templateName: string, templateTheme?: string) => {
@@ -512,7 +513,7 @@ export function Editor() {
     setLastSyncedSignature('')
     setSaveState('idle')
     setMode('edit')
-    setFeedback(`Template "${templateName}" aplicado. Personalize e salve quando quiser.`)
+    setFeedback(`Tema "${templateName}" aplicado! Agora é só deixar do seu jeito.`)
   }, [setDraftContext, setMode, setPage])
 
   const savePage = useCallback(async () => {
@@ -541,7 +542,7 @@ export function Editor() {
       setDraftContext(result.page.id, result.page.updatedAt)
       setLastSyncedSignature(currentSignature)
       setSaveState('saved')
-      setFeedback('Pagina salva com sucesso.')
+      setFeedback('Página salva com sucesso!')
       trackEditorEvent({
         event: 'save_success',
         pageId: result.page.id,
@@ -671,11 +672,11 @@ export function Editor() {
   }, [saveState])
 
   return (
-    <div className="min-h-screen px-4 pb-24 pt-28 md:px-6 md:pb-12" style={editorThemeStyle}>
-      <div className="mx-auto w-full max-w-4xl">
+    <div className="min-h-screen pb-24 pt-28 md:pb-12" style={editorThemeStyle}>
+      <Container size="narrow">
         <div className="mb-6">
-          <h1 className="font-display text-3xl text-text md:text-4xl">Editor modular</h1>
-          <p className="mt-1 text-sm text-text-light">Arraste blocos, reorganize e visualize o resultado em tempo real.</p>
+          <h1 className="font-display text-3xl text-text md:text-4xl">Crie sua carta</h1>
+          <p className="mt-1 text-sm text-text-light">Escolha cores, escreva sua mensagem e veja tudo mudar em tempo real.</p>
         </div>
 
         <div className="mb-4">
@@ -690,7 +691,7 @@ export function Editor() {
             aria-live="polite"
           >
             {saveState === 'saving' ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : saveState === 'saved' ? <CheckCircle2 size={14} aria-hidden="true" /> : saveState === 'error' ? <AlertTriangle size={14} aria-hidden="true" /> : <CheckCircle2 size={14} aria-hidden="true" className="text-text-muted" />}
-            {saveState === 'saving' ? 'Salvando alteracoes...' : saveState === 'saved' ? 'Tudo salvo' : saveState === 'error' ? 'Erro ao salvar' : hasPageId ? 'Auto-save ativo' : 'Novo rascunho ainda nao salvo'}
+            {saveState === 'saving' ? 'Salvando alterações...' : saveState === 'saved' ? 'Tudo salvo' : saveState === 'error' ? 'Erro ao salvar' : hasPageId ? 'Salvamento automático ativo' : 'Novo rascunho ainda não salvo'}
           </div>
 
           <AnimatePresence initial={false}>
@@ -750,7 +751,7 @@ export function Editor() {
               transition={{ duration: 0.2 }}
               className="rounded-3xl border border-primary/20 bg-white/80 p-8 text-center"
             >
-              <p className="text-sm text-text-light">Carregando pagina...</p>
+              <p className="text-sm text-text-light">Preparando sua página...</p>
             </motion.section>
           ) : mode === 'edit' ? (
             <motion.section
@@ -774,19 +775,19 @@ export function Editor() {
             </motion.section>
           )}
         </AnimatePresence>
-      </div>
+      </Container>
 
       <Modal
         isOpen={Boolean(templateConflict)}
         onClose={() => {
           setTemplateConflict(null)
-          setFeedback('Template ignorado para preservar o rascunho atual.')
+          setFeedback('Modelo ignorado para manter o que você já escreveu.')
         }}
-        title="Aplicar template"
+        title="Mudar o tema?"
       >
         <div className="space-y-4">
           <p className="text-sm text-text-light">
-            Já existe conteúdo no editor. Deseja substituir os blocos atuais pelo template {templateConflict ? `"${templateConflict.templateName}"` : ''}?
+            Já existe conteúdo por aqui. Quer substituir tudo pelo tema {templateConflict ? `"${templateConflict.templateName}"` : ''}?
           </p>
           <div className="flex flex-wrap justify-end gap-2">
             <button
@@ -826,9 +827,9 @@ export function Editor() {
 
           applyBackendPage(draftConflict.backendPage)
           setDraftConflict(null)
-          setFeedback('Versao salva carregada com sucesso.')
+          setFeedback('Tudo certo! Carregamos sua versão salva.')
         }}
-        title="Rascunho local encontrado"
+        title="Continuar de onde parou?"
       >
         <div className="space-y-4">
           <p className="text-sm text-text-light">
@@ -844,11 +845,11 @@ export function Editor() {
 
                 applyBackendPage(draftConflict.backendPage)
                 setDraftConflict(null)
-                setFeedback('Versao salva carregada com sucesso.')
+                setFeedback('Tudo certo! Carregamos sua versão salva.')
               }}
               className="rounded-lg border border-primary/20 px-3 py-2 text-sm font-medium text-text-light transition-colors hover:bg-primary/5"
             >
-              Usar versao salva
+              Usar versão salva
             </button>
             <button
               type="button"

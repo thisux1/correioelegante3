@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/Card'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { ScrollSection } from '@/components/layout/ScrollSection'
+import { Container } from '@/components/layout/Container'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 
 const stats = [
@@ -27,8 +28,8 @@ const testimonials = [
 
 export function SocialProofSection() {
     return (
-        <ScrollSection id="social-proof">
-            <div className="max-w-6xl mx-auto px-6">
+        <ScrollSection id="social-proof" className="section-spacing">
+            <Container size="default">
                 <div className="flex flex-wrap justify-center gap-12 md:gap-24 mb-20">
                     {stats.map((stat, index) => (
                         <ScrollReveal key={index} delay={index * 0.1} scrollRange={[0.0, 0.12, 0.88, 1.0]}>
@@ -74,7 +75,7 @@ export function SocialProofSection() {
                         </ScrollReveal>
                     ))}
                 </div>
-            </div>
+            </Container>
         </ScrollSection>
     )
 }

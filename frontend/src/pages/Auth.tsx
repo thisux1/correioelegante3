@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/Card'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
+import { Container } from '@/components/layout/Container'
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -156,7 +157,8 @@ export function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-6">
+    <div className="min-h-screen flex items-center justify-center pt-24 pb-16">
+      <Container size="narrow" className="flex justify-center">
       <ScrollReveal animateOnMount>
         <Card glass className="w-full max-w-md">
           <div className="text-center mb-8">
@@ -267,6 +269,7 @@ export function Auth() {
           </AnimatePresence>
         </Card>
       </ScrollReveal>
+      </Container>
     </div>
   )
 }

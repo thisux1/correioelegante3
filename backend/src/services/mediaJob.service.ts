@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { logAssetEvent } from '../utils/observability';
 
-const prismaDb = prisma as unknown as any;
+const prismaDb = prisma;
 
 export const MEDIA_JOB_TYPES = ['transcode', 'poster', 'waveform'] as const;
 export type MediaJobType = (typeof MEDIA_JOB_TYPES)[number];

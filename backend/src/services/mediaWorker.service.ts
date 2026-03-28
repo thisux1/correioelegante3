@@ -5,7 +5,7 @@ import type { MediaJobType } from './mediaJob.service';
 import { validateDurationLimit, type AssetKind } from '../contracts/asset.contract';
 import { logAssetEvent } from '../utils/observability';
 
-const prismaDb = prisma as unknown as any;
+const prismaDb = prisma;
 
 type PersistedMediaJob = {
   id: string;
@@ -198,7 +198,7 @@ export function createMediaWorkerService(provider: MediaProvider) {
 
       validateDurationLimit(asset.kind as AssetKind, result.durationMs ?? asset.durationMs);
 
-      await prismaDb.$transaction(async (tx: any) => {
+      await prismaDb.$transaction(async (tx) => {
         await tx.mediaJob.update({
           where: { id: claimedJob.id },
           data: {

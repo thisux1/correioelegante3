@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { ChevronRight, FilePlus2, Shapes } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
+import { Container } from '@/components/layout/Container'
 import { templates } from '@/editor/templates'
 import { resolveEditorAccessForUser } from '@/config/featureFlags'
 import { useAuthStore } from '@/store/authStore'
@@ -40,8 +41,8 @@ export function Create() {
   const templateCards = useMemo(() => templates, [])
 
   return (
-    <div className="min-h-screen pt-28 pb-16 px-6">
-        <div className="mx-auto w-full max-w-6xl">
+    <div className="min-h-screen pt-28 pb-16">
+        <Container size="default">
           {blockedNotice ? (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
               {blockedNotice}
@@ -138,7 +139,7 @@ export function Create() {
             </ScrollReveal>
           ))}
         </div>
-      </div>
+      </Container>
     </div>
   )
 }

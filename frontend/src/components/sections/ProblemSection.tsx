@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { Frown, Sparkles, Clock } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { ScrollSection } from '@/components/layout/ScrollSection'
+import { Container } from '@/components/layout/Container'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { motion, useScroll, useTransform } from 'framer-motion'
@@ -50,8 +51,8 @@ function ProblemCard({ problem, index }: { problem: typeof problems[number]; ind
 
 export function ProblemSection() {
     return (
-        <ScrollSection id="problem-section">
-            <div className="max-w-6xl mx-auto px-6">
+        <ScrollSection id="problem-section" className="section-spacing">
+            <Container size="default">
                 <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
                     <div className="text-center mb-16">
                         <h2 className="font-display text-4xl md:text-5xl font-bold text-text mb-4">
@@ -65,7 +66,7 @@ export function ProblemSection() {
                         <ProblemCard key={index} problem={problem} index={index} />
                     ))}
                 </div>
-            </div>
+            </Container>
         </ScrollSection>
     )
 }
