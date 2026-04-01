@@ -23,37 +23,22 @@ Plataforma de correio elegante digital com pagamento via Pix (Mercado Pago) e Ca
 - Stripe (Cartão de Crédito — Checkout Session)
 - Mercado Pago (Pix — QR Code + Copia e Cola)
 
-## Como Rodar
+## 🚀 Guia de Configuração e Execução
 
-### Pré-requisitos
+Siga a ordem abaixo para configurar, instalar e rodar o projeto localmente da forma correta.
+
+### 1. Pré-requisitos
 - Node.js 18+
+- Serviços de terceiros configurados caso deseje utilizar todas as features (MongoDB Atlas, Cloudinary, Stripe, Mercado Pago).
 
-### Rodar tudo junto (raiz do projeto)
-```bash
-npm install
-npm run all
-```
+### 2. Variáveis de Ambiente
+Antes de instalar tudo, configure as credenciais do backend:
 
-### Backend (individual)
 ```bash
 cd backend
-# Copie e configure as variáveis de ambiente:
 cp .env.example .env
-npm install
-npx prisma generate
-npm run dev
 ```
-
-### Frontend (individual)
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-O frontend roda em `http://localhost:5173` e o backend em `http://localhost:3000`.
-
-## Variáveis de Ambiente (backend/.env)
+Edite o arquivo `backend/.env` recém-criado com as suas informações:
 
 | Variável | Descrição |
 |---|---|
@@ -70,6 +55,58 @@ O frontend roda em `http://localhost:5173` e o backend em `http://localhost:3000
 | `STRIPE_WEBHOOK_SECRET` | Webhook Secret do Stripe (`whsec_...`) |
 | `MP_ACCESS_TOKEN` | Access Token do Mercado Pago |
 | `MP_PUBLIC_KEY` | Public Key do Mercado Pago |
+
+### 3. Instalação de Dependências
+Volte para a raiz do repositório para instalar as dependências do frontend e backend:
+```bash
+npm install --prefix frontend
+npm install --prefix backend
+```
+
+### 4. Configuração do Banco de Dados (Prisma)
+Entre na pasta do backend para gerar o cliente do Prisma e rodar as migrações:
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+### 5. Inicialização do Projeto (Ambiente Dev)
+Para rodar tanto o frontend (porta 5173) quanto o backend (porta 3000) simultaneamente, volte para a raiz do repositório e rode:
+```bash
+npm run all
+```
+*(Opcional) Execução isolada: `npm run dev` dentro de `frontend/` ou `backend/` separadamente.*
+
+---
+
+## 🛠 Outros Comandos e Ferramentas Úteis
+
+Após configurar o projeto, você tem à disposição diversos scripts de qualidade e build, divididos por área.
+
+### Comandos de Frontend (`frontend/`)
+- **Linting de código:** `npm run lint`
+- **Geração de Build:** `npm run build`
+- **Rodar todos os testes:** `npm run test`
+- **Testes Smoke E2E:** `npm run e2e:smoke`
+
+**Testes Vitest Específicos (Frontend):**
+- Por arquivo: `npm run test -- src/editor/components/MediaField.test.ts`
+- Por nome/descrição: `npm run test -- -t "status feedback"`
+- Combinado: `npm run test -- src/editor/components/MediaField.test.ts -t "shows ready state"`
+
+### Comandos de Backend (`backend/`)
+- **Gerar Build:** `npm run build`
+- **Rodar o servidor compilado:** `npm start`
+- **Acessar interface do Banco (Prisma Studio):** `npm run prisma:studio`
+- **Rodar todos os testes:** `npm run test`
+- **Testes em tempo real (watch):** `npm run test:watch`
+- **Relatório de Cobertura (coverage):** `npm run test:coverage`
+
+**Testes Vitest Específicos (Backend):**
+- Por arquivo: `npm run test -- src/__tests__/auth/auth.controller.test.ts`
+- Por nome/descrição: `npm run test -- -t "should refresh token"`
+- Combinado: `npm run test -- src/__tests__/payments/payment.service.test.ts -t "creates checkout"`
 
 ## Deploy na Vercel (pré-produção)
 
