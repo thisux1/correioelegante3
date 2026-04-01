@@ -17,7 +17,7 @@ function DeferredHeroAnimation({ scrollProgress, animationOpacity }: { scrollPro
   const [shouldRender, setShouldRender] = useState(false)
 
   useEffect(() => {
-    let timeoutId: any
+    let timeoutId: number | ReturnType<typeof setTimeout>
     if (typeof requestIdleCallback !== 'undefined') {
       timeoutId = requestIdleCallback(() => setShouldRender(true), { timeout: 1500 })
     } else {
