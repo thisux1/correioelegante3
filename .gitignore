@@ -63,8 +63,27 @@ opencode.json
 plan-execucao-urgente/
 docs/
 INTERVIEW_PRESENTATION_SCRIPT.md
-# Relatórios e Scripts locais
-localhost_*.report.html
-
-# Video Project (External)
+*.report.html
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!frontend/tsconfig.json
+!frontend/tsconfig.node.json
+!frontend/tsconfig.app.json
+!backend/tsconfig.json
+!backend/package.json
+!backend/package-lock.json
+!frontend/package.json
+!frontend/package-lock.json
+!opencode.json
 my-video/
+.plan/
+templates.examples/
+/screenshots/
+/logs/
+.system_generated/
+.gemini/
+heroframes/
+hero-3d-plan.md
+opencode.json
