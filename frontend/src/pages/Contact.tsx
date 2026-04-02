@@ -9,7 +9,7 @@ const contactLinks = [
     title: 'LinkedIn',
     description: 'Conecte-se comigo profissionalmente e acompanhe minha trajetória.',
     icon: <Linkedin className="w-6 h-6" />,
-    href: 'https://linkedin.com/in/thiago',
+    href: 'https://linkedin.com/in/thisux',
     color: 'text-[#0A66C2]',
     bg: 'bg-[#0A66C2]/10',
     border: 'group-hover:border-[#0A66C2]/30',
