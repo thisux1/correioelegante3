@@ -417,9 +417,12 @@ export function SiteAtmosphere({
                         key={`c${i}`}
                         className="atm-cloud"
                         style={{
+                            position: 'absolute',
+                            pointerEvents: 'none',
                             left: c.x,
                             top: c.y,
                             opacity: c.opacity,
+                            color: 'rgba(255, 240, 245, 1)',
                             transform: `scale(${c.scale ?? 1})${c.flip ? ' scaleX(-1)' : ''}`,
                         }}
                     >
