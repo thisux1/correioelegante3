@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion, useMotionTemplate, useSpring, useTransform, type MotionValue } from 'framer-motion'
 
 // ── Scroll Timeline (chapter-based cyclic) ──────────────────────
@@ -138,6 +138,20 @@ function WindTrail({ isMobile }: { isMobile: boolean }) {
     )
 }
 
+interface PhaseVisibility {
+    showTrail: boolean
+    showLetter: boolean
+    showBurst: boolean
+}
+
+function getPhaseVisibility(progress: number): PhaseVisibility {
+    return {
+        showTrail: progress <= 0.36,
+        showLetter: progress >= 0.5 && progress <= 0.9,
+        showBurst: progress >= 0.64 && progress <= 0.92,
+    }
+}
+
 // ── Envelope SVG ────────────────────────────────────────────────
 function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
     // Flap pivot: rotates from closed (0°) to open (-175°) about the top edge
@@ -261,14 +275,16 @@ const BURST_PARTICLES: BurstParticleConfig[] = [
     { id: 'p10', angle: 252, distance: 88, size: 13, spin: 210, kind: 'petal' },
 ]
 
-function BurstParticle({
+const BurstParticle = memo(function BurstParticle({
     particle,
     burstProgress,
     centerY,
+    isMobile,
 }: {
     particle: BurstParticleConfig
     burstProgress: MotionValue<number>
     centerY: MotionValue<string>
+    isMobile: boolean
 }) {
     const rad = (particle.angle * Math.PI) / 180
     const x = useTransform(burstProgress, [0, 1], [0, Math.cos(rad) * particle.distance])
@@ -288,7 +304,7 @@ function BurstParticle({
                 rotate,
                 translateX: '-50%',
                 translateY: '-50%',
-                filter: 'drop-shadow(0 0 8px rgba(255, 196, 224, 0.7))',
+                filter: isMobile ? undefined : 'drop-shadow(0 0 6px rgba(255, 196, 224, 0.55))',
             }}
         >
             {particle.kind === 'star' ? (
@@ -302,7 +318,7 @@ function BurstParticle({
             )}
         </motion.div>
     )
-}
+})
 
 // ── Cloud variants (3 shapes with inner highlight) ───────────────
 const CLOUD_VARIANTS = [
@@ -324,7 +340,7 @@ const CLOUD_VARIANTS = [
 ] as const
 
 // ── Cloud shapes (matches SiteAtmosphere palette) ────────────────
-function Cloud({ w = 320, cx = '0', cy = '0', opacity = 0.28, flip = false, variant = 0 as 0 | 1 | 2, blur = 0 }: {
+const Cloud = memo(function Cloud({ w = 320, cx = '0', cy = '0', opacity = 0.28, flip = false, variant = 0 as 0 | 1 | 2, blur = 0 }: {
     w?: number; cx?: number | string; cy?: number | string; opacity?: number; flip?: boolean; variant?: 0 | 1 | 2; blur?: number
 }) {
     const { viewBox, path, highlight } = CLOUD_VARIANTS[variant]
@@ -345,7 +361,7 @@ function Cloud({ w = 320, cx = '0', cy = '0', opacity = 0.28, flip = false, vari
             </svg>
         </div>
     )
-}
+})
 
 // ── Main Component ──────────────────────────────────────────────
 interface HeroAnimationProps {
@@ -361,6 +377,20 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
         : false
     // On mobile: use 5 particles (skip every other) to reduce concurrent animations
     const burstParticles = isMobile ? BURST_PARTICLES.filter((_, i) => i % 2 === 0) : BURST_PARTICLES
+    const [phaseVisibility, setPhaseVisibility] = useState<PhaseVisibility>(() => getPhaseVisibility(scrollProgress.get()))
+
+    useEffect(() => {
+        const unsubscribe = scrollProgress.on('change', (value) => {
+            const next = getPhaseVisibility(value)
+            setPhaseVisibility((prev) => (
+                prev.showTrail === next.showTrail
+                && prev.showLetter === next.showLetter
+                && prev.showBurst === next.showBurst
+            ) ? prev : next)
+        })
+
+        return () => unsubscribe()
+    }, [scrollProgress])
     // ── Airplane ──────────────────────────────────────────────
     const planeX = useTransform(scrollProgress,
         [0.00, 0.10, 0.22, 0.34, 0.88, 0.98, 1.00],
@@ -455,6 +485,12 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
         return () => unsubs.forEach(u => u())
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+    useLayoutEffect(() => {
+        if (trailRef.current) trailRef.current.style.opacity = String(trailOpacity.get())
+        if (letterRef.current) letterRef.current.style.opacity = String(letterOpacity.get())
+        if (burstRef.current) burstRef.current.style.opacity = String(burstOpacity.get())
+    }, [burstOpacity, letterOpacity, phaseVisibility.showBurst, phaseVisibility.showLetter, phaseVisibility.showTrail, trailOpacity])
+
 
     return (
         <div className="absolute inset-0 overflow-hidden">
@@ -499,7 +535,7 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
             <div className="absolute inset-0">
                 <Cloud w={760} cx={-130} cy="76%" opacity={0.70} variant={0} />
                 <Cloud w={680} cx="52%" cy="80%" opacity={0.62} variant={1} flip />
-                <Cloud w={700} cx={-60} cy="90%" opacity={0.75} variant={0} flip blur={1} />
+                {!isMobile && <Cloud w={700} cx={-60} cy="90%" opacity={0.75} variant={0} flip blur={1} />}
                 {!isMobile && (
                     <>
                         <Cloud w={580} cx="18%" cy="86%" opacity={0.58} variant={2} />
@@ -511,20 +547,22 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
 
 
             {/* ── Heart trail ────────────────────────────────── */}
-            <motion.div
-                ref={trailRef}
-                className="absolute opacity-0"
-                style={{
-                    left: trailX,
-                    top: trailY,
-                    rotate: trailRotate,
-                    translateX: '-50%',
-                    translateY: '-50%',
-                    originX: '100%',
-                }}
-            >
-                <WindTrail isMobile={isMobile} />
-            </motion.div>
+            {phaseVisibility.showTrail && (
+                <motion.div
+                    ref={trailRef}
+                    className="absolute opacity-0"
+                    style={{
+                        left: trailX,
+                        top: trailY,
+                        rotate: trailRotate,
+                        translateX: '-50%',
+                        translateY: '-50%',
+                        originX: '100%',
+                    }}
+                >
+                    <WindTrail isMobile={isMobile} />
+                </motion.div>
+            )}
 
             {/* ── Paper airplane ─────────────────────────────── */}
             <motion.div
@@ -537,27 +575,30 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                     scale: planeScale,
                     translateX: '-50%',
                     translateY: '-50%',
+                    willChange: 'transform, opacity',
                 }}
             >
                 <PaperAirplane />
             </motion.div>
 
             {/* ── Letter emerging from envelope ──────────────── */}
-            <motion.div
-                ref={letterRef}
-                className="absolute opacity-0 pointer-events-none"
-                style={{
-                    left: envX,
-                    top: letterY,
-                    scale: letterScale,
-                    rotate: letterRotate,
-                    translateX: '-50%',
-                    translateY: '-50%',
-                    filter: 'drop-shadow(0 4px 10px rgba(194,109,138,0.24))',
-                }}
-            >
-                <LetterSheet />
-            </motion.div>
+            {phaseVisibility.showLetter && (
+                <motion.div
+                    ref={letterRef}
+                    className="absolute opacity-0 pointer-events-none"
+                    style={{
+                        left: envX,
+                        top: letterY,
+                        scale: letterScale,
+                        rotate: letterRotate,
+                        translateX: '-50%',
+                        translateY: '-50%',
+                        filter: 'drop-shadow(0 4px 10px rgba(194,109,138,0.24))',
+                    }}
+                >
+                    <LetterSheet />
+                </motion.div>
+            )}
 
             {/* ── Envelope ───────────────────────────────────── */}
             <motion.div
@@ -572,22 +613,26 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                     perspective: 400,
                     translateX: '-50%',
                     translateY: '-50%',
+                    willChange: 'transform, opacity',
                 }}
             >
                 <Envelope flapProgress={flapProgress} />
             </motion.div>
 
             {/* ── Emotional burst particles (5 on mobile, 10 on desktop) ─ */}
-            <div ref={burstRef} className="absolute inset-0 pointer-events-none opacity-0">
-                {burstParticles.map((particle) => (
-                    <BurstParticle
-                        key={particle.id}
-                        particle={particle}
-                        burstProgress={burstProgress}
-                        centerY={heartY}
-                    />
-                ))}
-            </div>
+            {phaseVisibility.showBurst && (
+                <div ref={burstRef} className="absolute inset-0 pointer-events-none opacity-0">
+                    {burstParticles.map((particle) => (
+                        <BurstParticle
+                            key={particle.id}
+                            particle={particle}
+                            burstProgress={burstProgress}
+                            centerY={heartY}
+                            isMobile={isMobile}
+                        />
+                    ))}
+                </div>
+            )}
 
             {/* ── Heart ──────────────────────────────────────── */}
             <motion.div
@@ -599,6 +644,7 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                     scale: heartScale,
                     translateX: '-50%',
                     translateY: '-50%',
+                    willChange: 'transform, opacity',
                 }}
             >
                 <motion.div
