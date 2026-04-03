@@ -1,6 +1,5 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { SpeedInsights } from '@vercel/speed-insights/react'
 import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals'
 import { BootLoadingGate } from './components/layout/BootLoadingGate'
 import './index.css'
@@ -78,12 +77,34 @@ if (import.meta.hot) {
   import.meta.hot.dispose(faviconCleanup)
 }
 
+function setupSpeedInsights() {
+  if (!import.meta.env.PROD) return
+
+  const inject = () => {
+    void import('@vercel/speed-insights')
+      .then(({ injectSpeedInsights }) => {
+        injectSpeedInsights()
+      })
+      .catch(() => undefined)
+  }
+
+  if ('requestIdleCallback' in window) {
+    ;(window as Window & { requestIdleCallback: (cb: IdleRequestCallback) => number }).requestIdleCallback(() => {
+      inject()
+    })
+    return
+  }
+
+  window.setTimeout(inject, 1200)
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BootLoadingGate />
-    <SpeedInsights />
   </StrictMode>,
 )
+
+setupSpeedInsights()
 
 // Report Web Vitals to console in development
 if (import.meta.env.DEV) {
