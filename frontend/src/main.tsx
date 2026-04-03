@@ -88,14 +88,18 @@ function setupSpeedInsights() {
       .catch(() => undefined)
   }
 
-  if ('requestIdleCallback' in window) {
-    ;(window as Window & { requestIdleCallback: (cb: IdleRequestCallback) => number }).requestIdleCallback(() => {
+  const win = globalThis as typeof globalThis & {
+    requestIdleCallback?: (cb: IdleRequestCallback) => number
+  }
+
+  if (typeof win.requestIdleCallback === 'function') {
+    win.requestIdleCallback(() => {
       inject()
     })
     return
   }
 
-  window.setTimeout(inject, 1200)
+  globalThis.setTimeout(inject, 1200)
 }
 
 createRoot(document.getElementById('root')!).render(
