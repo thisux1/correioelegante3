@@ -1,5 +1,5 @@
 import { motion, useTransform, useMotionValue, useSpring, type MotionValue } from 'framer-motion'
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import { memo, useRef, useEffect, useState, useCallback, useMemo } from 'react'
 
 // ── Cloud SVG Shapes ────────────────────────────────────────────
 
@@ -188,6 +188,7 @@ export function HeroClouds({ scrollProgress }: HeroCloudsProps) {
                     config={star}
                     mouseX={smoothX}
                     mouseY={smoothY}
+                    isMobile={isMobile}
                 />
             ))}
         </div>
@@ -195,7 +196,7 @@ export function HeroClouds({ scrollProgress }: HeroCloudsProps) {
 }
 
 // ── Cloud Layer ─────────────────────────────────────────────────
-function CloudLayer({
+const CloudLayer = memo(function CloudLayer({
     config,
     scrollProgress,
     mouseX,
@@ -256,20 +257,25 @@ function CloudLayer({
             </motion.div>
         </motion.div>
     )
-}
+})
 
 // ── Star Particle ───────────────────────────────────────────────
-function StarParticle({
+const StarParticle = memo(function StarParticle({
     config,
     mouseX,
     mouseY,
+    isMobile,
 }: {
     config: StarConfig
     mouseX: MotionValue<number>
     mouseY: MotionValue<number>
+    isMobile: boolean
 }) {
     const { x, y, size, delay, duration } = config
     const [pos, setPos] = useState({ x, y })
+    const starFilter = isMobile
+        ? undefined
+        : `drop-shadow(0 0 ${size * 0.25}px rgba(255, 220, 240, 0.55))`
 
     // Mouse parallax for stars (subtle)
     const mX = useTransform(mouseX, (v) => v * 0.5)
@@ -292,7 +298,7 @@ function StarParticle({
                 x: mX,
                 y: mY,
                 color: 'rgba(255, 255, 255, 0.9)',
-                filter: `drop-shadow(0 0 ${size * 0.4}px rgba(255, 220, 240, 0.8))`,
+                filter: starFilter,
                 willChange: 'transform, opacity',
             }}
             initial={{ opacity: 0, scale: 0, rotate: 0 }}
@@ -313,4 +319,4 @@ function StarParticle({
             <FourPointStar size={size} />
         </motion.div>
     )
-}
+})
