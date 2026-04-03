@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { Heart, ArrowRight } from 'lucide-react'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { TextSplit } from '@/components/animations/TextSplit'
-import { SectionReveal } from '@/components/animations/SectionReveal'
 import { MagneticButton } from '@/components/animations/MagneticButton'
-import { ScrollSection } from '@/components/layout/ScrollSection'
+import { HeroClouds } from '@/components/animations/HeroClouds'
 import type { MotionValue } from 'framer-motion'
 
 const LazyHeroAnimation = lazy(() => import('@/components/animations/HeroAnimation').then(m => ({ default: m.HeroAnimation })))
@@ -56,6 +54,7 @@ const SocialProofSection = lazy(() => import('@/components/sections/SocialProofS
 const HowItWorksSection = lazy(() => import('@/components/sections/HowItWorksSection').then(m => ({ default: m.HowItWorksSection })))
 const ProductPreviewSection = lazy(() => import('@/components/sections/ProductPreviewSection').then(m => ({ default: m.ProductPreviewSection })))
 const FAQSection = lazy(() => import('@/components/sections/FAQSection').then(m => ({ default: m.FAQSection })))
+const FinalCTASection = lazy(() => import('@/components/sections/FinalCTASection').then(m => ({ default: m.FinalCTASection })))
 
 // --- Feature Flags (Otimização LCP) ---
 const ENABLE_FAST_HERO = true
@@ -69,10 +68,11 @@ function HeroSectionOriginal() {
     target: sectionRef,
     offset: ['start start', 'end end'],
   })
-  const heroProgress = useTransform(scrollYProgress, [0.18, 1], [0, 0.93])
-  const animationOpacity = useTransform(scrollYProgress, [0.16, 0.22], [0, 1])
-  const textOpacity = useTransform(scrollYProgress, [0.05, 0.18], [1, 0])
-  const textY = useTransform(scrollYProgress, [0.05, 0.18], [0, -60])
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 80, damping: 25, restDelta: 0.01 })
+  const heroProgress = useTransform(smoothProgress, [0.18, 1], [0, 0.93])
+  const animationOpacity = useTransform(smoothProgress, [0.16, 0.22], [0, 1])
+  const textOpacity = useTransform(smoothProgress, [0.05, 0.18], [1, 0])
+  const textY = useTransform(smoothProgress, [0.05, 0.18], [0, -60])
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: '500vh' }}>
@@ -136,6 +136,7 @@ function HeroSectionOptimized() {
     target: sectionRef,
     offset: ['start start', 'end end'],
   })
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 80, damping: 25, restDelta: 0.01 })
 
   // ── Orquestração de Foco (Livro de História) ──
   // [0.00, 0.08]: Texto sólido para leitura. Fundo opaco.
@@ -143,12 +144,12 @@ function HeroSectionOptimized() {
   // [0.14, 0.86]: Coreografia do Envelope ganha vida no fundo mágico.
   // [0.86, 0.94]: Crossfade animação sai, texto e fundo sólido voltam.
   // [0.94, 1.00]: Fixação para o fim da tela antes da próxima sessão.
-  const focusOpacity = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [1, 0, 0, 1])
-  const textY = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [0, -60, 60, 0])
-  const animationOpacity = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [0, 1, 1, 0])
+  const focusOpacity = useTransform(smoothProgress, [0.06, 0.14, 0.86, 0.94], [1, 0, 0, 1])
+  const textY = useTransform(smoothProgress, [0.06, 0.14, 0.86, 0.94], [0, -60, 60, 0])
+  const animationOpacity = useTransform(smoothProgress, [0.06, 0.14, 0.86, 0.94], [0, 1, 1, 0])
   
   // A progressão da animação física SVG (avião, papel) ocorre apenas no espaço onde a opacidade é 100%.
-  const heroProgress = useTransform(scrollYProgress, [0.14, 0.86], [0, 1])
+  const heroProgress = useTransform(smoothProgress, [0.14, 0.86], [0, 1])
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: '500vh' }}>
@@ -161,6 +162,7 @@ function HeroSectionOptimized() {
 
         {/* Camada da Animação do Envelope e Avião */}
         <DeferredHeroAnimation scrollProgress={heroProgress} animationOpacity={animationOpacity} />
+        <HeroClouds scrollProgress={smoothProgress} />
 
         {/* Camada do Texto Principal e Botões */}
         <motion.div
@@ -245,6 +247,7 @@ export function Home() {
           <HowItWorksSection />
           <ProductPreviewSection />
           <FAQSection />
+          <FinalCTASection />
         </Suspense>
       ) : (
         <>
@@ -253,40 +256,9 @@ export function Home() {
           <HowItWorksSection />
           <ProductPreviewSection />
           <FAQSection />
+          <FinalCTASection />
         </>
       )}
-
-      <ScrollSection id="cta-section">
-        <Container size="narrow">
-          <Card className="relative overflow-hidden border-none shadow-2xl bg-gradient-to-tr from-primary to-secondary p-12 md:p-24 text-center rounded-3xl" data-cursor-light="true">
-            <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10 pointer-events-none" />
-
-            <div className="relative z-10 text-white" data-no-ink="true">
-              <SectionReveal scrollRange={[0.1, 0.35, 1.0, 1.0]}>
-                <Heart className="w-16 h-16 text-white/90 fill-white/20 mx-auto mb-6 animate-pulse" />
-                <h2 className="font-display text-4xl md:text-6xl font-bold mb-6">
-                  Bora mandar aquele recado?
-                </h2>
-                <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Leva menos de 5 minutos, prometo!
-                </p>
-                <MagneticButton>
-                  <Link to="/create">
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      className="text-primary hover:bg-white/90 shadow-2xl text-lg px-10 py-5 h-auto border-none"
-                    >
-                      Criar minha carta
-                      <Heart size={20} className="fill-current" />
-                    </Button>
-                  </Link>
-                </MagneticButton>
-              </SectionReveal>
-            </div>
-          </Card>
-        </Container>
-      </ScrollSection>
     </div>
   )
 }
