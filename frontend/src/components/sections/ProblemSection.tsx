@@ -5,7 +5,10 @@ import { ScrollSection } from '@/components/layout/ScrollSection'
 import { Container } from '@/components/layout/Container'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { SectionReveal } from '@/components/animations/SectionReveal'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+
+// Shared spring config for smooth scroll animations without Lenis
+const springConfig = { stiffness: 100, damping: 28, restDelta: 0.01 }
 
 const problems = [
     { icon: Frown, title: 'Presentes genéricos', description: 'Chocolate e flor são legais, mas não dizem o que você realmente sente.', fromX: -100 },
@@ -21,14 +24,17 @@ function ProblemCard({ problem, index }: { problem: typeof problems[number]; ind
         offset: ['start end', 'end 0.1'],
     })
 
+    // Smooth scroll progress (replaces Lenis smoothing)
+    const smoothProgress = useSpring(scrollYProgress, springConfig)
+
     const opacityStart = 0.03 + index * 0.02
     const opacityEnd = opacityStart + 0.10
     const slideStart = 0.08 + index * 0.04
     const slideEnd = slideStart + 0.15
 
-    const opacity = useTransform(scrollYProgress, [opacityStart, opacityEnd, 0.85, 1.0], [0, 1, 1, 0])
-    const x = useTransform(scrollYProgress, [slideStart, slideEnd, 0.85, 1.0], [problem.fromX || 0, 0, 0, -(problem.fromX || 0)])
-    const y = useTransform(scrollYProgress, [slideStart, slideEnd, 0.85, 1.0], [problem.fromY || 0, 0, 0, -(problem.fromY || 0)])
+    const opacity = useTransform(smoothProgress, [opacityStart, opacityEnd, 0.85, 1.0], [0, 1, 1, 0])
+    const x = useTransform(smoothProgress, [slideStart, slideEnd, 0.85, 1.0], [problem.fromX || 0, 0, 0, -(problem.fromX || 0)])
+    const y = useTransform(smoothProgress, [slideStart, slideEnd, 0.85, 1.0], [problem.fromY || 0, 0, 0, -(problem.fromY || 0)])
 
     return (
         <motion.div ref={ref} style={{ opacity, x, y }}>

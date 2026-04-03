@@ -1,5 +1,8 @@
 import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform, type MotionValue } from 'framer-motion'
+
+// Shared spring config for smooth scroll animations without Lenis
+const springConfig = { stiffness: 140, damping: 30, restDelta: 0.005 }
 
 interface TextSplitProps {
   text: string
@@ -20,6 +23,9 @@ export function TextSplit({ text, className = '', charClassName = '', delay = 0,
     offset: ['start end', 'end 0.1'],
   })
 
+  // Smooth scroll progress (replaces Lenis smoothing)
+  const smoothProgress = useSpring(scrollYProgress, springConfig)
+
   // ── Mount animation mode ──
   if (animateOnMount) {
     return (
@@ -36,15 +42,15 @@ export function TextSplit({ text, className = '', charClassName = '', delay = 0,
                 <motion.span
                   key={charIndex}
                   variants={{
-                    hidden: { y: 50, opacity: 0 },
+                    hidden: { y: 34, opacity: 0 },
                     visible: {
                       y: 0,
                       opacity: 1,
-                      transition: {
-                        duration: 0.5,
-                        delay: delay + globalIndex * 0.03,
-                        ease: [0.19, 1, 0.22, 1],
-                      },
+                        transition: {
+                          duration: 0.54,
+                          delay: delay + globalIndex * 0.026,
+                          ease: [0.22, 1, 0.36, 1],
+                        },
                     },
                   }}
                   className={`inline-block ${charClassName}`}
@@ -66,15 +72,15 @@ export function TextSplit({ text, className = '', charClassName = '', delay = 0,
           {word.split('').map((char, charIndex) => {
             const globalIndex = words.slice(0, wordIndex).join('').length + charIndex
             const charStart = 0.05 + delay * 0.03 + (globalIndex / totalChars) * 0.15
-            const charEnd = charStart + 0.1
-            const charFadeOut = 0.85 + ((totalChars - globalIndex) / totalChars) * 0.1
-            const charGone = Math.min(charFadeOut + 0.1, 1)
+            const charEnd = charStart + 0.085
+            const charFadeOut = 0.88 + ((totalChars - globalIndex) / totalChars) * 0.08
+            const charGone = Math.min(charFadeOut + 0.08, 1)
 
             return (
               <TextSplitChar
                 key={charIndex}
                 char={char}
-                scrollYProgress={scrollYProgress}
+                smoothProgress={smoothProgress}
                 fadeIn={charStart}
                 fadeInEnd={charEnd}
                 fadeOut={charFadeOut}
@@ -91,7 +97,7 @@ export function TextSplit({ text, className = '', charClassName = '', delay = 0,
 
 function TextSplitChar({
   char,
-  scrollYProgress,
+  smoothProgress,
   fadeIn,
   fadeInEnd,
   fadeOut,
@@ -99,7 +105,7 @@ function TextSplitChar({
   charClassName,
 }: {
   char: string
-  scrollYProgress: ReturnType<typeof useScroll>['scrollYProgress']
+  smoothProgress: MotionValue<number>
   fadeIn: number
   fadeInEnd: number
   fadeOut: number
@@ -107,12 +113,12 @@ function TextSplitChar({
   charClassName: string
 }) {
   const opacity = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [fadeIn, fadeInEnd, fadeOut, fadeOutEnd],
     [0, 1, 1, 0]
   )
   const y = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [fadeIn, fadeInEnd, fadeOut, fadeOutEnd],
     [50, 0, 0, -50]
   )

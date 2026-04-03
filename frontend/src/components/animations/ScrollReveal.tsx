@@ -1,5 +1,8 @@
 import { useRef, type ReactNode } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+
+// Shared spring config for smooth scroll animations without Lenis
+const springConfig = { stiffness: 140, damping: 30, restDelta: 0.005 }
 
 interface ScrollRevealProps {
   children: ReactNode
@@ -45,19 +48,22 @@ export function ScrollReveal({
     offset: ['start end', 'end 0.1'],
   })
 
+  // Smooth scroll progress (replaces Lenis smoothing)
+  const smoothProgress = useSpring(scrollYProgress, springConfig)
+
   // Default keyframes with optional delay offset
   const defaultFadeIn = 0.05 + delay * 0.05
   const defaultRange: [number, number, number, number] = [
     defaultFadeIn,
-    defaultFadeIn + 0.15,
-    0.85,
-    1.0,
+    defaultFadeIn + 0.12,
+    0.88,
+    0.98,
   ]
   const [fi, fie, fo, foe] = scrollRange ?? defaultRange
 
-  const opacity = useTransform(scrollYProgress, [fi, fie, fo, foe], [0, 1, 1, 0])
-  const x = useTransform(scrollYProgress, [fi, fie, fo, foe], [offset.x, 0, 0, -offset.x])
-  const y = useTransform(scrollYProgress, [fi, fie, fo, foe], [offset.y, 0, 0, -offset.y])
+  const opacity = useTransform(smoothProgress, [fi, fie, fo, foe], [0, 1, 1, 0])
+  const x = useTransform(smoothProgress, [fi, fie, fo, foe], [offset.x, 0, 0, -offset.x])
+  const y = useTransform(smoothProgress, [fi, fie, fo, foe], [offset.y, 0, 0, -offset.y])
 
   // ── Mount animation (for hero / top-of-page) ──
   if (animateOnMount) {
@@ -66,9 +72,9 @@ export function ScrollReveal({
         initial={{ opacity: 0, x: offset.x, y: offset.y }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{
-          duration: 0.8,
+          duration: 0.65,
           delay,
-          ease: [0.19, 1, 0.22, 1],
+          ease: 'easeIn',
         }}
         className={className}
       >
