@@ -18,6 +18,9 @@ vi.mock('../utils/prisma', () => ({
             update: vi.fn(),
             delete: vi.fn(),
         },
+        userConsent: {
+            findMany: vi.fn(),
+        },
         message: {
             findUnique: vi.fn(),
             findMany: vi.fn(),
@@ -47,6 +50,11 @@ vi.mock('../utils/prisma', () => ({
             create: vi.fn(),
             update: vi.fn(),
             updateMany: vi.fn(),
+        },
+        refundRequest: {
+            findMany: vi.fn(),
+            findFirst: vi.fn(),
+            create: vi.fn(),
         },
         $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback({
             mediaJob: {

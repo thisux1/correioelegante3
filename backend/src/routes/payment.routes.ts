@@ -6,10 +6,11 @@ import {
   mercadopagoWebhookHandler,
   getPaymentStatus,
   getPaymentStatusByResource,
+  requestRefund,
 } from '../controllers/payment.controller';
 import { authenticate } from '../middlewares/auth';
 import { validate, validateObjectId } from '../middlewares/validate';
-import { createPaymentSchema } from '../utils/validation';
+import { createPaymentSchema, createRefundRequestSchema } from '../utils/validation';
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripe
 router.post('/webhook/mercadopago', express.json(), mercadopagoWebhookHandler);
 
 router.post('/create', authenticate, validate(createPaymentSchema), createPayment);
+router.post('/refund', authenticate, validate(createRefundRequestSchema), requestRefund);
 router.get('/status/:messageId', authenticate, validateObjectId('messageId'), getPaymentStatus);
 router.get(
   '/status/:resourceType/:resourceId',

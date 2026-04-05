@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { isAxiosError } from 'axios'
@@ -23,6 +23,13 @@ const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Mínimo de 6 caracteres'),
   confirmPassword: z.string(),
+  age: z.string()
+    .min(1, 'Idade é obrigatória')
+    .refine((value) => !Number.isNaN(Number(value)), 'Idade inválida')
+    .refine((value) => Number(value) >= 13, 'Você precisa ter pelo menos 13 anos'),
+  legalAccepted: z.boolean().refine((value) => value, {
+    message: 'Você precisa aceitar os Termos, Privacidade e Cookies',
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Senhas não conferem',
   path: ['confirmPassword'],
@@ -91,6 +98,10 @@ export function Auth() {
 
   const registerForm = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      age: '',
+      legalAccepted: false,
+    },
   })
 
   async function handleLogin(data: LoginForm) {
@@ -136,6 +147,8 @@ export function Auth() {
       const response = await authService.register({
         email: data.email,
         password: data.password,
+        age: Number(data.age),
+        legalAccepted: data.legalAccepted,
       })
       setAuth(response.data.user, response.data.accessToken)
       navigate('/create')
@@ -253,6 +266,43 @@ export function Auth() {
                   error={registerForm.formState.errors.password?.message}
                   {...registerForm.register('password')}
                 />
+                <Input
+                  label="Idade"
+                  type="number"
+                  min={13}
+                  placeholder="Ex.: 18"
+                  error={registerForm.formState.errors.age?.message}
+                  {...registerForm.register('age')}
+                />
+                <div className="flex flex-col gap-1.5">
+                  <label className="flex items-start gap-3 text-sm text-text-light leading-relaxed">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 rounded border-white/40 accent-primary"
+                      {...registerForm.register('legalAccepted')}
+                    />
+                    <span>
+                      Li e aceito os{' '}
+                      <Link to="/legal/terms" className="text-primary hover:underline">
+                        Termos de Uso
+                      </Link>
+                      , a{' '}
+                      <Link to="/legal/privacy" className="text-primary hover:underline">
+                        Política de Privacidade
+                      </Link>
+                      {' '}e a{' '}
+                      <Link to="/legal/cookies" className="text-primary hover:underline">
+                        Política de Cookies
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                  {registerForm.formState.errors.legalAccepted?.message && (
+                    <span className="text-xs text-red-500">
+                      {registerForm.formState.errors.legalAccepted.message}
+                    </span>
+                  )}
+                </div>
                 <Input
                   label="Confirmar Senha"
                   type="password"

@@ -13,8 +13,8 @@ function setCookieRefreshToken(res: Response, token: string) {
 }
 
 export async function register(req: Request, res: Response): Promise<void> {
-  const { email, password } = req.body;
-  const { user, accessToken, refreshToken } = await authService.registerUser(email, password);
+  const { email, password, age, legalAccepted } = req.body;
+  const { user, accessToken, refreshToken } = await authService.registerUser(email, password, age, legalAccepted);
   setCookieRefreshToken(res, refreshToken);
   res.status(201).json({ user, accessToken });
 }
@@ -56,4 +56,9 @@ export async function deleteAccount(req: AuthRequest, res: Response): Promise<vo
   await authService.deleteUser(req.userId!);
   res.clearCookie('refreshToken');
   res.json({ message: 'Conta excluída com sucesso' });
+}
+
+export async function exportAccountData(req: AuthRequest, res: Response): Promise<void> {
+  const data = await authService.exportUserData(req.userId!);
+  res.json(data);
 }
