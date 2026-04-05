@@ -13,6 +13,9 @@ const Editor = lazy(() => import('@/pages/Editor').then(m => ({ default: m.Edito
 const Auth = lazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
 const Profile = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
 const Contact = lazy(() => import('@/pages/Contact').then(m => ({ default: m.Contact })))
+const LegalTerms = lazy(() => import('@/pages/LegalTerms').then(m => ({ default: m.LegalTerms })))
+const LegalPrivacy = lazy(() => import('@/pages/LegalPrivacy').then(m => ({ default: m.LegalPrivacy })))
+const LegalCookies = lazy(() => import('@/pages/LegalCookies').then(m => ({ default: m.LegalCookies })))
 const Payment = lazy(() => import('@/pages/Payment').then(m => ({ default: m.Payment })))
 const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })))
 const Card = lazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
@@ -96,6 +99,9 @@ export function AppRouter() {
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/legal/terms" element={<LegalTerms />} />
+              <Route path="/legal/privacy" element={<LegalPrivacy />} />
+              <Route path="/legal/cookies" element={<LegalCookies />} />
               <Route path="/card/:id" element={<Card />} />
               <Route path="/card/page/:pageId" element={<PageCard />} />
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />

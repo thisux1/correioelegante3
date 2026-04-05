@@ -9,14 +9,16 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  email     String    @unique
-  password  String
-  messages  Message[]
-  pages     Page[]
-  assets    Asset[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  email          String          @unique
+  password       String
+  messages       Message[]
+  pages          Page[]
+  assets         Asset[]
+  consents       UserConsent[]
+  refundRequests RefundRequest[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Message {
@@ -111,4 +113,32 @@ model MediaJob {
 
   @@index([status, createdAt])
   @@unique([assetId, type])
+}
+
+model UserConsent {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentType String
+  version      String
+  acceptedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@unique([userId, documentType, version])
+}
+
+model RefundRequest {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resourceType String
+  resourceId   String
+  reasonType   String
+  reason       String?
+  status       String   @default("requested")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, resourceType, resourceId, status])
 }

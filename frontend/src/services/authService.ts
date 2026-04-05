@@ -3,6 +3,8 @@ import api from './api'
 export interface RegisterData {
   email: string
   password: string
+  age: number
+  legalAccepted: boolean
 }
 
 export interface LoginData {

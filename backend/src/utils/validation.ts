@@ -17,6 +17,10 @@ import {
 export const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+  age: z.number({ invalid_type_error: 'Idade inválida' }).int('Idade inválida').min(13, 'Idade mínima é 13 anos'),
+  legalAccepted: z.literal(true, {
+    errorMap: () => ({ message: 'Aceite legal é obrigatório' }),
+  }),
 });
 
 export const loginSchema = z.object({
@@ -92,6 +96,20 @@ export const createPaymentSchema = z.object({
       path: ['resourceType'],
     });
   }
+});
+
+export const createRefundRequestSchema = z.object({
+  resourceType: z.enum(['message', 'page'], {
+    errorMap: () => ({ message: 'resourceType invalido. Use "message" ou "page".' }),
+  }),
+  resourceId: z
+    .string({ required_error: 'resourceId é obrigatório' })
+    .min(1, 'resourceId é obrigatório')
+    .regex(/^[a-f\d]{24}$/i, 'resourceId inválido'),
+  reasonType: z.enum(['service_failure', 'within_7_days'], {
+    errorMap: () => ({ message: 'reasonType invalido. Use "service_failure" ou "within_7_days".' }),
+  }),
+  reason: z.string().max(1000, 'reason muito longa').optional(),
 });
 
 const blockMetaSchema = z.object({
@@ -199,6 +217,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
+export type CreateRefundRequestInput = z.infer<typeof createRefundRequestSchema>;
 export type CreatePageInput = z.infer<typeof createPageSchema>;
 export type UpdatePageInput = z.infer<typeof updatePageSchema>;
 export type AssetUploadUrlInput = z.infer<typeof assetUploadUrlSchema>;
