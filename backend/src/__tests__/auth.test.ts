@@ -26,7 +26,7 @@ describe('POST /api/auth/register', () => {
 
         const res = await request(app)
             .post('/api/auth/register')
-            .send({ email: 'novo@teste.com', password: 'Senha1234' });
+            .send({ email: 'novo@teste.com', password: 'Senha1234', age: 18, legalAccepted: true });
 
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty('accessToken');
@@ -38,7 +38,7 @@ describe('POST /api/auth/register', () => {
 
         const res = await request(app)
             .post('/api/auth/register')
-            .send({ email: 'test@correio.com', password: 'Senha1234' });
+            .send({ email: 'test@correio.com', password: 'Senha1234', age: 18, legalAccepted: true });
 
         expect(res.status).toBe(409);
         expect(res.body.error).toMatch(/cadastrado/i);
@@ -47,7 +47,7 @@ describe('POST /api/auth/register', () => {
     it('400 — email inválido', async () => {
         const res = await request(app)
             .post('/api/auth/register')
-            .send({ email: 'nao-e-um-email', password: 'Senha1234' });
+            .send({ email: 'nao-e-um-email', password: 'Senha1234', age: 18, legalAccepted: true });
 
         expect(res.status).toBe(400);
     });
@@ -55,7 +55,23 @@ describe('POST /api/auth/register', () => {
     it('400 — senha muito curta', async () => {
         const res = await request(app)
             .post('/api/auth/register')
-            .send({ email: 'novo@teste.com', password: '123' });
+            .send({ email: 'novo@teste.com', password: '123', age: 18, legalAccepted: true });
+
+        expect(res.status).toBe(400);
+    });
+
+    it('400 — menor de 13 anos', async () => {
+        const res = await request(app)
+            .post('/api/auth/register')
+            .send({ email: 'novo@teste.com', password: 'Senha1234', age: 12, legalAccepted: true });
+
+        expect(res.status).toBe(400);
+    });
+
+    it('400 — sem aceite legal', async () => {
+        const res = await request(app)
+            .post('/api/auth/register')
+            .send({ email: 'novo@teste.com', password: 'Senha1234', age: 18, legalAccepted: false });
 
         expect(res.status).toBe(400);
     });
@@ -207,6 +223,7 @@ describe('PUT /api/auth/password', () => {
 // ── DELETE /api/auth/account ──────────────────────────────────────────────────
 describe('DELETE /api/auth/account', () => {
     it('200 — exclui conta do usuário autenticado', async () => {
+        vi.mocked(prisma.asset.findMany).mockResolvedValue([]);
         vi.mocked(prisma.user.delete).mockResolvedValue(mockUser);
 
         const token = makeToken(mockUser.id);
@@ -221,5 +238,29 @@ describe('DELETE /api/auth/account', () => {
     it('401 — sem autenticação', async () => {
         const res = await request(app).delete('/api/auth/account');
         expect(res.status).toBe(401);
+    });
+});
+
+describe('GET /api/auth/export', () => {
+    it('200 — exporta dados do usuário autenticado', async () => {
+        vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+        vi.mocked(prisma.message.findMany).mockResolvedValue([]);
+        vi.mocked(prisma.page.findMany).mockResolvedValue([]);
+        vi.mocked(prisma.asset.findMany).mockResolvedValue([]);
+        vi.mocked(prisma.userConsent.findMany).mockResolvedValue([]);
+        vi.mocked(prisma.refundRequest.findMany).mockResolvedValue([]);
+
+        const token = makeToken(mockUser.id);
+        const res = await request(app)
+            .get('/api/auth/export')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('user');
+        expect(res.body).toHaveProperty('messages');
+        expect(res.body).toHaveProperty('pages');
+        expect(res.body).toHaveProperty('assets');
+        expect(res.body).toHaveProperty('consents');
+        expect(res.body).toHaveProperty('refundRequests');
     });
 });

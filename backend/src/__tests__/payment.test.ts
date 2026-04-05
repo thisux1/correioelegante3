@@ -370,3 +370,64 @@ describe('GET /api/payments/status/:resourceType/:resourceId — validação de 
         expect(res.body.error).toMatch(/resourceType invalido/i);
     });
 });
+
+describe('POST /api/payments/refund', () => {
+    it('201 — cria solicitação de reembolso elegível por service_failure', async () => {
+        vi.mocked(prisma.refundRequest.findFirst).mockResolvedValue(null);
+        vi.mocked(prisma.message.findUnique).mockResolvedValue({
+            ...mockMessage,
+            paymentStatus: 'paid',
+        });
+        vi.mocked(prisma.refundRequest.create).mockResolvedValue({
+            id: '507f1f77bcf86cd799439033',
+            userId: USER_ID,
+            resourceType: 'message',
+            resourceId: MSG_ID,
+            reasonType: 'service_failure',
+            reason: 'Falha na entrega',
+            status: 'requested',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        const token = makeToken(USER_ID);
+        const res = await request(app)
+            .post('/api/payments/refund')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                resourceType: 'message',
+                resourceId: MSG_ID,
+                reasonType: 'service_failure',
+                reason: 'Falha na entrega',
+            });
+
+        expect(res.status).toBe(201);
+        expect(res.body.refundRequest.status).toBe('requested');
+    });
+
+    it('409 — bloqueia solicitação duplicada em aberto', async () => {
+        vi.mocked(prisma.refundRequest.findFirst).mockResolvedValue({
+            id: '507f1f77bcf86cd799439034',
+            userId: USER_ID,
+            resourceType: 'message',
+            resourceId: MSG_ID,
+            reasonType: 'service_failure',
+            reason: null,
+            status: 'requested',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        const token = makeToken(USER_ID);
+        const res = await request(app)
+            .post('/api/payments/refund')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                resourceType: 'message',
+                resourceId: MSG_ID,
+                reasonType: 'service_failure',
+            });
+
+        expect(res.status).toBe(409);
+    });
+});

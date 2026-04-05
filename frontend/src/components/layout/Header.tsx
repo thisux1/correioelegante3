@@ -89,7 +89,7 @@ export function Header() {
         <Container className="mt-4">
           <div className="relative overflow-hidden rounded-2xl border border-white/55 bg-white/92 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.24)] supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-md">
 
-            <div className="py-4 px-4 md:px-6 flex items-center justify-between relative z-10">
+            <div className="py-4 px-8 md:px-12 flex items-center justify-between relative z-10">
             {isEditorRoute ? (
               <a href="/" className="flex items-center gap-2 group">
                 <MagneticButton>
@@ -200,9 +200,9 @@ export function Header() {
         </Container>
       </div>
 
-      <div className="fixed inset-x-0 bottom-4 z-[90] px-4 md:hidden">
-        <div className={`relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl ${mobileSurfaceClass}`}>
-          <div className="px-4 py-3 flex items-center justify-between">
+      <div className="fixed inset-x-0 bottom-4 z-[90] px-4 sm:px-6 lg:px-8 md:hidden">
+        <div className={`relative mx-auto w-full max-w-7xl overflow-hidden rounded-2xl ${mobileSurfaceClass}`}>
+          <div className="px-8 py-3 flex items-center justify-between">
             {isEditorRoute ? (
               <a href="/" className="flex items-center gap-2.5 group">
                 <Heart className="h-5 w-5 text-primary fill-primary transition-transform group-active:scale-95" />
@@ -288,9 +288,9 @@ export function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className="fixed inset-x-0 bottom-24 z-[95] px-4 md:hidden"
+            className="fixed inset-x-0 bottom-24 z-[95] px-4 sm:px-6 lg:px-8 md:hidden"
           >
-            <div ref={menuPanelRef} className={mobilePanelClass}>
+            <div ref={menuPanelRef} className={mobilePanelClass.replace('max-w-sm', 'max-w-7xl')}>
               <nav className="p-4 flex flex-col gap-2">
                 {navLinks.map((link) => renderNavLink({
                   key: link.path,

@@ -6,6 +6,7 @@ import * as stripeService from '../services/stripe.service';
 import { prisma } from '../utils/prisma';
 
 type PaymentResourceType = 'message' | 'page';
+type RefundReasonType = 'service_failure' | 'within_7_days';
 
 interface PaymentTarget {
   resourceType: PaymentResourceType;
@@ -153,4 +154,110 @@ export async function getPaymentStatusByResource(req: AuthRequest, res: Response
   });
 
   res.json(status);
+}
+
+function isWithinDays(date: Date, days: number): boolean {
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  return diffMs >= 0 && diffMs <= days * 24 * 60 * 60 * 1000;
+}
+
+export async function requestRefund(req: AuthRequest, res: Response): Promise<void> {
+  const { resourceType, resourceId, reasonType, reason } = req.body as {
+    resourceType: PaymentResourceType;
+    resourceId: string;
+    reasonType: RefundReasonType;
+    reason?: string;
+  };
+
+  if (resourceType !== 'message' && resourceType !== 'page') {
+    throw new AppError('resourceType invalido. Use "message" ou "page".', 400);
+  }
+
+  const existingOpenRequest = await prisma.refundRequest.findFirst({
+    where: {
+      userId: req.userId!,
+      resourceType,
+      resourceId,
+      status: {
+        in: ['requested', 'in_review'],
+      },
+    },
+  });
+
+  if (existingOpenRequest) {
+    throw new AppError('Ja existe solicitacao de reembolso em aberto para este recurso.', 409, 'REFUND_DUPLICATE_OPEN_REQUEST');
+  }
+
+  let paymentStatus: string;
+  let eligibilityDate: Date | null;
+
+  if (resourceType === 'message') {
+    const message = await prisma.message.findUnique({
+      where: { id: resourceId },
+      select: {
+        userId: true,
+        paymentStatus: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!message) {
+      throw new AppError('Mensagem não encontrada', 404);
+    }
+
+    if (message.userId !== req.userId) {
+      throw new AppError('Sem permissão', 403);
+    }
+
+    paymentStatus = message.paymentStatus;
+    eligibilityDate = message.publishedAt ?? message.updatedAt;
+  } else {
+    const page = await prisma.page.findUnique({
+      where: { id: resourceId },
+      select: {
+        userId: true,
+        paymentStatus: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!page) {
+      throw new AppError('Pagina nao encontrada', 404);
+    }
+
+    if (page.userId !== req.userId) {
+      throw new AppError('Sem permissao', 403);
+    }
+
+    paymentStatus = page.paymentStatus;
+    eligibilityDate = page.publishedAt ?? page.updatedAt;
+  }
+
+  if (paymentStatus !== 'paid') {
+    throw new AppError('Reembolso so pode ser solicitado para pagamento concluido.', 400, 'REFUND_NOT_PAID');
+  }
+
+  const eligible = reasonType === 'service_failure'
+    ? true
+    : Boolean(eligibilityDate && isWithinDays(eligibilityDate, 7));
+
+  if (!eligible) {
+    throw new AppError('Reembolso fora da janela de 7 dias para este recurso.', 400, 'REFUND_NOT_ELIGIBLE');
+  }
+
+  const refundRequest = await prisma.refundRequest.create({
+    data: {
+      userId: req.userId!,
+      resourceType,
+      resourceId,
+      reasonType,
+      reason: reason?.trim() ? reason.trim() : null,
+      status: 'requested',
+    },
+  });
+
+  res.status(201).json({ refundRequest });
 }
