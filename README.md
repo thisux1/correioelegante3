@@ -23,17 +23,6 @@ O **Correio Elegante** é uma plataforma digital e interativa para envio de mens
 
 ---
 
-## Demonstração Visual
-
-Abaixo está o layout das principais telas da aplicação em dispositivos móveis e desktops, demonstrando o design focado em responsividade e estética premium:
-
-| Interface Desktop | Interface Mobile |
-| :--- | :--- |
-| <img src="docs/landing-hero-desktop-top.png" alt="Desktop Hero" width="100%" style="border-radius: 6px; border: 1px solid rgba(225, 29, 72, 0.08);" /> | <img src="docs/landing-hero-mobile-top.png" alt="Mobile Hero" width="100%" style="border-radius: 6px; border: 1px solid rgba(225, 29, 72, 0.08);" /> |
-| <img src="docs/landing-hero-desktop-scroll.png" alt="Desktop Scroll" width="100%" style="border-radius: 6px; border: 1px solid rgba(225, 29, 72, 0.08);" /> | <img src="docs/landing-hero-mobile-scroll.png" alt="Mobile Scroll" width="100%" style="border-radius: 6px; border: 1px solid rgba(225, 29, 72, 0.08);" /> |
-
----
-
 ## Arquitetura de Fluxo de Dados
 
 A imagem abaixo ilustra a integração contínua do ecossistema desde a criação da carta pelo usuário até a entrega final por meio de webhooks de pagamento assíncronos:
