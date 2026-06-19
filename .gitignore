@@ -61,7 +61,10 @@ AGENTS.md
 .agents/
 opencode.json
 plan-execucao-urgente/
-docs/
+docs/*
+!docs/banner.svg
+!docs/architecture.svg
+!docs/landing-hero-*.png
 INTERVIEW_PRESENTATION_SCRIPT.md
 *.report.html
 *.json
