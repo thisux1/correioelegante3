@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="100%" height="100%">
+  <defs>
+    <!-- Soft glass drop shadow matching the app's card shadow -->
+    <filter id="glass-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#be123c" flood-opacity="0.06" />
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.02" />
+    </filter>
+
+    <filter id="glow-rose" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="glow-gold" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Linear Gradients matching the design system -->
+    <linearGradient id="grad-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff6f7"/>
+      <stop offset="100%" stop-color="#fdf2f8"/>
+    </linearGradient>
+
+    <linearGradient id="grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <linearGradient id="grad-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c9a0"/>
+      <stop offset="100%" stop-color="#d4a574"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    /* Google Fonts Import for high-fidelity rendering */
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&amp;family=Inter:wght@400;500;600&amp;family=Playfair+Display:ital,wght@0,700;1,400&amp;display=swap');
+
+    .bg-main { fill: url(#grad-bg); }
+    
+    .font-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+    }
+
+    .font-cursive {
+      font-family: 'Dancing Script', cursive;
+      font-size: 20px;
+      fill: #d4a574;
+    }
+
+    .font-sans {
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* Keyframes for romantic elements */
+    @keyframes floating {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(1deg); }
+    }
+
+    @keyframes float-heart-1 {
+      0% { transform: translateY(0px) scale(0.8) rotate(0deg); opacity: 0; }
+      20% { opacity: 0.8; }
+      80% { opacity: 0.8; }
+      100% { transform: translateY(-70px) scale(1.1) rotate(15deg); opacity: 0; }
+    }
+
+    @keyframes float-heart-2 {
+      0% { transform: translateY(0px) scale(0.7) rotate(0deg); opacity: 0; }
+      20% { opacity: 0.7; }
+      80% { opacity: 0.7; }
+      100% { transform: translateY(-55px) scale(1.0) rotate(-20deg); opacity: 0; }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.9); }
+      50% { opacity: 0.9; transform: scale(1.1); }
+    }
+
+    .animated-card {
+      transform-origin: 300px 190px;
+      animation: floating 6s ease-in-out infinite;
+    }
+
+    .sparkle {
+      transform-origin: center;
+      animation: twinkle 4s ease-in-out infinite;
+    }
+    .sparkle-delay-1 { animation-delay: 1.5s; }
+    .sparkle-delay-2 { animation-delay: 3s; }
+
+    .drifting-heart-1 {
+      transform-origin: 300px 150px;
+      animation: float-heart-1 5s ease-in-out infinite;
+    }
+
+    .drifting-heart-2 {
+      transform-origin: 270px 160px;
+      animation: float-heart-2 6s ease-in-out infinite;
+      animation-delay: 2.5s;
+    }
+  </style>
+
+  <!-- BACKGROUND -->
+  <rect class="bg-main" width="100%" height="100%"/>
+
+  <!-- DECORATIVE BORDER (ROUNDED DESIGN RATIO) -->
+  <rect x="20" y="20" width="1160" height="340" rx="28" ry="28" fill="none" stroke="#fda4af" stroke-width="1" opacity="0.35"/>
+  <rect x="26" y="26" width="1148" height="328" rx="22" ry="22" fill="none" stroke="#e11d48" stroke-width="1" opacity="0.08"/>
+
+  <!-- ROMANTIC SPARKLES (NO TECH GRID) -->
+  <g>
+    <path class="sparkle" d="M 150,80 L 152,85 L 157,87 L 152,89 L 150,94 L 148,89 L 143,87 L 148,85 Z" fill="#d4a574" />
+    <path class="sparkle sparkle-delay-1" d="M 100,280 L 101.5,283.5 L 105,285 L 101.5,286.5 L 100,290 L 98.5,286.5 L 95,285 L 98.5,283.5 Z" fill="#fda4af" />
+    <path class="sparkle sparkle-delay-2" d="M 480,70 L 481.5,73.5 L 485,75 L 481.5,76.5 L 480,80 L 478.5,76.5 L 475,75 L 478.5,73.5 Z" fill="#e8c9a0" />
+    <path class="sparkle" d="M 1100,80 L 1102,85 L 1107,87 L 1102,89 L 1100,94 L 1098,89 L 1093,87 L 1098,85 Z" fill="#d4a574" />
+    <path class="sparkle sparkle-delay-1" d="M 1050,300 L 1051.5,303.5 L 1055,305 L 1051.5,306.5 L 1050,310 L 1048.5,306.5 L 1045,305 L 1048.5,303.5 Z" fill="#fda4af" />
+  </g>
+
+  <!-- LEFT: THE FLOATING CARD & ENVELOPE -->
+  <g class="animated-card">
+    <!-- Glassmorphic Card Container - Replicating the App's Glassmorphism -->
+    <rect x="180" y="70" width="240" height="240" rx="32" ry="32" fill="rgba(255, 255, 255, 0.55)" stroke="rgba(255, 255, 255, 0.7)" stroke-width="2" filter="url(#glass-shadow)"/>
+    
+    <!-- Floating Hearts -->
+    <g class="drifting-heart-1" transform="scale(0.55)">
+      <path d="M 0,-15 C -8,-25 -25,-20 -25,0 C -25,18 0,32 0,32 C 0,32 25,18 25,0 C 25,-20 8,-25 0,-15 Z" fill="#e11d48" filter="url(#glow-rose)" opacity="0.9"/>
+    </g>
+    <g class="drifting-heart-2" transform="scale(0.4)">
+      <path d="M 0,-15 C -8,-25 -25,-20 -25,0 C -25,18 0,32 0,32 C 0,32 25,18 25,0 C 25,-20 8,-25 0,-15 Z" fill="#f43f5e" opacity="0.8"/>
+    </g>
+
+    <!-- The Envelope Design (Layered correctly for perfect visual overlap) -->
+    <g transform="translate(10, 15)">
+      <!-- 1. Inside Back of the Envelope (Shadow/Darker fill) -->
+      <path d="M 210,150 L 290,95 L 370,150 L 370,242 C 370,242 362,246 354,246 L 226,246 C 218,246 210,242 210,242 Z" fill="#f5d6dc" stroke="#f43f5e" stroke-width="2" />
+      
+      <!-- 2. Inner Letter Card (Slipped inside the pocket) -->
+      <rect x="222" y="110" width="136" height="110" rx="8" ry="8" fill="#ffffff" stroke="#fda4af" stroke-width="1.2" filter="url(#glass-shadow)"/>
+      <line x1="238" y1="130" x2="342" y2="130" stroke="rgba(225, 29, 72, 0.15)" stroke-width="2" stroke-linecap="round" />
+      <line x1="238" y1="142" x2="326" y2="142" stroke="rgba(225, 29, 72, 0.15)" stroke-width="2" stroke-linecap="round" />
+      <line x1="238" y1="154" x2="306" y2="154" stroke="rgba(225, 29, 72, 0.15)" stroke-width="2" stroke-linecap="round" />
+      
+      <!-- 3. Front Pocket Cover (Opaque, covers the lower card body) -->
+      <polygon points="210,150 290,198 370,150 370,246 210,246" fill="#ffffff" stroke="#f43f5e" stroke-width="2" />
+      
+      <!-- 4. Inside fold lines of side flaps -->
+      <path d="M 210,150 L 290,198 M 370,150 L 290,198" stroke="#f43f5e" stroke-width="1.5" />
+      
+      <!-- 5. Bottom Flap (Folds upwards, overlapping the side folds) -->
+      <path d="M 210,246 L 290,195 L 370,246" fill="#fffafb" stroke="#f43f5e" stroke-width="2" />
+      
+      <!-- 6. Golden Wax Seal at the vertex point -->
+      <g transform="translate(290, 195) scale(0.65)">
+        <circle cx="0" cy="0" r="22" fill="#d4a574" filter="url(#glow-gold)"/>
+        <circle cx="0" cy="0" r="18" fill="url(#grad-gold)"/>
+        <!-- Heart Seal Details -->
+        <path d="M 0,-5 C -2.5,-8.5 -8.5,-7 -8.5,0 C -8.5,6 0,11 0,11 C 0,11 8.5,6 8.5,0 C 8.5,-7 2.5,-8.5 0,-5 Z" fill="#ffffff" />
+      </g>
+    </g>
+  </g>
+
+  <!-- RIGHT: CONTENT AREA -->
+  <g transform="translate(520, 0)">
+    <!-- Small Handwritten Introduction Label -->
+    <text x="0" y="105" class="font-cursive">com muito afeto...</text>
+
+    <!-- Title in Playfair Display -->
+    <text x="0" y="165" class="font-title" fill="#e11d48" font-size="48">Correio<tspan fill="#d4a574"> Elegante</tspan></text>
+    
+    <!-- Title Gold Sparkle Decor -->
+    <path class="sparkle" d="M 395,135 L 398,141 L 404,143 L 398,145 L 395,151 L 392,145 L 386,143 L 392,141 Z" fill="#d4a574" filter="url(#glow-gold)"/>
+
+    <!-- Subtitle in sans-serif (Inter) -->
+    <text x="0" y="202" class="font-sans" fill="#4b5563" font-size="16" font-weight="500">Mande um recado especial que faz sorrir</text>
+    
+    <!-- Elegant features with hearts instead of code points -->
+    <g transform="translate(0, 235)">
+      <!-- Bullet 1 -->
+      <g transform="translate(0, 4)">
+        <path d="M 0,-4 C -2,-7 -6,-6 -6,0 C -6,5 0,9 0,9 C 0,9 6,5 6,0 C 6,-6 2,-7 0,-4 Z" fill="#e11d48" transform="scale(0.85)"/>
+      </g>
+      <text x="20" y="9" class="font-sans" fill="#4b5563" font-size="13" font-weight="500">Editor customizável com temas exclusivos, animações e trilhas sonoras</text>
+      
+      <!-- Bullet 2 -->
+      <g transform="translate(0, 29)">
+        <path d="M 0,-4 C -2,-7 -6,-6 -6,0 C -6,5 0,9 0,9 C 0,9 6,5 6,0 C 6,-6 2,-7 0,-4 Z" fill="#d4a574" transform="scale(0.85)" filter="url(#glow-gold)"/>
+      </g>
+      <text x="20" y="34" class="font-sans" fill="#4b5563" font-size="13" font-weight="500">Integração com Stripe (Cartão) e Mercado Pago (Pix com liberação imediata)</text>
+      
+      <!-- Bullet 3 -->
+      <g transform="translate(0, 54)">
+        <path d="M 0,-4 C -2,-7 -6,-6 -6,0 C -6,5 0,9 0,9 C 0,9 6,5 6,0 C 6,-6 2,-7 0,-4 Z" fill="#f43f5e" transform="scale(0.85)"/>
+      </g>
+      <text x="20" y="59" class="font-sans" fill="#4b5563" font-size="13" font-weight="500">Visualização segura e otimizada por QR Code e links dinâmicos</text>
+    </g>
+  </g>
+</svg>
