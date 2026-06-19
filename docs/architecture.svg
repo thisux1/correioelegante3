@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 240" width="100%" height="100%">
+  <defs>
+    <!-- Soft shadow matching the app's card shadow -->
+    <filter id="card-shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#be123c" flood-opacity="0.05" />
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.01" />
+    </filter>
+
+    <linearGradient id="grad-card-rose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#fff5f6"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&amp;family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@700&amp;display=swap');
+
+    .bg { fill: #fffafb; }
+    
+    .main-title {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      fill: #e11d48;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .node-title {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12.5px;
+      font-weight: 700;
+      fill: #1f2937;
+    }
+
+    .node-desc {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      fill: #6b7280;
+    }
+
+    .node-tag {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .conn-line {
+      fill: none;
+      stroke-width: 1.2;
+    }
+
+    /* ANIMATIONS */
+    @keyframes pulse-glow-rose {
+      0%, 100% { stroke: #e11d48; filter: drop-shadow(0 0 1px rgba(225, 29, 72, 0.15)); }
+      50% { stroke: #fb7185; filter: drop-shadow(0 0 7px rgba(225, 29, 72, 0.45)); }
+    }
+
+    @keyframes pulse-glow-gold {
+      0%, 100% { stroke: #d4a574; filter: drop-shadow(0 0 1px rgba(212, 165, 116, 0.15)); }
+      50% { stroke: #e8c9a0; filter: drop-shadow(0 0 7px rgba(212, 165, 116, 0.45)); }
+    }
+
+    .card-rose {
+      animation: pulse-glow-rose 4s ease-in-out infinite;
+    }
+
+    .card-gold {
+      animation: pulse-glow-gold 4s ease-in-out infinite;
+    }
+
+    /* Sliding flow animations matching the card boundaries (width=180, gaps=40) */
+    @keyframes slide-heart-1 {
+      0% { transform: translate(190px, 122px) scale(0); opacity: 0; }
+      12% { transform: translate(196px, 122px) scale(1); opacity: 1; }
+      88% { transform: translate(224px, 122px) scale(1); opacity: 1; }
+      100% { transform: translate(230px, 122px) scale(0); opacity: 0; }
+    }
+
+    @keyframes slide-heart-2 {
+      0% { transform: translate(410px, 122px) scale(0); opacity: 0; }
+      12% { transform: translate(416px, 122px) scale(1); opacity: 1; }
+      88% { transform: translate(444px, 122px) scale(1); opacity: 1; }
+      100% { transform: translate(450px, 122px) scale(0); opacity: 0; }
+    }
+
+    @keyframes slide-heart-3 {
+      0% { transform: translate(630px, 122px) scale(0); opacity: 0; }
+      12% { transform: translate(636px, 122px) scale(1); opacity: 1; }
+      88% { transform: translate(664px, 122px) scale(1); opacity: 1; }
+      100% { transform: translate(670px, 122px) scale(0); opacity: 0; }
+    }
+
+    @keyframes slide-heart-4 {
+      0% { transform: translate(850px, 122px) scale(0); opacity: 0; }
+      12% { transform: translate(856px, 122px) scale(1); opacity: 1; }
+      88% { transform: translate(884px, 122px) scale(1); opacity: 1; }
+      100% { transform: translate(890px, 122px) scale(0); opacity: 0; }
+    }
+
+    .flow-heart-1 { animation: slide-heart-1 2.5s linear infinite; }
+    .flow-heart-2 { animation: slide-heart-2 2.5s linear infinite; }
+    .flow-heart-3 { animation: slide-heart-3 2.5s linear infinite; }
+    .flow-heart-4 { animation: slide-heart-4 2.5s linear infinite; }
+
+    @keyframes float-sparkle {
+      0%, 100% { transform: translate(0, 0) scale(0.85); opacity: 0.3; }
+      50% { transform: translate(2px, -3px) scale(1.15); opacity: 0.95; }
+    }
+    .anim-sparkle { animation: float-sparkle 3s ease-in-out infinite; }
+
+    @keyframes scan-line {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(20px); }
+    }
+    .anim-scan { animation: scan-line 2s ease-in-out infinite; }
+
+    @keyframes pulse-icon {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+    .anim-pulse { transform-origin: center; animation: pulse-icon 2.5s ease-in-out infinite; }
+  </style>
+
+  <!-- Background -->
+  <rect class="bg" width="100%" height="100%"/>
+  
+  <!-- Outer Rounded Border (Decreased Padding/Margin to 8px) -->
+  <rect x="8" y="8" width="1064" height="224" rx="22" ry="22" fill="none" stroke="#fda4af" stroke-width="1" opacity="0.3"/>
+
+  <!-- HEADER -->
+  <text x="540" y="38" text-anchor="middle" class="main-title">Fluxo de Integração e Arquitetura</text>
+
+  <!-- ==================== NODE 1: WRITING ==================== -->
+  <g transform="translate(10, 65)">
+    <rect width="180" height="115" rx="20" ry="20" fill="url(#grad-card-rose)" stroke="#e11d48" stroke-width="1.2" class="card-rose" filter="url(#card-shadow)"/>
+    <text x="18" y="32" class="node-title">01. ESCRITA &amp; EDIT</text>
+    <text x="18" y="54" class="node-desc">Editor SPA React 19</text>
+    <text x="18" y="70" class="node-desc">Customização Visual</text>
+    <text x="18" y="92" class="node-tag" fill="#e11d48">Zustand Store</text>
+
+    <!-- Visual Deco: Tiny Sparkle -->
+    <g transform="translate(150, 20)" class="anim-sparkle">
+      <path d="M 0,-4 L 1,-1 L 4,0 L 1,1 L 0,4 L -1,1 L -4,0 L -1,-1 Z" fill="#d4a574" />
+    </g>
+  </g>
+
+  <!-- Connection 1 -> 2 -->
+  <path class="conn-line" d="M 190,122 L 230,122" stroke="#fda4af" opacity="0.6"/>
+  <path d="M 226,119 L 230,122 L 226,125" fill="none" stroke="#fda4af" stroke-width="1.2" stroke-linecap="round" />
+  
+  <!-- Sliding Heart 1 -->
+  <g class="flow-heart-1">
+    <path d="M 0,-3 C -1.5,-5.5 -5,-4.5 -5,0 C -5,3.5 0,6 0,6 C 0,6 5,3.5 5,0 C 5,-4.5 1.5,-5.5 0,-3 Z" fill="#e11d48" transform="translate(0, 0) scale(1.15)"/>
+  </g>
+
+  <!-- ==================== NODE 2: BACKEND API ==================== -->
+  <g transform="translate(230, 65)">
+    <rect width="180" height="115" rx="20" ry="20" fill="url(#grad-card-rose)" stroke="#d4a574" stroke-width="1.2" class="card-gold" filter="url(#card-shadow)"/>
+    <text x="18" y="32" class="node-title">02. PROCESSAMENTO</text>
+    <text x="18" y="54" class="node-desc">Express API Server</text>
+    <text x="18" y="70" class="node-desc">Validação de Tipos Zod</text>
+    <text x="18" y="92" class="node-tag" fill="#d4a574">Prisma Client</text>
+  </g>
+
+  <!-- Connection 2 -> 3 -->
+  <path class="conn-line" d="M 410,122 L 450,122" stroke="#fda4af" opacity="0.6"/>
+  <path d="M 446,119 L 450,122 L 446,125" fill="none" stroke="#fda4af" stroke-width="1.2" stroke-linecap="round" />
+  
+  <!-- Sliding Heart 2 -->
+  <g class="flow-heart-2">
+    <path d="M 0,-3 C -1.5,-5.5 -5,-4.5 -5,0 C -5,3.5 0,6 0,6 C 0,6 5,3.5 5,0 C 5,-4.5 1.5,-5.5 0,-3 Z" fill="#d4a574" transform="translate(0, 0) scale(1.15)"/>
+  </g>
+
+  <!-- ==================== NODE 3: PAYMENT ==================== -->
+  <g transform="translate(450, 65)">
+    <rect width="180" height="115" rx="20" ry="20" fill="url(#grad-card-rose)" stroke="#e11d48" stroke-width="1.2" class="card-rose" filter="url(#card-shadow)"/>
+    <text x="18" y="32" class="node-title">03. PAGAMENTOS</text>
+    <text x="18" y="54" class="node-desc">Stripe &amp; Mercado Pago</text>
+    <text x="18" y="70" class="node-desc">Pix Dinâmico &amp; Cartão</text>
+    <text x="18" y="92" class="node-tag" fill="#e11d48">Sessão Segura</text>
+
+    <!-- Visual Deco: Pulsing Coin Outline -->
+    <circle cx="150" cy="24" r="6" fill="none" stroke="#d4a574" stroke-width="1" class="anim-pulse"/>
+    <line x1="150" y1="20" x2="150" y2="28" stroke="#d4a574" stroke-width="0.8" class="anim-pulse"/>
+  </g>
+
+  <!-- Connection 3 -> 4 -->
+  <path class="conn-line" d="M 630,122 L 670,122" stroke="#fda4af" opacity="0.6"/>
+  <path d="M 666,119 L 670,122 L 666,125" fill="none" stroke="#fda4af" stroke-width="1.2" stroke-linecap="round" />
+  
+  <!-- Sliding Heart 3 -->
+  <g class="flow-heart-3">
+    <path d="M 0,-3 C -1.5,-5.5 -5,-4.5 -5,0 C -5,3.5 0,6 0,6 C 0,6 5,3.5 5,0 C 5,-4.5 1.5,-5.5 0,-3 Z" fill="#e11d48" transform="translate(0, 0) scale(1.15)"/>
+  </g>
+
+  <!-- ==================== NODE 4: WEBHOOKS ==================== -->
+  <g transform="translate(670, 65)">
+    <rect width="180" height="115" rx="20" ry="20" fill="url(#grad-card-rose)" stroke="#d4a574" stroke-width="1.2" class="card-gold" filter="url(#card-shadow)"/>
+    <text x="18" y="32" class="node-title">04. WEBHOOK &amp; ATIVAR</text>
+    <text x="18" y="54" class="node-desc">Retorno Assíncrono</text>
+    <text x="18" y="70" class="node-desc">Gravação no MongoDB</text>
+    <text x="18" y="92" class="node-tag" fill="#d4a574">Webhooks Ativos</text>
+  </g>
+
+  <!-- Connection 4 -> 5 -->
+  <path class="conn-line" d="M 850,122 L 890,122" stroke="#fda4af" opacity="0.6"/>
+  <path d="M 886,119 L 890,122 L 886,125" fill="none" stroke="#fda4af" stroke-width="1.2" stroke-linecap="round" />
+  
+  <!-- Sliding Heart 4 -->
+  <g class="flow-heart-4">
+    <path d="M 0,-3 C -1.5,-5.5 -5,-4.5 -5,0 C -5,3.5 0,6 0,6 C 0,6 5,3.5 5,0 C 5,-4.5 1.5,-5.5 0,-3 Z" fill="#d4a574" transform="translate(0, 0) scale(1.15)"/>
+  </g>
+
+  <!-- ==================== NODE 5: DELIVERY ==================== -->
+  <g transform="translate(890, 65)">
+    <rect width="180" height="115" rx="20" ry="20" fill="url(#grad-card-rose)" stroke="#e11d48" stroke-width="1.2" class="card-rose" filter="url(#card-shadow)"/>
+    <text x="18" y="32" class="node-title">05. ENTREGA &amp; LEITURA</text>
+    <text x="18" y="54" class="node-desc">QR Code de Leitura</text>
+    <text x="18" y="70" class="node-desc">Visualizador de Cartas</text>
+    <text x="18" y="92" class="node-tag" fill="#e11d48">Lenis Smooth Scroll</text>
+
+    <!-- Visual Deco: Tiny QR Code with scanner line -->
+    <g transform="translate(145, 58)">
+      <rect width="22" height="22" rx="3" ry="3" fill="#fff5f6" stroke="#fda4af" stroke-width="0.8"/>
+      <rect x="2" y="2" width="5" height="5" fill="#e11d48"/>
+      <rect x="15" y="2" width="5" height="5" fill="#e11d48"/>
+      <rect x="2" y="15" width="5" height="5" fill="#e11d48"/>
+      <rect x="9" y="9" width="3" height="3" fill="#d4a574"/>
+      <line x1="1" y1="1" x2="21" y2="1" stroke="#e11d48" stroke-width="0.8" class="anim-scan" />
+    </g>
+  </g>
+</svg>
