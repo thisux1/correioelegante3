@@ -1,8 +1,5 @@
 import { useRef, type ReactNode } from 'react'
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
-
-// Shared spring config for smooth scroll animations without Lenis
-const springConfig = { stiffness: 140, damping: 30, restDelta: 0.005 }
+import { motion, useScroll, useTransform } from 'framer-motion'
 
 interface SectionRevealProps {
   children: ReactNode
@@ -23,9 +20,6 @@ export function SectionReveal({ children, className = '', delay = 0, scrollRange
     offset: ['start end', 'end 0.1'],
   })
 
-  // Smooth scroll progress (replaces Lenis smoothing)
-  const smoothProgress = useSpring(scrollYProgress, springConfig)
-
   const defaultFadeIn = 0.05 + delay * 0.05
   const defaultRange: [number, number, number, number] = [
     defaultFadeIn,
@@ -35,8 +29,8 @@ export function SectionReveal({ children, className = '', delay = 0, scrollRange
   ]
   const [fi, fie, fo, foe] = scrollRange ?? defaultRange
 
-  const opacity = useTransform(smoothProgress, [fi, fie, fo, foe], [0, 1, 1, 0])
-  const y = useTransform(smoothProgress, [fi, fie, fo, foe], [50, 0, 0, -50])
+  const opacity = useTransform(scrollYProgress, [fi, fie, fo, foe], [0, 1, 1, 0])
+  const y = useTransform(scrollYProgress, [fi, fie, fo, foe], [50, 0, 0, -50])
 
   return (
     <motion.div

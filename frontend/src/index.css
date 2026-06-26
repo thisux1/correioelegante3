@@ -33,6 +33,7 @@
   html {
     scroll-behavior: auto;
     scrollbar-width: none;
+    position: relative;
     /* Firefox */
     -ms-overflow-style: none;
     /* IE/Edge */
