@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
@@ -68,11 +68,10 @@ function HeroSectionOriginal() {
     target: sectionRef,
     offset: ['start start', 'end end'],
   })
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 80, damping: 25, restDelta: 0.01 })
-  const heroProgress = useTransform(smoothProgress, [0.18, 1], [0, 0.93])
-  const animationOpacity = useTransform(smoothProgress, [0.16, 0.22], [0, 1])
-  const textOpacity = useTransform(smoothProgress, [0.05, 0.18], [1, 0])
-  const textY = useTransform(smoothProgress, [0.05, 0.18], [0, -60])
+  const heroProgress = useTransform(scrollYProgress, [0.18, 1], [0, 0.93])
+  const animationOpacity = useTransform(scrollYProgress, [0.16, 0.22], [0, 1])
+  const textOpacity = useTransform(scrollYProgress, [0.05, 0.18], [1, 0])
+  const textY = useTransform(scrollYProgress, [0.05, 0.18], [0, -60])
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: '500vh' }}>
@@ -136,20 +135,18 @@ function HeroSectionOptimized() {
     target: sectionRef,
     offset: ['start start', 'end end'],
   })
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 80, damping: 25, restDelta: 0.01 })
-
   // ── Orquestração de Foco (Livro de História) ──
   // [0.00, 0.08]: Texto sólido para leitura. Fundo opaco.
   // [0.08, 0.14]: Crossfade texto sai, animação entra.
   // [0.14, 0.86]: Coreografia do Envelope ganha vida no fundo mágico.
   // [0.86, 0.94]: Crossfade animação sai, texto e fundo sólido voltam.
   // [0.94, 1.00]: Fixação para o fim da tela antes da próxima sessão.
-  const focusOpacity = useTransform(smoothProgress, [0.06, 0.14, 0.86, 0.94], [1, 0, 0, 1])
-  const textY = useTransform(smoothProgress, [0.06, 0.14, 0.86, 0.94], [0, -60, 60, 0])
-  const animationOpacity = useTransform(smoothProgress, [0.06, 0.14, 0.86, 0.94], [0, 1, 1, 0])
+  const focusOpacity = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [1, 0, 0, 1])
+  const textY = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [0, -60, 60, 0])
+  const animationOpacity = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [0, 1, 1, 0])
   
   // A progressão da animação física SVG (avião, papel) ocorre apenas no espaço onde a opacidade é 100%.
-  const heroProgress = useTransform(smoothProgress, [0.14, 0.86], [0, 1])
+  const heroProgress = useTransform(scrollYProgress, [0.14, 0.86], [0, 1])
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: '500vh' }}>
@@ -162,7 +159,7 @@ function HeroSectionOptimized() {
 
         {/* Camada da Animação do Envelope e Avião */}
         <DeferredHeroAnimation scrollProgress={heroProgress} animationOpacity={animationOpacity} />
-        <HeroClouds scrollProgress={smoothProgress} />
+        <HeroClouds scrollProgress={scrollYProgress} />
 
         {/* Camada do Texto Principal e Botões */}
         <motion.div
