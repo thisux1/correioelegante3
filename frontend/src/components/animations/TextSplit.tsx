@@ -1,8 +1,7 @@
 import { useRef } from 'react'
-import { motion, useScroll, useSpring, useTransform, type MotionValue } from 'framer-motion'
+import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 
-// Shared spring config for smooth scroll animations without Lenis
-const springConfig = { stiffness: 140, damping: 30, restDelta: 0.005 }
+
 
 interface TextSplitProps {
   text: string
@@ -22,9 +21,6 @@ export function TextSplit({ text, className = '', charClassName = '', delay = 0,
     target: ref,
     offset: ['start end', 'end 0.1'],
   })
-
-  // Smooth scroll progress (replaces Lenis smoothing)
-  const smoothProgress = useSpring(scrollYProgress, springConfig)
 
   // ── Mount animation mode ──
   if (animateOnMount) {
@@ -80,7 +76,7 @@ export function TextSplit({ text, className = '', charClassName = '', delay = 0,
               <TextSplitChar
                 key={charIndex}
                 char={char}
-                smoothProgress={smoothProgress}
+                smoothProgress={scrollYProgress}
                 fadeIn={charStart}
                 fadeInEnd={charEnd}
                 fadeOut={charFadeOut}

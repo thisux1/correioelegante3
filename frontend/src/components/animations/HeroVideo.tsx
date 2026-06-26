@@ -103,26 +103,22 @@ export function HeroVideo({ scrollProgress }: HeroVideoProps) {
         ctx.drawImage(img, 0, 0)
     }, [])
 
-    // RAF loop — only runs when visible
+    // Subscribe to scroll progress changes — event-driven, no polling
     useEffect(() => {
         if (!isLoaded) return
 
+        // Draw initial frame on mount
         drawFrame(frameIndex.get())
 
-        let rafId: number
-
-        function tick() {
-            // Only draw when the hero section is on screen
+        // Subscribe to changes — fires only when scrollProgress changes
+        const unsubscribe = scrollProgress.on('change', () => {
             if (isVisibleRef.current) {
                 drawFrame(frameIndex.get())
             }
-            rafId = requestAnimationFrame(tick)
-        }
+        })
 
-        rafId = requestAnimationFrame(tick)
-
-        return () => cancelAnimationFrame(rafId)
-    }, [isLoaded, frameIndex, drawFrame])
+        return () => unsubscribe()
+    }, [isLoaded, frameIndex, drawFrame, scrollProgress])
 
     return (
         <>
