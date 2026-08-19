@@ -118,9 +118,9 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    const payerEmail = user?.email && user.email.includes('@') && !user.email.endsWith('@correioelegante.com.br')
+    const payerEmail = user?.email && user.email.includes('@')
         ? user.email
-        : 'comprador.teste@gmail.com';
+        : 'contato@correioelegante.com.br';
 
     const client = getMercadoPagoClient();
     const payment = new Payment(client);
@@ -135,7 +135,7 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
                 payer: {
                     email: payerEmail,
                     first_name: 'Cliente',
-                    last_name: 'Correio',
+                    last_name: 'Elegante',
                     identification: {
                         type: 'CPF',
                         number: '19119119100',
@@ -175,7 +175,7 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         console.warn('Mercado Pago Direct Pix unavailable, creating official hosted Preference:', mpErr);
     }
 
-    // Criar preferência oficial do Mercado Pago (Checkout Pro Oficial)
+    // Criar preferência oficial do Mercado Pago (Checkout Pro / Brick Oficial)
     try {
         const { Preference } = await import('mercadopago');
         const preference = new Preference(client);
@@ -193,8 +193,13 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
                 ],
                 payer: {
                     email: payerEmail,
+                    name: 'Cliente',
+                    surname: 'Elegante',
                 },
                 payment_methods: {
+                    excluded_payment_types: [
+                        { id: 'ticket' },
+                    ],
                     default_payment_method_id: 'pix',
                 },
                 metadata: {
