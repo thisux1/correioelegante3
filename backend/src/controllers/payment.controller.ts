@@ -82,7 +82,7 @@ async function getResourcePaymentStatus(params: {
 }
 
 export async function createPayment(req: AuthRequest, res: Response): Promise<void> {
-  const { paymentMethod } = req.body as { paymentMethod: 'pix' | 'credit_card' };
+  const { paymentMethod } = req.body as { paymentMethod: 'pix' | 'credit_card' | 'mercadopago_checkout' };
   const target = resolvePaymentTarget(req.body as {
     messageId?: string;
     resourceType?: PaymentResourceType;
@@ -95,13 +95,19 @@ export async function createPayment(req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
+  if (paymentMethod === 'mercadopago_checkout') {
+    const result = await mercadopagoService.createMercadoPagoPreferenceForResource(target, req.userId!);
+    res.json(result);
+    return;
+  }
+
   if (paymentMethod === 'credit_card') {
     const result = await stripeService.createCardPaymentForResource(target, req.userId!);
     res.json(result);
     return;
   }
 
-  throw new AppError('Método de pagamento inválido. Use "pix" ou "credit_card".', 400);
+  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".', 400);
 }
 
 export async function stripeWebhookHandler(req: Request, res: Response): Promise<void> {
