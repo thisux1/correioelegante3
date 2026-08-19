@@ -104,6 +104,26 @@ export function Payment() {
     }
   }
 
+  async function handleMercadoPagoCheckout() {
+    if (!target) return
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await paymentService.createMercadoPagoCheckout(target)
+      if (response.data.checkoutUrl) {
+        window.location.href = response.data.checkoutUrl
+      } else {
+        setError('Não foi possível iniciar o Checkout do Mercado Pago.')
+      }
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } }
+      setError(axiosErr.response?.data?.error || 'Erro ao iniciar checkout do Mercado Pago.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   async function handleCopy() {
     if (!pixData?.pixQrCode) return
 
@@ -240,11 +260,28 @@ export function Payment() {
                     <CreditCard className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-text">Cartão de Crédito</p>
+                    <p className="font-semibold text-text">Cartão de Crédito (Stripe)</p>
                     <p className="text-sm text-text-light">Visa, Mastercard, Elo e outros</p>
                   </div>
                   {isLoading && (
                     <div className="ml-auto w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  )}
+                </button>
+
+                <button
+                  onClick={handleMercadoPagoCheckout}
+                  disabled={isLoading}
+                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-transparent bg-sky-50 hover:border-sky-400 hover:bg-sky-100 transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <div className="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-text">Mercado Pago (Checkout Pro)</p>
+                    <p className="text-sm text-text-light">Teste com Cartões de Teste Sandbox</p>
+                  </div>
+                  {isLoading && (
+                    <div className="ml-auto w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
                   )}
                 </button>
               </div>

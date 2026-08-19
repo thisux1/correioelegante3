@@ -60,6 +60,20 @@ export const paymentService = {
     return api.post<CardPaymentResponse>('/payments/create', buildCreatePayload(target, 'credit_card'))
   },
 
+  createMercadoPagoCheckout(target: PaymentTarget) {
+    return api.post<{
+      paymentId: string
+      status: string
+      checkoutUrl: string | null
+      preferenceId: string | null
+    }>('/payments/create', {
+      paymentMethod: 'mercadopago_checkout',
+      resourceType: target.resourceType,
+      resourceId: target.resourceId,
+      messageId: target.resourceType === 'message' ? target.resourceId : undefined,
+    })
+  },
+
   getStatus(target: PaymentTarget) {
     return api.get<PaymentStatusResponse>(`/payments/status/${target.resourceType}/${target.resourceId}`)
   },
