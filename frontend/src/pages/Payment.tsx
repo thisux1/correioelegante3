@@ -24,6 +24,7 @@ export function Payment() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
 
   const isPageFlow = location.pathname.includes('/payment/page/')
   const target = useMemo<PaymentTarget | null>(() => {
@@ -58,6 +59,18 @@ export function Payment() {
 
     return () => clearInterval(interval)
   }, [step, target])
+
+  // Countdown de expiração do QR Code Pix
+  useEffect(() => {
+    if (!pixData?.pixExpiresAt) return
+
+    const expiresAt = new Date(pixData.pixExpiresAt).getTime()
+    const tick = () => setSecondsLeft(Math.max(0, Math.floor((expiresAt - Date.now()) / 1000)))
+
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [pixData?.pixExpiresAt])
 
   async function handleSelectMethod(method: PaymentMethod) {
     if (!target) return
@@ -335,10 +348,27 @@ export function Payment() {
                 </Button>
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-6">
+              <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-2">
                 <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
                 Verificando pagamento automaticamente...
               </div>
+
+              {secondsLeft !== null && (
+                <div className="text-center text-sm mb-6">
+                  {secondsLeft > 0 ? (
+                    <span className="text-text-light">
+                      O QR Code expira em{' '}
+                      <span className="font-semibold text-text">
+                        {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-rose-500">
+                      Este QR Code expirou. Volte e gere um novo pagamento.
+                    </span>
+                  )}
+                </div>
+              )}
 
               <button
                 onClick={() => setStep('select')}

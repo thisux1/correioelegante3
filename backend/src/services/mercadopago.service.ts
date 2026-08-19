@@ -6,6 +6,9 @@ import { AppError } from '../utils/AppError';
 // R$ 4,99
 const AMOUNT = 4.99;
 
+// Expiração do QR Code Pix em minutos (padrão recomendado pelo Mercado Pago: 30 min)
+const PIX_EXPIRATION_MINUTES = Number(process.env.PIX_EXPIRATION_MINUTES) || 30;
+
 type PaymentResourceType = 'message' | 'page';
 
 interface PaymentTarget {
@@ -166,60 +169,75 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         ? user.email
         : 'contato@correioelegante.com.br';
 
+    const expiresAt = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
+    const notificationUrl = process.env.MERCADOPAGO_NOTIFICATION_URL || process.env.MP_NOTIFICATION_URL;
+
     const client = getMercadoPagoClient();
     const payment = new Payment(client);
 
-    try {
-        const result = await payment.create({
-            body: {
-                transaction_amount: AMOUNT,
-                description: resolveDescription(target.resourceType),
-                payment_method_id: 'pix',
-                statement_descriptor: 'CORREIOELEG',
-                payer: {
-                    email: payerEmail,
-                    first_name: 'Cliente',
-                    last_name: 'Elegante',
-                    identification: {
-                        type: 'CPF',
-                        number: '19119119100',
-                    },
-                },
-                metadata: {
-                    resource_type: target.resourceType,
-                    resource_id: target.resourceId,
-                    message_id: target.resourceType === 'message' ? target.resourceId : undefined,
-                    page_id: target.resourceType === 'page' ? target.resourceId : undefined,
-                    user_id: userId,
-                },
+    const paymentBody: Record<string, unknown> = {
+        transaction_amount: AMOUNT,
+        description: resolveDescription(target.resourceType),
+        payment_method_id: 'pix',
+        statement_descriptor: 'CORREIOELEG',
+        date_of_expiration: expiresAt.toISOString(),
+        external_reference: `${target.resourceType}:${target.resourceId}`,
+        payer: {
+            email: payerEmail,
+            first_name: 'Cliente',
+            last_name: 'Elegante',
+            identification: {
+                type: 'CPF',
+                number: '19119119100',
             },
-            requestOptions: {
-                idempotencyKey: crypto.randomUUID(),
-            },
-        });
+        },
+        metadata: {
+            resource_type: target.resourceType,
+            resource_id: target.resourceId,
+            message_id: target.resourceType === 'message' ? target.resourceId : undefined,
+            page_id: target.resourceType === 'page' ? target.resourceId : undefined,
+            user_id: userId,
+        },
+    };
 
-        if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
-            await markResourcePaymentPending({
-                resourceType: target.resourceType,
-                resourceId: target.resourceId,
-                paymentId: String(result.id),
-            });
-
-            const pixData = result.point_of_interaction.transaction_data;
-            return {
-                paymentId: String(result.id),
-                status: result.status ?? 'pending',
-                pixQrCode: pixData.qr_code ?? null,
-                pixQrCodeBase64: pixData.qr_code_base64 ?? null,
-                preferenceId: null,
-                checkoutUrl: null,
-            };
-        }
-    } catch (mpErr) {
-        console.warn('Mercado Pago Direct Pix API unavailable, generating direct Pix BR Code:', mpErr);
+    // Webhook automático do Mercado Pago: só envia se a URL pública estiver configurada
+    if (notificationUrl) {
+        paymentBody.notification_url = notificationUrl;
     }
 
-    // Gerar Pix BR Code direto (EMVCo Banco Central) sem intermediários nem formulários
+    let result;
+    try {
+        result = await payment.create({
+            body: paymentBody,
+            requestOptions: {
+                // Idempotência por recurso: evita QR duplicado em duplo clique/retry
+                idempotencyKey: `pix_${target.resourceType}_${target.resourceId}`,
+            },
+        });
+    } catch (mpErr) {
+        console.warn('Mercado Pago Direct API unavailable, falling back to direct BR Code Pix:', mpErr);
+    }
+
+    if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
+        await markResourcePaymentPending({
+            resourceType: target.resourceType,
+            resourceId: target.resourceId,
+            paymentId: String(result.id),
+        });
+
+        const pixData = result.point_of_interaction.transaction_data;
+        return {
+            paymentId: String(result.id),
+            status: result.status ?? 'pending',
+            pixQrCode: pixData.qr_code ?? null,
+            pixQrCodeBase64: pixData.qr_code_base64 ?? null,
+            pixExpiresAt: expiresAt.toISOString(),
+            preferenceId: null,
+            checkoutUrl: null,
+        };
+    }
+
+    // Gerar Pix BR Code direto (EMVCo Banco Central) com a chave Pix do recebedor
     const paymentId = `pix_${target.resourceType}_${target.resourceId}_${Date.now()}`;
     const pixKey = process.env.PIX_KEY || 'thiagocostabr74@gmail.com';
     const directQrCode = generateDirectPixCode({
@@ -241,6 +259,7 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         status: 'pending',
         pixQrCode: directQrCode,
         pixQrCodeBase64: null,
+        pixExpiresAt: expiresAt.toISOString(),
         preferenceId: null,
         checkoutUrl: null,
     };
@@ -297,11 +316,21 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
             const resourceId = result.metadata?.resource_id as string | undefined;
             const messageId = result.metadata?.message_id as string | undefined;
 
+            // Fallback via external_reference (formato "resourceType:resourceId")
+            let externalTarget: PaymentTarget | null = null;
+            const externalReference = result.external_reference as string | undefined;
+            if (externalReference?.includes(':')) {
+                const [extType, extId] = externalReference.split(':');
+                if ((extType === 'message' || extType === 'page') && extId) {
+                    externalTarget = { resourceType: extType, resourceId: extId };
+                }
+            }
+
             const target = resourceType && resourceId
                 ? { resourceType, resourceId }
                 : messageId
                     ? { resourceType: 'message' as const, resourceId: messageId }
-                    : null;
+                    : externalTarget;
 
             if (target) {
                 await markResourcePaymentPaid(target);
