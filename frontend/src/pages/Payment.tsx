@@ -7,12 +7,15 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Container } from '@/components/layout/Container'
+import { initMercadoPago, Payment as MPPaymentBrick } from '@mercadopago/sdk-react'
 import {
   paymentService,
   type PaymentMethod,
   type PixPaymentResponse,
   type PaymentTarget,
 } from '@/services/paymentService'
+
+initMercadoPago('APP_USR-65b3afe2-db9f-44d4-b3ca-eaa313289192', { locale: 'pt-BR' })
 
 type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 
@@ -67,11 +70,11 @@ export function Payment() {
     try {
       if (method === 'pix') {
         const response = await paymentService.createPix(target)
-        if (response.data.checkoutUrl) {
-          window.location.href = response.data.checkoutUrl
-        } else if (response.data.pixQrCode) {
+        if (response.data.pixQrCode || response.data.preferenceId) {
           setPixData(response.data)
           setStep('pix')
+        } else if (response.data.checkoutUrl) {
+          window.location.href = response.data.checkoutUrl
         } else {
           setError('Não foi possível iniciar o pagamento Pix. Tente novamente.')
         }
@@ -264,72 +267,99 @@ export function Payment() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 inline-block mb-6 shadow-sm">
-                {pixData?.pixQrCodeBase64 ? (
-                  <img
-                    src={`data:image/png;base64,${pixData.pixQrCodeBase64}`}
-                    alt="QR Code Pix"
-                    width={200}
-                    height={200}
+              {pixData?.preferenceId ? (
+                <div className="w-full my-4 text-left">
+                  <MPPaymentBrick
+                    initialization={{
+                      amount: 4.99,
+                      preferenceId: pixData.preferenceId,
+                    }}
+                    customization={{
+                      paymentMethods: {
+                        bankTransfer: 'all',
+                        ticket: 'all',
+                      },
+                      visual: {
+                        style: {
+                          theme: 'flat',
+                        },
+                      },
+                    }}
+                    onReady={() => setIsLoading(false)}
+                    onError={(err: unknown) => console.error('Mercado Pago Brick error:', err)}
+                    onSubmit={async () => {}}
                   />
-                ) : (
-                  <QRCodeSVG
-                    value={pixData?.pixQrCode || 'placeholder'}
-                    size={200}
-                    level="H"
-                    includeMargin
-                  />
-                )}
-              </div>
-
-              <div className="mb-6 text-left">
-                <label htmlFor="pix-copia-e-cola" className="block text-xs font-medium text-text-muted mb-2">
-                  Código Pix Copia e Cola
-                </label>
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-2.5 mb-3 focus-within:ring-2 focus-within:ring-primary/30">
-                  <input
-                    id="pix-copia-e-cola"
-                    type="text"
-                    readOnly
-                    value={pixData?.pixQrCode || ''}
-                    onFocus={(e) => e.target.select()}
-                    onClick={handleCopy}
-                    className="text-xs text-text-light font-mono bg-transparent flex-1 outline-none truncate cursor-pointer select-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    aria-label={copied ? 'Código copiado' : 'Copiar código Pix'}
-                    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
-                      copied ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-gray-200 text-text-light'
-                    }`}
-                  >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                  </button>
                 </div>
+              ) : (
+                <>
+                  <div className="bg-white rounded-2xl p-6 inline-block mb-6 shadow-sm">
+                    {pixData?.pixQrCodeBase64 ? (
+                      <img
+                        src={`data:image/png;base64,${pixData.pixQrCodeBase64}`}
+                        alt="QR Code Pix"
+                        width={200}
+                        height={200}
+                      />
+                    ) : (
+                      <QRCodeSVG
+                        value={pixData?.pixQrCode || ''}
+                        size={200}
+                        level="H"
+                        includeMargin
+                      />
+                    )}
+                  </div>
 
-                <Button
-                  onClick={handleCopy}
-                  className={`w-full gap-2 font-medium ${
-                    copied
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : ''
-                  }`}
-                  size="md"
-                >
-                  {copied ? (
-                    <>
-                      <Check size={18} />
-                      Código Pix Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={18} />
-                      Copiar Código Pix
-                    </>
-                  )}
-                </Button>
-              </div>
+                  <div className="mb-6 text-left">
+                    <label htmlFor="pix-copia-e-cola" className="block text-xs font-medium text-text-muted mb-2">
+                      Código Pix Copia e Cola
+                    </label>
+                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-2.5 mb-3 focus-within:ring-2 focus-within:ring-primary/30">
+                      <input
+                        id="pix-copia-e-cola"
+                        type="text"
+                        readOnly
+                        value={pixData?.pixQrCode || ''}
+                        onFocus={(e) => e.target.select()}
+                        onClick={handleCopy}
+                        className="text-xs text-text-light font-mono bg-transparent flex-1 outline-none truncate cursor-pointer select-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCopy}
+                        aria-label={copied ? 'Código copiado' : 'Copiar código Pix'}
+                        className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+                          copied ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-gray-200 text-text-light'
+                        }`}
+                      >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
+                    </div>
+
+                    <Button
+                      onClick={handleCopy}
+                      className={`w-full gap-2 font-medium ${
+                        copied
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : ''
+                      }`}
+                      size="md"
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={18} />
+                          Código Pix Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={18} />
+                          Copiar Código Pix
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
 
               <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-6">
                 <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />

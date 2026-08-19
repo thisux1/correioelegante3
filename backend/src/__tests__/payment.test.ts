@@ -54,6 +54,7 @@ describe('POST /api/payments/create', () => {
             status: 'pending',
             pixQrCode: 'pix_qr_code_data',
             pixQrCodeBase64: null,
+            preferenceId: null,
             checkoutUrl: null,
         });
 
@@ -89,6 +90,7 @@ describe('POST /api/payments/create', () => {
             status: 'pending',
             pixQrCode: 'pix_qr_code_page',
             pixQrCodeBase64: null,
+            preferenceId: null,
             checkoutUrl: null,
         });
 
