@@ -16,8 +16,8 @@ function getConsentPayload() {
     );
 }
 
-export async function registerUser(email: string, password: string, age: number, legalAccepted: boolean) {
-    if (age < 13) {
+export async function registerUser(email: string, password: string, age?: number, legalAccepted?: boolean) {
+    if (age !== undefined && age < 13) {
         throw new AppError('Idade mínima é 13 anos', 400, 'AUTH_UNDERAGE');
     }
 

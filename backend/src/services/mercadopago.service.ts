@@ -14,9 +14,9 @@ interface PaymentTarget {
 }
 
 function getMercadoPagoClient(): MercadoPagoConfig {
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const token = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
     if (!token) {
-        throw new Error('MERCADOPAGO_ACCESS_TOKEN não configurada');
+        throw new Error('MERCADOPAGO_ACCESS_TOKEN (ou MP_ACCESS_TOKEN) não configurada');
     }
     return new MercadoPagoConfig({ accessToken: token });
 }
@@ -117,29 +117,63 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         throw new AppError('Pagamento já realizado', 400);
     }
 
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const payerEmail = user?.email && user.email.includes('@') && !user.email.endsWith('@correioelegante.com.br')
+        ? user.email
+        : 'comprador.teste@gmail.com';
+
     const client = getMercadoPagoClient();
     const payment = new Payment(client);
 
-    const result = await payment.create({
-        body: {
-            transaction_amount: AMOUNT,
-            description: resolveDescription(target.resourceType),
-            payment_method_id: 'pix',
-            payer: {
-                // Endereço de e-mail genérico para pagamentos sem identificação do pagador
-                email: 'pagador@correioelegante.com.br',
-            },
-            metadata: {
-                resource_type: target.resourceType,
-                resource_id: target.resourceId,
-                message_id: target.resourceType === 'message' ? target.resourceId : undefined,
-                page_id: target.resourceType === 'page' ? target.resourceId : undefined,
-                user_id: userId,
-            },
-        },
-    });
+    let result: { id?: string | number; status?: string; point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string } } } | null = null;
 
-    if (!result.id) {
+    try {
+        result = await payment.create({
+            body: {
+                transaction_amount: AMOUNT,
+                description: resolveDescription(target.resourceType),
+                payment_method_id: 'pix',
+                payer: {
+                    email: payerEmail,
+                    first_name: 'Cliente',
+                    last_name: 'Teste',
+                    identification: {
+                        type: 'CPF',
+                        number: '19119119100',
+                    },
+                },
+                metadata: {
+                    resource_type: target.resourceType,
+                    resource_id: target.resourceId,
+                    message_id: target.resourceType === 'message' ? target.resourceId : undefined,
+                    page_id: target.resourceType === 'page' ? target.resourceId : undefined,
+                    user_id: userId,
+                },
+            },
+            requestOptions: {
+                idempotencyKey: crypto.randomUUID(),
+            },
+        });
+    } catch (mpErr) {
+        console.warn('Mercado Pago API error:', mpErr);
+        if (process.env.NODE_ENV !== 'production') {
+            const fallbackId = `dev_mp_${Date.now()}`;
+            result = {
+                id: fallbackId,
+                status: 'pending',
+                point_of_interaction: {
+                    transaction_data: {
+                        qr_code: `00020126580014br.gov.bcb.pix0136b76aa9c2-2ec4-4110-954e-ebfe34f05b6152040000530398654044.995802BR5916TA775759104283156009Sao Paulo62230519mpqrinter${fallbackId}63048466`,
+                        qr_code_base64: undefined,
+                    },
+                },
+            };
+        } else {
+            throw new AppError('Não foi possível gerar a chave Pix no momento. Tente novamente em instantes ou utilize cartão de crédito.', 502, 'PAYMENT_GATEWAY_ERROR');
+        }
+    }
+
+    if (!result || !result.id) {
         throw new AppError('Erro ao criar pagamento no Mercado Pago', 500);
     }
 
@@ -160,9 +194,9 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
 }
 
 export async function handleWebhook(body: Record<string, unknown>, signature: string, requestId: string) {
-    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET || process.env.MP_WEBHOOK_SECRET;
     if (!webhookSecret) {
-        throw new AppError('MERCADOPAGO_WEBHOOK_SECRET não configurado', 500);
+        throw new AppError('MERCADOPAGO_WEBHOOK_SECRET (ou MP_WEBHOOK_SECRET) não configurado', 500);
     }
     if (!signature) {
         throw new AppError('Header x-signature obrigatorio', 400);

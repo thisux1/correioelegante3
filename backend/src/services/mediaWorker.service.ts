@@ -198,7 +198,7 @@ export function createMediaWorkerService(provider: MediaProvider) {
 
       validateDurationLimit(asset.kind as AssetKind, result.durationMs ?? asset.durationMs);
 
-      await prismaDb.$transaction(async (tx) => {
+      await prismaDb.$transaction(async (tx: any) => {
         await tx.mediaJob.update({
           where: { id: claimedJob.id },
           data: {

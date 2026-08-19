@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -52,7 +53,6 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "ajv": "^8.18.0",
     "minimatch": "^10.2.3",
     "path-to-regexp": "^8.3.1",
     "undici": "^7.0.0",
