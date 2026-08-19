@@ -251,36 +251,41 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
             : `${baseUrl}/payment/page/${target.resourceId}`)
         : 'https://correioelegante.com.br/payment/cancel';
 
-    const prefResult = await preference.create({
-        body: {
-            items: [
-                {
-                    id: target.resourceId,
-                    title: resolveDescription(target.resourceType),
-                    description: 'Correio Elegante Digital',
-                    unit_price: AMOUNT,
-                    quantity: 1,
-                    currency_id: 'BRL',
-                },
-            ],
-            payer: {
-                email: payerEmail,
+    const prefBody: Record<string, unknown> = {
+        items: [
+            {
+                id: target.resourceId,
+                title: resolveDescription(target.resourceType),
+                description: 'Correio Elegante Digital',
+                unit_price: AMOUNT,
+                quantity: 1,
+                currency_id: 'BRL',
             },
-            back_urls: {
-                success: successUrl,
-                pending: successUrl,
-                failure: cancelUrl,
-            },
-            auto_return: 'approved',
-            metadata: {
-                resource_type: target.resourceType,
-                resource_id: target.resourceId,
-                message_id: target.resourceType === 'message' ? target.resourceId : undefined,
-                page_id: target.resourceType === 'page' ? target.resourceId : undefined,
-                user_id: userId,
-            },
-            external_reference: `${target.resourceType}:${target.resourceId}`,
+        ],
+        back_urls: {
+            success: successUrl,
+            pending: successUrl,
+            failure: cancelUrl,
         },
+        auto_return: 'approved',
+        metadata: {
+            resource_type: target.resourceType,
+            resource_id: target.resourceId,
+            message_id: target.resourceType === 'message' ? target.resourceId : undefined,
+            page_id: target.resourceType === 'page' ? target.resourceId : undefined,
+            user_id: userId,
+        },
+        external_reference: `${target.resourceType}:${target.resourceId}`,
+    };
+
+    if (user?.email && !isSellerEmail) {
+        prefBody.payer = {
+            email: user.email,
+        };
+    }
+
+    const prefResult = await preference.create({
+        body: prefBody,
     });
 
     if (prefResult && prefResult.id) {
