@@ -14,6 +14,7 @@ export interface PixPaymentResponse {
   status: string
   pixQrCode: string | null
   pixQrCodeBase64: string | null
+  checkoutUrl?: string | null
 }
 
 export interface CardPaymentResponse {
