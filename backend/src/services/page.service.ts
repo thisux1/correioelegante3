@@ -95,7 +95,7 @@ export async function createPage(userId: string, data: CreatePageInput) {
 
   const page = await prisma.page.create({
     data: {
-      content: sanitizedContent as unknown as Prisma.InputJsonValue,
+      content: sanitizedContent as any,
       status: lifecycle.status,
       visibility: lifecycle.visibility,
       publishedAt: lifecycle.publishedAt,
@@ -151,7 +151,7 @@ export async function updatePage(pageId: string, userId: string, data: UpdatePag
   const updated = await prisma.page.update({
     where: { id: pageId },
     data: {
-      content: sanitizedContent as unknown as Prisma.InputJsonValue,
+      content: sanitizedContent as any,
       status: lifecycle.status,
       visibility: lifecycle.visibility,
       publishedAt: lifecycle.publishedAt,

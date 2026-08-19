@@ -72,10 +72,9 @@ export function Payment() {
       } else {
         const response = await paymentService.createCard(target)
         if (response.data.checkoutUrl) {
-          // Redireciona para o Stripe Checkout
           window.location.href = response.data.checkoutUrl
         } else {
-          setError('Não foi possível iniciar o pagamento. Tente novamente.')
+          setError('Não foi possível iniciar o pagamento com cartão. Tente novamente.')
         }
       }
     } catch (err: unknown) {
@@ -87,32 +86,48 @@ export function Payment() {
   }
 
   async function handleCopy() {
-    if (pixData?.pixQrCode) {
-      await navigator.clipboard.writeText(pixData.pixQrCode)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+    if (!pixData?.pixQrCode) return
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(pixData.pixQrCode)
+      } else {
+        throw new Error('Clipboard API not available')
+      }
+    } catch {
+      const textArea = document.createElement('textarea')
+      textArea.value = pixData.pixQrCode
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      textArea.style.top = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      try {
+        document.execCommand('copy')
+      } finally {
+        document.body.removeChild(textArea)
+      }
     }
+
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
   }
 
-  if (error) {
+  if (!target) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-24 px-6">
         <Container size="narrow" className="flex justify-center">
-        <Card glass className="text-center max-w-md w-full py-12">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="font-display text-2xl font-bold text-text mb-2">
-            Ops! Algo deu errado
-          </h2>
-          <p className="text-text-light mb-6">{error}</p>
-          <div className="flex flex-col gap-3">
-            <Button onClick={() => { setError(null); setStep('select') }}>
-              Tentar novamente
-            </Button>
+          <Card glass className="text-center max-w-md w-full py-12">
+            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <h2 className="font-display text-2xl font-bold text-text mb-2">
+              Identificador não encontrado
+            </h2>
+            <p className="text-text-light mb-6">Não foi possível identificar o item para pagamento.</p>
             <Link to="/profile">
               <Button variant="outline" className="w-full">Voltar ao Perfil</Button>
             </Link>
-          </div>
-        </Card>
+          </Card>
         </Container>
       </div>
     )
@@ -167,6 +182,17 @@ export function Payment() {
                   Valor: <span className="font-semibold text-text">R$ 4,99</span>
                 </p>
               </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm mb-6 flex items-start gap-2.5 text-left"
+                >
+                  <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <span className="leading-snug flex-1">{error}</span>
+                </motion.div>
+              )}
 
               <div className="flex flex-col gap-4 mb-6">
                 <button
@@ -250,24 +276,53 @@ export function Payment() {
                 )}
               </div>
 
-              <div className="mb-6">
-                <p className="text-xs text-text-muted mb-2">Código Pix Copia e Cola</p>
-                <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-3">
-                  <code className="text-xs text-text-light flex-1 truncate">
-                    {pixData?.pixQrCode}
-                  </code>
+              <div className="mb-6 text-left">
+                <label htmlFor="pix-copia-e-cola" className="block text-xs font-medium text-text-muted mb-2">
+                  Código Pix Copia e Cola
+                </label>
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-2.5 mb-3 focus-within:ring-2 focus-within:ring-primary/30">
+                  <input
+                    id="pix-copia-e-cola"
+                    type="text"
+                    readOnly
+                    value={pixData?.pixQrCode || ''}
+                    onFocus={(e) => e.target.select()}
+                    onClick={handleCopy}
+                    className="text-xs text-text-light font-mono bg-transparent flex-1 outline-none truncate cursor-pointer select-all"
+                  />
                   <button
+                    type="button"
                     onClick={handleCopy}
                     aria-label={copied ? 'Código copiado' : 'Copiar código Pix'}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+                      copied ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-gray-200 text-text-light'
+                    }`}
                   >
-                    {copied ? (
-                      <Check size={16} className="text-emerald-500" />
-                    ) : (
-                      <Copy size={16} className="text-text-light" />
-                    )}
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
                   </button>
                 </div>
+
+                <Button
+                  onClick={handleCopy}
+                  className={`w-full gap-2 font-medium ${
+                    copied
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : ''
+                  }`}
+                  size="md"
+                >
+                  {copied ? (
+                    <>
+                      <Check size={18} />
+                      Código Pix Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={18} />
+                      Copiar Código Pix
+                    </>
+                  )}
+                </Button>
               </div>
 
               <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-6">
@@ -275,13 +330,32 @@ export function Payment() {
                 Verificando pagamento automaticamente...
               </div>
 
-              <button
-                onClick={() => setStep('select')}
-                className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text transition-colors"
-              >
-                <ArrowLeft size={16} />
-                Escolher outro método
-              </button>
+              <div className="flex flex-col gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!target) return
+                    try {
+                      await paymentService.simulateApproval(target)
+                      setStep('paid')
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                  className="w-full text-xs text-primary border-primary/30 hover:bg-primary/5"
+                >
+                  ⚡ Simular Confirmação Pix (Modo Teste)
+                </Button>
+
+                <button
+                  onClick={() => setStep('select')}
+                  className="inline-flex items-center justify-center gap-2 text-sm text-text-muted hover:text-text transition-colors"
+                >
+                  <ArrowLeft size={16} />
+                  Escolher outro método
+                </button>
+              </div>
             </motion.div>
           )}
 

@@ -261,3 +261,32 @@ export async function requestRefund(req: AuthRequest, res: Response): Promise<vo
 
   res.status(201).json({ refundRequest });
 }
+
+export async function simulatePaymentApproval(req: AuthRequest, res: Response): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    throw new AppError('Não permitido em produção', 403);
+  }
+
+  const target = resolvePaymentTarget(req.body);
+  if (target.resourceType === 'message') {
+    await prisma.message.update({
+      where: { id: target.resourceId },
+      data: {
+        paymentStatus: 'paid',
+        status: 'published',
+        publishedAt: new Date(),
+      },
+    });
+  } else {
+    await prisma.page.update({
+      where: { id: target.resourceId },
+      data: {
+        paymentStatus: 'paid',
+        status: 'published',
+        publishedAt: new Date(),
+      },
+    });
+  }
+
+  res.json({ success: true, message: 'Pagamento simulado como aprovado com sucesso!' });
+}

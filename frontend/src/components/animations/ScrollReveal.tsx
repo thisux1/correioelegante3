@@ -12,11 +12,6 @@ interface ScrollRevealProps {
    * Manual scroll keyframes: [fadeInStart, fadeInEnd, fadeOutStart, fadeOutEnd]
    * Each value is 0–1 representing scroll progress through the element.
    * Default: [0.05, 0.20, 0.85, 1.0]
-   *
-   * Examples:
-   *   [0.0, 0.10, 0.90, 1.0]  → reveals earlier, stays visible longer
-   *   [0.0, 0.05, 0.95, 1.0]  → very fast reveal, almost always visible
-   *   [0.10, 0.35, 0.75, 0.95] → slower reveal and exit
    */
   scrollRange?: [number, number, number, number]
 }
@@ -63,6 +58,7 @@ export function ScrollReveal({
   if (animateOnMount) {
     return (
       <motion.div
+        ref={ref}
         initial={{ opacity: 0, x: offset.x, y: offset.y }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{
