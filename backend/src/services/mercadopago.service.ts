@@ -104,50 +104,6 @@ function resolveDescription(resourceType: PaymentResourceType) {
     return resourceType === 'message' ? 'Correio Elegante' : 'Correio Elegante - Pagina personalizada';
 }
 
-function crc16(str: string): string {
-    let crc = 0xFFFF;
-    for (let i = 0; i < str.length; i++) {
-        crc ^= (str.charCodeAt(i) << 8);
-        for (let j = 0; j < 8; j++) {
-            if ((crc & 0x8000) !== 0) {
-                crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
-            } else {
-                crc = (crc << 1) & 0xFFFF;
-            }
-        }
-    }
-    return crc.toString(16).toUpperCase().padStart(4, '0');
-}
-
-export function generateDirectPixCode(params: {
-    pixKey: string;
-    merchantName?: string;
-    merchantCity?: string;
-    amount: number;
-    txId: string;
-}): string {
-    const f = (id: string, val: string) => id + String(val.length).padStart(2, '0') + val;
-
-    const payloadKey = f('00', 'br.gov.bcb.pix') + f('01', params.pixKey);
-    const sanitizedTxId = params.txId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 25) || 'CORREIOELEG';
-    const additional = f('05', sanitizedTxId);
-
-    const raw =
-        f('00', '01') +
-        f('01', '12') +
-        f('26', payloadKey) +
-        f('52', '0000') +
-        f('53', '986') +
-        f('54', params.amount.toFixed(2)) +
-        f('58', 'BR') +
-        f('59', (params.merchantName || 'CORREIO ELEGANTE').substring(0, 25).toUpperCase()) +
-        f('60', (params.merchantCity || 'SAO PAULO').substring(0, 15).toUpperCase()) +
-        f('62', additional) +
-        '6304';
-
-    return raw + crc16(raw);
-}
-
 export async function createPixPaymentForResource(target: PaymentTarget, userId: string) {
     const resource = await resolveResource(target);
 
@@ -200,69 +156,99 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         },
     };
 
-    // Webhook automático do Mercado Pago: só envia se a URL pública estiver configurada
     if (notificationUrl) {
         paymentBody.notification_url = notificationUrl;
     }
 
-    let result;
+    // 1. Tentar criar pagamento transparente via Mercado Pago API
     try {
-        result = await payment.create({
+        const result = await payment.create({
             body: paymentBody,
             requestOptions: {
-                // Idempotência por recurso: evita QR duplicado em duplo clique/retry
                 idempotencyKey: `pix_${target.resourceType}_${target.resourceId}`,
             },
         });
+
+        if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
+            await markResourcePaymentPending({
+                resourceType: target.resourceType,
+                resourceId: target.resourceId,
+                paymentId: String(result.id),
+            });
+
+            const pixData = result.point_of_interaction.transaction_data;
+            return {
+                paymentId: String(result.id),
+                status: result.status ?? 'pending',
+                pixQrCode: pixData.qr_code ?? null,
+                pixQrCodeBase64: pixData.qr_code_base64 ?? null,
+                pixExpiresAt: expiresAt.toISOString(),
+                preferenceId: null,
+                checkoutUrl: null,
+            };
+        }
     } catch (mpErr) {
-        console.warn('Mercado Pago Direct API unavailable, falling back to direct BR Code Pix:', mpErr);
+        console.warn('Mercado Pago Direct Pix indisponível, criando Checkout Pro oficial via Preference:', mpErr);
     }
 
-    if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
-        await markResourcePaymentPending({
-            resourceType: target.resourceType,
-            resourceId: target.resourceId,
-            paymentId: String(result.id),
+    // 2. Fallback oficial: Criar Checkout Pro oficial do Mercado Pago via Preference
+    try {
+        const { Preference } = await import('mercadopago');
+        const preference = new Preference(client);
+        const prefResult = await preference.create({
+            body: {
+                items: [
+                    {
+                        id: target.resourceId,
+                        title: resolveDescription(target.resourceType),
+                        description: 'Correio Elegante Digital',
+                        unit_price: AMOUNT,
+                        quantity: 1,
+                        currency_id: 'BRL',
+                    },
+                ],
+                payer: {
+                    email: payerEmail,
+                },
+                payment_methods: {
+                    excluded_payment_types: [{ id: 'ticket' }],
+                    default_payment_method_id: 'pix',
+                },
+                metadata: {
+                    resource_type: target.resourceType,
+                    resourceId: target.resourceId,
+                    userId,
+                },
+                external_reference: `${target.resourceType}:${target.resourceId}`,
+            },
         });
 
-        const pixData = result.point_of_interaction.transaction_data;
-        return {
-            paymentId: String(result.id),
-            status: result.status ?? 'pending',
-            pixQrCode: pixData.qr_code ?? null,
-            pixQrCodeBase64: pixData.qr_code_base64 ?? null,
-            pixExpiresAt: expiresAt.toISOString(),
-            preferenceId: null,
-            checkoutUrl: null,
-        };
+        if (prefResult && prefResult.id) {
+            await markResourcePaymentPending({
+                resourceType: target.resourceType,
+                resourceId: target.resourceId,
+                paymentId: String(prefResult.id),
+            });
+
+            return {
+                paymentId: String(prefResult.id),
+                status: 'pending',
+                pixQrCode: null,
+                pixQrCodeBase64: null,
+                pixExpiresAt: expiresAt.toISOString(),
+                preferenceId: String(prefResult.id),
+                checkoutUrl: prefResult.init_point ?? null,
+            };
+        }
+    } catch (prefErr) {
+        console.error('Erro na criação de preferência do Mercado Pago:', prefErr);
     }
 
-    // Gerar Pix BR Code direto (EMVCo Banco Central) com a chave Pix do recebedor
-    const paymentId = `pix_${target.resourceType}_${target.resourceId}_${Date.now()}`;
-    const pixKey = process.env.PIX_KEY || 'thiagocostabr74@gmail.com';
-    const directQrCode = generateDirectPixCode({
-        pixKey,
-        merchantName: 'CORREIO ELEGANTE',
-        merchantCity: 'SAO PAULO',
-        amount: AMOUNT,
-        txId: target.resourceId.slice(-15),
-    });
-
-    await markResourcePaymentPending({
-        resourceType: target.resourceType,
-        resourceId: target.resourceId,
-        paymentId,
-    });
-
-    return {
-        paymentId,
-        status: 'pending',
-        pixQrCode: directQrCode,
-        pixQrCodeBase64: null,
-        pixExpiresAt: expiresAt.toISOString(),
-        preferenceId: null,
-        checkoutUrl: null,
-    };
+    throw new AppError(
+        'Não foi possível gerar o pagamento no Mercado Pago. Verifique as credenciais da conta.',
+        502,
+        'MERCADOPAGO_GATEWAY_ERROR',
+    );
 }
 
 export async function handleWebhook(body: Record<string, unknown>, signature: string, requestId: string) {
