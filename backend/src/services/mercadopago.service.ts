@@ -206,6 +206,101 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
     );
 }
 
+export async function createMercadoPagoPreferenceForResource(target: PaymentTarget, userId: string) {
+    const resource = await resolveResource(target);
+
+    if (!resource.data) {
+        throw new AppError(
+            target.resourceType === 'message' ? 'Mensagem não encontrada' : 'Pagina nao encontrada',
+            404,
+        );
+    }
+    if (resource.data.userId !== userId) {
+        throw new AppError('Sem permissão', 403);
+    }
+    if (resource.data.paymentStatus === 'paid') {
+        throw new AppError('Pagamento já realizado', 400);
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const rawEmail = user?.email?.trim() || '';
+    const isSellerEmail = rawEmail.toLowerCase() === 'thicosta1432@gmail.com' || rawEmail.toLowerCase() === 'thiagocostabr74@gmail.com';
+    const isTestUserDomain = rawEmail.toLowerCase().includes('@testuser.com');
+    const payerEmail = (!rawEmail || isSellerEmail || isTestUserDomain)
+        ? 'comprador_correio@example.com'
+        : rawEmail;
+
+    const client = getMercadoPagoClient();
+    const { Preference } = await import('mercadopago');
+    const preference = new Preference(client);
+
+    const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
+
+    const successUrl = target.resourceType === 'message'
+        ? `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/${target.resourceId}/success`
+        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/page/${target.resourceId}/success`;
+
+    const cancelUrl = target.resourceType === 'message'
+        ? `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/${target.resourceId}`
+        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/page/${target.resourceId}`;
+
+    const prefResult = await preference.create({
+        body: {
+            items: [
+                {
+                    id: target.resourceId,
+                    title: resolveDescription(target.resourceType),
+                    description: 'Correio Elegante Digital',
+                    unit_price: AMOUNT,
+                    quantity: 1,
+                    currency_id: 'BRL',
+                },
+            ],
+            payer: {
+                email: payerEmail,
+            },
+            back_urls: {
+                success: successUrl,
+                pending: successUrl,
+                failure: cancelUrl,
+            },
+            auto_return: 'approved',
+            metadata: {
+                resource_type: target.resourceType,
+                resource_id: target.resourceId,
+                message_id: target.resourceType === 'message' ? target.resourceId : undefined,
+                page_id: target.resourceType === 'page' ? target.resourceId : undefined,
+                user_id: userId,
+            },
+            external_reference: `${target.resourceType}:${target.resourceId}`,
+        },
+    });
+
+    if (prefResult && prefResult.id) {
+        await markResourcePaymentPending({
+            resourceType: target.resourceType,
+            resourceId: target.resourceId,
+            paymentId: String(prefResult.id),
+        });
+
+        const checkoutUrl = isSandbox && prefResult.sandbox_init_point
+            ? prefResult.sandbox_init_point
+            : (prefResult.init_point || prefResult.sandbox_init_point);
+
+        return {
+            paymentId: String(prefResult.id),
+            status: 'pending',
+            pixQrCode: null,
+            pixQrCodeBase64: null,
+            pixExpiresAt: null,
+            preferenceId: String(prefResult.id),
+            checkoutUrl,
+        };
+    }
+
+    throw new AppError('Não foi possível gerar o Checkout do Mercado Pago no momento. Tente novamente em instantes.', 502);
+}
+
 export async function handleWebhook(body: Record<string, unknown>, signature: string, requestId: string) {
     const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET || process.env.MP_WEBHOOK_SECRET;
     if (!webhookSecret) {
