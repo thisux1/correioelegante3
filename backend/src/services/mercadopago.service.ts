@@ -285,7 +285,7 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
     }
 
     const prefResult = await preference.create({
-        body: prefBody,
+        body: prefBody as Parameters<typeof preference.create>[0]['body'],
     });
 
     if (prefResult && prefResult.id) {
