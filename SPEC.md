@@ -133,13 +133,19 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
 - `DELETE /:id`: Deletes page (Owner only).
 
 ### 4.4 Payments (`/api/payments`)
-- `POST /checkout`: Creates Stripe Checkout Session or Mercado Pago payment.
-  - Body: `{ resourceType: "message" | "page", resourceId: string, provider: "stripe" | "mercadopago", method?: string }`
-  - Returns `{ checkoutUrl: string, sessionId?: string, qrCode?: string, qrCodeBase64?: string }`.
+- `POST /create`: Creates a Stripe card payment or a Mercado Pago Pix payment.
+  - Body: `{ paymentMethod: "pix" | "credit_card", resourceType: "message" | "page", resourceId: string, messageId?: string }`
+  - Pix response (canonical Mercado Pago QR Code):
+    ```
+    { paymentId, status: "pending", pixQrCode: string, pixQrCodeBase64: string, pixExpiresAt: ISO8601, preferenceId: null, checkoutUrl: null }
+    ```
+    `pixQrCode` is the "copia e cola" EMV payload; `pixQrCodeBase64` is the canonical QR image rendered by Mercado Pago; `pixExpiresAt` is the QR expiration time (default 30 min).
+  - Card response: `{ sessionId, checkoutUrl }`.
+  - Errors: `400` invalid payload/already paid, `403` ownership, `502 PIX_PAYMENT_CREATION_FAILED` when Mercado Pago API fails, `502 PIX_QR_CODE_UNAVAILABLE` when no QR is returned.
 - `GET /status/:messageId`: Returns `{ paymentStatus, paymentProvider, paymentMethod }`.
 - `GET /status/:resourceType/:resourceId`: Resource-agnostic status query.
 - `POST /webhook/stripe`: Stripe webhook handler verifying `stripe-signature`. On `checkout.session.completed`, marks resource `paymentStatus = "paid"`.
-- `POST /webhook/mercadopago`: Mercado Pago IPN webhook handler verifying payment topic notifications.
+- `POST /webhook/mercadopago`: Mercado Pago IPN webhook handler verifying `x-signature`/`x-request-id`. On `payment` with `status = "approved"`, marks the resource identified by `metadata` (or `external_reference`) as `paymentStatus = "paid"`.
 
 ### 4.5 Assets (`/api/assets`)
 - `POST /upload-url`: Requests signed upload URL and creates pending `Asset`.
