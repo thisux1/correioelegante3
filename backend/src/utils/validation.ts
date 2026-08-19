@@ -56,8 +56,8 @@ export const changePasswordSchema = z.object({
 });
 
 export const createPaymentSchema = z.object({
-  paymentMethod: z.enum(['pix', 'credit_card'], {
-    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix" ou "credit_card".' }),
+  paymentMethod: z.enum(['pix', 'credit_card', 'mercadopago_checkout'], {
+    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".' }),
   }),
   messageId: z
     .string()
