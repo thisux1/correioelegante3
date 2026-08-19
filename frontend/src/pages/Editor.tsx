@@ -443,7 +443,7 @@ export function Editor() {
   }, [pageVersion, status, visibility])
 
   const hasPageId = Boolean(currentPageId)
-  const showPublishCta = Boolean(currentPageId) && status !== 'published'
+  const showPublishCta = status !== 'published' && blocks.length > 0
   const currentSignature = useMemo(
     () => toPageSignature({ blocks, theme, status, visibility }),
     [blocks, status, theme, visibility],
@@ -733,11 +733,29 @@ export function Editor() {
           hasPageId={hasPageId}
           selectedThemeId={theme}
           showPublishCta={showPublishCta}
-          onPublishCtaClick={() => {
-            if (!currentPageId) {
-              return
+          onPublishCtaClick={async () => {
+            try {
+              setSaveState('saving')
+              const result = await pageService.savePage({
+                pageId: currentPageId,
+                content: {
+                  blocks,
+                  theme,
+                  version: PAGE_VERSION,
+                },
+                status,
+                visibility,
+                version: pageVersion,
+              })
+              setCurrentPageId(result.page.id)
+              setPageVersion(result.page.version)
+              setStatus(result.page.status)
+              setSaveState('saved')
+              navigate(`/payment/page/${result.page.id}`)
+            } catch {
+              setSaveState('error')
+              setFeedback('Não foi possível salvar a página para publicação. Tente novamente.')
             }
-            navigate(`/payment/page/${currentPageId}`)
           }}
         />
 

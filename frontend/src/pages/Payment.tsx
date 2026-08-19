@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Container } from '@/components/layout/Container'
-import { initMercadoPago, Payment as MPPaymentBrick } from '@mercadopago/sdk-react'
-import { useAuthStore } from '@/store/authStore'
 import {
   paymentService,
   type PaymentMethod,
@@ -16,18 +14,14 @@ import {
   type PaymentTarget,
 } from '@/services/paymentService'
 
-initMercadoPago(import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-65b3afe2-db9f-44d4-b3ca-eaa313289192', { locale: 'pt-BR' })
-
 type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 
 export function Payment() {
   const location = useLocation()
   const { messageId, pageId } = useParams<{ messageId?: string; pageId?: string }>()
-  const user = useAuthStore((state) => state.user)
   const [step, setStep] = useState<Step>('select')
   const [pixData, setPixData] = useState<PixPaymentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [brickReady, setBrickReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -60,7 +54,7 @@ export function Payment() {
           clearInterval(interval)
         }
       } catch { /* ignorar erros de polling */ }
-    }, 5000)
+    }, 4000)
 
     return () => clearInterval(interval)
   }, [step, target])
@@ -72,15 +66,14 @@ export function Payment() {
 
     try {
       if (method === 'pix') {
-        setBrickReady(false)
         const response = await paymentService.createPix(target)
-        if (response.data.pixQrCode || response.data.preferenceId) {
+        if (response.data.pixQrCode) {
           setPixData(response.data)
           setStep('pix')
         } else if (response.data.checkoutUrl) {
           window.location.href = response.data.checkoutUrl
         } else {
-          setError('Não foi possível iniciar o pagamento Pix. Tente novamente.')
+          setError('Não foi possível gerar a chave Pix. Tente novamente.')
         }
       } else {
         const response = await paymentService.createCard(target)
@@ -271,118 +264,76 @@ export function Payment() {
                 </p>
               </div>
 
-              {pixData?.preferenceId ? (
-                <div className="w-full my-4 text-left relative min-h-[300px]">
-                  {!brickReady && (
-                    <div className="flex flex-col items-center justify-center p-8 bg-gray-50/80 border border-gray-200/80 rounded-2xl animate-pulse space-y-4">
-                      <div className="w-48 h-48 bg-gray-200/90 rounded-2xl flex items-center justify-center">
-                        <Smartphone className="w-10 h-10 text-gray-400 animate-bounce" />
-                      </div>
-                      <div className="h-4 w-44 bg-gray-200/90 rounded-full" />
-                      <div className="h-3 w-60 bg-gray-200/70 rounded-full" />
-                      <div className="h-11 w-full bg-gray-200/90 rounded-xl mt-2" />
-                    </div>
-                  )}
-                  <div className={!brickReady ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100 transition-opacity duration-300'}>
-                    <MPPaymentBrick
-                      initialization={{
-                        amount: 4.99,
-                        preferenceId: pixData.preferenceId,
-                        payer: {
-                          email: user?.email || 'contato@correioelegante.com.br',
-                        },
-                      }}
-                      customization={{
-                        paymentMethods: {
-                          bankTransfer: 'all',
-                        },
-                        visual: {
-                          hideFormTitle: true,
-                          style: {
-                            theme: 'flat',
-                            customVariables: {
-                              formBackgroundColor: '#ffffff',
-                              baseColor: '#e11d48',
-                            },
-                          },
-                        },
-                      }}
-                      onReady={() => setBrickReady(true)}
-                      onError={(err: unknown) => console.error('Mercado Pago Brick error:', err)}
-                      onSubmit={async () => {}}
-                    />
-                  </div>
+              <div className="bg-white rounded-3xl p-6 inline-flex flex-col items-center justify-center mb-6 shadow-sm border border-gray-100">
+                {pixData?.pixQrCodeBase64 ? (
+                  <img
+                    src={`data:image/png;base64,${pixData.pixQrCodeBase64}`}
+                    alt="QR Code Pix"
+                    width={220}
+                    height={220}
+                    className="rounded-xl"
+                  />
+                ) : (
+                  <QRCodeSVG
+                    value={pixData?.pixQrCode || ''}
+                    size={220}
+                    level="H"
+                    includeMargin
+                  />
+                )}
+                <span className="text-[11px] text-text-muted mt-3 font-medium">
+                  Aponte a câmera do seu banco para pagar
+                </span>
+              </div>
+
+              <div className="mb-6 text-left">
+                <label htmlFor="pix-copia-e-cola" className="block text-xs font-semibold text-text-muted mb-2">
+                  Ou pague com o Pix Copia e Cola:
+                </label>
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-2.5 mb-3 focus-within:ring-2 focus-within:ring-primary/30">
+                  <input
+                    id="pix-copia-e-cola"
+                    type="text"
+                    readOnly
+                    value={pixData?.pixQrCode || ''}
+                    onFocus={(e) => e.target.select()}
+                    onClick={handleCopy}
+                    className="text-xs text-text-light font-mono bg-transparent flex-1 outline-none truncate cursor-pointer select-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    aria-label={copied ? 'Código copiado' : 'Copiar código Pix'}
+                    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+                      copied ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-gray-200 text-text-light'
+                    }`}
+                  >
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
                 </div>
-              ) : (
-                <>
-                  <div className="bg-white rounded-2xl p-6 inline-block mb-6 shadow-sm">
-                    {pixData?.pixQrCodeBase64 ? (
-                      <img
-                        src={`data:image/png;base64,${pixData.pixQrCodeBase64}`}
-                        alt="QR Code Pix"
-                        width={200}
-                        height={200}
-                      />
-                    ) : (
-                      <QRCodeSVG
-                        value={pixData?.pixQrCode || ''}
-                        size={200}
-                        level="H"
-                        includeMargin
-                      />
-                    )}
-                  </div>
 
-                  <div className="mb-6 text-left">
-                    <label htmlFor="pix-copia-e-cola" className="block text-xs font-medium text-text-muted mb-2">
-                      Código Pix Copia e Cola
-                    </label>
-                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-2.5 mb-3 focus-within:ring-2 focus-within:ring-primary/30">
-                      <input
-                        id="pix-copia-e-cola"
-                        type="text"
-                        readOnly
-                        value={pixData?.pixQrCode || ''}
-                        onFocus={(e) => e.target.select()}
-                        onClick={handleCopy}
-                        className="text-xs text-text-light font-mono bg-transparent flex-1 outline-none truncate cursor-pointer select-all"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleCopy}
-                        aria-label={copied ? 'Código copiado' : 'Copiar código Pix'}
-                        className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
-                          copied ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-gray-200 text-text-light'
-                        }`}
-                      >
-                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
-                    </div>
-
-                    <Button
-                      onClick={handleCopy}
-                      className={`w-full gap-2 font-medium ${
-                        copied
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                          : ''
-                      }`}
-                      size="md"
-                    >
-                      {copied ? (
-                        <>
-                          <Check size={18} />
-                          Código Pix Copiado!
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={18} />
-                          Copiar Código Pix
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </>
-              )}
+                <Button
+                  onClick={handleCopy}
+                  className={`w-full gap-2 font-medium ${
+                    copied
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : ''
+                  }`}
+                  size="md"
+                >
+                  {copied ? (
+                    <>
+                      <Check size={18} />
+                      Código Pix Copiado com Sucesso!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={18} />
+                      Copiar Código Pix
+                    </>
+                  )}
+                </Button>
+              </div>
 
               <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-6">
                 <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
