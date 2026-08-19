@@ -104,50 +104,6 @@ function resolveDescription(resourceType: PaymentResourceType) {
     return resourceType === 'message' ? 'Correio Elegante' : 'Correio Elegante - Pagina personalizada';
 }
 
-function crc16(str: string): string {
-    let crc = 0xFFFF;
-    for (let i = 0; i < str.length; i++) {
-        crc ^= (str.charCodeAt(i) << 8);
-        for (let j = 0; j < 8; j++) {
-            if ((crc & 0x8000) !== 0) {
-                crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
-            } else {
-                crc = (crc << 1) & 0xFFFF;
-            }
-        }
-    }
-    return crc.toString(16).toUpperCase().padStart(4, '0');
-}
-
-export function generateDirectPixCode(params: {
-    pixKey: string;
-    merchantName?: string;
-    merchantCity?: string;
-    amount: number;
-    txId: string;
-}): string {
-    const f = (id: string, val: string) => id + String(val.length).padStart(2, '0') + val;
-
-    const payloadKey = f('00', 'br.gov.bcb.pix') + f('01', params.pixKey);
-    const sanitizedTxId = params.txId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 25) || 'CORREIOELEG';
-    const additional = f('05', sanitizedTxId);
-
-    const raw =
-        f('00', '01') +
-        f('01', '12') +
-        f('26', payloadKey) +
-        f('52', '0000') +
-        f('53', '986') +
-        f('54', params.amount.toFixed(2)) +
-        f('58', 'BR') +
-        f('59', (params.merchantName || 'CORREIO ELEGANTE').substring(0, 25).toUpperCase()) +
-        f('60', (params.merchantCity || 'SAO PAULO').substring(0, 15).toUpperCase()) +
-        f('62', additional) +
-        '6304';
-
-    return raw + crc16(raw);
-}
-
 export async function createPixPaymentForResource(target: PaymentTarget, userId: string) {
     const resource = await resolveResource(target);
 
@@ -204,63 +160,47 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         paymentBody.notification_url = notificationUrl;
     }
 
-    // 1. Tentar criar pagamento transparente via Mercado Pago API
+    let result;
     try {
-        const result = await payment.create({
+        result = await payment.create({
             body: paymentBody,
             requestOptions: {
                 idempotencyKey: `pix_${target.resourceType}_${target.resourceId}`,
             },
         });
-
-        if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
-            await markResourcePaymentPending({
-                resourceType: target.resourceType,
-                resourceId: target.resourceId,
-                paymentId: String(result.id),
-            });
-
-            const pixData = result.point_of_interaction.transaction_data;
-            return {
-                paymentId: String(result.id),
-                status: result.status ?? 'pending',
-                pixQrCode: pixData.qr_code ?? null,
-                pixQrCodeBase64: pixData.qr_code_base64 ?? null,
-                pixExpiresAt: expiresAt.toISOString(),
-                preferenceId: null,
-                checkoutUrl: null,
-            };
-        }
     } catch (mpErr) {
-        console.warn('Mercado Pago Direct Pix API restrita, gerando Pix BR Code direto:', mpErr);
+        console.error('Mercado Pago Pix payment creation error:', mpErr);
+        throw new AppError(
+            'Não foi possível gerar o pagamento Pix no Mercado Pago. Verifique as credenciais da conta.',
+            502,
+            'MERCADOPAGO_PAYMENT_FAILED',
+        );
     }
 
-    // 2. Gerar Pix BR Code direto (EMVCo Banco Central) com a chave Pix da conta Mercado Pago
-    const paymentId = `pix_${target.resourceType}_${target.resourceId}_${Date.now()}`;
-    const pixKey = process.env.PIX_KEY || 'thicosta1432@gmail.com';
-    const directQrCode = generateDirectPixCode({
-        pixKey,
-        merchantName: 'CORREIO ELEGANTE',
-        merchantCity: 'SAO PAULO',
-        amount: AMOUNT,
-        txId: target.resourceId.slice(-15),
-    });
+    if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
+        await markResourcePaymentPending({
+            resourceType: target.resourceType,
+            resourceId: target.resourceId,
+            paymentId: String(result.id),
+        });
 
-    await markResourcePaymentPending({
-        resourceType: target.resourceType,
-        resourceId: target.resourceId,
-        paymentId,
-    });
+        const pixData = result.point_of_interaction.transaction_data;
+        return {
+            paymentId: String(result.id),
+            status: result.status ?? 'pending',
+            pixQrCode: pixData.qr_code ?? null,
+            pixQrCodeBase64: pixData.qr_code_base64 ?? null,
+            pixExpiresAt: expiresAt.toISOString(),
+            preferenceId: null,
+            checkoutUrl: null,
+        };
+    }
 
-    return {
-        paymentId,
-        status: 'pending',
-        pixQrCode: directQrCode,
-        pixQrCodeBase64: null,
-        pixExpiresAt: expiresAt.toISOString(),
-        preferenceId: null,
-        checkoutUrl: null,
-    };
+    throw new AppError(
+        'O Mercado Pago não retornou os dados do QR Code Pix. Tente novamente.',
+        502,
+        'MERCADOPAGO_QR_UNAVAILABLE',
+    );
 }
 
 export async function handleWebhook(body: Record<string, unknown>, signature: string, requestId: string) {
