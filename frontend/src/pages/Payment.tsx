@@ -67,8 +67,14 @@ export function Payment() {
     try {
       if (method === 'pix') {
         const response = await paymentService.createPix(target)
-        setPixData(response.data)
-        setStep('pix')
+        if (response.data.checkoutUrl) {
+          window.location.href = response.data.checkoutUrl
+        } else if (response.data.pixQrCode) {
+          setPixData(response.data)
+          setStep('pix')
+        } else {
+          setError('Não foi possível iniciar o pagamento Pix. Tente novamente.')
+        }
       } else {
         const response = await paymentService.createCard(target)
         if (response.data.checkoutUrl) {
@@ -330,32 +336,13 @@ export function Payment() {
                 Verificando pagamento automaticamente...
               </div>
 
-              <div className="flex flex-col gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    if (!target) return
-                    try {
-                      await paymentService.simulateApproval(target)
-                      setStep('paid')
-                    } catch {
-                      // ignore
-                    }
-                  }}
-                  className="w-full text-xs text-primary border-primary/30 hover:bg-primary/5"
-                >
-                  ⚡ Simular Confirmação Pix (Modo Teste)
-                </Button>
-
-                <button
-                  onClick={() => setStep('select')}
-                  className="inline-flex items-center justify-center gap-2 text-sm text-text-muted hover:text-text transition-colors"
-                >
-                  <ArrowLeft size={16} />
-                  Escolher outro método
-                </button>
-              </div>
+              <button
+                onClick={() => setStep('select')}
+                className="inline-flex items-center justify-center gap-2 text-sm text-text-muted hover:text-text transition-colors"
+              >
+                <ArrowLeft size={16} />
+                Escolher outro método
+              </button>
             </motion.div>
           )}
 

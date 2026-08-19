@@ -125,18 +125,17 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
     const client = getMercadoPagoClient();
     const payment = new Payment(client);
 
-    let result: { id?: string | number; status?: string; point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string } } } | null = null;
-
     try {
-        result = await payment.create({
+        const result = await payment.create({
             body: {
                 transaction_amount: AMOUNT,
                 description: resolveDescription(target.resourceType),
                 payment_method_id: 'pix',
+                statement_descriptor: 'CORREIOELEG',
                 payer: {
                     email: payerEmail,
                     first_name: 'Cliente',
-                    last_name: 'Teste',
+                    last_name: 'Correio',
                     identification: {
                         type: 'CPF',
                         number: '19119119100',
@@ -154,43 +153,79 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
                 idempotencyKey: crypto.randomUUID(),
             },
         });
-    } catch (mpErr) {
-        console.warn('Mercado Pago API error:', mpErr);
-        if (process.env.NODE_ENV !== 'production') {
-            const fallbackId = `dev_mp_${Date.now()}`;
-            result = {
-                id: fallbackId,
-                status: 'pending',
-                point_of_interaction: {
-                    transaction_data: {
-                        qr_code: `00020126580014br.gov.bcb.pix0136b76aa9c2-2ec4-4110-954e-ebfe34f05b6152040000530398654044.995802BR5916TA775759104283156009Sao Paulo62230519mpqrinter${fallbackId}63048466`,
-                        qr_code_base64: undefined,
-                    },
-                },
+
+        if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
+            await markResourcePaymentPending({
+                resourceType: target.resourceType,
+                resourceId: target.resourceId,
+                paymentId: String(result.id),
+            });
+
+            const pixData = result.point_of_interaction.transaction_data;
+            return {
+                paymentId: String(result.id),
+                status: result.status ?? 'pending',
+                pixQrCode: pixData.qr_code ?? null,
+                pixQrCodeBase64: pixData.qr_code_base64 ?? null,
+                checkoutUrl: null,
             };
-        } else {
-            throw new AppError('Não foi possível gerar a chave Pix no momento. Tente novamente em instantes ou utilize cartão de crédito.', 502, 'PAYMENT_GATEWAY_ERROR');
         }
+    } catch (mpErr) {
+        console.warn('Mercado Pago Direct Pix unavailable, creating official hosted Preference:', mpErr);
     }
 
-    if (!result || !result.id) {
-        throw new AppError('Erro ao criar pagamento no Mercado Pago', 500);
+    // Criar preferência oficial do Mercado Pago (Checkout Pro Oficial)
+    try {
+        const { Preference } = await import('mercadopago');
+        const preference = new Preference(client);
+        const prefResult = await preference.create({
+            body: {
+                items: [
+                    {
+                        id: target.resourceId,
+                        title: resolveDescription(target.resourceType),
+                        description: 'Correio Elegante Digital',
+                        unit_price: AMOUNT,
+                        quantity: 1,
+                        currency_id: 'BRL',
+                    },
+                ],
+                payer: {
+                    email: payerEmail,
+                },
+                payment_methods: {
+                    default_payment_method_id: 'pix',
+                },
+                metadata: {
+                    resource_type: target.resourceType,
+                    resource_id: target.resourceId,
+                    message_id: target.resourceType === 'message' ? target.resourceId : undefined,
+                    page_id: target.resourceType === 'page' ? target.resourceId : undefined,
+                    user_id: userId,
+                },
+            },
+        });
+
+        if (prefResult && prefResult.id) {
+            await markResourcePaymentPending({
+                resourceType: target.resourceType,
+                resourceId: target.resourceId,
+                paymentId: String(prefResult.id),
+            });
+
+            return {
+                paymentId: String(prefResult.id),
+                status: 'pending',
+                pixQrCode: null,
+                pixQrCodeBase64: null,
+                checkoutUrl: prefResult.init_point ?? null,
+            };
+        }
+    } catch (prefErr) {
+        console.error('Mercado Pago Preference creation error:', prefErr);
     }
 
-    await markResourcePaymentPending({
-        resourceType: target.resourceType,
-        resourceId: target.resourceId,
-        paymentId: String(result.id),
-    });
-
-    const pixData = result.point_of_interaction?.transaction_data;
-
-    return {
-        paymentId: String(result.id),
-        status: result.status ?? 'pending',
-        pixQrCode: pixData?.qr_code ?? null,
-        pixQrCodeBase64: pixData?.qr_code_base64 ?? null,
-    };
+    throw new AppError('Não foi possível gerar a chave Pix no momento. Tente novamente em instantes ou utilize cartão de crédito.', 502, 'PAYMENT_GATEWAY_ERROR');
 }
 
 export async function handleWebhook(body: Record<string, unknown>, signature: string, requestId: string) {
