@@ -121,9 +121,12 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    const payerEmail = user?.email && user.email.includes('@')
-        ? user.email
-        : 'contato@correioelegante.com.br';
+    const rawEmail = user?.email?.trim() || '';
+    const isSellerEmail = rawEmail.toLowerCase() === 'thicosta1432@gmail.com' || rawEmail.toLowerCase() === 'thiagocostabr74@gmail.com';
+    const isTestUserDomain = rawEmail.toLowerCase().includes('@testuser.com');
+    const payerEmail = (!rawEmail || isSellerEmail || isTestUserDomain)
+        ? 'comprador_correio@example.com'
+        : rawEmail;
 
     const expiresAt = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
     const notificationUrl = process.env.MERCADOPAGO_NOTIFICATION_URL || process.env.MP_NOTIFICATION_URL;
