@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Container } from '@/components/layout/Container'
 import { initMercadoPago, Payment as MPPaymentBrick } from '@mercadopago/sdk-react'
+import { useAuthStore } from '@/store/authStore'
 import {
   paymentService,
   type PaymentMethod,
@@ -22,9 +23,11 @@ type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 export function Payment() {
   const location = useLocation()
   const { messageId, pageId } = useParams<{ messageId?: string; pageId?: string }>()
+  const user = useAuthStore((state) => state.user)
   const [step, setStep] = useState<Step>('select')
   const [pixData, setPixData] = useState<PixPaymentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [brickReady, setBrickReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -69,6 +72,7 @@ export function Payment() {
 
     try {
       if (method === 'pix') {
+        setBrickReady(false)
         const response = await paymentService.createPix(target)
         if (response.data.pixQrCode || response.data.preferenceId) {
           setPixData(response.data)
@@ -268,27 +272,46 @@ export function Payment() {
               </div>
 
               {pixData?.preferenceId ? (
-                <div className="w-full my-4 text-left">
-                  <MPPaymentBrick
-                    initialization={{
-                      amount: 4.99,
-                      preferenceId: pixData.preferenceId,
-                    }}
-                    customization={{
-                      paymentMethods: {
-                        bankTransfer: 'all',
-                        ticket: 'all',
-                      },
-                      visual: {
-                        style: {
-                          theme: 'flat',
+                <div className="w-full my-4 text-left relative min-h-[300px]">
+                  {!brickReady && (
+                    <div className="flex flex-col items-center justify-center p-8 bg-gray-50/80 border border-gray-200/80 rounded-2xl animate-pulse space-y-4">
+                      <div className="w-48 h-48 bg-gray-200/90 rounded-2xl flex items-center justify-center">
+                        <Smartphone className="w-10 h-10 text-gray-400 animate-bounce" />
+                      </div>
+                      <div className="h-4 w-44 bg-gray-200/90 rounded-full" />
+                      <div className="h-3 w-60 bg-gray-200/70 rounded-full" />
+                      <div className="h-11 w-full bg-gray-200/90 rounded-xl mt-2" />
+                    </div>
+                  )}
+                  <div className={!brickReady ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100 transition-opacity duration-300'}>
+                    <MPPaymentBrick
+                      initialization={{
+                        amount: 4.99,
+                        preferenceId: pixData.preferenceId,
+                        payer: {
+                          email: user?.email || 'contato@correioelegante.com.br',
                         },
-                      },
-                    }}
-                    onReady={() => setIsLoading(false)}
-                    onError={(err: unknown) => console.error('Mercado Pago Brick error:', err)}
-                    onSubmit={async () => {}}
-                  />
+                      }}
+                      customization={{
+                        paymentMethods: {
+                          bankTransfer: 'all',
+                        },
+                        visual: {
+                          hideFormTitle: true,
+                          style: {
+                            theme: 'flat',
+                            customVariables: {
+                              formBackgroundColor: '#ffffff',
+                              baseColor: '#e11d48',
+                            },
+                          },
+                        },
+                      }}
+                      onReady={() => setBrickReady(true)}
+                      onError={(err: unknown) => console.error('Mercado Pago Brick error:', err)}
+                      onSubmit={async () => {}}
+                    />
+                  </div>
                 </div>
               ) : (
                 <>
