@@ -49,11 +49,12 @@ const mockMessage = {
 // ── POST /api/payments/create ─────────────────────────────────────────────────
 describe('POST /api/payments/create', () => {
     it('200 — cria pagamento Pix para mensagem pendente', async () => {
-        vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
+vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
             paymentId: '123456789',
             status: 'pending',
             pixQrCode: 'pix_qr_code_data',
             pixQrCodeBase64: null,
+            pixExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
             preferenceId: null,
             checkoutUrl: null,
         });
@@ -85,11 +86,12 @@ describe('POST /api/payments/create', () => {
     });
 
     it('200 — cria pagamento Pix para pagina (resourceType/resourceId)', async () => {
-        vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
+vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
             paymentId: '987654321',
             status: 'pending',
             pixQrCode: 'pix_qr_code_page',
             pixQrCodeBase64: null,
+            pixExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
             preferenceId: null,
             checkoutUrl: null,
         });
