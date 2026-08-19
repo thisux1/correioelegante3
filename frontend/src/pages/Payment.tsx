@@ -15,7 +15,7 @@ import {
   type PaymentTarget,
 } from '@/services/paymentService'
 
-initMercadoPago('APP_USR-65b3afe2-db9f-44d4-b3ca-eaa313289192', { locale: 'pt-BR' })
+initMercadoPago(import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-65b3afe2-db9f-44d4-b3ca-eaa313289192', { locale: 'pt-BR' })
 
 type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 
