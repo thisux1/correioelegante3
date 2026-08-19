@@ -236,13 +236,20 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
 
     const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
 
-    const successUrl = target.resourceType === 'message'
-        ? `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/${target.resourceId}/success`
-        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/page/${target.resourceId}/success`;
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const isHttps = baseUrl.startsWith('https://');
 
-    const cancelUrl = target.resourceType === 'message'
-        ? `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/${target.resourceId}`
-        : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/page/${target.resourceId}`;
+    const successUrl = isHttps
+        ? (target.resourceType === 'message'
+            ? `${baseUrl}/payment/${target.resourceId}/success`
+            : `${baseUrl}/payment/page/${target.resourceId}/success`)
+        : 'https://correioelegante.com.br/payment/success';
+
+    const cancelUrl = isHttps
+        ? (target.resourceType === 'message'
+            ? `${baseUrl}/payment/${target.resourceId}`
+            : `${baseUrl}/payment/page/${target.resourceId}`)
+        : 'https://correioelegante.com.br/payment/cancel';
 
     const prefResult = await preference.create({
         body: {
