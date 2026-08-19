@@ -7,6 +7,7 @@ import {
   getPaymentStatus,
   getPaymentStatusByResource,
   requestRefund,
+  simulatePaymentApproval,
 } from '../controllers/payment.controller';
 import { authenticate } from '../middlewares/auth';
 import { validate, validateObjectId } from '../middlewares/validate';
@@ -22,6 +23,7 @@ router.post('/webhook/mercadopago', express.json(), mercadopagoWebhookHandler);
 
 router.post('/create', authenticate, validate(createPaymentSchema), createPayment);
 router.post('/refund', authenticate, validate(createRefundRequestSchema), requestRefund);
+router.post('/simulate-approval', authenticate, simulatePaymentApproval);
 router.get('/status/:messageId', authenticate, validateObjectId('messageId'), getPaymentStatus);
 router.get(
   '/status/:resourceType/:resourceId',

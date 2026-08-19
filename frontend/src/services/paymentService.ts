@@ -60,4 +60,11 @@ export const paymentService = {
   getStatus(target: PaymentTarget) {
     return api.get<PaymentStatusResponse>(`/payments/status/${target.resourceType}/${target.resourceId}`)
   },
+
+  simulateApproval(target: PaymentTarget) {
+    return api.post<{ success: boolean; message: string }>('/payments/simulate-approval', {
+      resourceType: target.resourceType,
+      resourceId: target.resourceId,
+    })
+  },
 }

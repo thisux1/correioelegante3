@@ -17,7 +17,8 @@ import {
 export const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
-  age: z.number({ invalid_type_error: 'Idade inválida' }).int('Idade inválida').min(13, 'Idade mínima é 13 anos'),
+  age: z.number({ invalid_type_error: 'Idade inválida' }).int('Idade inválida').min(13, 'Idade mínima é 13 anos').optional(),
+  ageConfirmed: z.boolean().optional(),
   legalAccepted: z.literal(true, {
     errorMap: () => ({ message: 'Aceite legal é obrigatório' }),
   }),

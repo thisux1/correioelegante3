@@ -3,7 +3,8 @@ import api from './api'
 export interface RegisterData {
   email: string
   password: string
-  age: number
+  age?: number
+  ageConfirmed?: boolean
   legalAccepted: boolean
 }
 
