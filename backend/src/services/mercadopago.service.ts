@@ -167,6 +167,7 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
                 status: result.status ?? 'pending',
                 pixQrCode: pixData.qr_code ?? null,
                 pixQrCodeBase64: pixData.qr_code_base64 ?? null,
+                preferenceId: null,
                 checkoutUrl: null,
             };
         }
@@ -218,6 +219,7 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
                 status: 'pending',
                 pixQrCode: null,
                 pixQrCodeBase64: null,
+                preferenceId: String(prefResult.id),
                 checkoutUrl: prefResult.init_point ?? null,
             };
         }
