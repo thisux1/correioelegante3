@@ -171,9 +171,9 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
     } catch (mpErr) {
         console.error('Mercado Pago Pix payment creation error:', mpErr);
         throw new AppError(
-            'Não foi possível gerar o pagamento Pix no Mercado Pago. Verifique as credenciais da conta.',
+            'Não foi possível gerar o pagamento Pix no momento. Tente novamente em instantes.',
             502,
-            'MERCADOPAGO_PAYMENT_FAILED',
+            'PAYMENT_CREATION_FAILED',
         );
     }
 
@@ -197,9 +197,9 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
     }
 
     throw new AppError(
-        'O Mercado Pago não retornou os dados do QR Code Pix. Tente novamente.',
+        'Não foi possível carregar os dados do Pix no momento. Tente novamente em instantes.',
         502,
-        'MERCADOPAGO_QR_UNAVAILABLE',
+        'PAYMENT_DATA_UNAVAILABLE',
     );
 }
 
