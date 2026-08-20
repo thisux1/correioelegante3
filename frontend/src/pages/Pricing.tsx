@@ -250,12 +250,9 @@ export function Pricing() {
           {/* Plano Ilimitado (Destaque) */}
           <ScrollReveal animateOnMount delay={0.12}>
             <div className="relative h-full">
-              {/* Glowing decorative gradient */}
-              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary via-rose-400 to-amber-400 opacity-60 blur-lg transition duration-500 group-hover:opacity-100" />
-
-              <Card glass className="relative flex h-full flex-col justify-between p-8 sm:p-10 border-2 border-primary shadow-2xl bg-white/95">
+              <Card glass className="relative flex h-full flex-col justify-between p-8 sm:p-10 border-2 border-primary/40 shadow-xl bg-surface">
                 <div className="absolute -top-3.5 right-8">
-                  <span className="rounded-full bg-gradient-to-r from-primary to-rose-500 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-md">
+                  <span className="rounded-full bg-primary px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-xs">
                     Mais Popular • Recomendado
                   </span>
                 </div>
@@ -330,7 +327,7 @@ export function Pricing() {
                     <Button
                       onClick={handleOpenSubscribe}
                       size="lg"
-                      className="w-full bg-gradient-to-r from-primary to-rose-500 text-white shadow-lg shadow-primary/30 hover:scale-[1.02] transition-transform font-bold text-base"
+                      className="w-full bg-primary text-white shadow-md shadow-primary/25 hover:bg-primary/90 transition-colors font-bold text-base"
                     >
                       <Zap size={18} />
                       Assinar Plano Ilimitado
@@ -344,7 +341,7 @@ export function Pricing() {
 
         {/* Benefits Banner */}
         <ScrollReveal animateOnMount>
-          <div className="mb-20 rounded-3xl border border-primary/20 bg-gradient-to-br from-rose-50/70 via-white to-pink-50/70 p-8 text-center sm:p-12">
+          <div className="mb-20 rounded-3xl border border-border bg-surface p-8 text-center sm:p-12">
             <h2 className="font-display text-2xl font-bold text-text sm:text-3xl">
               Por que escolher o Plano Ilimitado?
             </h2>
@@ -436,7 +433,7 @@ export function Pricing() {
 
           {checkoutStep === 'select' ? (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-rose-50 via-white to-pink-50 p-5 text-center shadow-sm">
+              <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-xs">
                 <p className="text-xs font-bold text-primary uppercase tracking-wider">Você está assinando</p>
                 <h4 className="font-display text-xl font-bold text-text mt-1">Correio Elegante Ilimitado (1 Mês)</h4>
                 <p className="font-display text-3xl font-extrabold text-primary mt-2">R$ 15,00</p>
