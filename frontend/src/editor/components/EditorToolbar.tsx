@@ -424,8 +424,8 @@ function ToolbarControls({
         transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: [0.19, 1, 0.22, 1] }}
         className={useCompactButtons
           ? `${compactBtnBase} disabled:opacity-60`
-          : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 bg-white/90 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60'}
-        aria-label={isSaving ? 'Salvando pagina' : 'Salvar pagina'}
+          : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface/80 px-3.5 text-sm font-medium text-text-light transition-colors hover:bg-surface hover:text-text disabled:cursor-not-allowed disabled:opacity-60'}
+        aria-label={isSaving ? 'Salvando rascunho' : 'Salvar rascunho'}
         title={saveLabel}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -443,7 +443,7 @@ function ToolbarControls({
             </motion.span>
           )}
         </AnimatePresence>
-        {!useCompactButtons ? saveLabel : null}
+        {!useCompactButtons ? (saveState === 'saved' ? 'Salvo' : isSaving ? 'Salvando...' : 'Salvar Rascunho') : null}
       </motion.button>
 
       {showPublishCta ? (
@@ -455,13 +455,13 @@ function ToolbarControls({
             type="button"
             onClick={onPublishCtaClick}
             className={useCompactButtons
-              ? 'flex w-full min-h-11 items-center justify-center rounded-lg bg-amber-50/80 p-0 text-amber-700 transition-colors hover:bg-amber-100 active:bg-amber-200'
-              : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100'}
+              ? 'flex w-full min-h-11 items-center justify-center rounded-lg bg-primary p-0 text-white shadow-md transition-colors hover:bg-primary-dark active:scale-95'
+              : 'inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98]'}
             aria-label="Pagar e publicar"
             title="Pagar e publicar"
           >
             <CreditCard size={16} />
-            {!useCompactButtons ? 'Pagar e publicar' : null}
+            {!useCompactButtons ? 'Pagar e Publicar' : null}
           </motion.button>
         </>
       ) : null}
