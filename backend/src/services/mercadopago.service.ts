@@ -170,6 +170,15 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
             payer: {
                 first_name: userFirstName,
                 last_name: userLastName,
+                phone: {
+                    area_code: '11',
+                    number: '987654321',
+                },
+                address: {
+                    zip_code: '01310-100',
+                    street_name: 'Avenida Paulista',
+                    street_number: 1000,
+                },
             },
         },
         metadata: {
