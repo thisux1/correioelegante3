@@ -146,10 +146,6 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
             email: payerEmail,
             first_name: 'Cliente',
             last_name: 'Elegante',
-            identification: {
-                type: 'CPF',
-                number: '19119119100',
-            },
         },
         metadata: {
             resource_type: target.resourceType,
@@ -169,16 +165,21 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         result = await payment.create({
             body: paymentBody,
             requestOptions: {
-                idempotencyKey: `pix_${target.resourceType}_${target.resourceId}`,
+                idempotencyKey: crypto.randomUUID(),
             },
         });
     } catch (mpErr) {
-        console.error('Mercado Pago Pix payment creation error:', mpErr);
-        throw new AppError(
-            'Não foi possível gerar o pagamento Pix no momento. Tente novamente em instantes.',
-            502,
-            'PAYMENT_CREATION_FAILED',
-        );
+        console.warn('Mercado Pago Pix direct API unavailable or live credentials unverified. Falling back to Mercado Pago Checkout Preference:', mpErr);
+        try {
+            return await createMercadoPagoPreferenceForResource(target, userId);
+        } catch (prefErr) {
+            console.error('Mercado Pago Preference fallback error:', prefErr);
+            throw new AppError(
+                'Não foi possível gerar o pagamento Pix no momento. Tente novamente em instantes.',
+                502,
+                'PAYMENT_CREATION_FAILED',
+            );
+        }
     }
 
     if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
@@ -200,11 +201,16 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         };
     }
 
-    throw new AppError(
-        'Não foi possível carregar os dados do Pix no momento. Tente novamente em instantes.',
-        502,
-        'PAYMENT_DATA_UNAVAILABLE',
-    );
+    // Se não retornou QR code direto, tenta fallback para Preference
+    try {
+        return await createMercadoPagoPreferenceForResource(target, userId);
+    } catch {
+        throw new AppError(
+            'Não foi possível carregar os dados do Pix no momento. Tente novamente em instantes.',
+            502,
+            'PAYMENT_DATA_UNAVAILABLE',
+        );
+    }
 }
 
 export async function createMercadoPagoPreferenceForResource(target: PaymentTarget, userId: string) {
