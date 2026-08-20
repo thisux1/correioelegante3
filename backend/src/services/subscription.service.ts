@@ -267,16 +267,20 @@ export async function createSubscriptionMercadoPagoPreference(userId: string) {
   const client = getMercadoPagoClient();
   const preference = new Preference(client);
 
-  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const rawBaseUrl = (process.env.FRONTEND_URL || '').trim();
+  const baseUrl = (!rawBaseUrl || rawBaseUrl.includes('correioelegantevercel.app'))
+    ? (process.env.NODE_ENV === 'production' ? 'https://www.correioelegante.studio' : 'http://localhost:5173')
+    : rawBaseUrl.replace(/\/+$/, '');
+
   const isHttps = baseUrl.startsWith('https://');
 
   const successUrl = isHttps
     ? `${baseUrl}/planos/sucesso`
-    : 'https://correioelegante.studio/planos/sucesso';
+    : 'https://www.correioelegante.studio/planos/sucesso';
 
   const cancelUrl = isHttps
     ? `${baseUrl}/planos`
-    : 'https://correioelegante.studio/planos';
+    : 'https://www.correioelegante.studio/planos';
 
   const notificationUrl = isHttps
     ? `${baseUrl}/api/payment/webhook/mercadopago`
@@ -343,7 +347,10 @@ export async function createSubscriptionStripeSession(userId: string) {
   }
 
   const stripe = getStripe();
-  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const rawBaseUrl = (process.env.FRONTEND_URL || '').trim();
+  const baseUrl = (!rawBaseUrl || rawBaseUrl.includes('correioelegantevercel.app'))
+    ? (process.env.NODE_ENV === 'production' ? 'https://www.correioelegante.studio' : 'http://localhost:5173')
+    : rawBaseUrl.replace(/\/+$/, '');
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
