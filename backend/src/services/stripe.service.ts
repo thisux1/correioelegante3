@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/AppError';
+import { activateUserSubscription } from './subscription.service';
 
 // R$ 4,99 em centavos
 const AMOUNT_CENTS = 499;
@@ -236,7 +237,6 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
         const userId = session.metadata?.userId ?? session.metadata?.user_id;
 
         if (resourceType === 'subscription' && userId && session.payment_status === 'paid') {
-            const { activateUserSubscription } = await import('./subscription.service');
             await activateUserSubscription({
                 userId,
                 provider: 'stripe',
@@ -266,7 +266,6 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
         const userId = intent.metadata?.userId ?? intent.metadata?.user_id;
 
         if (resourceType === 'subscription' && userId) {
-            const { activateUserSubscription } = await import('./subscription.service');
             await activateUserSubscription({
                 userId,
                 provider: 'stripe',
