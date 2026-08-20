@@ -314,9 +314,7 @@ export async function createSubscriptionMercadoPagoPreference(userId: string) {
   });
 
   if (prefResult && prefResult.id) {
-    const checkoutUrl = isSandbox && prefResult.sandbox_init_point
-      ? prefResult.sandbox_init_point
-      : (prefResult.init_point || prefResult.sandbox_init_point);
+    const checkoutUrl = prefResult.init_point || prefResult.sandbox_init_point;
 
     return {
       paymentId: String(prefResult.id),

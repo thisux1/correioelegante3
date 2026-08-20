@@ -295,9 +295,7 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
             paymentId: String(prefResult.id),
         });
 
-        const checkoutUrl = isSandbox && prefResult.sandbox_init_point
-            ? prefResult.sandbox_init_point
-            : (prefResult.init_point || prefResult.sandbox_init_point);
+        const checkoutUrl = prefResult.init_point || prefResult.sandbox_init_point;
 
         return {
             paymentId: String(prefResult.id),
