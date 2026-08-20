@@ -247,12 +247,17 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
             : `${baseUrl}/payment/page/${target.resourceId}`)
         : 'https://correioelegante.studio/payment/cancel';
 
+    const notificationUrl = isHttps
+        ? `${baseUrl}/api/payment/webhook/mercadopago`
+        : undefined;
+
     const prefBody: Record<string, unknown> = {
         items: [
             {
                 id: target.resourceId,
                 title: resolveDescription(target.resourceType),
-                description: 'Correio Elegante Digital',
+                description: 'Correio Elegante Digital - Envio e personalização de mensagem/página',
+                category_id: 'services',
                 unit_price: AMOUNT,
                 quantity: 1,
                 currency_id: 'BRL',
@@ -264,6 +269,8 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
             failure: cancelUrl,
         },
         auto_return: 'approved',
+        statement_descriptor: 'CORREIOELEGAN',
+        notification_url: notificationUrl,
         metadata: {
             resource_type: target.resourceType,
             resource_id: target.resourceId,

@@ -278,12 +278,17 @@ export async function createSubscriptionMercadoPagoPreference(userId: string) {
     ? `${baseUrl}/planos`
     : 'https://correioelegante.studio/planos';
 
+  const notificationUrl = isHttps
+    ? `${baseUrl}/api/payment/webhook/mercadopago`
+    : undefined;
+
   const prefBody: Record<string, unknown> = {
     items: [
       {
         id: SUBSCRIPTION_PLAN_ID,
         title: 'Correio Elegante Ilimitado - 1 Mês',
         description: 'Acesso ilimitado por 30 dias para criar e enviar cartas e páginas.',
+        category_id: 'services',
         unit_price: SUBSCRIPTION_PRICE,
         quantity: 1,
         currency_id: 'BRL',
@@ -295,6 +300,8 @@ export async function createSubscriptionMercadoPagoPreference(userId: string) {
       failure: cancelUrl,
     },
     auto_return: 'approved',
+    statement_descriptor: 'CORREIOELEGAN',
+    notification_url: notificationUrl,
     metadata: {
       resource_type: 'subscription',
       user_id: userId,
