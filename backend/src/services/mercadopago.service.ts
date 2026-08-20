@@ -2,6 +2,7 @@ import MercadoPagoConfig, { Payment, Preference } from 'mercadopago';
 import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/AppError';
+import { activateUserSubscription } from './subscription.service';
 
 const AMOUNT = 4.99;
 
@@ -368,7 +369,6 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
             if (resourceType === 'subscription' || externalReference?.startsWith('subscription:')) {
                 const subUserId = metaUserId || (externalReference?.startsWith('subscription:') ? externalReference.split(':')[1] : undefined);
                 if (subUserId) {
-                    const { activateUserSubscription } = await import('./subscription.service');
                     await activateUserSubscription({
                         userId: subUserId,
                         provider: 'mercadopago',

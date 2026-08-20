@@ -5,12 +5,12 @@ import {
   canAccessPageByLifecycle,
   resolvePageLifecycle,
 } from '../contracts/page.contract';
+import { isUserSubscribed } from './subscription.service';
 
 export async function createMessage(
     userId: string,
     data: MessageInput
 ) {
-    const { isUserSubscribed } = await import('./subscription.service');
     const userSubscribed = await isUserSubscribed(userId);
 
     const lifecycle = resolvePageLifecycle({
