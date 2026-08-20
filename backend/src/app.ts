@@ -11,6 +11,7 @@ import { uploadRouter } from './routes/upload.routes';
 import { pageRouter } from './routes/page.routes';
 import { assetRouter } from './routes/asset.routes';
 import { errorHandler } from './middlewares/errorHandler';
+import { prisma } from './utils/prisma';
 
 const app = express();
 app.set('trust proxy', 1); // Confia no proxy da Vercel para ler IPs reais
@@ -54,7 +55,6 @@ app.use('/api/assets', assetRouter);
 // Health check — includes DB connectivity test (safe, read-only)
 app.get('/api/health', async (_req, res) => {
   try {
-    const { prisma } = await import('./utils/prisma');
     await prisma.$runCommandRaw({ ping: 1 });
     res.json({ status: 'ok', db: 'connected', timestamp: new Date().toISOString() });
   } catch (err: unknown) {
