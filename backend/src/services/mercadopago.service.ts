@@ -127,7 +127,7 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
     const isTestUserDomain = rawEmail.toLowerCase().includes('@testuser.com');
     const payerEmail = isSandbox
         ? (isTestUserDomain ? rawEmail : 'test_user_comprador@testuser.com')
-        : ((!rawEmail || isSellerEmail) ? 'comprador_correio@example.com' : rawEmail);
+        : ((!rawEmail || isSellerEmail) ? 'contato@correioelegante.studio' : rawEmail);
 
     const expiresAt = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
     const notificationUrl = process.env.MERCADOPAGO_NOTIFICATION_URL || process.env.MP_NOTIFICATION_URL;
