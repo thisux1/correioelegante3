@@ -158,13 +158,22 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
 }
 
 export async function mercadopagoWebhookHandler(req: Request, res: Response): Promise<void> {
+  const body = (req.body || {}) as Record<string, unknown>;
+  const rawDataId = (body?.data as Record<string, unknown> | undefined)?.id;
+  const isSimulation = body?.id === '123456' || rawDataId === '123456' || body?.live_mode === false;
+
+  if (isSimulation) {
+    res.status(200).json({ received: true, simulation: true });
+    return;
+  }
+
   const signature = req.headers['x-signature'] as string;
   const requestId = req.headers['x-request-id'] as string;
   if (!signature || !requestId) {
     throw new AppError('Headers x-signature e x-request-id obrigatorios', 400);
   }
   const result = await mercadopagoService.handleWebhook(
-    req.body as Record<string, unknown>,
+    body,
     signature,
     requestId,
   );

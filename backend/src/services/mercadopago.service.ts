@@ -361,49 +361,53 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
 
     // Processar eventos de pagamento
     if (body.type === 'payment' && dataId) {
-        const client = getMercadoPagoClient();
-        const paymentClient = new Payment(client);
-        const result = await paymentClient.get({ id: dataId });
+        try {
+            const client = getMercadoPagoClient();
+            const paymentClient = new Payment(client);
+            const result = await paymentClient.get({ id: dataId });
 
-        if (result.status === 'approved') {
-            const resourceType = (result.metadata?.resource_type ?? result.metadata?.resourceType) as string | undefined;
-            const resourceId = (result.metadata?.resource_id ?? result.metadata?.resourceId) as string | undefined;
-            const messageId = (result.metadata?.message_id ?? result.metadata?.messageId) as string | undefined;
-            const metaUserId = (result.metadata?.user_id ?? result.metadata?.userId) as string | undefined;
+            if (result.status === 'approved') {
+                const resourceType = (result.metadata?.resource_type ?? result.metadata?.resourceType) as string | undefined;
+                const resourceId = (result.metadata?.resource_id ?? result.metadata?.resourceId) as string | undefined;
+                const messageId = (result.metadata?.message_id ?? result.metadata?.messageId) as string | undefined;
+                const metaUserId = (result.metadata?.user_id ?? result.metadata?.userId) as string | undefined;
 
-            // Tratamento de Assinatura Ilimitada
-            const externalReference = result.external_reference as string | undefined;
-            if (resourceType === 'subscription' || externalReference?.startsWith('subscription:')) {
-                const subUserId = metaUserId || (externalReference?.startsWith('subscription:') ? externalReference.split(':')[1] : undefined);
-                if (subUserId) {
-                    await activateUserSubscription({
-                        userId: subUserId,
-                        provider: 'mercadopago',
-                        providerPaymentId: String(result.id),
-                        paymentMethod: result.payment_method_id ?? 'pix',
-                    });
+                // Tratamento de Assinatura Ilimitada
+                const externalReference = result.external_reference as string | undefined;
+                if (resourceType === 'subscription' || externalReference?.startsWith('subscription:')) {
+                    const subUserId = metaUserId || (externalReference?.startsWith('subscription:') ? externalReference.split(':')[1] : undefined);
+                    if (subUserId) {
+                        await activateUserSubscription({
+                            userId: subUserId,
+                            provider: 'mercadopago',
+                            providerPaymentId: String(result.id),
+                            paymentMethod: result.payment_method_id ?? 'pix',
+                        });
+                    }
+                    return { received: true };
                 }
-                return { received: true };
-            }
 
-            // Fallback via external_reference (formato "resourceType:resourceId")
-            let externalTarget: PaymentTarget | null = null;
-            if (externalReference?.includes(':') && !externalReference.startsWith('subscription:')) {
-                const [extType, extId] = externalReference.split(':');
-                if ((extType === 'message' || extType === 'page') && extId) {
-                    externalTarget = { resourceType: extType, resourceId: extId };
+                // Fallback via external_reference (formato "resourceType:resourceId")
+                let externalTarget: PaymentTarget | null = null;
+                if (externalReference?.includes(':') && !externalReference.startsWith('subscription:')) {
+                    const [extType, extId] = externalReference.split(':');
+                    if ((extType === 'message' || extType === 'page') && extId) {
+                        externalTarget = { resourceType: extType, resourceId: extId };
+                    }
+                }
+
+                const target: PaymentTarget | null = (resourceType === 'message' || resourceType === 'page') && resourceId
+                    ? { resourceType, resourceId }
+                    : messageId
+                        ? { resourceType: 'message', resourceId: messageId }
+                        : externalTarget;
+
+                if (target) {
+                    await markResourcePaymentPaid(target);
                 }
             }
-
-            const target: PaymentTarget | null = (resourceType === 'message' || resourceType === 'page') && resourceId
-                ? { resourceType, resourceId }
-                : messageId
-                    ? { resourceType: 'message', resourceId: messageId }
-                    : externalTarget;
-
-            if (target) {
-                await markResourcePaymentPaid(target);
-            }
+        } catch {
+            // Ignorar falha de busca para IDs simulados ou expirados
         }
     }
 

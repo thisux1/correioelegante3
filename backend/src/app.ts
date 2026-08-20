@@ -48,6 +48,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/payments', paymentRouter);
+app.use('/api/payment', paymentRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/pages', pageRouter);
 app.use('/api/assets', assetRouter);
