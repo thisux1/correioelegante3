@@ -758,12 +758,16 @@ export function Editor() {
               setLastSyncedSignature(currentSignature)
               setSaveState('saved')
 
-              if (userSubscribed || result.page.paymentStatus === 'paid') {
-                setFeedback('🎉 Sua página foi publicada com sucesso pelo Plano Ilimitado!')
-                navigate(`/card/page/${result.page.id}`)
-              } else {
-                navigate(`/payment/page/${result.page.id}`)
-              }
+              const destination = (userSubscribed || result.page.paymentStatus === 'paid')
+                ? `/card/page/${result.page.id}`
+                : `/payment/page/${result.page.id}`
+
+              navigate(destination)
+              window.setTimeout(() => {
+                if (!window.location.pathname.includes(result.page.id)) {
+                  window.location.href = destination
+                }
+              }, 100)
             } catch (error) {
               setSaveState('error')
               // Se deu conflito de versão (409), recupera a versão mais recente do backend e salva
@@ -786,11 +790,16 @@ export function Editor() {
                   setLastSyncedSignature(currentSignature)
                   setSaveState('saved')
 
-                  if (userSubscribed || retry.page.paymentStatus === 'paid') {
-                    navigate(`/card/page/${retry.page.id}`)
-                  } else {
-                    navigate(`/payment/page/${retry.page.id}`)
-                  }
+                  const retryDestination = (userSubscribed || retry.page.paymentStatus === 'paid')
+                    ? `/card/page/${retry.page.id}`
+                    : `/payment/page/${retry.page.id}`
+
+                  navigate(retryDestination)
+                  window.setTimeout(() => {
+                    if (!window.location.pathname.includes(retry.page.id)) {
+                      window.location.href = retryDestination
+                    }
+                  }, 100)
                   return
                 } catch {
                   // Fallback para feedback de erro
