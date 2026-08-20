@@ -129,8 +129,16 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         ? (isTestUserDomain ? rawEmail : 'test_user_comprador@testuser.com')
         : ((!rawEmail || isSellerEmail) ? 'contato@correioelegante.studio' : rawEmail);
 
+    const emailPrefix = rawEmail ? rawEmail.split('@')[0] : '';
+    const userFirstName = emailPrefix ? (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)) : 'Cliente';
+    const userLastName = 'Elegante';
+
     const expiresAt = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
-    const notificationUrl = process.env.MERCADOPAGO_NOTIFICATION_URL || process.env.MP_NOTIFICATION_URL;
+    const rawBaseUrl = process.env.FRONTEND_URL || 'https://www.correioelegante.studio';
+    const baseUrl = rawBaseUrl.includes('correioelegantevercel.app') || !rawBaseUrl.startsWith('http')
+        ? 'https://www.correioelegante.studio'
+        : rawBaseUrl.replace(/\/+$/, '');
+    const notificationUrl = process.env.MERCADOPAGO_NOTIFICATION_URL || process.env.MP_NOTIFICATION_URL || `${baseUrl}/api/payment/webhook/mercadopago`;
 
     const client = getMercadoPagoClient();
     const payment = new Payment(client);
@@ -142,10 +150,27 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         statement_descriptor: 'CORREIOELEG',
         date_of_expiration: expiresAt.toISOString(),
         external_reference: `${target.resourceType}:${target.resourceId}`,
+        notification_url: notificationUrl,
         payer: {
             email: payerEmail,
-            first_name: 'Cliente',
-            last_name: 'Elegante',
+            first_name: userFirstName,
+            last_name: userLastName,
+        },
+        additional_info: {
+            items: [
+                {
+                    id: target.resourceId,
+                    title: resolveDescription(target.resourceType),
+                    description: 'Carta digital personalizada e comemorativa com fotos, música e efeitos.',
+                    category_id: 'services',
+                    quantity: 1,
+                    unit_price: AMOUNT,
+                },
+            ],
+            payer: {
+                first_name: userFirstName,
+                last_name: userLastName,
+            },
         },
         metadata: {
             resource_type: target.resourceType,
@@ -155,10 +180,6 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
             user_id: userId,
         },
     };
-
-    if (notificationUrl) {
-        paymentBody.notification_url = notificationUrl;
-    }
 
     let result;
     try {
