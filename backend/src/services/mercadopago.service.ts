@@ -238,13 +238,13 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
         ? (target.resourceType === 'message'
             ? `${baseUrl}/payment/${target.resourceId}/success`
             : `${baseUrl}/payment/page/${target.resourceId}/success`)
-        : 'https://correioelegante.com.br/payment/success';
+        : 'https://correioelegante.studio/payment/success';
 
     const cancelUrl = isHttps
         ? (target.resourceType === 'message'
             ? `${baseUrl}/payment/${target.resourceId}`
             : `${baseUrl}/payment/page/${target.resourceId}`)
-        : 'https://correioelegante.com.br/payment/cancel';
+        : 'https://correioelegante.studio/payment/cancel';
 
     const prefBody: Record<string, unknown> = {
         items: [
@@ -360,24 +360,40 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
         const result = await paymentClient.get({ id: dataId });
 
         if (result.status === 'approved') {
-            const resourceType = result.metadata?.resource_type as PaymentResourceType | undefined;
-            const resourceId = result.metadata?.resource_id as string | undefined;
-            const messageId = result.metadata?.message_id as string | undefined;
+            const resourceType = (result.metadata?.resource_type ?? result.metadata?.resourceType) as string | undefined;
+            const resourceId = (result.metadata?.resource_id ?? result.metadata?.resourceId) as string | undefined;
+            const messageId = (result.metadata?.message_id ?? result.metadata?.messageId) as string | undefined;
+            const metaUserId = (result.metadata?.user_id ?? result.metadata?.userId) as string | undefined;
+
+            // Tratamento de Assinatura Ilimitada
+            const externalReference = result.external_reference as string | undefined;
+            if (resourceType === 'subscription' || externalReference?.startsWith('subscription:')) {
+                const subUserId = metaUserId || (externalReference?.startsWith('subscription:') ? externalReference.split(':')[1] : undefined);
+                if (subUserId) {
+                    const { activateUserSubscription } = await import('./subscription.service');
+                    await activateUserSubscription({
+                        userId: subUserId,
+                        provider: 'mercadopago',
+                        providerPaymentId: String(result.id),
+                        paymentMethod: result.payment_method_id ?? 'pix',
+                    });
+                }
+                return { received: true };
+            }
 
             // Fallback via external_reference (formato "resourceType:resourceId")
             let externalTarget: PaymentTarget | null = null;
-            const externalReference = result.external_reference as string | undefined;
-            if (externalReference?.includes(':')) {
+            if (externalReference?.includes(':') && !externalReference.startsWith('subscription:')) {
                 const [extType, extId] = externalReference.split(':');
                 if ((extType === 'message' || extType === 'page') && extId) {
                     externalTarget = { resourceType: extType, resourceId: extId };
                 }
             }
 
-            const target = resourceType && resourceId
+            const target: PaymentTarget | null = (resourceType === 'message' || resourceType === 'page') && resourceId
                 ? { resourceType, resourceId }
                 : messageId
-                    ? { resourceType: 'message' as const, resourceId: messageId }
+                    ? { resourceType: 'message', resourceId: messageId }
                     : externalTarget;
 
             if (target) {

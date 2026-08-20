@@ -56,7 +56,7 @@ export function LegalTerms() {
             <div>
               <h2 className="text-base font-semibold text-text mb-2">6. Disposições Gerais</h2>
               <p>
-                Estes termos são regidos pelas leis da República Federativa do Brasil. Para a resolução de quaisquer controvérsias, fica eleito o Foro da Comarca de Sorocaba/SP, com renúncia a qualquer outro, por mais privilegiado que seja.
+                Estes termos são regidos pelas leis da República Federativa do Brasil. Em caso de dúvidas ou notificações legais, entre em contato através de <a href="mailto:contato@correioelegante.studio" className="text-primary hover:underline font-medium">contato@correioelegante.studio</a>. Para a resolução de controvérsias, fica eleito o Foro da Comarca de Sorocaba/SP, com renúncia a qualquer outro, por mais privilegiado que seja.
               </p>
             </div>
           </section>

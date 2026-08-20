@@ -21,12 +21,16 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   })
 }
 
-interface User {
+export interface User {
   id: string
   email: string
+  isSubscribed?: boolean
+  subscriptionStatus?: string | null
+  subscriptionPlan?: string | null
+  subscriptionExpiresAt?: string | Date | null
 }
 
-interface AuthState {
+export interface AuthState {
   user: User | null
   accessToken: string | null
   isAuthenticated: boolean
@@ -58,15 +62,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   initAuth: async () => {
     set({ isLoading: true })
 
-    // Prevent Lighthouse / console 401 errors by not calling refresh
-    // if we know the user is not logged in.
     if (!localStorage.getItem('@ce:session')) {
       set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false })
       return
     }
 
     try {
-      // Try to get a new access token from the refresh cookie
       const { data: refreshData } = await withTimeout(
         axios.post(
           '/api/auth/refresh',
@@ -76,7 +77,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         INIT_AUTH_TIMEOUT_MS
       )
 
-      // Then fetch the user profile with the new token
       const { data: userData } = await withTimeout(
         axios.get('/api/auth/me', {
           headers: { Authorization: `Bearer ${refreshData.accessToken}` },
@@ -86,11 +86,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         INIT_AUTH_TIMEOUT_MS
       )
 
-      // Update the session timestamp to simulate activity or fresh token login validation refresh
       localStorage.setItem('@ce:session', JSON.stringify({ lastLogin: Date.now() }))
 
       set({
-        user: userData.user,
+        user: userData.user || userData,
         accessToken: refreshData.accessToken,
         isAuthenticated: true,
         isLoading: false,

@@ -51,6 +51,22 @@ function buildCreatePayload(target: PaymentTarget, paymentMethod: PaymentMethod)
   }
 }
 
+export interface SubscriptionStatusResponse {
+  isSubscribed: boolean
+  status: string
+  plan: string | null
+  expiresAt: string | null
+  daysRemaining: number
+  history?: Array<{
+    id: string
+    planId: string
+    status: string
+    amount: number
+    startsAt: string
+    expiresAt: string
+  }>
+}
+
 export const paymentService = {
   createPix(target: PaymentTarget) {
     return api.post<PixPaymentResponse>('/payments/create', buildCreatePayload(target, 'pix'))
@@ -83,5 +99,44 @@ export const paymentService = {
       resourceType: target.resourceType,
       resourceId: target.resourceId,
     })
+  },
+
+  createSubscriptionPix() {
+    return api.post<PixPaymentResponse & { amount: number; planId: string }>('/payments/subscription/checkout', {
+      paymentMethod: 'pix',
+      planId: 'monthly_unlimited',
+    })
+  },
+
+  createSubscriptionCard() {
+    return api.post<{ sessionId: string; checkoutUrl: string | null; amount: number; planId: string }>('/payments/subscription/checkout', {
+      paymentMethod: 'credit_card',
+      planId: 'monthly_unlimited',
+    })
+  },
+
+  createSubscriptionMercadoPagoCheckout() {
+    return api.post<{
+      paymentId: string
+      status: string
+      checkoutUrl: string | null
+      preferenceId: string | null
+      amount: number
+      planId: string
+    }>('/payments/subscription/checkout', {
+      paymentMethod: 'mercadopago_checkout',
+      planId: 'monthly_unlimited',
+    })
+  },
+
+  getSubscriptionStatus() {
+    return api.get<SubscriptionStatusResponse>('/payments/subscription/status')
+  },
+
+  simulateSubscriptionApproval() {
+    return api.post<{ success: boolean; message: string; isSubscribed: boolean; expiresAt: string; daysRemaining: number }>(
+      '/payments/simulate-subscription',
+      {}
+    )
   },
 }

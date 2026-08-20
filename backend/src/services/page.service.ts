@@ -85,6 +85,9 @@ function canAccessPage(params: {
 }
 
 export async function createPage(userId: string, data: CreatePageInput) {
+  const { isUserSubscribed } = await import('./subscription.service');
+  const userSubscribed = await isUserSubscribed(userId);
+
   const lifecycle = resolvePageLifecycle({
     status: data.status,
     visibility: data.visibility,
@@ -99,7 +102,7 @@ export async function createPage(userId: string, data: CreatePageInput) {
       status: lifecycle.status,
       visibility: lifecycle.visibility,
       publishedAt: lifecycle.publishedAt,
-      paymentStatus: 'pending',
+      paymentStatus: userSubscribed ? 'paid' : 'pending',
       version: 1,
       userId,
     },
@@ -137,6 +140,10 @@ export async function updatePage(pageId: string, userId: string, data: UpdatePag
     );
   }
 
+  const { isUserSubscribed } = await import('./subscription.service');
+  const userSubscribed = await isUserSubscribed(userId);
+  const paymentStatus = page.paymentStatus === 'paid' || userSubscribed ? 'paid' : 'pending';
+
   const lifecycle = resolvePageLifecycle({
     status: data.status ?? page.status,
     visibility: data.visibility ?? page.visibility,
@@ -155,6 +162,7 @@ export async function updatePage(pageId: string, userId: string, data: UpdatePag
       status: lifecycle.status,
       visibility: lifecycle.visibility,
       publishedAt: lifecycle.publishedAt,
+      paymentStatus,
       version: page.version + 1,
     },
   });

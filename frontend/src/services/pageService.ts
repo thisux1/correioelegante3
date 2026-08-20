@@ -14,6 +14,7 @@ interface BackendPage {
   status: PageStatus
   visibility: PageVisibility
   publishedAt: string | null
+  paymentStatus?: 'pending' | 'paid' | string
   version: number
   updatedAt: string
   createdAt: string
@@ -21,6 +22,7 @@ interface BackendPage {
 
 export interface PageSummary extends PageContract {
   createdAt: string
+  paymentStatus?: 'pending' | 'paid' | string
 }
 
 export interface SavePageInput {
@@ -45,6 +47,7 @@ function mapBackendPage(page: BackendPage): PageSummary {
     status: page.status,
     visibility: page.visibility,
     publishedAt: page.publishedAt,
+    paymentStatus: page.paymentStatus,
     version: page.version,
     updatedAt: page.updatedAt,
     createdAt: page.createdAt,
