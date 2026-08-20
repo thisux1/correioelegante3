@@ -165,7 +165,7 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
         result = await payment.create({
             body: paymentBody,
             requestOptions: {
-                idempotencyKey: crypto.randomUUID(),
+                idempotencyKey: crypto.randomBytes(16).toString('hex'),
             },
         });
     } catch (mpErr) {
