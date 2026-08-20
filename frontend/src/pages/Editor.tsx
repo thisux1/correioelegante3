@@ -352,6 +352,7 @@ function useEditorAutosave(params: {
   lastSyncedSignature: string
   saveState: SaveState
   isLoadingPage: boolean
+  isNavigatingToPayment: boolean
   savePage: () => Promise<void>
 }) {
   const {
@@ -361,11 +362,12 @@ function useEditorAutosave(params: {
     lastSyncedSignature,
     saveState,
     isLoadingPage,
+    isNavigatingToPayment,
     savePage,
   } = params
 
   useEffect(() => {
-    if (!hasPageId || pageVersion === undefined || typeof window === 'undefined') {
+    if (isNavigatingToPayment || !hasPageId || pageVersion === undefined || typeof window === 'undefined') {
       return
     }
 
@@ -378,7 +380,9 @@ function useEditorAutosave(params: {
     }
 
     const timeoutId = window.setTimeout(() => {
-      void savePage()
+      if (!isNavigatingToPayment) {
+        void savePage()
+      }
     }, AUTOSAVE_DEBOUNCE_MS)
 
     return () => {
@@ -388,6 +392,7 @@ function useEditorAutosave(params: {
     currentSignature,
     hasPageId,
     isLoadingPage,
+    isNavigatingToPayment,
     lastSyncedSignature,
     pageVersion,
     savePage,
@@ -421,6 +426,8 @@ export function Editor() {
   const [draftConflict, setDraftConflict] = useState<DraftConflictState | null>(null)
   const [templateConflict, setTemplateConflict] = useState<TemplateConflictState | null>(null)
   const handledTemplateKeyRef = useRef<string>('')
+  const isNavigatingToPaymentRef = useRef(false)
+  const isPublishingRef = useRef(false)
 
   useEffect(() => {
     trackEditorEvent({
@@ -559,7 +566,7 @@ export function Editor() {
         })
       }
 
-      if (!currentPageId) {
+      if (!currentPageId && !isNavigatingToPaymentRef.current) {
         navigate(`/editor/${result.page.id}`, { replace: true })
       }
     } catch (error) {
@@ -658,6 +665,7 @@ export function Editor() {
     lastSyncedSignature,
     saveState,
     isLoadingPage,
+    isNavigatingToPayment: isNavigatingToPaymentRef.current,
     savePage,
   })
 
@@ -736,46 +744,36 @@ export function Editor() {
           selectedThemeId={theme}
           showPublishCta={showPublishCta}
           onPublishCtaClick={async () => {
+            if (isPublishingRef.current) return
+            isPublishingRef.current = true
+            isNavigatingToPaymentRef.current = true
             try {
               setSaveState('saving')
+              setFeedback('Salvando página e redirecionando para pagamento...')
               const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
               const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
-              const result = await pageService.savePage({
-                pageId: currentPageId,
-                content: {
-                  blocks,
-                  theme,
-                  version: PAGE_VERSION,
-                },
-                status: targetStatus,
-                visibility,
-                version: pageVersion,
-              })
-              setCurrentPageId(result.page.id)
-              setPageVersion(result.page.version)
-              setStatus(result.page.status)
-              setDraftContext(result.page.id, result.page.updatedAt)
-              setLastSyncedSignature(currentSignature)
-              setSaveState('saved')
 
-              const destination = (userSubscribed || result.page.paymentStatus === 'paid')
-                ? `/card/page/${result.page.id}`
-                : `/payment/page/${result.page.id}`
+              let resultPageId = currentPageId
+              let paymentStatus = ''
 
-              navigate(destination)
-              window.setTimeout(() => {
-                if (!window.location.pathname.includes(result.page.id)) {
-                  window.location.href = destination
-                }
-              }, 100)
-            } catch (error) {
-              setSaveState('error')
-              // Se deu conflito de versão (409), recupera a versão mais recente do backend e salva
-              if (isAxiosError(error) && error.response?.status === 409 && currentPageId) {
-                try {
+              try {
+                const result = await pageService.savePage({
+                  pageId: currentPageId,
+                  content: {
+                    blocks,
+                    theme,
+                    version: PAGE_VERSION,
+                  },
+                  status: targetStatus,
+                  visibility,
+                  version: pageVersion,
+                })
+                resultPageId = result.page.id
+                paymentStatus = result.page.paymentStatus || ''
+                setDraftContext(result.page.id, result.page.updatedAt)
+              } catch (saveErr) {
+                if (isAxiosError(saveErr) && saveErr.response?.status === 409 && currentPageId) {
                   const latest = await pageService.loadPage(currentPageId)
-                  const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
-                  const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
                   const retry = await pageService.savePage({
                     pageId: currentPageId,
                     content: { blocks, theme, version: PAGE_VERSION },
@@ -783,29 +781,32 @@ export function Editor() {
                     visibility,
                     version: latest.version,
                   })
-                  setCurrentPageId(retry.page.id)
-                  setPageVersion(retry.page.version)
-                  setStatus(retry.page.status)
+                  resultPageId = retry.page.id
+                  paymentStatus = retry.page.paymentStatus || ''
                   setDraftContext(retry.page.id, retry.page.updatedAt)
-                  setLastSyncedSignature(currentSignature)
-                  setSaveState('saved')
-
-                  const retryDestination = (userSubscribed || retry.page.paymentStatus === 'paid')
-                    ? `/card/page/${retry.page.id}`
-                    : `/payment/page/${retry.page.id}`
-
-                  navigate(retryDestination)
-                  window.setTimeout(() => {
-                    if (!window.location.pathname.includes(retry.page.id)) {
-                      window.location.href = retryDestination
-                    }
-                  }, 100)
-                  return
-                } catch {
-                  // Fallback para feedback de erro
+                } else {
+                  throw saveErr
                 }
               }
-              setFeedback('Não foi possível salvar a página para publicação. Tente novamente.')
+
+              if (!resultPageId) {
+                throw new Error('Não foi possível identificar a página salva.')
+              }
+
+              const destination = (userSubscribed || paymentStatus === 'paid')
+                ? `/card/page/${resultPageId}`
+                : `/payment/page/${resultPageId}`
+
+              window.location.assign(destination)
+            } catch (error) {
+              isPublishingRef.current = false
+              isNavigatingToPaymentRef.current = false
+              setSaveState('error')
+              setFeedback(
+                isAxiosError<{ error?: string }>(error)
+                  ? error.response?.data?.error ?? 'Não foi possível salvar a página para publicação. Tente novamente.'
+                  : 'Não foi possível salvar a página para publicação. Tente novamente.',
+              )
             }
           }}
         />

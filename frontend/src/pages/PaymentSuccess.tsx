@@ -11,19 +11,22 @@ export function PaymentSuccess() {
   const { messageId, pageId } = useParams<{ messageId?: string; pageId?: string }>()
   const [confirmed, setConfirmed] = useState(false)
 
-  const isPageFlow = location.pathname.includes('/payment/page/')
+  const isPageFlow = location.pathname.includes('/payment/page')
+  const resolvedPageId = pageId || (isPageFlow ? location.pathname.split('/payment/page/')[1]?.split('/')[0]?.split('?')[0] : undefined)
+  const resolvedMessageId = messageId || (!isPageFlow ? location.pathname.split('/payment/')[1]?.split('/')[0]?.split('?')[0] : undefined)
+
   const target = useMemo<PaymentTarget | null>(() => {
     if (isPageFlow) {
-      return pageId ? { resourceType: 'page', resourceId: pageId } : null
+      return resolvedPageId ? { resourceType: 'page', resourceId: resolvedPageId } : null
     }
 
-    return messageId ? { resourceType: 'message', resourceId: messageId } : null
-  }, [isPageFlow, messageId, pageId])
+    return resolvedMessageId ? { resourceType: 'message', resourceId: resolvedMessageId } : null
+  }, [isPageFlow, resolvedMessageId, resolvedPageId])
 
-  const cardHref = isPageFlow && pageId
-    ? `/card/page/${pageId}`
-    : messageId
-      ? `/card/${messageId}`
+  const cardHref = isPageFlow && resolvedPageId
+    ? `/card/page/${resolvedPageId}`
+    : resolvedMessageId
+      ? `/card/${resolvedMessageId}`
       : '/profile'
 
   // Aguarda o webhook confirmar o pagamento (pode haver delay do Stripe)
