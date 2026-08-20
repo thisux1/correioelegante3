@@ -222,8 +222,8 @@ export function Payment() {
               className="py-4"
             >
               {isSubscribed ? (
-                <div className="mb-8 rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-rose-50 to-white p-6 text-center shadow-lg">
-                  <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                <div className="mb-8 rounded-2xl border border-primary/20 bg-surface p-6 text-center shadow-sm">
+                  <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-primary">
                     <Zap size={13} />
                     Assinatura Ilimitada Ativa
                   </div>
@@ -238,7 +238,7 @@ export function Payment() {
                       onClick={() => handleSelectMethod('pix')}
                       disabled={isLoading}
                       size="lg"
-                      className="w-full font-bold shadow-xl shadow-primary/25 text-base"
+                      className="w-full font-bold shadow-md shadow-primary/20 text-base"
                     >
                       {isLoading ? 'Publicando...' : '✨ Publicar Agora Gratuitamente'}
                     </Button>
@@ -246,7 +246,7 @@ export function Payment() {
                 </div>
               ) : (
                 <>
-                  <div className="mb-6 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-rose-50 to-amber-50 p-4 text-left shadow-xs">
+                  <div className="mb-6 rounded-2xl border border-border bg-surface p-4 text-left shadow-xs">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-primary">
@@ -257,7 +257,7 @@ export function Payment() {
                         </p>
                       </div>
                       <Link to="/planos" className="shrink-0">
-                        <Button size="sm" variant="outline" className="text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white">
+                        <Button size="sm" variant="outline" className="text-xs font-bold border-primary/40 text-primary hover:bg-primary hover:text-white">
                           Ver Planos
                         </Button>
                       </Link>

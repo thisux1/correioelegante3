@@ -247,16 +247,16 @@ export function Profile() {
 
           {/* Banner de Assinatura */}
           {(subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
-            <div className="rounded-3xl border-2 border-amber-300/60 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-primary/10 p-5 sm:p-6 shadow-sm">
+            <div className="rounded-2xl border border-amber-300/60 bg-amber-50/40 p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-md">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-xs">
                     <Zap size={24} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-display text-lg font-bold text-text">Plano Ilimitado Ativo</h3>
-                      <span className="rounded-md bg-gradient-to-r from-amber-500 to-rose-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">PRO</span>
+                      <span className="rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white">PRO</span>
                     </div>
                     <p className="text-xs text-text-light mt-0.5">
                       {subscription?.daysRemaining ? `Restam ${subscription.daysRemaining} dias de acesso irrestrito para criar quantas cartas quiser.` : 'Criação e publicação de cartas ilimitadas liberadas.'}
@@ -264,7 +264,7 @@ export function Profile() {
                   </div>
                 </div>
                 <Link to="/create" className="w-full sm:w-auto">
-                  <Button size="sm" className="w-full sm:w-auto font-semibold shadow-sm shadow-primary/20">
+                  <Button size="sm" className="w-full sm:w-auto font-semibold shadow-xs">
                     <Heart size={14} />
                     Nova Carta
                   </Button>
@@ -272,7 +272,7 @@ export function Profile() {
               </div>
             </div>
           ) : (
-            <div className="rounded-3xl border border-primary/20 bg-gradient-to-r from-primary/5 via-rose-50/60 to-amber-50/60 p-5 sm:p-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -289,7 +289,7 @@ export function Profile() {
                   </div>
                 </div>
                 <Link to="/planos" className="w-full sm:w-auto">
-                  <Button size="sm" className="w-full sm:w-auto bg-gradient-to-r from-primary to-rose-500 font-semibold text-white shadow-md shadow-primary/20">
+                  <Button size="sm" className="w-full sm:w-auto bg-primary font-semibold text-white shadow-xs hover:bg-primary/90">
                     <Zap size={14} />
                     Assinar Ilimitado (R$ 15)
                   </Button>
