@@ -186,7 +186,7 @@ export function Header() {
                       <User size={16} />
                       Perfil
                       {(user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
-                        <span className="rounded-md bg-gradient-to-r from-amber-500 to-rose-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">
+                        <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">
                           PRO
                         </span>
                       ) : null}

@@ -739,7 +739,7 @@ export function Editor() {
             try {
               setSaveState('saving')
               const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
-              const targetStatus = userSubscribed ? 'published' : status
+              const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
               const result = await pageService.savePage({
                 pageId: currentPageId,
                 content: {
@@ -754,6 +754,8 @@ export function Editor() {
               setCurrentPageId(result.page.id)
               setPageVersion(result.page.version)
               setStatus(result.page.status)
+              setDraftContext(result.page.id, result.page.updatedAt)
+              setLastSyncedSignature(currentSignature)
               setSaveState('saved')
 
               if (userSubscribed || result.page.paymentStatus === 'paid') {
@@ -762,8 +764,38 @@ export function Editor() {
               } else {
                 navigate(`/payment/page/${result.page.id}`)
               }
-            } catch {
+            } catch (error) {
               setSaveState('error')
+              // Se deu conflito de versão (409), recupera a versão mais recente do backend e salva
+              if (isAxiosError(error) && error.response?.status === 409 && currentPageId) {
+                try {
+                  const latest = await pageService.loadPage(currentPageId)
+                  const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
+                  const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
+                  const retry = await pageService.savePage({
+                    pageId: currentPageId,
+                    content: { blocks, theme, version: PAGE_VERSION },
+                    status: targetStatus,
+                    visibility,
+                    version: latest.version,
+                  })
+                  setCurrentPageId(retry.page.id)
+                  setPageVersion(retry.page.version)
+                  setStatus(retry.page.status)
+                  setDraftContext(retry.page.id, retry.page.updatedAt)
+                  setLastSyncedSignature(currentSignature)
+                  setSaveState('saved')
+
+                  if (userSubscribed || retry.page.paymentStatus === 'paid') {
+                    navigate(`/card/page/${retry.page.id}`)
+                  } else {
+                    navigate(`/payment/page/${retry.page.id}`)
+                  }
+                  return
+                } catch {
+                  // Fallback para feedback de erro
+                }
+              }
               setFeedback('Não foi possível salvar a página para publicação. Tente novamente.')
             }
           }}
