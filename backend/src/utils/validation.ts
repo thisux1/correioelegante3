@@ -55,6 +55,13 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
 });
 
+export const createSubscriptionPaymentSchema = z.object({
+  paymentMethod: z.enum(['pix', 'credit_card', 'mercadopago_checkout'], {
+    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".' }),
+  }),
+  planId: z.enum(['monthly_unlimited']).optional().default('monthly_unlimited'),
+});
+
 export const createPaymentSchema = z.object({
   paymentMethod: z.enum(['pix', 'credit_card', 'mercadopago_checkout'], {
     errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".' }),

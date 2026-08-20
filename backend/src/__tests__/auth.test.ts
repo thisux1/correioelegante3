@@ -14,6 +14,11 @@ const mockUser = {
     id: '507f1f77bcf86cd799439000',
     email: 'test@correio.com',
     password: '$2b$12$exampleHashedPasswordForTests123456789',
+    subscriptionStatus: 'none',
+    subscriptionPlan: null,
+    subscriptionExpiresAt: null,
+    subscriptionProvider: null,
+    subscriptionId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
 };

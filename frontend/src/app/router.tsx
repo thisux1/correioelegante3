@@ -18,6 +18,8 @@ const LegalPrivacy = lazy(() => import('@/pages/LegalPrivacy').then(m => ({ defa
 const LegalCookies = lazy(() => import('@/pages/LegalCookies').then(m => ({ default: m.LegalCookies })))
 const Payment = lazy(() => import('@/pages/Payment').then(m => ({ default: m.Payment })))
 const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })))
+const Pricing = lazy(() => import('@/pages/Pricing').then(m => ({ default: m.Pricing })))
+const SubscriptionSuccess = lazy(() => import('@/pages/SubscriptionSuccess').then(m => ({ default: m.SubscriptionSuccess })))
 const Card = lazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
 const PageCard = lazy(() => import('@/pages/PageCard').then(m => ({ default: m.PageCard })))
 const Error404 = lazy(() => import('@/pages/Error404').then(m => ({ default: m.Error404 })))
@@ -97,6 +99,9 @@ export function AppRouter() {
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
+              <Route path="/planos" element={<Pricing />} />
+              <Route path="/pricing" element={<Navigate to="/planos" replace />} />
+              <Route path="/planos/sucesso" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
               <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/legal/terms" element={<LegalTerms />} />

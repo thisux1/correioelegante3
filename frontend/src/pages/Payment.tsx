@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion } from 'framer-motion'
-import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone } from 'lucide-react'
+import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Container } from '@/components/layout/Container'
+import { useAuthStore } from '@/store/authStore'
 import {
   paymentService,
   type PaymentMethod,
@@ -72,6 +73,9 @@ export function Payment() {
     return () => clearInterval(interval)
   }, [pixData?.pixExpiresAt])
 
+  const user = useAuthStore((state) => state.user)
+  const isSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
+
   async function handleSelectMethod(method: PaymentMethod) {
     if (!target) return
     setIsLoading(true)
@@ -80,6 +84,10 @@ export function Payment() {
     try {
       if (method === 'pix') {
         const response = await paymentService.createPix(target)
+        if (response.data.status === 'paid') {
+          setStep('paid')
+          return
+        }
         if (response.data.pixQrCode) {
           setPixData(response.data)
           setStep('pix')
@@ -213,14 +221,59 @@ export function Payment() {
               animate={{ opacity: 1, y: 0 }}
               className="py-4"
             >
-              <div className="mb-8">
-                <h2 className="font-display text-2xl font-bold text-text mb-2">
-                  Como deseja pagar?
-                </h2>
-                <p className="text-text-light text-sm">
-                  Valor: <span className="font-semibold text-text">R$ 4,99</span>
-                </p>
-              </div>
+              {isSubscribed ? (
+                <div className="mb-8 rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-rose-50 to-white p-6 text-center shadow-lg">
+                  <div className="mx-auto mb-3 inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                    <Zap size={13} />
+                    Assinatura Ilimitada Ativa
+                  </div>
+                  <h2 className="font-display text-2xl font-bold text-text">
+                    Publicar com seu Plano PRO
+                  </h2>
+                  <p className="mx-auto mt-2 max-w-sm text-xs text-text-light">
+                    Você tem acesso ilimitado para publicar quantas cartas e páginas desejar sem pagar nada a mais.
+                  </p>
+                  <div className="mt-6">
+                    <Button
+                      onClick={() => handleSelectMethod('pix')}
+                      disabled={isLoading}
+                      size="lg"
+                      className="w-full font-bold shadow-xl shadow-primary/25 text-base"
+                    >
+                      {isLoading ? 'Publicando...' : '✨ Publicar Agora Gratuitamente'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-rose-50 to-amber-50 p-4 text-left shadow-xs">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+                          <Zap size={13} /> Economize com o Plano Ilimitado
+                        </span>
+                        <p className="mt-0.5 text-xs text-text font-medium">
+                          Assine por <strong>R$ 15,00/mês</strong> e crie quantas cartas quiser por 30 dias!
+                        </p>
+                      </div>
+                      <Link to="/planos" className="shrink-0">
+                        <Button size="sm" variant="outline" className="text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white">
+                          Ver Planos
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="mb-8">
+                    <h2 className="font-display text-2xl font-bold text-text mb-2">
+                      Como deseja pagar?
+                    </h2>
+                    <p className="text-text-light text-sm">
+                      Pagamento avulso: <span className="font-semibold text-text">R$ 4,99</span>
+                    </p>
+                  </div>
+                </>
+              )}
 
               {error && (
                 <motion.div

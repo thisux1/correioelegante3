@@ -230,14 +230,26 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
-        const resourceType = session.metadata?.resourceType as PaymentResourceType | undefined;
-        const resourceId = session.metadata?.resourceId;
-        const messageId = session.metadata?.messageId;
+        const resourceType = (session.metadata?.resourceType ?? session.metadata?.resource_type) as string | undefined;
+        const resourceId = session.metadata?.resourceId ?? session.metadata?.resource_id;
+        const messageId = session.metadata?.messageId ?? session.metadata?.message_id;
+        const userId = session.metadata?.userId ?? session.metadata?.user_id;
 
-        const target = resourceType && resourceId
+        if (resourceType === 'subscription' && userId && session.payment_status === 'paid') {
+            const { activateUserSubscription } = await import('./subscription.service');
+            await activateUserSubscription({
+                userId,
+                provider: 'stripe',
+                providerPaymentId: session.id,
+                paymentMethod: 'credit_card',
+            });
+            return { received: true };
+        }
+
+        const target: PaymentTarget | null = (resourceType === 'message' || resourceType === 'page') && resourceId
             ? { resourceType, resourceId }
             : messageId
-                ? { resourceType: 'message' as const, resourceId: messageId }
+                ? { resourceType: 'message', resourceId: messageId }
                 : null;
 
         if (target && session.payment_status === 'paid') {
@@ -248,14 +260,26 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
     // Manter compatibilidade com payment_intent.succeeded para outros fluxos
     if (event.type === 'payment_intent.succeeded') {
         const intent = event.data.object as Stripe.PaymentIntent;
-        const resourceType = intent.metadata?.resourceType as PaymentResourceType | undefined;
-        const resourceId = intent.metadata?.resourceId;
-        const messageId = intent.metadata?.messageId;
+        const resourceType = (intent.metadata?.resourceType ?? intent.metadata?.resource_type) as string | undefined;
+        const resourceId = intent.metadata?.resourceId ?? intent.metadata?.resource_id;
+        const messageId = intent.metadata?.messageId ?? intent.metadata?.message_id;
+        const userId = intent.metadata?.userId ?? intent.metadata?.user_id;
 
-        const target = resourceType && resourceId
+        if (resourceType === 'subscription' && userId) {
+            const { activateUserSubscription } = await import('./subscription.service');
+            await activateUserSubscription({
+                userId,
+                provider: 'stripe',
+                providerPaymentId: intent.id,
+                paymentMethod: 'credit_card',
+            });
+            return { received: true };
+        }
+
+        const target: PaymentTarget | null = (resourceType === 'message' || resourceType === 'page') && resourceId
             ? { resourceType, resourceId }
             : messageId
-                ? { resourceType: 'message' as const, resourceId: messageId }
+                ? { resourceType: 'message', resourceId: messageId }
                 : null;
 
         if (target) {

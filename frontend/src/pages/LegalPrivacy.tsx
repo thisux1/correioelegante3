@@ -55,7 +55,7 @@ export function LegalPrivacy() {
             <div>
               <h2 className="text-base font-semibold text-text mb-2">6. Contato</h2>
               <p>
-                Para questões relacionadas ao tratamento de dados, o Usuário poderá entrar em contato através dos canais oficiais de suporte disponibilizados no rodapé da Plataforma.
+                Para questões relacionadas ao tratamento de dados ou exercício de direitos, o Usuário poderá entrar em contato através do e-mail <a href="mailto:contato@correioelegante.studio" className="text-primary hover:underline font-medium">contato@correioelegante.studio</a> ou pelos canais de suporte da Plataforma.
               </p>
             </div>
           </section>

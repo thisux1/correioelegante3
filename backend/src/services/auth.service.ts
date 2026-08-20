@@ -48,7 +48,19 @@ export async function registerUser(email: string, password: string, age?: number
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    return { user, accessToken, refreshToken };
+    const isSubscribed = false;
+    return {
+        user: {
+            id: user.id,
+            email: user.email,
+            isSubscribed,
+            subscriptionStatus: 'none',
+            subscriptionPlan: null,
+            subscriptionExpiresAt: null,
+        },
+        accessToken,
+        refreshToken,
+    };
 }
 
 export async function loginUser(email: string, password: string) {
@@ -65,7 +77,24 @@ export async function loginUser(email: string, password: string) {
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
 
-    return { user: { id: user.id, email: user.email }, accessToken, refreshToken };
+    const isSubscribed = Boolean(
+        user.subscriptionStatus === 'active' &&
+        user.subscriptionExpiresAt &&
+        new Date(user.subscriptionExpiresAt).getTime() > Date.now()
+    );
+
+    return {
+        user: {
+            id: user.id,
+            email: user.email,
+            isSubscribed,
+            subscriptionStatus: user.subscriptionStatus,
+            subscriptionPlan: user.subscriptionPlan,
+            subscriptionExpiresAt: user.subscriptionExpiresAt,
+        },
+        accessToken,
+        refreshToken,
+    };
 }
 
 export async function refreshTokens(token: string) {
@@ -85,14 +114,30 @@ export async function refreshTokens(token: string) {
 export async function getMe(userId: string) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, email: true, createdAt: true },
+        select: {
+            id: true,
+            email: true,
+            createdAt: true,
+            subscriptionStatus: true,
+            subscriptionPlan: true,
+            subscriptionExpiresAt: true,
+        },
     });
 
     if (!user) {
         throw new AppError('Usuário não encontrado', 404);
     }
 
-    return user;
+    const isSubscribed = Boolean(
+        user.subscriptionStatus === 'active' &&
+        user.subscriptionExpiresAt &&
+        new Date(user.subscriptionExpiresAt).getTime() > Date.now()
+    );
+
+    return {
+        ...user,
+        isSubscribed,
+    };
 }
 
 export async function changePassword(userId: string, oldPassword: string, newPassword: string) {
