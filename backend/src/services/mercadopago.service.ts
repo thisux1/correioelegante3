@@ -232,20 +232,24 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
     const client = getMercadoPagoClient();
     const preference = new Preference(client);
 
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const rawBaseUrl = (process.env.FRONTEND_URL || '').trim();
+    const baseUrl = (!rawBaseUrl || rawBaseUrl.includes('correioelegantevercel.app'))
+        ? (process.env.NODE_ENV === 'production' ? 'https://www.correioelegante.studio' : 'http://localhost:5173')
+        : rawBaseUrl.replace(/\/+$/, '');
+
     const isHttps = baseUrl.startsWith('https://');
 
     const successUrl = isHttps
         ? (target.resourceType === 'message'
             ? `${baseUrl}/payment/${target.resourceId}/success`
             : `${baseUrl}/payment/page/${target.resourceId}/success`)
-        : 'https://correioelegante.studio/payment/success';
+        : 'https://www.correioelegante.studio/payment/success';
 
     const cancelUrl = isHttps
         ? (target.resourceType === 'message'
             ? `${baseUrl}/payment/${target.resourceId}`
             : `${baseUrl}/payment/page/${target.resourceId}`)
-        : 'https://correioelegante.studio/payment/cancel';
+        : 'https://www.correioelegante.studio/payment/cancel';
 
     const notificationUrl = isHttps
         ? `${baseUrl}/api/payment/webhook/mercadopago`
