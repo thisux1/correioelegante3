@@ -113,10 +113,10 @@ export function AppRouter() {
               <Route path="/editor" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/editor/:pageId" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
-              <Route path="/payment/:messageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
               <Route path="/payment/page/:pageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
               <Route path="/payment/page/:pageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+              <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
+              <Route path="/payment/:messageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
               <Route path="/500" element={<Error500 />} />
               <Route path="/session-expired" element={<ErrorSession />} />
               <Route path="*" element={<Error404 />} />
