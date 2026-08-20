@@ -8,6 +8,7 @@ import {
 } from '../contracts/page.contract';
 import { sanitizePageContent } from './page.sanitizer';
 import { migratePage } from './page.migration';
+import { isUserSubscribed } from './subscription.service';
 
 interface CreatePageInput {
   content: unknown;
@@ -85,7 +86,6 @@ function canAccessPage(params: {
 }
 
 export async function createPage(userId: string, data: CreatePageInput) {
-  const { isUserSubscribed } = await import('./subscription.service');
   const userSubscribed = await isUserSubscribed(userId);
 
   const lifecycle = resolvePageLifecycle({
@@ -140,7 +140,6 @@ export async function updatePage(pageId: string, userId: string, data: UpdatePag
     );
   }
 
-  const { isUserSubscribed } = await import('./subscription.service');
   const userSubscribed = await isUserSubscribed(userId);
   const paymentStatus = page.paymentStatus === 'paid' || userSubscribed ? 'paid' : 'pending';
 
