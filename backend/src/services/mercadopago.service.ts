@@ -1,9 +1,8 @@
-import MercadoPagoConfig, { Payment } from 'mercadopago';
+import MercadoPagoConfig, { Payment, Preference } from 'mercadopago';
 import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/AppError';
 
-// R$ 4,99
 const AMOUNT = 4.99;
 
 // Expiração do QR Code Pix em minutos (padrão recomendado pelo Mercado Pago: 30 min)
@@ -122,11 +121,12 @@ export async function createPixPaymentForResource(target: PaymentTarget, userId:
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     const rawEmail = user?.email?.trim() || '';
+    const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
     const isSellerEmail = rawEmail.toLowerCase() === 'thicosta1432@gmail.com' || rawEmail.toLowerCase() === 'thiagocostabr74@gmail.com';
     const isTestUserDomain = rawEmail.toLowerCase().includes('@testuser.com');
-    const payerEmail = (!rawEmail || isSellerEmail || isTestUserDomain)
-        ? 'comprador_correio@example.com'
-        : rawEmail;
+    const payerEmail = isSandbox
+        ? (isTestUserDomain ? rawEmail : 'test_user_comprador@testuser.com')
+        : ((!rawEmail || isSellerEmail) ? 'comprador_correio@example.com' : rawEmail);
 
     const expiresAt = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
     const notificationUrl = process.env.MERCADOPAGO_NOTIFICATION_URL || process.env.MP_NOTIFICATION_URL;
@@ -224,17 +224,12 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     const rawEmail = user?.email?.trim() || '';
+    const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
     const isSellerEmail = rawEmail.toLowerCase() === 'thicosta1432@gmail.com' || rawEmail.toLowerCase() === 'thiagocostabr74@gmail.com';
     const isTestUserDomain = rawEmail.toLowerCase().includes('@testuser.com');
-    const payerEmail = (!rawEmail || isSellerEmail || isTestUserDomain)
-        ? 'comprador_correio@example.com'
-        : rawEmail;
 
     const client = getMercadoPagoClient();
-    const { Preference } = await import('mercadopago');
     const preference = new Preference(client);
-
-    const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
 
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const isHttps = baseUrl.startsWith('https://');
@@ -278,7 +273,12 @@ export async function createMercadoPagoPreferenceForResource(target: PaymentTarg
         external_reference: `${target.resourceType}:${target.resourceId}`,
     };
 
-    if (user?.email && !isSellerEmail) {
+    // Em Sandbox, não enviamos email real de usuário como pagador para evitar conflito de ambientes
+    if (!isSandbox && user?.email && !isSellerEmail) {
+        prefBody.payer = {
+            email: user.email,
+        };
+    } else if (isSandbox && user?.email && isTestUserDomain) {
         prefBody.payer = {
             email: user.email,
         };
