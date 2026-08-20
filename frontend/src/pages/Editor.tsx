@@ -23,6 +23,7 @@ import {
 import { cloneTemplateBlocks, getTemplateById } from '@/editor/templates'
 import { pageService, type PageSummary } from '@/services/pageService'
 import { trackEditorEvent } from '@/services/telemetry'
+import { useAuthStore } from '@/store/authStore'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -407,6 +408,7 @@ export function Editor() {
   const setMode = useEditorStore((state) => state.setMode)
   const setPage = useEditorStore((state) => state.setPage)
   const setDraftContext = useEditorStore((state) => state.setDraftContext)
+  const user = useAuthStore((state) => state.user)
 
   const [isLoadingPage, setIsLoadingPage] = useState(false)
   const [saveState, setSaveState] = useState<SaveState>('idle')
@@ -736,6 +738,8 @@ export function Editor() {
           onPublishCtaClick={async () => {
             try {
               setSaveState('saving')
+              const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
+              const targetStatus = userSubscribed ? 'published' : status
               const result = await pageService.savePage({
                 pageId: currentPageId,
                 content: {
@@ -743,7 +747,7 @@ export function Editor() {
                   theme,
                   version: PAGE_VERSION,
                 },
-                status,
+                status: targetStatus,
                 visibility,
                 version: pageVersion,
               })
@@ -751,7 +755,13 @@ export function Editor() {
               setPageVersion(result.page.version)
               setStatus(result.page.status)
               setSaveState('saved')
-              navigate(`/payment/page/${result.page.id}`)
+
+              if (userSubscribed || result.page.paymentStatus === 'paid') {
+                setFeedback('🎉 Sua página foi publicada com sucesso pelo Plano Ilimitado!')
+                navigate(`/card/page/${result.page.id}`)
+              } else {
+                navigate(`/payment/page/${result.page.id}`)
+              }
             } catch {
               setSaveState('error')
               setFeedback('Não foi possível salvar a página para publicação. Tente novamente.')

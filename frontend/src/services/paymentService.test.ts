@@ -46,4 +46,24 @@ describe('paymentService', () => {
 
     expect(api.get).toHaveBeenCalledWith('/payments/status/page/507f1f77bcf86cd799439022')
   })
+
+  it('createSubscriptionPix envia payload correto para /payments/subscription/checkout', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: { paymentId: 'sub_123', pixQrCode: 'qrcode' } })
+
+    await paymentService.createSubscriptionPix()
+
+    expect(api.post).toHaveBeenCalledWith('/payments/subscription/checkout', {
+      paymentMethod: 'pix',
+      planId: 'monthly_unlimited',
+    })
+  })
+
+  it('getSubscriptionStatus consulta /payments/subscription/status', async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: { isSubscribed: true, daysRemaining: 30 } })
+
+    const res = await paymentService.getSubscriptionStatus()
+
+    expect(api.get).toHaveBeenCalledWith('/payments/subscription/status')
+    expect(res.data.isSubscribed).toBe(true)
+  })
 })

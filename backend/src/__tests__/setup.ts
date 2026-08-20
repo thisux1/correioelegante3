@@ -21,11 +21,19 @@ vi.mock('../utils/prisma', () => ({
         userConsent: {
             findMany: vi.fn(),
         },
+        subscription: {
+            findUnique: vi.fn(),
+            findMany: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
+            delete: vi.fn(),
+        },
         message: {
             findUnique: vi.fn(),
             findMany: vi.fn(),
             create: vi.fn(),
             update: vi.fn(),
+            updateMany: vi.fn(),
             delete: vi.fn(),
         },
         page: {
@@ -33,6 +41,7 @@ vi.mock('../utils/prisma', () => ({
             findMany: vi.fn(),
             create: vi.fn(),
             update: vi.fn(),
+            updateMany: vi.fn(),
             delete: vi.fn(),
         },
         asset: {
@@ -56,14 +65,22 @@ vi.mock('../utils/prisma', () => ({
             findFirst: vi.fn(),
             create: vi.fn(),
         },
-        $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => callback({
-            mediaJob: {
-                update: vi.fn(),
-            },
-            asset: {
-                update: vi.fn(),
-            },
-        })),
+        $transaction: vi.fn(async (arg: unknown) => {
+            if (Array.isArray(arg)) {
+                return Promise.all(arg);
+            }
+            if (typeof arg === 'function') {
+                return (arg as (tx: unknown) => Promise<unknown>)({
+                    mediaJob: { update: vi.fn() },
+                    asset: { update: vi.fn() },
+                    subscription: { create: vi.fn() },
+                    user: { update: vi.fn() },
+                    page: { updateMany: vi.fn() },
+                    message: { updateMany: vi.fn() },
+                });
+            }
+            return arg;
+        }),
     },
 }));
 

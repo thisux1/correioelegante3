@@ -27,9 +27,9 @@ const contactLinks = [
   },
   {
     title: 'Email',
-    description: 'Tem uma proposta, dúvida ou feedback? Me mande uma mensagem.',
+    description: 'Tem uma proposta, dúvida ou feedback? Envie para contato@correioelegante.studio.',
     icon: <Mail className="w-6 h-6" />,
-    href: 'mailto:[thisux94@gmail.com]',
+    href: 'mailto:contato@correioelegante.studio',
     color: 'text-primary',
     bg: 'bg-primary/10',
     border: 'group-hover:border-primary/30',

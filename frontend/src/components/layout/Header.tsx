@@ -8,6 +8,7 @@ import { Container } from '@/components/layout/Container'
 
 const navLinks = [
   { path: '/', label: 'Início' },
+  { path: '/planos', label: 'Planos' },
   { path: '/create', label: 'Escrever' },
   { path: '/contact', label: 'Contato' },
 ]
@@ -17,7 +18,7 @@ export function Header() {
   const menuPanelRef = useRef<HTMLDivElement | null>(null)
   const menuButtonRef = useRef<HTMLButtonElement | null>(null)
   const location = useLocation()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const isEditorRoute = location.pathname.startsWith('/editor')
   const useMobileLiteGlass = isEditorRoute
   const { scrollYProgress } = useScroll()
@@ -184,6 +185,11 @@ export function Header() {
                     <>
                       <User size={16} />
                       Perfil
+                      {(user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
+                        <span className="rounded-md bg-gradient-to-r from-amber-500 to-rose-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">
+                          PRO
+                        </span>
+                      ) : null}
                     </>
                   ),
                 })

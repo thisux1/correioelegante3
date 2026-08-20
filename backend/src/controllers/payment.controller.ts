@@ -81,6 +81,8 @@ async function getResourcePaymentStatus(params: {
   };
 }
 
+import * as subscriptionService from '../services/subscription.service';
+
 export async function createPayment(req: AuthRequest, res: Response): Promise<void> {
   const { paymentMethod } = req.body as { paymentMethod: 'pix' | 'credit_card' | 'mercadopago_checkout' };
   const target = resolvePaymentTarget(req.body as {
@@ -88,6 +90,42 @@ export async function createPayment(req: AuthRequest, res: Response): Promise<vo
     resourceType?: PaymentResourceType;
     resourceId?: string;
   });
+
+  // Se o usuário possui assinatura ativa, auto-libera o recurso gratuitamente
+  const isSubscribed = await subscriptionService.isUserSubscribed(req.userId!);
+  if (isSubscribed) {
+    if (target.resourceType === 'message') {
+      await prisma.message.update({
+        where: { id: target.resourceId },
+        data: {
+          paymentStatus: 'paid',
+          status: 'published',
+          publishedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.page.update({
+        where: { id: target.resourceId },
+        data: {
+          paymentStatus: 'paid',
+          status: 'published',
+          publishedAt: new Date(),
+        },
+      });
+    }
+
+    res.json({
+      paymentId: 'subscription_auto_unlocked',
+      status: 'paid',
+      pixQrCode: null,
+      pixQrCodeBase64: null,
+      pixExpiresAt: null,
+      preferenceId: null,
+      checkoutUrl: null,
+      message: 'Recurso liberado com sua assinatura ativa!',
+    });
+    return;
+  }
 
   if (paymentMethod === 'pix') {
     const result = await mercadopagoService.createPixPaymentForResource(target, req.userId!);
@@ -295,4 +333,50 @@ export async function simulatePaymentApproval(req: AuthRequest, res: Response): 
   }
 
   res.json({ success: true, message: 'Pagamento simulado como aprovado com sucesso!' });
+}
+
+export async function createSubscriptionPayment(req: AuthRequest, res: Response): Promise<void> {
+  const { paymentMethod } = req.body as { paymentMethod: 'pix' | 'credit_card' | 'mercadopago_checkout' };
+
+  if (paymentMethod === 'pix') {
+    const result = await subscriptionService.createSubscriptionPixPayment(req.userId!);
+    res.json(result);
+    return;
+  }
+
+  if (paymentMethod === 'mercadopago_checkout') {
+    const result = await subscriptionService.createSubscriptionMercadoPagoPreference(req.userId!);
+    res.json(result);
+    return;
+  }
+
+  if (paymentMethod === 'credit_card') {
+    const result = await subscriptionService.createSubscriptionStripeSession(req.userId!);
+    res.json(result);
+    return;
+  }
+
+  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".', 400);
+}
+
+export async function getSubscriptionStatus(req: AuthRequest, res: Response): Promise<void> {
+  const status = await subscriptionService.getUserSubscription(req.userId!);
+  res.json(status);
+}
+
+export async function simulateSubscriptionApproval(req: AuthRequest, res: Response): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    throw new AppError('Não permitido em produção', 403);
+  }
+
+  const result = await subscriptionService.activateUserSubscription({
+    userId: req.userId!,
+    provider: 'system',
+    paymentMethod: 'pix',
+  });
+
+  res.json({
+    message: 'Assinatura ilimitada ativada com sucesso por 30 dias!',
+    ...result,
+  });
 }

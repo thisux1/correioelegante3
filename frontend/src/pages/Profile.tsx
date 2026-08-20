@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Mail, Trash2, ExternalLink, LogOut, Settings, MessageCircle, AlertTriangle, Key, ChevronDown } from 'lucide-react'
+import { Heart, Mail, Trash2, ExternalLink, LogOut, Settings, MessageCircle, AlertTriangle, Key, ChevronDown, Zap, Infinity as InfinityIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -13,6 +13,7 @@ import { SettingRow } from '@/components/ui/SettingRow'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
 import { pageService, type PageSummary } from '@/services/pageService'
+import { paymentService, type SubscriptionStatusResponse } from '@/services/paymentService'
 import { Container } from '@/components/layout/Container'
 
 export function Profile() {
@@ -23,6 +24,8 @@ export function Profile() {
   const [editorPages, setEditorPages] = useState<PageSummary[]>([])
   const [isLoadingEditorPages, setIsLoadingEditorPages] = useState(false)
   const [editorPagesError, setEditorPagesError] = useState('')
+
+  const [subscription, setSubscription] = useState<SubscriptionStatusResponse | null>(null)
 
   // Password Change State
   const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false)
@@ -66,7 +69,19 @@ export function Profile() {
       }
     }
 
+    async function fetchSubscription() {
+      try {
+        const { data } = await paymentService.getSubscriptionStatus()
+        if (!abortController.signal.aborted) {
+          setSubscription(data)
+        }
+      } catch {
+        // Fallback default
+      }
+    }
+
     fetchEditorPages()
+    fetchSubscription()
     return () => abortController.abort()
   }, [isAuthenticated, navigate])
 
@@ -165,6 +180,10 @@ export function Profile() {
   }
 
   function shouldShowPayNow(page: PageSummary) {
+    if (subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active') {
+      return false
+    }
+
     const candidate = (
       page as PageSummary & {
         paymentStatus?: 'pending' | 'paid'
@@ -225,6 +244,59 @@ export function Profile() {
               Crie, envie e gerencie a magia dos seus correios elegantes.
             </p>
           </header>
+
+          {/* Banner de Assinatura */}
+          {(subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
+            <div className="rounded-3xl border-2 border-amber-300/60 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-primary/10 p-5 sm:p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-md">
+                    <Zap size={24} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-lg font-bold text-text">Plano Ilimitado Ativo</h3>
+                      <span className="rounded-md bg-gradient-to-r from-amber-500 to-rose-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">PRO</span>
+                    </div>
+                    <p className="text-xs text-text-light mt-0.5">
+                      {subscription?.daysRemaining ? `Restam ${subscription.daysRemaining} dias de acesso irrestrito para criar quantas cartas quiser.` : 'Criação e publicação de cartas ilimitadas liberadas.'}
+                    </p>
+                  </div>
+                </div>
+                <Link to="/create" className="w-full sm:w-auto">
+                  <Button size="sm" className="w-full sm:w-auto font-semibold shadow-sm shadow-primary/20">
+                    <Heart size={14} />
+                    Nova Carta
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-primary/20 bg-gradient-to-r from-primary/5 via-rose-50/60 to-amber-50/60 p-5 sm:p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <InfinityIcon size={24} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-base font-bold text-text">Plano Avulso</h3>
+                      <Badge variant="default" className="text-[10px]">R$ 4,99/carta</Badge>
+                    </div>
+                    <p className="text-xs text-text-light mt-0.5">
+                      Assine o <strong>Plano Ilimitado por R$ 15,00/mês</strong> e publique cartas sem limite por 30 dias!
+                    </p>
+                  </div>
+                </div>
+                <Link to="/planos" className="w-full sm:w-auto">
+                  <Button size="sm" className="w-full sm:w-auto bg-gradient-to-r from-primary to-rose-500 font-semibold text-white shadow-md shadow-primary/20">
+                    <Zap size={14} />
+                    Assinar Ilimitado (R$ 15)
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="glass rounded-2xl p-2">
             <nav className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="Seções do perfil">
@@ -436,6 +508,42 @@ export function Profile() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.32, ease: [0.19, 1, 0.22, 1] }}
+            >
+              <SectionCard
+                title="Sua Assinatura"
+                description="Consulte o status do seu plano e benefícios disponíveis."
+                className="border border-primary/10"
+              >
+                <SettingRow
+                  icon={<Zap size={18} className="text-primary" />}
+                  label="Plano atual"
+                  value={
+                    (subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active')
+                      ? 'Ilimitado Mensal (PRO)'
+                      : 'Avulso (Gratuito)'
+                  }
+                  className="flex-col items-start border-primary/10 bg-white/55 sm:flex-row sm:items-center"
+                  action={
+                    (subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
+                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl">
+                        Ativo {subscription?.daysRemaining ? `(${subscription.daysRemaining} dias restantes)` : ''}
+                      </span>
+                    ) : (
+                      <Link to="/planos">
+                        <Button size="sm" className="bg-primary text-white font-medium">
+                          Fazer Upgrade (R$ 15/mês)
+                        </Button>
+                      </Link>
+                    )
+                  }
+                />
+              </SectionCard>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.32, delay: 0.02, ease: [0.19, 1, 0.22, 1] }}
             >
               <SectionCard
                 title="Sua Conta"
