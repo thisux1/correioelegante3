@@ -53,6 +53,21 @@ async function getResourcePaymentStatus(params: {
       throw new AppError('Sem permissão', 403);
     }
 
+    if (message.paymentStatus !== 'paid' && message.paymentProvider === 'mercadopago' && message.paymentId) {
+      const syncedStatus = await mercadopagoService.syncMercadoPagoPaymentStatus(
+        { resourceType: 'message', resourceId: params.resourceId },
+        message.paymentId,
+      );
+      if (syncedStatus === 'paid') {
+        return {
+          status: 'paid',
+          paymentId: message.paymentId,
+          paymentProvider: message.paymentProvider,
+          paymentMethod: message.paymentMethod,
+        };
+      }
+    }
+
     return {
       status: message.paymentStatus,
       paymentId: message.paymentId,
@@ -71,6 +86,21 @@ async function getResourcePaymentStatus(params: {
   }
   if (page.userId !== params.userId) {
     throw new AppError('Sem permissao', 403);
+  }
+
+  if (page.paymentStatus !== 'paid' && page.paymentProvider === 'mercadopago' && page.paymentId) {
+    const syncedStatus = await mercadopagoService.syncMercadoPagoPaymentStatus(
+      { resourceType: 'page', resourceId: params.resourceId },
+      page.paymentId,
+    );
+    if (syncedStatus === 'paid') {
+      return {
+        status: 'paid',
+        paymentId: page.paymentId,
+        paymentProvider: page.paymentProvider,
+        paymentMethod: page.paymentMethod,
+      };
+    }
   }
 
   return {
