@@ -15,6 +15,12 @@ import {
   type PaymentTarget,
 } from '@/services/paymentService'
 
+declare global {
+  interface Window {
+    MercadoPago?: new (publicKey: string, options?: { locale?: string }) => unknown
+  }
+}
+
 type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 
 export function Payment() {
@@ -26,6 +32,17 @@ export function Payment() {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.MercadoPago) {
+      try {
+        const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-2126b201-7c82-4066-b68f-4508baddcc83'
+        new window.MercadoPago(publicKey, { locale: 'pt-BR' })
+      } catch {
+        // Ignora se já instanciado
+      }
+    }
+  }, [])
 
   const isPageFlow = location.pathname.includes('/payment/page')
   const resolvedPageId = pageId || (isPageFlow ? location.pathname.split('/payment/page/')[1]?.split('/')[0]?.split('?')[0] : undefined)
