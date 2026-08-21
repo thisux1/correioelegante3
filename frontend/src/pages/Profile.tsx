@@ -29,6 +29,7 @@ import { Modal } from '@/components/ui/Modal'
 import { InlineAlert } from '@/components/ui/InlineAlert'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { SettingRow } from '@/components/ui/SettingRow'
+import { ProfileCardSkeleton } from '@/components/ui/ProfileCardSkeleton'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
 import { pageService, type PageSummary } from '@/services/pageService'
@@ -451,11 +452,7 @@ export function Profile() {
             </div>
 
             {isLoadingEditorPages ? (
-              <div className="space-y-3" aria-live="polite">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="shimmer h-28 rounded-2xl bg-white/60" />
-                ))}
-              </div>
+              <ProfileCardSkeleton count={3} />
             ) : editorPagesError ? (
               <InlineAlert tone="danger">{editorPagesError}</InlineAlert>
             ) : displayedPages.length === 0 ? (

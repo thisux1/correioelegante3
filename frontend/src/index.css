@@ -27,6 +27,16 @@
   --font-outfit: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --animate-shimmer: shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @layer base {
@@ -144,5 +154,9 @@
 
   .block-gap {
     @apply gap-8 md:gap-12;
+  }
+
+  .animate-shimmer {
+    animation: shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
 }

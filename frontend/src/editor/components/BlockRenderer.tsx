@@ -3,6 +3,7 @@ import type { Block, BlockComponentProps, BlockMap, EditorMode } from '@/editor/
 import { TextBlock } from '@/editor/blocks/TextBlock'
 import { ImageBlock } from '@/editor/blocks/ImageBlock'
 import { TimerBlock } from '@/editor/blocks/TimerBlock'
+import { BlockSkeleton } from '@/editor/components/BlockSkeleton'
 
 const GalleryBlock = lazy(async () => {
   const module = await import('@/editor/blocks/GalleryBlock')
@@ -73,13 +74,7 @@ function renderFallback(block: Block) {
 }
 
 function renderLoadingFallback(block: Block) {
-  return (
-    <div className="rounded-2xl border border-primary/20 bg-white/75 p-4" role="status" aria-live="polite">
-      <div className="mb-2 h-4 w-32 animate-pulse rounded bg-primary/15" />
-      <div className="h-20 animate-pulse rounded-xl bg-primary/10" />
-      <p className="mt-2 text-xs text-text-light">Carregando bloco de {block.type}...</p>
-    </div>
-  )
+  return <BlockSkeleton block={block} />
 }
 
 function BlockRendererComponent({ block, mode, onUpdate }: BlockRendererProps) {
