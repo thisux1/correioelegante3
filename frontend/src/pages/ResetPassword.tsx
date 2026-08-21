@@ -8,6 +8,7 @@ import { Lock, Eye, EyeOff, Check, ArrowRight, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
+import { AuthPageSkeleton } from '@/components/ui/AuthPageSkeleton'
 import { Container } from '@/components/layout/Container'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
@@ -42,7 +43,11 @@ function getPasswordStrength(password: string): {
   return { score: 4, label: 'Forte', color: 'bg-emerald-600' }
 }
 
-export function ResetPassword() {
+export interface ResetPasswordProps {
+  isLoading?: boolean
+}
+
+export function ResetPassword({ isLoading = false }: ResetPasswordProps = {}) {
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') || ''
   const navigate = useNavigate()
@@ -96,6 +101,10 @@ export function ResetPassword() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isLoading) {
+    return <AuthPageSkeleton isResetPassword />
   }
 
   if (!token) {
