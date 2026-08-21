@@ -388,7 +388,15 @@ export function Payment() {
               </div>
 
               <div className="bg-white rounded-3xl p-6 inline-flex flex-col items-center justify-center mb-6 shadow-sm border border-gray-100">
-                {pixData?.pixQrCodeBase64 ? (
+                {pixData?.pixQrCodeUrl ? (
+                  <img
+                    src={pixData.pixQrCodeUrl}
+                    alt="QR Code Pix"
+                    width={220}
+                    height={220}
+                    className="rounded-xl"
+                  />
+                ) : pixData?.pixQrCodeBase64 ? (
                   <img
                     src={`data:image/png;base64,${pixData.pixQrCodeBase64}`}
                     alt="QR Code Pix"
@@ -408,6 +416,7 @@ export function Payment() {
                   Aponte a câmera do seu banco para pagar
                 </span>
               </div>
+
 
               <div className="mb-6 text-left">
                 <label htmlFor="pix-copia-e-cola" className="block text-xs font-semibold text-text-muted mb-2">

@@ -52,16 +52,6 @@
     overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  /* Re-enable selection for form elements */
-  input,
-  textarea,
-  [contenteditable="true"] {
-    user-select: text;
-    -webkit-user-select: text;
   }
 
   ::selection {

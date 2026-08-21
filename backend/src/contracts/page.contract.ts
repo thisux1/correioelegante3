@@ -90,13 +90,23 @@ export function canAccessPageByLifecycle(input: {
   visibility: PageVisibility;
   ownerUserId: string;
   requesterUserId?: string;
+  paymentStatus?: string | null;
 }): boolean {
+  const isOwner = Boolean(input.requesterUserId) && input.requesterUserId === input.ownerUserId;
+  if (isOwner) {
+    return true;
+  }
+
+  if (input.paymentStatus !== undefined && input.paymentStatus !== null && input.paymentStatus !== 'paid') {
+    return false;
+  }
+
   if (input.status !== 'published') {
     return false;
   }
 
   if (input.visibility === 'private') {
-    return input.requesterUserId === input.ownerUserId;
+    return false;
   }
 
   return true;

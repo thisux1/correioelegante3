@@ -68,9 +68,6 @@ function setupAnimatedFavicon() {
   }
 }
 
-// Disable right-click context menu
-document.addEventListener('contextmenu', (e) => e.preventDefault())
-
 const faviconCleanup = setupAnimatedFavicon()
 // HMR: dispose previous favicon animation when module hot-reloads
 if (import.meta.hot) {

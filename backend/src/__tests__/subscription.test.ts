@@ -4,6 +4,7 @@ import app from '../app';
 import { generateAccessToken } from '../utils/jwt';
 import { prisma } from '../utils/prisma';
 import * as subscriptionService from '../services/subscription.service';
+import * as pagbankService from '../services/pagbank.service';
 
 const USER_ID = '507f1f77bcf86cd799439000';
 
@@ -45,7 +46,7 @@ describe('Subscription API & Logic', () => {
         subscriptionStatus: 'active',
         subscriptionPlan: 'monthly_unlimited',
         subscriptionExpiresAt: futureDate,
-        subscriptionProvider: 'mercadopago',
+        subscriptionProvider: 'pagbank',
         subscriptions: [
           {
             id: 'sub_123',
@@ -70,12 +71,15 @@ describe('Subscription API & Logic', () => {
   });
 
   describe('POST /api/payments/subscription/checkout', () => {
-    it('200 — gera checkout Pix para assinatura', async () => {
-      vi.spyOn(subscriptionService, 'createSubscriptionPixPayment').mockResolvedValue({
-        paymentId: 'mp_sub_123',
+    it('200 — gera checkout Pix para assinatura via PagBank', async () => {
+      vi.spyOn(pagbankService, 'createSubscriptionPagBankPixPayment').mockResolvedValue({
+        paymentMethod: 'pix',
+        paymentProvider: 'pagbank',
+        paymentId: 'ORDE_SUB_123',
         status: 'pending',
         pixQrCode: '00020126...BR.GOV.BCB.PIX...',
-        pixQrCodeBase64: 'base64image',
+        pixQrCodeBase64: null,
+        pixQrCodeUrl: 'https://sandbox.api.pagseguro.com/qrcode/sub.png',
         pixExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
         amount: 15.0,
         planId: 'monthly_unlimited',
@@ -90,6 +94,7 @@ describe('Subscription API & Logic', () => {
       expect(res.body.pixQrCode).toBeDefined();
       expect(res.body.amount).toBe(15.0);
     });
+
 
     it('400 — rejeita método de pagamento inválido', async () => {
       const res = await request(app)
@@ -123,6 +128,36 @@ describe('Subscription API & Logic', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.isSubscribed).toBe(true);
+    });
+
+    it('retorna sem duplicar se providerPaymentId já estiver ativo (idempotência)', async () => {
+      const existingExpiresAt = new Date(Date.now() + 25 * 24 * 60 * 60 * 1000);
+      vi.spyOn(prisma.user, 'findUnique').mockResolvedValue({
+        id: USER_ID,
+        subscriptionStatus: 'active',
+        subscriptionExpiresAt: existingExpiresAt,
+      } as any);
+
+      vi.spyOn(prisma.subscription, 'findFirst').mockResolvedValue({
+        id: 'sub_exist',
+        userId: USER_ID,
+        providerPaymentId: 'mp_pay_already_processed',
+        status: 'active',
+        expiresAt: existingExpiresAt,
+      } as any);
+
+      const txSpy = vi.spyOn(prisma, '$transaction');
+
+      const result = await subscriptionService.activateUserSubscription({
+        userId: USER_ID,
+        provider: 'mercadopago',
+        providerPaymentId: 'mp_pay_already_processed',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isSubscribed).toBe(true);
+      expect(result.expiresAt).toEqual(existingExpiresAt);
+      expect(txSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -49,6 +49,30 @@ export function PageCard() {
     return () => abortController.abort()
   }, [pageId])
 
+  useEffect(() => {
+    if (!page) {
+      document.title = 'Correio Elegante'
+      return
+    }
+
+    const firstTextBlock = page.blocks.find((b) => b.type === 'text')
+    const rawText =
+      firstTextBlock && 'text' in firstTextBlock.props
+        ? (firstTextBlock.props as { text: string }).text
+        : ''
+    const cleanSnippet = rawText.trim().replace(/\s+/g, ' ').slice(0, 40)
+
+    if (cleanSnippet) {
+      document.title = `Correio Elegante — ${cleanSnippet}`
+    } else {
+      document.title = 'Correio Elegante — Mensagem Especial'
+    }
+
+    return () => {
+      document.title = 'Correio Elegante'
+    }
+  }, [page])
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

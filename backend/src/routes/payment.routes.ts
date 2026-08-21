@@ -4,6 +4,7 @@ import {
   createPayment,
   stripeWebhookHandler,
   mercadopagoWebhookHandler,
+  pagbankWebhookHandler,
   getPaymentStatus,
   getPaymentStatusByResource,
   requestRefund,
@@ -18,11 +19,15 @@ import { createPaymentSchema, createRefundRequestSchema, createSubscriptionPayme
 
 const router = Router();
 
+// Webhook PagBank — recebe JSON de notificações de orders e charges
+router.post('/webhook/pagbank', express.json(), pagbankWebhookHandler);
+
 // Webhook Stripe — precisa do rawBody (Buffer) para validar assinatura
 router.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
-// Webhook Mercado Pago — recebe JSON normal
+// Webhook Mercado Pago — recebe JSON normal (preservado como legado)
 router.post('/webhook/mercadopago', express.json(), mercadopagoWebhookHandler);
+
 
 router.post('/create', authenticate, validate(createPaymentSchema), createPayment);
 router.post('/refund', authenticate, validate(createRefundRequestSchema), requestRefund);

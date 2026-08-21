@@ -1,2 +1,13 @@
 User-agent: *
 Allow: /
+Allow: /card/
+Allow: /planos
+Allow: /contact
+Allow: /legal/
+Disallow: /editor
+Disallow: /editor/
+Disallow: /payment
+Disallow: /payment/
+Disallow: /profile
+Disallow: /profile/
+Disallow: /api/

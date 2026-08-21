@@ -133,19 +133,22 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
 - `DELETE /:id`: Deletes page (Owner only).
 
 ### 4.4 Payments (`/api/payments`)
-- `POST /create`: Creates a Stripe card payment or a Mercado Pago Pix payment.
-  - Body: `{ paymentMethod: "pix" | "credit_card", resourceType: "message" | "page", resourceId: string, messageId?: string }`
-  - Pix response (canonical Mercado Pago QR Code):
+- `POST /create`: Creates a PagBank Pix payment, PagBank transparent card payment, Stripe card session, or Mercado Pago fallback checkout.
+  - Body: `{ paymentMethod: "pix" | "credit_card" | "pagbank_card" | "mercadopago_checkout", resourceType: "message" | "page", resourceId: string, messageId?: string, customer?: { name?, email?, tax_id? }, cardData?: { encrypted, holderName, installments? } }`
+  - Pix response (PagBank V3 Orders API):
+    ```json
+    { "paymentId": "ORDE_...", "status": "pending", "paymentProvider": "pagbank", "pixQrCode": "000201...", "pixQrCodeBase64": null, "pixQrCodeUrl": "https://sandbox.api.pagseguro.com/qrcode/...", "pixExpiresAt": "ISO8601", "amount": 4.99 }
     ```
-    { paymentId, status: "pending", pixQrCode: string, pixQrCodeBase64: string, pixExpiresAt: ISO8601, preferenceId: null, checkoutUrl: null }
-    ```
-    `pixQrCode` is the "copia e cola" EMV payload; `pixQrCodeBase64` is the canonical QR image rendered by Mercado Pago; `pixExpiresAt` is the QR expiration time (default 30 min).
-  - Card response: `{ sessionId, checkoutUrl }`.
-  - Errors: `400` invalid payload/already paid, `403` ownership, `502 PIX_PAYMENT_CREATION_FAILED` when Mercado Pago API fails, `502 PIX_QR_CODE_UNAVAILABLE` when no QR is returned.
-- `GET /status/:messageId`: Returns `{ paymentStatus, paymentProvider, paymentMethod }`.
-- `GET /status/:resourceType/:resourceId`: Resource-agnostic status query.
+    `pixQrCode` is the "copia e cola" EMV payload; `pixQrCodeUrl` is the direct PNG QR Code URL from PagBank; `pixExpiresAt` is the expiration timestamp (default 30 min).
+  - Card response: `{ sessionId, checkoutUrl }` (Stripe) or `{ status: "paid", paymentId, message }` (PagBank transparent).
+  - Errors: `400` invalid payload/already paid, `403` ownership, `502 PAGBANK_ORDER_FAILED` when PagBank API fails.
+- `POST /subscription/checkout`: Creates subscription checkout (R$ 15,00/mês) via PagBank Pix (`pix`), Stripe Card (`credit_card`), or Mercado Pago (`mercadopago_checkout`).
+- `GET /status/:messageId`: Returns `{ status, paymentId, paymentProvider, paymentMethod }`.
+- `GET /status/:resourceType/:resourceId`: Resource-agnostic status query (automatically syncs with PagBank/Mercado Pago if pending).
+- `POST /webhook/pagbank`: PagBank Orders/Charges webhook handler. On `charges.status === 'PAID'` or `qr_codes.status === 'PAID'`, unlocks resource or activates monthly subscription.
 - `POST /webhook/stripe`: Stripe webhook handler verifying `stripe-signature`. On `checkout.session.completed`, marks resource `paymentStatus = "paid"`.
-- `POST /webhook/mercadopago`: Mercado Pago IPN webhook handler verifying `x-signature`/`x-request-id`. On `payment` with `status = "approved"`, marks the resource identified by `metadata` (or `external_reference`) as `paymentStatus = "paid"`.
+- `POST /webhook/mercadopago`: Mercado Pago IPN webhook handler verifying `x-signature`/`x-request-id` (preserved for backwards compatibility).
+
 
 ### 4.5 Assets (`/api/assets`)
 - `POST /upload-url`: Requests signed upload URL and creates pending `Asset`.

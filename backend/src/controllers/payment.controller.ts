@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { AppError } from '../utils/AppError';
+import * as pagbankService from '../services/pagbank.service';
 import * as mercadopagoService from '../services/mercadopago.service';
 import * as stripeService from '../services/stripe.service';
+import * as subscriptionService from '../services/subscription.service';
 import { prisma } from '../utils/prisma';
 
 type PaymentResourceType = 'message' | 'page';
@@ -53,18 +55,33 @@ async function getResourcePaymentStatus(params: {
       throw new AppError('Sem permissão', 403);
     }
 
-    if (message.paymentStatus !== 'paid' && message.paymentProvider === 'mercadopago' && message.paymentId) {
-      const syncedStatus = await mercadopagoService.syncMercadoPagoPaymentStatus(
-        { resourceType: 'message', resourceId: params.resourceId },
-        message.paymentId,
-      );
-      if (syncedStatus === 'paid') {
-        return {
-          status: 'paid',
-          paymentId: message.paymentId,
-          paymentProvider: message.paymentProvider,
-          paymentMethod: message.paymentMethod,
-        };
+    if (message.paymentStatus !== 'paid' && message.paymentId) {
+      if (message.paymentProvider === 'pagbank') {
+        const syncedStatus = await pagbankService.syncPagBankPaymentStatus(
+          { resourceType: 'message', resourceId: params.resourceId },
+          message.paymentId,
+        );
+        if (syncedStatus === 'paid') {
+          return {
+            status: 'paid',
+            paymentId: message.paymentId,
+            paymentProvider: message.paymentProvider,
+            paymentMethod: message.paymentMethod,
+          };
+        }
+      } else if (message.paymentProvider === 'mercadopago') {
+        const syncedStatus = await mercadopagoService.syncMercadoPagoPaymentStatus(
+          { resourceType: 'message', resourceId: params.resourceId },
+          message.paymentId,
+        );
+        if (syncedStatus === 'paid') {
+          return {
+            status: 'paid',
+            paymentId: message.paymentId,
+            paymentProvider: message.paymentProvider,
+            paymentMethod: message.paymentMethod,
+          };
+        }
       }
     }
 
@@ -88,18 +105,33 @@ async function getResourcePaymentStatus(params: {
     throw new AppError('Sem permissao', 403);
   }
 
-  if (page.paymentStatus !== 'paid' && page.paymentProvider === 'mercadopago' && page.paymentId) {
-    const syncedStatus = await mercadopagoService.syncMercadoPagoPaymentStatus(
-      { resourceType: 'page', resourceId: params.resourceId },
-      page.paymentId,
-    );
-    if (syncedStatus === 'paid') {
-      return {
-        status: 'paid',
-        paymentId: page.paymentId,
-        paymentProvider: page.paymentProvider,
-        paymentMethod: page.paymentMethod,
-      };
+  if (page.paymentStatus !== 'paid' && page.paymentId) {
+    if (page.paymentProvider === 'pagbank') {
+      const syncedStatus = await pagbankService.syncPagBankPaymentStatus(
+        { resourceType: 'page', resourceId: params.resourceId },
+        page.paymentId,
+      );
+      if (syncedStatus === 'paid') {
+        return {
+          status: 'paid',
+          paymentId: page.paymentId,
+          paymentProvider: page.paymentProvider,
+          paymentMethod: page.paymentMethod,
+        };
+      }
+    } else if (page.paymentProvider === 'mercadopago') {
+      const syncedStatus = await mercadopagoService.syncMercadoPagoPaymentStatus(
+        { resourceType: 'page', resourceId: params.resourceId },
+        page.paymentId,
+      );
+      if (syncedStatus === 'paid') {
+        return {
+          status: 'paid',
+          paymentId: page.paymentId,
+          paymentProvider: page.paymentProvider,
+          paymentMethod: page.paymentMethod,
+        };
+      }
     }
   }
 
@@ -111,10 +143,12 @@ async function getResourcePaymentStatus(params: {
   };
 }
 
-import * as subscriptionService from '../services/subscription.service';
-
 export async function createPayment(req: AuthRequest, res: Response): Promise<void> {
-  const { paymentMethod } = req.body as { paymentMethod: 'pix' | 'credit_card' | 'mercadopago_checkout' };
+  const { paymentMethod, customer, cardData } = req.body as {
+    paymentMethod: 'pix' | 'credit_card' | 'pagbank_card' | 'mercadopago_checkout';
+    customer?: pagbankService.PagBankCustomer;
+    cardData?: { encrypted: string; holderName: string; installments?: number };
+  };
   const target = resolvePaymentTarget(req.body as {
     messageId?: string;
     resourceType?: PaymentResourceType;
@@ -158,7 +192,19 @@ export async function createPayment(req: AuthRequest, res: Response): Promise<vo
   }
 
   if (paymentMethod === 'pix') {
-    const result = await mercadopagoService.createPixPaymentForResource(target, req.userId!);
+    const result = await pagbankService.createPixPaymentForResource(target, req.userId!, customer);
+    res.json(result);
+    return;
+  }
+
+  if (paymentMethod === 'pagbank_card') {
+    if (!cardData) {
+      throw new AppError('Dados do cartão (cardData) são obrigatórios.', 400);
+    }
+    const result = await pagbankService.createCreditCardPaymentForResource(target, req.userId!, {
+      ...cardData,
+      customer,
+    });
     res.json(result);
     return;
   }
@@ -175,15 +221,17 @@ export async function createPayment(req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
-  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".', 400);
+  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card", "pagbank_card" ou "mercadopago_checkout".', 400);
 }
 
 export async function stripeWebhookHandler(req: Request, res: Response): Promise<void> {
+
   const sig = req.headers['stripe-signature'] as string;
   if (!sig) {
     throw new AppError('Header stripe-signature obrigatorio', 400);
   }
-  const result = await stripeService.handleWebhook(req.body as Buffer, sig);
+  const payload = (req as any).rawBody || req.body;
+  const result = await stripeService.handleWebhook(payload, sig);
   res.status(200).json(result);
 }
 
@@ -375,10 +423,13 @@ export async function simulatePaymentApproval(req: AuthRequest, res: Response): 
 }
 
 export async function createSubscriptionPayment(req: AuthRequest, res: Response): Promise<void> {
-  const { paymentMethod } = req.body as { paymentMethod: 'pix' | 'credit_card' | 'mercadopago_checkout' };
+  const { paymentMethod, customer } = req.body as {
+    paymentMethod: 'pix' | 'credit_card' | 'pagbank_card' | 'mercadopago_checkout';
+    customer?: pagbankService.PagBankCustomer;
+  };
 
   if (paymentMethod === 'pix') {
-    const result = await subscriptionService.createSubscriptionPixPayment(req.userId!);
+    const result = await pagbankService.createSubscriptionPagBankPixPayment(req.userId!, customer);
     res.json(result);
     return;
   }
@@ -395,7 +446,13 @@ export async function createSubscriptionPayment(req: AuthRequest, res: Response)
     return;
   }
 
-  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".', 400);
+  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card", "pagbank_card" ou "mercadopago_checkout".', 400);
+}
+
+export async function pagbankWebhookHandler(req: Request, res: Response): Promise<void> {
+  const body = (req.body || {}) as Record<string, unknown>;
+  const result = await pagbankService.handleWebhook(body);
+  res.status(200).json(result);
 }
 
 export async function getSubscriptionStatus(req: AuthRequest, res: Response): Promise<void> {
@@ -419,3 +476,4 @@ export async function simulateSubscriptionApproval(req: AuthRequest, res: Respon
     ...result,
   });
 }
+

@@ -515,9 +515,25 @@ describe('GET /api/pages/:id', () => {
     expect(res.status).toBe(404);
   });
 
-  it('200 — published unlisted permite acesso por link', async () => {
+  it('404 — published public com pagamento pendente bloqueia visitante', async () => {
     vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'published',
+      visibility: 'public',
+      paymentStatus: 'pending',
+    }));
+
+    const res = await request(app)
+      .get(`/api/pages/${pageId}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Página não encontrada ou com pagamento pendente');
+  });
+
+  it('200 — published unlisted pago permite acesso por link', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'published',
       visibility: 'unlisted',
+      paymentStatus: 'paid',
     }));
 
     const res = await request(app)

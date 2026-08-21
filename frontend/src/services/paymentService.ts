@@ -10,13 +10,16 @@ export interface PaymentTarget {
 
 export interface PixPaymentResponse {
   paymentMethod: 'pix'
+  paymentProvider?: 'pagbank' | 'mercadopago' | string
   paymentId: string
   status: string
   pixQrCode: string | null
   pixQrCodeBase64: string | null
+  pixQrCodeUrl?: string | null
   pixExpiresAt?: string | null
   preferenceId?: string | null
   checkoutUrl?: string | null
+  amount?: number
 }
 
 export interface CardPaymentResponse {
@@ -30,9 +33,10 @@ export type PaymentCreateResponse = PixPaymentResponse | CardPaymentResponse
 export interface PaymentStatusResponse {
   status: 'pending' | 'paid'
   paymentId: string | null
-  paymentProvider: 'stripe' | 'mercadopago' | null
+  paymentProvider: 'pagbank' | 'stripe' | 'mercadopago' | null
   paymentMethod: PaymentMethod | null
 }
+
 
 function buildCreatePayload(target: PaymentTarget, paymentMethod: PaymentMethod) {
   if (target.resourceType === 'message') {

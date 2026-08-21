@@ -5,9 +5,18 @@ import { generateAccessToken } from '../utils/jwt';
 import { AppError } from '../utils/AppError';
 import { prisma } from '../utils/prisma';
 
-// Mock dos novos services de pagamento
+// Mock dos services de pagamento
+vi.mock('../services/pagbank.service', () => ({
+    createPixPaymentForResource: vi.fn(),
+    createCreditCardPaymentForResource: vi.fn(),
+    createSubscriptionPagBankPixPayment: vi.fn(),
+    syncPagBankPaymentStatus: vi.fn(),
+    handleWebhook: vi.fn(),
+}));
+
 vi.mock('../services/mercadopago.service', () => ({
     createPixPaymentForResource: vi.fn(),
+    createMercadoPagoPreferenceForResource: vi.fn(),
     handleWebhook: vi.fn(),
 }));
 
@@ -16,6 +25,7 @@ vi.mock('../services/stripe.service', () => ({
     handleWebhook: vi.fn(),
 }));
 
+import * as pagbankService from '../services/pagbank.service';
 import * as mercadopagoService from '../services/mercadopago.service';
 import * as stripeService from '../services/stripe.service';
 
@@ -48,15 +58,17 @@ const mockMessage = {
 
 // ── POST /api/payments/create ─────────────────────────────────────────────────
 describe('POST /api/payments/create', () => {
-    it('200 — cria pagamento Pix para mensagem pendente', async () => {
-vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
-            paymentId: '123456789',
+    it('200 — cria pagamento Pix para mensagem pendente via PagBank', async () => {
+        vi.mocked(pagbankService.createPixPaymentForResource).mockResolvedValue({
+            paymentMethod: 'pix',
+            paymentProvider: 'pagbank',
+            paymentId: 'ORDE_123456789',
             status: 'pending',
             pixQrCode: 'pix_qr_code_data',
             pixQrCodeBase64: null,
+            pixQrCodeUrl: 'https://sandbox.api.pagseguro.com/qrcode/123.png',
             pixExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-            preferenceId: null,
-            checkoutUrl: null,
+            amount: 4.99,
         });
 
         const token = makeToken(USER_ID);
@@ -66,7 +78,7 @@ vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
             .send({ messageId: MSG_ID, paymentMethod: 'pix' });
 
         expect(res.status).toBe(200);
-        expect(res.body).toHaveProperty('paymentId', '123456789');
+        expect(res.body).toHaveProperty('paymentId', 'ORDE_123456789');
     });
 
     it('200 — cria pagamento por cartão para mensagem pendente', async () => {
@@ -85,15 +97,17 @@ vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
         expect(res.body).toHaveProperty('checkoutUrl');
     });
 
-    it('200 — cria pagamento Pix para pagina (resourceType/resourceId)', async () => {
-vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
-            paymentId: '987654321',
+    it('200 — cria pagamento Pix para pagina (resourceType/resourceId) via PagBank', async () => {
+        vi.mocked(pagbankService.createPixPaymentForResource).mockResolvedValue({
+            paymentMethod: 'pix',
+            paymentProvider: 'pagbank',
+            paymentId: 'ORDE_987654321',
             status: 'pending',
             pixQrCode: 'pix_qr_code_page',
             pixQrCodeBase64: null,
+            pixQrCodeUrl: null,
             pixExpiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-            preferenceId: null,
-            checkoutUrl: null,
+            amount: 4.99,
         });
 
         const token = makeToken(USER_ID);
@@ -103,7 +117,7 @@ vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
             .send({ resourceType: 'page', resourceId: PAGE_ID, paymentMethod: 'pix' });
 
         expect(res.status).toBe(200);
-        expect(res.body).toHaveProperty('paymentId', '987654321');
+        expect(res.body).toHaveProperty('paymentId', 'ORDE_987654321');
     });
 
     it('400 — paymentMethod inválido', async () => {
@@ -135,12 +149,12 @@ vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
 
         expect(res.status).toBe(400);
         expect(res.body.error).toMatch(/messageId inválido/i);
-        expect(mercadopagoService.createPixPaymentForResource).not.toHaveBeenCalled();
+        expect(pagbankService.createPixPaymentForResource).not.toHaveBeenCalled();
         expect(stripeService.createCardPaymentForResource).not.toHaveBeenCalled();
     });
 
     it('404 — mensagem não encontrada', async () => {
-        vi.mocked(mercadopagoService.createPixPaymentForResource).mockRejectedValue(
+        vi.mocked(pagbankService.createPixPaymentForResource).mockRejectedValue(
             new AppError('Mensagem não encontrada', 404)
         );
 
@@ -154,7 +168,7 @@ vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
     });
 
     it('403 — mensagem de outro usuário', async () => {
-        vi.mocked(mercadopagoService.createPixPaymentForResource).mockRejectedValue(
+        vi.mocked(pagbankService.createPixPaymentForResource).mockRejectedValue(
             new AppError('Sem permissão', 403)
         );
 
@@ -168,7 +182,7 @@ vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
     });
 
     it('400 — mensagem já paga', async () => {
-        vi.mocked(mercadopagoService.createPixPaymentForResource).mockRejectedValue(
+        vi.mocked(pagbankService.createPixPaymentForResource).mockRejectedValue(
             new AppError('Pagamento já realizado', 400)
         );
 
@@ -189,12 +203,14 @@ vi.mocked(mercadopagoService.createPixPaymentForResource).mockResolvedValue({
 
         expect(res.status).toBe(401);
     });
+
 });
 
 // ── GET /api/payments/status/:messageId ───────────────────────────────────────
 describe('GET /api/payments/status/:messageId', () => {
     it('200 — retorna status pending', async () => {
         vi.mocked(prisma.message.findUnique).mockResolvedValue(mockMessage);
+
 
         const token = makeToken(USER_ID);
         const res = await request(app)
@@ -363,9 +379,45 @@ describe('POST /api/payments/webhook/mercadopago', () => {
         expect(res.status).toBe(400);
         expect(res.body.error).toMatch(/x-request-id/i);
     });
+
+    it('401 — assinatura inválida no webhook do Mercado Pago', async () => {
+        vi.mocked(mercadopagoService.handleWebhook).mockRejectedValue(
+            new AppError('Assinatura inválida', 401)
+        );
+
+        const res = await request(app)
+            .post('/api/payments/webhook/mercadopago')
+            .set('x-signature', 'ts=12345,v1=wronghash')
+            .set('x-request-id', 'req-test-123')
+            .set('Content-Type', 'application/json')
+            .send({ type: 'payment', data: { id: '123456789' } });
+
+        expect(res.status).toBe(401);
+        expect(res.body.error).toMatch(/assinatura inválida/i);
+    });
+});
+
+// ── POST /api/payments/webhook/pagbank ────────────────────────────────────────
+describe('POST /api/payments/webhook/pagbank', () => {
+    it('200 — processa webhook do PagBank', async () => {
+        vi.mocked(pagbankService.handleWebhook).mockResolvedValue({ received: true, type: 'page' });
+
+        const res = await request(app)
+            .post('/api/payments/webhook/pagbank')
+            .set('Content-Type', 'application/json')
+            .send({
+                id: 'ORDE_WEBHOOK_123',
+                reference_id: `page:${PAGE_ID}`,
+                charges: [{ id: 'CHAR_1', status: 'PAID' }],
+            });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('received', true);
+    });
 });
 
 describe('GET /api/payments/status/:resourceType/:resourceId — validação de resourceType', () => {
+
     it('400 — resourceType inválido', async () => {
         const token = makeToken(USER_ID);
         const res = await request(app)
