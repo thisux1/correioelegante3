@@ -1,6 +1,8 @@
 import { memo, useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Sparkles, Heart, MailOpen, X, Check } from 'lucide-react'
+import { Sparkles, Heart, X, Check } from 'lucide-react'
+
+
 import type { BlockComponentProps, EnvelopeBlockProps } from '@/editor/types'
 
 const WAX_COLORS = [
@@ -187,32 +189,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
 
   return (
     <div className="relative mx-auto w-full max-w-lg select-none px-2 py-4">
-      {/* Barra de controle rápida superior no modo de edição */}
-      {isEditMode && (
-        <div className="mb-3 flex items-center justify-between gap-2 px-1">
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-light">
-            <Mail size={14} className="text-primary" />
-            <span>Carta Lacrada</span>
-          </div>
 
-          <button
-            type="button"
-            onClick={handleToggleOpen}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-white/90 px-3 py-1.5 text-xs font-bold text-primary shadow-xs backdrop-blur-xs transition-all hover:bg-primary hover:text-white active:scale-95"
-            aria-label={isOpenLocal ? 'Visualizar envelope fechado' : 'Visualizar carta aberta'}
-          >
-            {isOpenLocal ? (
-              <>
-                <Mail size={13} /> Ver Envelope Fechado
-              </>
-            ) : (
-              <>
-                <MailOpen size={13} /> Ver Carta Aberta
-              </>
-            )}
-          </button>
-        </div>
-      )}
 
       <div className="relative mx-auto flex flex-col items-center">
         {/* Folha Interna da Carta (Emerge ao Abrir) */}
@@ -295,10 +272,18 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
 
         {/* Corpo do Envelope */}
         <div
-          onClick={isEditMode ? undefined : handleToggleOpen}
-          className={`relative z-20 w-full overflow-visible rounded-3xl border border-amber-300/50 bg-gradient-to-b from-[#fbf4ea] via-[#f5e7d6] to-[#edd7bf] p-6 shadow-xl transition-shadow duration-300 sm:p-8 ${
-            isEditMode ? '' : 'cursor-pointer hover:shadow-2xl'
-          }`}
+          onClick={(e) => {
+            const target = e.target as HTMLElement
+            if (
+              target.tagName === 'INPUT' ||
+              target.tagName === 'TEXTAREA' ||
+              target.closest('[data-popover="seal"]')
+            ) {
+              return
+            }
+            handleToggleOpen()
+          }}
+          className="relative z-20 w-full cursor-pointer overflow-visible rounded-3xl border border-amber-300/50 bg-gradient-to-b from-[#fbf4ea] via-[#f5e7d6] to-[#edd7bf] p-6 shadow-xl transition-all duration-300 hover:shadow-2xl sm:p-8"
         >
           {/* Textura sutil e dobras decorativas */}
           <div
@@ -315,10 +300,6 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
           <div className="relative z-10 flex flex-col items-center justify-between gap-5 py-3 text-center">
             {/* Destinatário na Capa do Envelope */}
             <div className="w-full space-y-1">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary shadow-xs backdrop-blur-xs">
-                <Mail size={12} /> Carta Selada
-              </span>
-
               <div className="mt-1">
                 {isEditMode ? (
                   <input
@@ -350,6 +331,9 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                 onClick={() => {
                   if (isEditMode) {
                     setShowSealPopover((prev) => !prev)
+                    if (!isOpenLocal) {
+                      setIsOpenLocal(true)
+                    }
                   } else {
                     handleToggleOpen()
                   }
@@ -360,6 +344,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
               <AnimatePresence>
                 {isEditMode && showSealPopover && (
                   <motion.div
+                    data-popover="seal"
                     initial={{ opacity: 0, y: -6, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
@@ -438,7 +423,9 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                 <Heart size={12} className="text-primary" fill="currentColor" />
                 {isEditMode ? (
                   <span className="text-[11px] text-text-muted">
-                    {isOpenLocal ? 'Carta aberta para edição' : 'Clique no selo para personalizar ou abrir'}
+                    {isOpenLocal
+                      ? 'Toque na carta para fechar'
+                      : 'Toque na carta para abrir e editar a mensagem'}
                   </span>
                 ) : isOpenLocal ? (
                   'Toque no envelope para fechar'
@@ -465,6 +452,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
             </div>
           </div>
         </div>
+
       </div>
     </div>
   )

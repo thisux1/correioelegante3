@@ -48,7 +48,6 @@ describe('EnvelopeBlock', () => {
 
     expect(container.textContent).toContain('Para o amor da minha vida')
     expect(container.textContent).toContain('Com amor, Thiago')
-    expect(container.textContent).toContain('Carta Selada')
     // No input or textarea in preview mode
     expect(container.querySelector('input')).toBeNull()
     expect(container.querySelector('textarea')).toBeNull()
@@ -191,14 +190,13 @@ describe('EnvelopeBlock', () => {
       root.render(React.createElement(EnvelopeBlock, { block, mode: 'edit', onUpdate }))
     })
 
-    const openLetterBtn = Array.from(container.querySelectorAll('button')).find(
-      (btn) => btn.textContent?.includes('Ver Carta Aberta'),
-    ) as HTMLButtonElement
-    expect(openLetterBtn).toBeDefined()
+    const envelopeBody = container.querySelector('.cursor-pointer') as HTMLDivElement
+    expect(envelopeBody).not.toBeNull()
 
     await act(async () => {
-      openLetterBtn.click()
+      envelopeBody.click()
     })
+
 
     const textarea = container.querySelector(
       'textarea[aria-label="Mensagem interna da carta"]',
