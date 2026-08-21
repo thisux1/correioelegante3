@@ -284,15 +284,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                 {/* Botão NÃO */}
                 <div className="relative">
                   {isEditMode ? (
-                    <div
-                      onMouseEnter={moveNoButton}
-                      onTouchStart={moveNoButton}
-                      style={{
-                        transform: `translate(${noPosition.x}px, ${noPosition.y}px)`,
-                        transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                      }}
-                      className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-primary/20 bg-white/85 px-5 py-2.5 shadow-xs backdrop-blur-xs hover:bg-rose-50 hover:text-red-600 transition-colors"
-                    >
+                    <div className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-primary/20 bg-white/85 px-5 py-2.5 shadow-xs backdrop-blur-xs hover:border-primary/40 transition-colors">
                       <input
                         type="text"
                         value={props.noButtonText}

@@ -397,7 +397,7 @@ function CanvasBlockComponent({
     >
       <motion.div
         id={collapseContentId}
-        className="relative overflow-hidden"
+        className={`relative ${isCollapsed ? 'overflow-hidden' : 'overflow-visible'}`}
         initial={false}
         animate={animatedHeight ? { height: animatedHeight } : undefined}
         transition={{ type: 'spring', stiffness: 190, damping: 28, mass: 1.02 }}
