@@ -112,7 +112,7 @@ describe('POST /api/messages', () => {
         expect(res.status).toBe(400);
     });
 
-    it('400 — published sem publishedAt', async () => {
+    it('201 — published sem publishedAt auto-popula publishedAt', async () => {
         const token = makeToken();
         const res = await request(app)
             .post('/api/messages')
@@ -125,26 +125,51 @@ describe('POST /api/messages', () => {
                 visibility: 'public',
             });
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(201);
+        const createCall = vi.mocked(prisma.message.create).mock.calls.at(-1);
+        expect(createCall?.[0].data.status).toBe('published');
+        expect(createCall?.[0].data.publishedAt).toBeTruthy();
     });
 
-    it('400 — draft com publishedAt', async () => {
+    it('201 — draft com publishedAt limpa publishedAt para null', async () => {
         const token = makeToken();
         const res = await request(app)
             .post('/api/messages')
             .set('Authorization', `Bearer ${token}`)
             .send({
                 recipient: 'Ana',
-                message: 'Rascunho com data inválida',
+                message: 'Rascunho com data',
                 theme: 'classic',
                 status: 'draft',
                 visibility: 'public',
                 publishedAt: '2026-03-19T12:00:00.000Z',
             });
 
+        expect(res.status).toBe(201);
+        const createCall = vi.mocked(prisma.message.create).mock.calls.at(-1);
+        expect(createCall?.[0].data.status).toBe('draft');
+        expect(createCall?.[0].data.publishedAt).toBeNull();
+    });
+
+    it('400 — publishedAt com formato de data invalido', async () => {
+        const token = makeToken();
+        const res = await request(app)
+            .post('/api/messages')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                recipient: 'Ana',
+                message: 'Mensagem com data invalida',
+                theme: 'classic',
+                status: 'published',
+                visibility: 'public',
+                publishedAt: 'data-invalida-123',
+            });
+
         expect(res.status).toBe(400);
     });
 });
+
+
 
 // ── GET /api/messages ─────────────────────────────────────────────────────────
 describe('GET /api/messages', () => {
