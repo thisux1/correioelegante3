@@ -5,7 +5,9 @@ import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { Card as UICard } from '@/components/ui/Card'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
+import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
 import { PageRenderer } from '@/editor/components/PageRenderer'
+import { buildThemeStyle, getThemeAtmosphere } from '@/editor/themes'
 import type { PageSummary } from '@/services/pageService'
 import { pageService } from '@/services/pageService'
 
@@ -96,17 +98,24 @@ export function PageCard() {
     )
   }
 
+  const atmosphere = getThemeAtmosphere(page.theme)
+
   return (
-    <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-6">
+    <div
+      className="relative min-h-screen flex items-center justify-center pt-24 pb-16 px-6 overflow-hidden"
+      style={buildThemeStyle(page.theme)}
+    >
+      <AtmosphereCanvas atmosphere={atmosphere} position="fixed" />
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
-        className="w-full max-w-3xl"
+        className="w-full max-w-3xl relative z-10"
       >
         <CardTilt3D intensity={6}>
           <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-6 shadow-2xl md:p-8">
-            <PageRenderer blocks={page.blocks} theme={page.theme} />
+            <PageRenderer blocks={page.blocks} theme={page.theme} showAtmosphere={false} />
 
             <div className="mt-8 pt-6 border-t border-border/40 text-center">
               <p className="text-xs text-text-light mb-2.5">
@@ -128,4 +137,3 @@ export function PageCard() {
     </div>
   )
 }
-

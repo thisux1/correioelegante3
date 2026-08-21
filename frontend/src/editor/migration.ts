@@ -60,7 +60,19 @@ function asTimestamp(value: unknown, fallback: number): number {
 }
 
 function asBlockType(value: unknown): BlockType {
-  const supported: BlockType[] = ['text', 'image', 'timer', 'gallery', 'music', 'video']
+  const supported: BlockType[] = [
+    'text',
+    'image',
+    'timer',
+    'gallery',
+    'music',
+    'video',
+    'envelope',
+    'scratch',
+    'timeline',
+    'quiz',
+    'polaroid',
+  ]
   if (typeof value === 'string' && supported.includes(value as BlockType)) {
     return value as BlockType
   }
@@ -105,6 +117,82 @@ function asMusicTracks(value: unknown): Array<{
 
     return accumulator
   }, []).slice(0, 30)
+}
+
+function asTimelineItems(value: unknown): Array<{
+  id: string
+  date: string
+  title: string
+  description?: string
+  image?: string
+}> {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<Array<{
+    id: string
+    date: string
+    title: string
+    description?: string
+    image?: string
+  }>>((accumulator, item, index) => {
+    const record = asRecord(item)
+    const title = asText(record.title)
+    const date = asText(record.date)
+    const description = asOptionalText(record.description)
+    const image = asOptionalText(record.image)
+    const id = asOptionalText(record.id) || `timeline-item-${index}-${Math.random().toString(36).slice(2, 7)}`
+
+    if (!title && !date && !description && !image) {
+      return accumulator
+    }
+
+    accumulator.push({
+      id,
+      date,
+      title,
+      description,
+      image,
+    })
+
+    return accumulator
+  }, []).slice(0, 50)
+}
+
+function asPolaroidPhotos(value: unknown): Array<{
+  id: string
+  src: string
+  caption?: string
+  rotation?: number
+}> {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<Array<{
+    id: string
+    src: string
+    caption?: string
+    rotation?: number
+  }>>((accumulator, item, index) => {
+    const record = asRecord(item)
+    const src = asText(record.src)
+    const caption = asOptionalText(record.caption)
+    const rotation = typeof record.rotation === 'number' && Number.isFinite(record.rotation)
+      ? Math.max(-25, Math.min(25, record.rotation))
+      : 0
+    const id = asOptionalText(record.id) || `polaroid-${index}-${Math.random().toString(36).slice(2, 7)}`
+
+    accumulator.push({
+      id,
+      src,
+      caption,
+      rotation,
+    })
+
+    return accumulator
+  }, []).slice(0, 50)
 }
 
 function migrateBlock(input: unknown, index: number): Block {
@@ -221,6 +309,59 @@ function migrateBlock(input: unknown, index: number): Block {
         props: {
           assetId: typeof props.assetId === 'string' ? props.assetId : undefined,
           src: asText(props.src),
+        },
+      }
+    case 'envelope':
+      return {
+        ...base,
+        type: 'envelope',
+        props: {
+          recipientName: asText(props.recipientName) || 'Para o amor da minha vida',
+          senderName: asOptionalText(props.senderName),
+          sealInitial: asOptionalText(props.sealInitial) || '💌',
+          sealColor: asOptionalText(props.sealColor) || '#e11d48',
+          messageSnippet: asOptionalText(props.messageSnippet) || '',
+          isOpen: typeof props.isOpen === 'boolean' ? props.isOpen : false,
+        },
+      }
+    case 'scratch':
+      return {
+        ...base,
+        type: 'scratch',
+        props: {
+          coverText: asText(props.coverText) || '✨ Raspe aqui para descobrir um segredo...',
+          secretType: props.secretType === 'image' ? 'image' : 'text',
+          secretText: asOptionalText(props.secretText) || '',
+          secretImage: asOptionalText(props.secretImage) || '',
+          isRevealed: typeof props.isRevealed === 'boolean' ? props.isRevealed : false,
+        },
+      }
+    case 'timeline':
+      return {
+        ...base,
+        type: 'timeline',
+        props: {
+          items: asTimelineItems(props.items),
+        },
+      }
+    case 'quiz':
+      return {
+        ...base,
+        type: 'quiz',
+        props: {
+          question: asText(props.question) || 'Quer namorar comigo?',
+          yesButtonText: asText(props.yesButtonText) || 'Sim! ❤️',
+          noButtonText: asText(props.noButtonText) || 'Não 🙈',
+          successMessage: asText(props.successMessage) || 'Você me faz a pessoa mais feliz do mundo! 🥰✨',
+          isPlayfulNo: typeof props.isPlayfulNo === 'boolean' ? props.isPlayfulNo : true,
+        },
+      }
+    case 'polaroid':
+      return {
+        ...base,
+        type: 'polaroid',
+        props: {
+          photos: asPolaroidPhotos(props.photos),
         },
       }
     default:

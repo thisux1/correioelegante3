@@ -19,6 +19,31 @@ const VideoBlock = lazy(async () => {
   return { default: module.VideoBlock }
 })
 
+const EnvelopeBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/EnvelopeBlock')
+  return { default: module.EnvelopeBlock }
+})
+
+const ScratchBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/ScratchBlock')
+  return { default: module.ScratchBlock }
+})
+
+const TimelineBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/TimelineBlock')
+  return { default: module.TimelineBlock }
+})
+
+const QuizBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/QuizBlock')
+  return { default: module.QuizBlock }
+})
+
+const PolaroidBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/PolaroidBlock')
+  return { default: module.PolaroidBlock }
+})
+
 interface BlockRendererProps {
   block: Block
   mode: EditorMode
@@ -32,6 +57,11 @@ const blockMap: BlockMap = {
   gallery: GalleryBlock,
   music: MusicBlock,
   video: VideoBlock,
+  envelope: EnvelopeBlock,
+  scratch: ScratchBlock,
+  timeline: TimelineBlock,
+  quiz: QuizBlock,
+  polaroid: PolaroidBlock,
 }
 
 function renderFallback(block: Block) {

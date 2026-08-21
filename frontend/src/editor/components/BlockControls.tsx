@@ -25,8 +25,13 @@ const blockTypeLabels: Record<BlockType, string> = {
   image: 'Imagem',
   timer: 'Timer',
   gallery: 'Galeria',
-  music: 'Musica',
-  video: 'Video',
+  music: 'Música',
+  video: 'Vídeo',
+  envelope: 'Envelope',
+  scratch: 'Raspadinha',
+  timeline: 'Linha do Tempo',
+  quiz: 'Pergunta',
+  polaroid: 'Polaroid',
 }
 
 function BlockControlsComponent({
