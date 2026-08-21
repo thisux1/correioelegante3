@@ -7,6 +7,7 @@ import { AlertTriangle, CheckCircle2, LoaderCircle, RefreshCcw, Smartphone, Moni
 
 import { Modal } from '@/components/ui/Modal'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
+import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
 import { EditorCanvas } from '@/editor/components/EditorCanvas'
 import { PageRenderer } from '@/editor/components/PageRenderer'
 import { useEditorStore } from '@/editor/store/editorStore'
@@ -17,7 +18,7 @@ import {
   type PageStatus,
   type PageVisibility,
 } from '@/editor/types'
-import { buildThemeStyle, resolveThemeId } from '@/editor/themes'
+import { buildThemeStyle, getThemeAtmosphere, resolveThemeId } from '@/editor/themes'
 import {
   resolveDraftPrecedence,
 } from '@/editor/draftPrecedence'
@@ -684,8 +685,11 @@ export function Editor() {
     return 'border-primary/20 bg-white/80 text-text'
   }, [saveState])
 
+  const atmosphere = getThemeAtmosphere(theme)
+
   return (
-    <div className="min-h-screen pb-24 pt-28 md:pb-12" style={editorThemeStyle}>
+    <div className="relative min-h-screen pb-24 pt-28 md:pb-12 overflow-hidden" style={editorThemeStyle}>
+      <AtmosphereCanvas atmosphere={atmosphere} position="fixed" intensity={0.5} />
       <Container size="narrow">
         <div className="mb-6">
           <h1 className="font-display text-3xl text-text md:text-4xl">Crie sua carta</h1>

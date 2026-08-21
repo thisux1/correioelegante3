@@ -201,17 +201,30 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
       )
     }
 
-    const label = block.props.label?.trim() || 'Sem conteudo'
-    const targetDate = block.props.targetDate?.trim()
+    if (block.type === 'timer') {
+      const label = block.props.label?.trim() || 'Sem conteudo'
+      const targetDate = block.props.targetDate?.trim()
+      return (
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-primary">
+            <CalendarDays size={14} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-text">{label}</p>
+            <p className="truncate text-xs text-text-light">{targetDate ? formatTimerPreviewDate(targetDate) : 'Sem conteudo'}</p>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="flex min-w-0 items-center gap-3">
         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-primary">
           <CalendarDays size={14} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-text">{label}</p>
-          <p className="truncate text-xs text-text-light">{targetDate ? formatTimerPreviewDate(targetDate) : 'Sem conteudo'}</p>
-        </div>
+        <p className="min-w-0 flex-1 truncate text-sm text-text-light">
+          Bloco interativo
+        </p>
       </div>
     )
   })()

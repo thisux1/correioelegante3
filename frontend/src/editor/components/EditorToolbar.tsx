@@ -14,6 +14,11 @@ import {
   Video,
   Type,
   CreditCard,
+  Mail,
+  Sparkles,
+  Milestone,
+  HelpCircle,
+  Camera,
 } from 'lucide-react'
 
 import { MAX_BLOCKS, type BlockType } from '@/editor/types'
@@ -22,7 +27,7 @@ import { createBlock } from '@/editor/utils/blockFactory'
 import { getThemeById, resolveThemeId, themeCatalog } from '@/editor/themes'
 import { useShallow } from 'zustand/react/shallow'
 
-type AvailableBlockType = Extract<BlockType, 'text' | 'image' | 'timer' | 'gallery' | 'music' | 'video'>
+type AvailableBlockType = BlockType
 
 interface AddBlockOption {
   type: AvailableBlockType
@@ -33,10 +38,15 @@ interface AddBlockOption {
 const addBlockOptions: AddBlockOption[] = [
   { type: 'text', label: 'Texto', icon: Type },
   { type: 'image', label: 'Imagem', icon: ImageIcon },
+  { type: 'polaroid', label: 'Polaroid', icon: Camera },
+  { type: 'envelope', label: 'Envelope', icon: Mail },
+  { type: 'scratch', label: 'Raspadinha', icon: Sparkles },
+  { type: 'timeline', label: 'Linha do Tempo', icon: Milestone },
+  { type: 'quiz', label: 'Pergunta', icon: HelpCircle },
   { type: 'timer', label: 'Timer', icon: Timer },
   { type: 'gallery', label: 'Galeria', icon: Images },
-  { type: 'music', label: 'Musica', icon: Music2 },
-  { type: 'video', label: 'Video', icon: Video },
+  { type: 'music', label: 'Música', icon: Music2 },
+  { type: 'video', label: 'Vídeo', icon: Video },
 ]
 
 interface ToolbarControlsProps {
@@ -179,12 +189,12 @@ function ThemeMenu({
 
   const positionClassName =
     placement === 'left'
-      ? 'absolute right-full top-0 z-30 mr-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute right-full top-0 z-30 mr-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
       : placement === 'right'
-      ? 'absolute left-full top-0 z-30 ml-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute left-full top-0 z-30 ml-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
       : placement === 'up'
-      ? 'absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
-      : 'absolute left-0 top-full z-30 mt-2 w-56 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute bottom-full left-0 z-30 mb-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      : 'absolute left-0 top-full z-30 mt-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
 
   const initialMotion = shouldReduceMotion
     ? placement === 'left'
@@ -211,6 +221,16 @@ function ThemeMenu({
       : { opacity: 0, y: placement === 'up' ? -16 : 16, scale: 0.985 }
 
   const animateMotion = (placement === 'left' || placement === 'right') ? { opacity: 1, x: 0, scale: 1 } : { opacity: 1, y: 0, scale: 1 }
+
+  const atmosphereLabels: Record<string, string> = {
+    petals: 'Pétalas de rosa',
+    stars: 'Estrelas mágicas',
+    sparkles: 'Brilho dourado',
+    hearts: 'Corações suaves',
+    sakura: 'Flores sakura',
+    fireflies: 'Vaga-lumes',
+    none: 'Clássico',
+  }
 
   return (
     <motion.div
@@ -268,9 +288,11 @@ function ThemeMenu({
               style={{ background: theme.thumbnail }}
               aria-hidden="true"
             />
-            <span className="flex-1">
+            <span className="flex-1 min-w-0">
               <span className="block truncate font-medium">{theme.name}</span>
-              <span className="block text-xs text-text-light">Fonte e paleta</span>
+              <span className="block text-xs text-text-light truncate">
+                {theme.atmosphere ? atmosphereLabels[theme.atmosphere] || 'Fonte e paleta' : 'Fonte e paleta'}
+              </span>
             </span>
             {isSelected ? <Check size={14} /> : null}
           </motion.button>
