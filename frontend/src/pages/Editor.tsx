@@ -418,12 +418,12 @@ export function Editor() {
   const setDraftContext = useEditorStore((state) => state.setDraftContext)
   const user = useAuthStore((state) => state.user)
 
-  const [isLoadingPage, setIsLoadingPage] = useState(false)
+  const [isLoadingPage, setIsLoadingPage] = useState<boolean>(Boolean(pageIdFromRoute))
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [feedback, setFeedback] = useState<string | null>(null)
   const [currentPageId, setCurrentPageId] = useState<string | undefined>(pageIdFromRoute)
   const [pageVersion, setPageVersion] = useState<number | undefined>(undefined)
-  const [status, setStatus] = useState<PageStatus>('draft')
+  const [status, setStatus] = useState<PageStatus>(pageIdFromRoute ? 'published' : 'draft')
   const [visibility, setVisibility] = useState<PageVisibility>('public')
   const [lastSyncedSignature, setLastSyncedSignature] = useState('')
   const [draftConflict, setDraftConflict] = useState<DraftConflictState | null>(null)
@@ -457,7 +457,7 @@ export function Editor() {
   }, [pageVersion, status, visibility])
 
   const hasPageId = Boolean(currentPageId)
-  const showPublishCta = status !== 'published' && blocks.length > 0
+  const showPublishCta = !isLoadingPage && status !== 'published' && blocks.length > 0
   const currentSignature = useMemo(
     () => toPageSignature({ blocks, theme, status, visibility }),
     [blocks, status, theme, visibility],
