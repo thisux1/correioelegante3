@@ -11,6 +11,7 @@ const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
 const Create = lazy(() => import('@/pages/Create').then(m => ({ default: m.Create })))
 const Editor = lazy(() => import('@/pages/Editor').then(m => ({ default: m.Editor })))
 const Auth = lazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
+const ResetPassword = lazy(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })))
 const Profile = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
 const Contact = lazy(() => import('@/pages/Contact').then(m => ({ default: m.Contact })))
 const LegalTerms = lazy(() => import('@/pages/LegalTerms').then(m => ({ default: m.LegalTerms })))
@@ -103,6 +104,7 @@ export function AppRouter() {
               <Route path="/pricing" element={<Navigate to="/planos" replace />} />
               <Route path="/planos/sucesso" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
               <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
+              <Route path="/auth/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/legal/terms" element={<LegalTerms />} />
               <Route path="/legal/privacy" element={<LegalPrivacy />} />

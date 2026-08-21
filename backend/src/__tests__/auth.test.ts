@@ -19,9 +19,12 @@ const mockUser = {
     subscriptionExpiresAt: null,
     subscriptionProvider: null,
     subscriptionId: null,
+    resetPasswordToken: null,
+    resetPasswordExpires: null,
     createdAt: new Date(),
     updatedAt: new Date(),
 };
+
 
 // ── POST /api/auth/register ───────────────────────────────────────────────────
 describe('POST /api/auth/register', () => {
@@ -269,3 +272,84 @@ describe('GET /api/auth/export', () => {
         expect(res.body).toHaveProperty('refundRequests');
     });
 });
+
+// ── POST /api/auth/forgot-password ───────────────────────────────────────────
+describe('POST /api/auth/forgot-password', () => {
+    it('200 — solicita recuperacao com email cadastrado', async () => {
+        vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+        vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+
+        const res = await request(app)
+            .post('/api/auth/forgot-password')
+            .send({ email: 'test@correio.com' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.message).toMatch(/redefinir sua senha/i);
+        expect(prisma.user.update).toHaveBeenCalled();
+    });
+
+    it('200 — solicita recuperacao com email inexistente (proteção contra enumeração)', async () => {
+        vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+        const res = await request(app)
+            .post('/api/auth/forgot-password')
+            .send({ email: 'inexistente@correio.com' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.message).toMatch(/redefinir sua senha/i);
+    });
+
+    it('400 — email em formato inválido', async () => {
+        const res = await request(app)
+            .post('/api/auth/forgot-password')
+            .send({ email: 'nao-email' });
+
+        expect(res.status).toBe(400);
+    });
+});
+
+// ── POST /api/auth/reset-password ─────────────────────────────────────────────
+describe('POST /api/auth/reset-password', () => {
+    it('200 — redefine senha com token válido', async () => {
+        vi.mocked(prisma.user.findFirst).mockResolvedValue(mockUser);
+        vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+
+        const res = await request(app)
+            .post('/api/auth/reset-password')
+            .send({
+                token: 'token-criptografado-valido-1234567890',
+                password: 'NovaSenhaForte123',
+            });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('accessToken');
+        expect(res.body.user.email).toBe('test@correio.com');
+        expect(prisma.user.update).toHaveBeenCalled();
+    });
+
+    it('400 — token inválido ou expirado', async () => {
+        vi.mocked(prisma.user.findFirst).mockResolvedValue(null);
+
+        const res = await request(app)
+            .post('/api/auth/reset-password')
+            .send({
+                token: 'token-expirado',
+                password: 'NovaSenhaForte123',
+            });
+
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe('AUTH_INVALID_RESET_TOKEN');
+    });
+
+    it('400 — nova senha muito curta', async () => {
+        const res = await request(app)
+            .post('/api/auth/reset-password')
+            .send({
+                token: 'token-valido',
+                password: '123',
+            });
+
+        expect(res.status).toBe(400);
+    });
+});
+
