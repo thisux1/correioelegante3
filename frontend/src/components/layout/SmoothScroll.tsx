@@ -21,18 +21,19 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
   const location = useSafeLocation()
   const pathname = location?.pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '')
   const isEditor = pathname.startsWith('/editor')
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   useEffect(() => {
-    if (isEditor) return
+    if (isEditor || isTouchDevice) return
 
     function update(data: { timestamp: number }) {
       lenisRef.current?.lenis?.raf(data.timestamp)
     }
     frame.update(update, true)
     return () => cancelFrame(update)
-  }, [isEditor])
+  }, [isEditor, isTouchDevice])
 
-  if (isEditor) {
+  if (isEditor || isTouchDevice) {
     return <>{children}</>
   }
 
