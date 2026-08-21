@@ -294,9 +294,11 @@ export function Pricing() {
                     <span className="text-sm font-medium text-text-muted">/ 1 mês (30 dias)</span>
                   </div>
 
-                  <p className="mt-1 text-xs font-medium text-emerald-600">
-                    ✨ Crie a partir de 4 cartas e já está economizando!
+                  <p className="mt-1 text-xs font-medium text-emerald-600 flex items-center gap-1">
+                    <Sparkles size={13} className="text-emerald-600" />
+                    <span>Crie a partir de 4 cartas e já está economizando!</span>
                   </p>
+
 
                   <div className="mt-8 space-y-3.5 text-sm text-text font-medium">
                     <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
+
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { Card as UICard } from '@/components/ui/Card'
@@ -106,9 +107,25 @@ export function PageCard() {
         <CardTilt3D intensity={6}>
           <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-6 shadow-2xl md:p-8">
             <PageRenderer blocks={page.blocks} theme={page.theme} />
+
+            <div className="mt-8 pt-6 border-t border-border/40 text-center">
+              <p className="text-xs text-text-light mb-2.5">
+                Gostou dessa página mágica?
+              </p>
+              <Link to="/create">
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold shadow-xs hover:bg-primary/90 transition-colors"
+                >
+                  <Heart className="w-3.5 h-3.5 fill-white" />
+                  <span>Crie um correio elegante você também</span>
+                </button>
+              </Link>
+            </div>
           </div>
         </CardTilt3D>
       </motion.div>
     </div>
   )
 }
+

@@ -3,7 +3,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
 import { Container } from '@/components/layout/Container'
-import { AlertTriangle, CheckCircle2, LoaderCircle, RefreshCcw } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, LoaderCircle, RefreshCcw, Smartphone, Monitor } from 'lucide-react'
+
 import { Modal } from '@/components/ui/Modal'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { EditorCanvas } from '@/editor/components/EditorCanvas'
@@ -425,7 +426,9 @@ export function Editor() {
   const [lastSyncedSignature, setLastSyncedSignature] = useState('')
   const [draftConflict, setDraftConflict] = useState<DraftConflictState | null>(null)
   const [templateConflict, setTemplateConflict] = useState<TemplateConflictState | null>(null)
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop')
   const handledTemplateKeyRef = useRef<string>('')
+
   const isNavigatingToPaymentRef = useRef(false)
   const isPublishingRef = useRef(false)
 
@@ -841,9 +844,48 @@ export function Editor() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              <PageRenderer blocks={blocks} theme={theme} />
+              <div className="flex justify-center items-center gap-2 mb-6">
+                <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white/85 border border-border shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('desktop')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                      previewDevice === 'desktop'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-text-light hover:text-text'
+                    }`}
+                  >
+                    <Monitor size={14} />
+                    <span>Tela Cheia (Desktop)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('mobile')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                      previewDevice === 'mobile'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'text-text-light hover:text-text'
+                    }`}
+                  >
+                    <Smartphone size={14} />
+                    <span>Smartphone</span>
+                  </button>
+                </div>
+              </div>
+
+              {previewDevice === 'mobile' ? (
+                <div className="max-w-[390px] mx-auto border-[10px] border-neutral-800 bg-neutral-900 rounded-[44px] p-2.5 shadow-2xl overflow-hidden">
+                  <div className="w-20 h-4 bg-neutral-800 rounded-full mx-auto mb-2" />
+                  <div className="rounded-[30px] overflow-hidden max-h-[640px] overflow-y-auto bg-surface">
+                    <PageRenderer blocks={blocks} theme={theme} />
+                  </div>
+                </div>
+              ) : (
+                <PageRenderer blocks={blocks} theme={theme} />
+              )}
             </motion.section>
           )}
+
         </AnimatePresence>
       </Container>
 
