@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion } from 'framer-motion'
-import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone, Zap } from 'lucide-react'
+import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone, Zap, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -29,9 +29,11 @@ export function Payment() {
   const [step, setStep] = useState<Step>('select')
   const [pixData, setPixData] = useState<PixPaymentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingMethod, setLoadingMethod] = useState<PaymentMethod | 'mercadopago_checkout' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.MercadoPago) {
@@ -99,6 +101,7 @@ export function Payment() {
   async function handleSelectMethod(method: PaymentMethod) {
     if (!target) return
     setIsLoading(true)
+    setLoadingMethod(method)
     setError(null)
 
     try {
@@ -129,12 +132,14 @@ export function Payment() {
       setError(axiosErr.response?.data?.error || 'Erro ao criar pagamento. Tente recarregar a página.')
     } finally {
       setIsLoading(false)
+      setLoadingMethod(null)
     }
   }
 
   async function handleMercadoPagoCheckout() {
     if (!target) return
     setIsLoading(true)
+    setLoadingMethod('mercadopago_checkout')
     setError(null)
 
     try {
@@ -149,8 +154,10 @@ export function Payment() {
       setError(axiosErr.response?.data?.error || 'Erro ao iniciar checkout do Mercado Pago.')
     } finally {
       setIsLoading(false)
+      setLoadingMethod(null)
     }
   }
+
 
   async function handleCopy() {
     if (!pixData?.pixQrCode) return
@@ -319,8 +326,8 @@ export function Payment() {
                     <p className="font-semibold text-text">Pix</p>
                     <p className="text-sm text-text-light">Pagamento instantâneo via QR Code</p>
                   </div>
-                  {isLoading && (
-                    <div className="ml-auto w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                  {loadingMethod === 'pix' && (
+                    <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 aspect-square text-emerald-600" />
                   )}
                 </button>
 
@@ -336,8 +343,8 @@ export function Payment() {
                     <p className="font-semibold text-text">Cartão de Crédito (Stripe)</p>
                     <p className="text-sm text-text-light">Visa, Mastercard, Elo e outros</p>
                   </div>
-                  {isLoading && (
-                    <div className="ml-auto w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  {loadingMethod === 'credit_card' && (
+                    <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 aspect-square text-blue-600" />
                   )}
                 </button>
 
@@ -353,11 +360,12 @@ export function Payment() {
                     <p className="font-semibold text-text">Mercado Pago (Checkout Pro)</p>
                     <p className="text-sm text-text-light">Teste com Cartões de Teste Sandbox</p>
                   </div>
-                  {isLoading && (
-                    <div className="ml-auto w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                  {loadingMethod === 'mercadopago_checkout' && (
+                    <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 aspect-square text-sky-600" />
                   )}
                 </button>
               </div>
+
 
               <Link to={backHref} className="inline-flex mt-2">
                 <Button variant="ghost" size="sm">

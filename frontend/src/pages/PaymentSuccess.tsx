@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Check } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { paymentService, type PaymentTarget } from '@/services/paymentService'
@@ -84,7 +84,7 @@ export function PaymentSuccess() {
               </div>
             ) : (
               <div className="flex items-center justify-center gap-2 text-sm text-text-muted">
-                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <Loader2 size={16} className="animate-spin shrink-0 aspect-square text-primary" />
                 Confirmando pagamento...
               </div>
             )}
