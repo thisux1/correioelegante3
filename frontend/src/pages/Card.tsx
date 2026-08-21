@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { Card as UICard } from '@/components/ui/Card'
+import { PageCardSkeleton } from '@/components/ui/PageCardSkeleton'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
 import { messageService } from '@/services/messageService'
@@ -66,11 +67,7 @@ export function Card() {
   }, [card])
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="shimmer w-16 h-16 bg-primary/10 rounded-2xl" />
-      </div>
-    )
+    return <PageCardSkeleton maxWidth="lg" />
   }
 
   if (error || !card) {
