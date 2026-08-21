@@ -277,15 +277,13 @@ export async function resetPassword(token: string, newPassword: string) {
     const user = await prisma.user.findFirst({
         where: {
             resetPasswordToken: tokenHash,
-            resetPasswordExpires: {
-                gt: new Date(),
-            },
         },
     });
 
-    if (!user) {
+    if (!user || !user.resetPasswordExpires || new Date(user.resetPasswordExpires).getTime() < Date.now()) {
         throw new AppError('Link de recuperação inválido ou expirado. Solicite uma nova redefinição.', 400, 'AUTH_INVALID_RESET_TOKEN');
     }
+
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 

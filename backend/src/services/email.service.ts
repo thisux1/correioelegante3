@@ -32,13 +32,13 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
   <title>Redefinição de Senha - Correio Elegante</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fdf2f8; margin: 0; padding: 24px; color: #1e1b4b; }
-    .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 24px; padding: 40px 32px; border: 1px solid #fbcfe8; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
+    .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fbcfe8; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
     .logo { text-align: center; margin-bottom: 24px; }
-    .logo-badge { display: inline-block; background: linear-gradient(135deg, #e11d48, #f43f5e); color: #ffffff; padding: 10px 20px; border-radius: 9999px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; }
-    h1 { font-size: 22px; font-weight: 800; color: #0f172a; text-align: center; margin-top: 0; margin-bottom: 16px; }
+    .logo-text { font-size: 22px; font-weight: 800; color: #e11d48; letter-spacing: -0.5px; margin: 0; }
+    h1 { font-size: 20px; font-weight: 700; color: #0f172a; text-align: center; margin-top: 0; margin-bottom: 16px; }
     p { font-size: 15px; line-height: 1.6; color: #475569; margin: 12px 0; }
     .btn-container { text-align: center; margin: 32px 0; }
-    .btn { display: inline-block; background: linear-gradient(135deg, #e11d48, #be123c); color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 14px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35); }
+    .btn { display: inline-block; background: linear-gradient(135deg, #e11d48, #be123c); color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3); }
     .footer { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 20px; }
     .link-fallback { word-break: break-all; font-size: 12px; color: #e11d48; }
   </style>
@@ -46,7 +46,7 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
 <body>
   <div class="container">
     <div class="logo">
-      <div class="logo-badge">💌 Correio Elegante</div>
+      <h2 class="logo-text">Correio Elegante</h2>
     </div>
     <h1>Recuperação de Senha</h1>
     <p>Olá${params.userName ? `, <strong>${params.userName}</strong>` : ''}!</p>
@@ -56,7 +56,7 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
       <a href="${params.resetUrl}" class="btn" target="_blank">Redefinir Minha Senha</a>
     </div>
     <p style="font-size: 13px; color: #64748b;">
-      ⏰ <em>Este link é seguro e expira automaticamente em <strong>60 minutos</strong>.</em>
+      Este link é seguro e expira automaticamente em <strong>60 minutos</strong>.
     </p>
     <p style="font-size: 13px; color: #64748b;">
       Se você não solicitou a redefinição de senha, nenhuma ação é necessária. Sua conta continua segura.
@@ -80,7 +80,7 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
     const { data, error } = await client.emails.send({
       from,
       to: params.to,
-      subject: 'Redefinição de Senha - Correio Elegante 💌',
+      subject: 'Redefinição de Senha - Correio Elegante',
       html: htmlContent,
     });
 
