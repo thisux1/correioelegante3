@@ -93,7 +93,7 @@ function ScratchCanvas({
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'
     ctx.shadowBlur = 4
 
-    const lines = (coverText || '✨ Raspe aqui para descobrir um segredo...').split('\n')
+    const lines = (coverText || 'Raspe suavemente aqui para descobrir a mensagem...').split('\n')
     const lineHeight = 22
     const startY = height / 2 - ((lines.length - 1) * lineHeight) / 2
 
@@ -226,9 +226,9 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const props: ScratchBlockProps = isScratch
     ? block.props
     : {
-        coverText: '✨ Raspe aqui com carinho para descobrir...',
+        coverText: 'Raspe suavemente para revelar a mensagem',
         secretType: 'text',
-        secretText: 'Você é a razão do meu sorriso todos os dias! Te amo!',
+        secretText: 'Minha vida se tornou incomparavelmente melhor desde o momento em que você chegou.',
         secretImage: '',
         isRevealed: false,
       }
@@ -270,8 +270,8 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   const secretType = props.secretType || 'text'
-  const coverText = props.coverText || '✨ Raspe aqui para descobrir...'
-  const secretText = props.secretText || 'Você ilumina todos os meus dias!'
+  const coverText = props.coverText || 'Raspe suavemente aqui para descobrir...'
+  const secretText = props.secretText || 'Você ilumina todos os meus dias.'
   const secretImage = props.secretImage || ''
 
   const interactiveCard = (
@@ -324,7 +324,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       <div className="py-2">
         {interactiveCard}
         <p className="mt-2 text-center text-xs font-medium text-text-light">
-          {isRevealedLocal ? '💖 Segredo revelado com sucesso!' : '👆 Passe o dedo ou mouse para raspar'}
+          {isRevealedLocal ? 'Segredo revelado com sucesso.' : 'Passe o dedo ou mouse para raspar'}
         </p>
       </div>
     )
@@ -356,7 +356,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             type="text"
             value={props.coverText}
             onChange={(e) => updateProp('coverText', e.target.value)}
-            placeholder="Ex: ✨ Raspe aqui para descobrir um segredo..."
+            placeholder="Ex: Raspe suavemente para descobrir a mensagem..."
             className={EDITOR_FIELD_BASE_CLASS}
             aria-label="Texto da capa da raspadinha"
           />
@@ -401,7 +401,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               rows={3}
               value={props.secretText ?? ''}
               onChange={(e) => updateProp('secretText', e.target.value)}
-              placeholder="Ex: Você é o meu maior presente de todos os dias! ❤️"
+              placeholder="Ex: Minha vida se tornou incomparavelmente melhor desde o momento em que você chegou."
               className={EDITOR_FIELD_BASE_CLASS}
               aria-label="Mensagem secreta"
             />
@@ -424,7 +424,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                 type="text"
                 value={props.secretText ?? ''}
                 onChange={(e) => updateProp('secretText', e.target.value)}
-                placeholder="Ex: Lembrança daquele nosso dia especial 💕"
+                placeholder="Ex: Lembrança daquele nosso dia especial"
                 className={EDITOR_FIELD_BASE_CLASS}
                 aria-label="Legenda da foto secreta"
               />

@@ -8,7 +8,12 @@ describe('createBlock', () => {
 
     expect(block.type).toBe('text')
     expect(block.version).toBe(BLOCK_VERSION)
-    expect(block.props).toEqual({ text: 'Novo texto', align: 'left' })
+    expect(block.props).toEqual({
+      category: 'body',
+      text: 'Escreva sua mensagem aqui...',
+      html: '',
+      align: 'left',
+    })
     expect(block.meta.createdAt).toBe(block.meta.updatedAt)
     expect(block.id.length).toBeGreaterThan(0)
   })
@@ -24,7 +29,7 @@ describe('createBlock', () => {
     const block = createBlock('timer')
 
     expect(block.type).toBe('timer')
-    expect(block.props.label).toBe('Contagem regressiva')
+    expect(block.props.label).toBe('Tempo compartilhado')
     expect(Number.isNaN(Date.parse(block.props.targetDate))).toBe(false)
   })
 
@@ -50,12 +55,12 @@ describe('createBlock', () => {
     })
   })
 
-  it('cria bloco de envelope com defaults romanticos', () => {
+  it('cria bloco de envelope com defaults autenticos e elegantes', () => {
     const block = createBlock('envelope')
 
     expect(block.type).toBe('envelope')
-    expect(block.props.recipientName).toBe('Para o amor da minha vida')
-    expect(block.props.sealInitial).toBe('💌')
+    expect(block.props.recipientName).toBe('Para quem ilumina meus dias')
+    expect(block.props.sealInitial).toBe('C')
     expect(block.props.sealColor).toBe('#e11d48')
     expect(block.props.isOpen).toBe(false)
   })
@@ -75,7 +80,7 @@ describe('createBlock', () => {
 
     expect(block.type).toBe('timeline')
     expect(block.props.items.length).toBe(3)
-    expect(block.props.items[0]?.title).toBe('Primeiro Olhar')
+    expect(block.props.items[0]?.title).toBe('Primeiro encontro')
   })
 
   it('cria bloco de quiz com pergunta e playful no ativo', () => {

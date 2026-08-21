@@ -1,9 +1,26 @@
-import { memo, useCallback, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Plus, Trash2, ArrowUp, ArrowDown, Camera, Sparkles } from 'lucide-react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Camera,
+  RotateCw,
+  Trash2,
+  Copy,
+  Plus,
+  Upload,
+  Link as LinkIcon,
+  Sparkles,
+} from 'lucide-react'
 import type { BlockComponentProps, PolaroidBlockProps, PolaroidPhoto } from '@/editor/types'
-import { MediaField } from '@/editor/components/MediaField'
-import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
+import { assetService } from '@/services/assetService'
 
 function generatePhotoId(): string {
   return `polaroid-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -13,14 +30,475 @@ function WashiTape({ className = '' }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none absolute h-6 w-20 bg-amber-100/70 shadow-xs backdrop-blur-xs ${className}`}
+      className={`pointer-events-none absolute h-6 w-20 bg-amber-100/80 shadow-xs backdrop-blur-xs z-20 ${className}`}
       style={{
         clipPath:
           'polygon(0% 5%, 5% 0%, 95% 0%, 100% 5%, 98% 95%, 95% 100%, 5% 100%, 0% 95%)',
         backgroundImage:
-          'repeating-linear-gradient(45deg, rgba(245,158,11,0.15), rgba(245,158,11,0.15) 6px, transparent 6px, transparent 12px)',
+          'repeating-linear-gradient(45deg, rgba(245,158,11,0.2), rgba(245,158,11,0.2) 6px, transparent 6px, transparent 12px)',
       }}
     />
+  )
+}
+
+interface PolaroidCardProps {
+  photo: PolaroidPhoto
+  index: number
+  isSelected: boolean
+  isEditMode: boolean
+  onSelect: () => void
+  onDeselect: () => void
+  onUpdateCaption: (caption: string) => void
+  onUpdateRotation: (rotation: number) => void
+  onUpdateWidth: (width: number) => void
+  onUpdateSrc: (src: string) => void
+  onRemove: () => void
+  onDuplicate: () => void
+}
+
+function PolaroidCard({
+  photo,
+  index,
+  isSelected,
+  isEditMode,
+  onSelect,
+  onDeselect,
+  onUpdateCaption,
+  onUpdateRotation,
+  onUpdateWidth,
+  onUpdateSrc,
+  onRemove,
+  onDuplicate,
+}: PolaroidCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [isRotating, setIsRotating] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [showUrlPopover, setShowUrlPopover] = useState(false)
+  const [urlInputValue, setUrlInputValue] = useState(photo.src || '')
+
+  const currentRotation = photo.rotation ?? (index % 2 === 0 ? -2.5 : 2.5)
+  const currentWidth = photo.width ?? 260
+
+  // Click outside detection for progressive disclosure
+  useEffect(() => {
+    if (!isSelected || !isEditMode) return
+
+    const handlePointerDownOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node
+      if (cardRef.current && !cardRef.current.contains(target)) {
+        onDeselect()
+        setShowUrlPopover(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onDeselect()
+        setShowUrlPopover(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDownOutside)
+    document.addEventListener('touchstart', handlePointerDownOutside)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDownOutside)
+      document.removeEventListener('touchstart', handlePointerDownOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isEditMode, isSelected, onDeselect])
+
+  // Direct Interactive Rotation Dragging
+  const handleRotationPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!cardRef.current) return
+    const cardEl = cardRef.current
+    const rect = cardEl.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+
+    setIsRotating(true)
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      const dx = moveEvent.clientX - centerX
+      const dy = moveEvent.clientY - centerY
+
+      // Calculate angle from center
+      let deg = (Math.atan2(dy, dx) * 180) / Math.PI + 90
+      while (deg > 180) deg -= 360
+      while (deg < -180) deg += 360
+
+      // Magnetic snap to 0° within 2 degrees
+      if (Math.abs(deg) < 2) {
+        deg = 0
+      }
+
+      // Clamp between -45° and 45° for realistic collage feel
+      const clamped = Math.max(-45, Math.min(45, deg))
+      const rounded = Math.round(clamped * 2) / 2
+      onUpdateRotation(rounded)
+    }
+
+    const onPointerUp = () => {
+      setIsRotating(false)
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+    }
+
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+  }
+
+  // Direct Fluid Corner Resize Dragging
+  const handleResizePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!cardRef.current) return
+    const cardEl = cardRef.current
+    const rect = cardEl.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+
+    const initialDistance = Math.hypot(e.clientX - centerX, e.clientY - centerY)
+    const initialWidth = currentWidth
+
+    setIsResizing(true)
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      const currentDistance = Math.hypot(
+        moveEvent.clientX - centerX,
+        moveEvent.clientY - centerY,
+      )
+
+      if (initialDistance === 0) return
+      const scale = currentDistance / initialDistance
+      const calculatedWidth = Math.round(initialWidth * scale)
+      const clampedWidth = Math.max(180, Math.min(400, calculatedWidth))
+
+      onUpdateWidth(clampedWidth)
+    }
+
+    const onPointerUp = () => {
+      setIsResizing(false)
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+    }
+
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+  }
+
+  // File Upload Handler
+  const handleFileInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    const localUrl = URL.createObjectURL(file)
+    onUpdateSrc(localUrl)
+
+    try {
+      const asset = await assetService.uploadFileFlow({ file, kind: 'image' })
+      if (asset.publicUrl) {
+        onUpdateSrc(asset.publicUrl)
+      }
+    } catch {
+      // Retains local preview if upload fails or is offline
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleApplyUrl = () => {
+    if (urlInputValue.trim()) {
+      onUpdateSrc(urlInputValue.trim())
+    }
+    setShowUrlPopover(false)
+  }
+
+  const cycleAnglePreset = () => {
+    const presets = [0, -3.5, 3.5, -6, 6, -1.5, 1.5]
+    const nextIdx = (presets.indexOf(currentRotation) + 1) % presets.length
+    onUpdateRotation(presets[nextIdx >= 0 ? nextIdx : 0])
+  }
+
+  return (
+    <div
+      ref={cardRef}
+      role={isEditMode ? 'button' : undefined}
+      tabIndex={isEditMode ? 0 : undefined}
+      onClick={(e) => {
+        if (!isEditMode) return
+        e.stopPropagation()
+        onSelect()
+      }}
+      onKeyDown={(e) => {
+        if (!isEditMode) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          onSelect()
+        }
+      }}
+      className={`group relative flex flex-col select-none rounded-xl border bg-[#fffdfa] p-3.5 pb-5 transition-shadow duration-200 ${
+        isSelected && isEditMode
+          ? 'z-40 border-primary/50 shadow-2xl ring-2 ring-primary/70 ring-offset-2 ring-offset-background'
+          : 'z-10 border-amber-200/50 shadow-lg hover:shadow-xl'
+      }`}
+      style={{
+        width: `${currentWidth}px`,
+        transform: `rotate(${currentRotation}deg)`,
+        boxShadow:
+          isSelected && isEditMode
+            ? '0 20px 40px -10px rgba(0,0,0,0.22), 0 8px 16px -4px rgba(0,0,0,0.12)'
+            : '0 12px 28px -6px rgba(0,0,0,0.15), 0 4px 10px -2px rgba(0,0,0,0.08)',
+      }}
+    >
+      {/* Hidden File Input for Direct Upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/avif"
+        className="hidden"
+        onChange={handleFileInputChange}
+      />
+
+      {/* Washi Tape Decorativa */}
+      <WashiTape className="-top-3 left-1/2 -translate-x-1/2 rotate-[-2deg]" />
+
+      {/* Floating Contextual Toolbar (Progressive Disclosure) */}
+      <AnimatePresence>
+        {isSelected && isEditMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute -top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 rounded-2xl border border-primary/25 bg-white/95 p-1 shadow-2xl backdrop-blur-md"
+          >
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-primary/10 hover:text-primary active:scale-95"
+              title="Trocar Foto da Polaroid"
+            >
+              <Upload size={13} className="text-primary" />
+              <span>Trocar Foto</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowUrlPopover((prev) => !prev)}
+              className={`inline-flex items-center gap-1 rounded-xl px-2 py-1.5 text-xs font-semibold transition-colors hover:bg-primary/10 active:scale-95 ${
+                showUrlPopover ? 'bg-primary/10 text-primary' : 'text-text hover:text-primary'
+              }`}
+              title="Inserir URL da Imagem"
+            >
+              <LinkIcon size={13} />
+            </button>
+
+            <button
+              type="button"
+              onClick={cycleAnglePreset}
+              className="inline-flex items-center gap-1 rounded-xl px-2 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-primary/10 hover:text-primary active:scale-95"
+              title="Ajustar Ângulo"
+            >
+              <RotateCw size={13} className="text-primary" />
+              <span className="font-mono text-[11px]">{currentRotation}°</span>
+            </button>
+
+            <div className="h-4 w-px bg-primary/20" />
+
+            <button
+              type="button"
+              onClick={onDuplicate}
+              className="inline-flex items-center rounded-xl p-1.5 text-text-light transition-colors hover:bg-primary/10 hover:text-primary active:scale-95"
+              title="Duplicar Polaroid"
+              aria-label="Duplicar Polaroid"
+            >
+              <Copy size={14} />
+            </button>
+
+            <button
+              type="button"
+              onClick={onRemove}
+              className="inline-flex items-center rounded-xl p-1.5 text-red-500 transition-colors hover:bg-red-50 active:scale-95"
+              title="Remover Polaroid"
+              aria-label="Remover Polaroid"
+            >
+              <Trash2 size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* URL Popover */}
+      <AnimatePresence>
+        {isSelected && isEditMode && showUrlPopover && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.96 }}
+            transition={{ duration: 0.12 }}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute -top-26 left-1/2 -translate-x-1/2 z-50 flex w-64 items-center gap-1.5 rounded-xl border border-primary/25 bg-white p-2 shadow-2xl"
+          >
+            <input
+              type="url"
+              value={urlInputValue}
+              onChange={(e) => setUrlInputValue(e.target.value)}
+              placeholder="https://..."
+              className="flex-1 rounded-lg border border-primary/20 px-2 py-1 text-xs text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/40"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleApplyUrl()
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleApplyUrl}
+              className="rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-white shadow-xs transition-colors hover:bg-primary-dark"
+            >
+              OK
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Top Interactive Rotation Handle & Stem */}
+      {isSelected && isEditMode && (
+        <>
+          {/* Vertical Connecting Stem */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-0.5 bg-primary/70"
+          />
+
+          {/* Circular Rotation Handle */}
+          <button
+            type="button"
+            onPointerDown={handleRotationPointerDown}
+            className={`absolute -top-12 left-1/2 -translate-x-1/2 z-40 flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-white shadow-lg transition-transform hover:scale-115 active:scale-95 ${
+              isRotating ? 'cursor-grabbing ring-2 ring-primary ring-offset-2' : 'cursor-grab'
+            }`}
+            title="Arrastar para girar a foto"
+            aria-label="Girar Polaroid"
+          >
+            <RotateCw size={14} className={`text-primary ${isRotating ? 'animate-spin' : ''}`} />
+          </button>
+
+          {/* Rotation Tooltip Badge while dragging */}
+          {isRotating && (
+            <div className="pointer-events-none absolute -top-19 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md">
+              {currentRotation > 0 ? `+${currentRotation}` : currentRotation}°
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Corner Resize Handles */}
+      {isSelected && isEditMode && (
+        <>
+          <div
+            onPointerDown={handleResizePointerDown}
+            className="absolute -top-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            title="Redimensionar"
+          />
+          <div
+            onPointerDown={handleResizePointerDown}
+            className="absolute -top-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            title="Redimensionar"
+          />
+          <div
+            onPointerDown={handleResizePointerDown}
+            className="absolute -bottom-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            title="Redimensionar"
+          />
+          <div
+            onPointerDown={handleResizePointerDown}
+            className="absolute -bottom-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            title="Redimensionar"
+          />
+
+          {/* Size Tooltip Badge while resizing */}
+          {isResizing && (
+            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md">
+              {currentWidth}px
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Área Quadrada da Foto */}
+      <div
+        onClick={() => {
+          if (isEditMode && !photo.src) {
+            fileInputRef.current?.click()
+          }
+        }}
+        className={`relative aspect-square w-full overflow-hidden rounded-lg bg-stone-100 shadow-inner ${
+          isEditMode && !photo.src ? 'cursor-pointer hover:bg-stone-200/80 transition-colors' : ''
+        }`}
+      >
+        {photo.src ? (
+          <img
+            src={photo.src}
+            alt={photo.caption || 'Foto Polaroid'}
+            className="h-full w-full object-cover pointer-events-none"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-text-light">
+            {isUploading ? (
+              <div className="flex flex-col items-center gap-1.5">
+                <RotateCw size={24} className="animate-spin text-primary" />
+                <span className="text-xs font-medium text-primary">Enviando foto...</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Camera size={20} />
+                </div>
+                <span className="text-xs font-semibold text-text">Clique para adicionar foto</span>
+                <span className="text-[10px] text-text-light">Upload direto ou link</span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Legenda Estilo Manuscrito (Click-to-Type WYSIWYG) */}
+      <div className="mt-3 min-h-[36px] px-1 text-center">
+        {isEditMode ? (
+          <input
+            type="text"
+            value={photo.caption ?? ''}
+            onChange={(e) => onUpdateCaption(e.target.value)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelect()
+            }}
+            placeholder="Escreva uma legenda..."
+            className="w-full bg-transparent text-center font-cursive text-xl leading-snug text-text placeholder:font-sans placeholder:text-xs placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary/60 focus:outline-none transition-colors py-0.5"
+            aria-label="Legenda da foto polaroid"
+          />
+        ) : (
+          <p className="font-cursive text-xl leading-snug text-text">
+            {photo.caption || ''}
+          </p>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -33,6 +511,7 @@ function PolaroidBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
       }
 
   const photos = useMemo(() => (Array.isArray(props.photos) ? props.photos : []), [props.photos])
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null)
 
   const updatePhotos = useCallback(
     (newPhotos: PolaroidPhoto[]) => {
@@ -59,39 +538,44 @@ function PolaroidBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
     const newPhoto: PolaroidPhoto = {
       id: generatePhotoId(),
       src: '',
-      caption: 'Nosso momento especial ✨',
+      caption: 'Nosso momento especial',
       rotation: nextRotation,
+      width: 260,
     }
-    updatePhotos([...photos, newPhoto])
+    const nextPhotos = [...photos, newPhoto]
+    updatePhotos(nextPhotos)
+    setSelectedPhotoId(newPhoto.id)
   }, [photos, updatePhotos])
 
   const handleRemovePhoto = useCallback(
-    (index: number) => {
-      updatePhotos(photos.filter((_, i) => i !== index))
-    },
-    [photos, updatePhotos],
-  )
-
-  const handleMovePhoto = useCallback(
-    (index: number, direction: 'up' | 'down') => {
-      const targetIndex = direction === 'up' ? index - 1 : index + 1
-      if (targetIndex < 0 || targetIndex >= photos.length) return
-      const nextPhotos = [...photos]
-      const temp = nextPhotos[index]
-      nextPhotos[index] = nextPhotos[targetIndex]
-      nextPhotos[targetIndex] = temp
-      updatePhotos(nextPhotos)
-    },
-    [photos, updatePhotos],
-  )
-
-  const handleUpdatePhoto = useCallback(
-    <K extends keyof PolaroidPhoto>(index: number, key: K, value: PolaroidPhoto[K]) => {
-      const nextPhotos = [...photos]
-      nextPhotos[index] = {
-        ...nextPhotos[index],
-        [key]: value,
+    (id: string) => {
+      updatePhotos(photos.filter((p) => p.id !== id))
+      if (selectedPhotoId === id) {
+        setSelectedPhotoId(null)
       }
+    },
+    [photos, selectedPhotoId, updatePhotos],
+  )
+
+  const handleDuplicatePhoto = useCallback(
+    (id: string) => {
+      const source = photos.find((p) => p.id === id)
+      if (!source) return
+
+      const duplicated: PolaroidPhoto = {
+        ...source,
+        id: generatePhotoId(),
+        rotation: (source.rotation ?? 0) + (Math.random() > 0.5 ? 2.5 : -2.5),
+      }
+      updatePhotos([...photos, duplicated])
+      setSelectedPhotoId(duplicated.id)
+    },
+    [photos, updatePhotos],
+  )
+
+  const handleUpdatePhotoField = useCallback(
+    <K extends keyof PolaroidPhoto>(id: string, key: K, value: PolaroidPhoto[K]) => {
+      const nextPhotos = photos.map((p) => (p.id === id ? { ...p, [key]: value } : p))
       updatePhotos(nextPhotos)
     },
     [photos, updatePhotos],
@@ -101,177 +585,94 @@ function PolaroidBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
     return null
   }
 
-  const previewGallery = (
-    <div className="mx-auto w-full max-w-3xl py-4">
-      {photos.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-primary/30 p-8 text-center text-text-light">
-          <Camera className="mx-auto mb-2 text-primary" size={28} />
-          <p className="text-sm">Nenhuma foto Polaroid adicionada ainda.</p>
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center justify-center gap-8 px-2 py-4 sm:gap-10">
-          {photos.map((photo, index) => {
-            const rot = photo.rotation ?? (index % 2 === 0 ? -2.5 : 2.5)
-
-            return (
-              <motion.div
-                key={photo.id || index}
-                initial={{ opacity: 0, scale: 0.92, rotate: rot }}
-                animate={{ opacity: 1, scale: 1, rotate: rot }}
-                whileHover={{ scale: 1.05, rotate: 0, zIndex: 30 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                className="relative z-10 w-full max-w-[270px] rounded-xl border border-amber-200/50 bg-[#fffdfa] p-3.5 pb-5 shadow-xl transition-shadow duration-300 hover:shadow-2xl"
-                style={{
-                  boxShadow:
-                    '0 12px 28px -6px rgba(0,0,0,0.15), 0 4px 10px -2px rgba(0,0,0,0.08)',
-                }}
-              >
-                {/* Washi Tape Decorativa no Topo */}
-                <WashiTape className="-top-3 left-1/2 -translate-x-1/2 rotate-[-2deg]" />
-
-                {/* Área da Foto */}
-                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-stone-100 shadow-inner">
-                  {photo.src ? (
-                    <img
-                      src={photo.src}
-                      alt={photo.caption || 'Foto Polaroid'}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-text-light">
-                      <Camera size={32} className="text-primary/50" />
-                      <span className="text-xs">Foto vazia</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Legenda Estilo Manuscrito */}
-                <div className="mt-3.5 min-h-[32px] px-1 text-center">
-                  <p className="font-cursive text-xl leading-snug text-text">
-                    {photo.caption || ''}
-                  </p>
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-
-  if (mode === 'preview') {
-    return previewGallery
-  }
+  const isEditMode = mode === 'edit'
 
   return (
-    <div className="space-y-4 rounded-2xl border border-primary/20 bg-white/80 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-bold text-text">Fotos Polaroid com Washi Tape</h3>
-          <p className="text-xs text-text-light">
-            Memórias no formato clássico de foto instantânea.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleAddPhoto}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-primary-dark"
-        >
-          <Plus size={14} /> Nova Polaroid
-        </button>
-      </div>
-
-      {previewGallery}
-
-      <div className="space-y-4 pt-2">
-        {photos.map((photo, index) => (
-          <div
-            key={photo.id || index}
-            className="space-y-3 rounded-xl border border-primary/20 bg-white/95 p-4 shadow-sm"
-          >
-            <div className="flex items-center justify-between border-b border-primary/10 pb-2">
-              <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
-                <Sparkles size={13} /> Polaroid {index + 1}
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  onClick={() => handleMovePhoto(index, 'up')}
-                  className="rounded-lg p-1 text-text-light transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-30"
-                  aria-label="Mover foto para cima"
-                >
-                  <ArrowUp size={14} />
-                </button>
-                <button
-                  type="button"
-                  disabled={index === photos.length - 1}
-                  onClick={() => handleMovePhoto(index, 'down')}
-                  className="rounded-lg p-1 text-text-light transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-30"
-                  aria-label="Mover foto para baixo"
-                >
-                  <ArrowDown size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRemovePhoto(index)}
-                  className="rounded-lg p-1 text-red-500 transition-colors hover:bg-red-50"
-                  aria-label="Remover foto polaroid"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
+    <div className="w-full">
+      {/* Top Header bar in Edit Mode */}
+      {isEditMode && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-white/85 p-3.5 shadow-sm backdrop-blur-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Camera size={18} />
             </div>
-
-            <MediaField
-              kind="image"
-              label="Foto"
-              value={{ src: photo.src }}
-              onChange={(val) => handleUpdatePhoto(index, 'src', val.src)}
-              onRemove={() => handleUpdatePhoto(index, 'src', '')}
-              helperText="Insira uma foto para a moldura Polaroid."
-            />
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <EditorInputSection
-                title="Legenda Manuscrita"
-                helperText="Texto exibido na base da foto."
-              >
-                <input
-                  type="text"
-                  value={photo.caption ?? ''}
-                  onChange={(e) => handleUpdatePhoto(index, 'caption', e.target.value)}
-                  placeholder="Ex: Aquele dia mágico em Paris 💕"
-                  className={EDITOR_FIELD_BASE_CLASS}
-                  aria-label="Legenda da foto polaroid"
-                />
-              </EditorInputSection>
-
-              <EditorInputSection
-                title={`Inclinação da Foto (${photo.rotation ?? 0}°)`}
-                helperText="Ajuste o ângulo artesanal da Polaroid."
-              >
-                <div className="flex items-center gap-3 pt-2">
-                  <span className="text-xs text-text-light">-8°</span>
-                  <input
-                    type="range"
-                    min={-8}
-                    max={8}
-                    step={0.5}
-                    value={photo.rotation ?? 0}
-                    onChange={(e) =>
-                      handleUpdatePhoto(index, 'rotation', parseFloat(e.target.value))
-                    }
-                    className="h-2 w-full cursor-pointer accent-primary"
-                    aria-label="Inclinação da foto polaroid"
-                  />
-                  <span className="text-xs text-text-light">+8°</span>
-                </div>
-              </EditorInputSection>
+            <div>
+              <h3 className="text-sm font-bold text-text flex items-center gap-1.5">
+                Fotos Polaroid com Washi Tape
+                <Sparkles size={13} className="text-primary" />
+              </h3>
+              <p className="text-xs text-text-light">
+                Clique na foto para girar, redimensionar ou digitar a legenda direto no papel.
+              </p>
             </div>
           </div>
-        ))}
-      </div>
+
+          <button
+            type="button"
+            onClick={handleAddPhoto}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Plus size={14} /> Nova Polaroid
+          </button>
+        </div>
+      )}
+
+      {/* Collage Area */}
+      {photos.length === 0 ? (
+        <div
+          onClick={isEditMode ? handleAddPhoto : undefined}
+          className={`flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
+            isEditMode
+              ? 'cursor-pointer border-primary/30 bg-white/60 hover:border-primary/50 hover:bg-primary/5'
+              : 'border-primary/20 bg-white/40'
+          }`}
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Camera size={26} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-text">Nenhuma foto Polaroid adicionada</p>
+            <p className="text-xs text-text-light">
+              {isEditMode
+                ? 'Clique aqui para adicionar sua primeira lembrança instantânea.'
+                : 'Esta seção de memórias está vazia no momento.'}
+            </p>
+          </div>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleAddPhoto}
+              className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-primary-dark"
+            >
+              <Plus size={14} /> Adicionar Polaroid
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-center gap-8 px-2 py-6 sm:gap-10 overflow-visible">
+          {photos.map((photo, index) => (
+            <PolaroidCard
+              key={photo.id || index}
+              photo={photo}
+              index={index}
+              isSelected={selectedPhotoId === photo.id}
+              isEditMode={isEditMode}
+              onSelect={() => setSelectedPhotoId(photo.id)}
+              onDeselect={() => {
+                if (selectedPhotoId === photo.id) {
+                  setSelectedPhotoId(null)
+                }
+              }}
+              onUpdateCaption={(caption) => handleUpdatePhotoField(photo.id, 'caption', caption)}
+              onUpdateRotation={(rotation) => handleUpdatePhotoField(photo.id, 'rotation', rotation)}
+              onUpdateWidth={(width) => handleUpdatePhotoField(photo.id, 'width', width)}
+              onUpdateSrc={(src) => handleUpdatePhotoField(photo.id, 'src', src)}
+              onRemove={() => handleRemovePhoto(photo.id)}
+              onDuplicate={() => handleDuplicatePhoto(photo.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

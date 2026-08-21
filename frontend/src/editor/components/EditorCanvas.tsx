@@ -606,7 +606,7 @@ export function EditorCanvas() {
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Sparkles size={20} />
         </div>
-        <h2 className="font-display text-2xl text-text">Comece criando seu primeiro bloco ✨</h2>
+        <h2 className="font-display text-2xl text-text">Comece criando seu primeiro bloco</h2>
         <p className="mt-2 text-sm text-text-light">Use o botao + para adicionar texto ou imagem e monte sua carta com calma.</p>
       </div>
     )
