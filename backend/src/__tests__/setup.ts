@@ -14,10 +14,12 @@ vi.mock('../utils/prisma', () => ({
     prisma: {
         user: {
             findUnique: vi.fn(),
+            findFirst: vi.fn(),
             create: vi.fn(),
             update: vi.fn(),
             delete: vi.fn(),
         },
+
         userConsent: {
             findMany: vi.fn(),
         },

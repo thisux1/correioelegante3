@@ -29,6 +29,10 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Senha é obrigatória'),
 })
 
+const forgotSchema = z.object({
+  email: z.string().email('Digite um e-mail válido'),
+})
+
 const registerSchema = z.object({
   email: z.string().email('Digite um e-mail válido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
@@ -45,7 +49,9 @@ const registerSchema = z.object({
 })
 
 type LoginForm = z.infer<typeof loginSchema>
+type ForgotForm = z.infer<typeof forgotSchema>
 type RegisterForm = z.infer<typeof registerSchema>
+
 
 interface ApiErrorResponse {
   error?: string
@@ -122,8 +128,9 @@ function getPasswordStrength(password: string): {
 export function Auth() {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
-  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode)
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : (searchParams.get('mode') === 'forgot' ? 'forgot' : 'login')
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>(initialMode)
+  const [forgotSent, setForgotSent] = useState(false)
   
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -134,14 +141,15 @@ export function Auth() {
 
   useEffect(() => {
     const urlMode = searchParams.get('mode')
-    if (urlMode === 'register' || urlMode === 'login') {
+    if (urlMode === 'register' || urlMode === 'login' || urlMode === 'forgot') {
       setMode(urlMode)
     }
   }, [searchParams])
 
-  const handleTabChange = (newMode: 'login' | 'register') => {
+  const handleTabChange = (newMode: 'login' | 'register' | 'forgot') => {
     setMode(newMode)
     setError('')
+    setForgotSent(false)
     setSearchParams({ mode: newMode }, { replace: true })
   }
 
@@ -150,6 +158,13 @@ export function Auth() {
     defaultValues: {
       email: '',
       password: '',
+    },
+  })
+
+  const forgotForm = useForm<ForgotForm>({
+    resolver: zodResolver(forgotSchema),
+    defaultValues: {
+      email: '',
     },
   })
 
@@ -210,6 +225,21 @@ export function Auth() {
     }
   }
 
+  async function handleForgot(data: ForgotForm) {
+    setIsSubmitting(true)
+    setError('')
+    forgotForm.clearErrors()
+    try {
+      await authService.forgotPassword(data.email)
+      setForgotSent(true)
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Erro ao solicitar recuperação de senha. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+
   async function handleRegister(data: RegisterForm) {
     setIsSubmitting(true)
     setError('')
@@ -256,51 +286,59 @@ export function Auth() {
                   <Heart className="w-5 h-5 fill-primary/20" />
                 </div>
                 <h1 className="font-display text-2xl sm:text-3xl font-bold text-text tracking-tight">
-                  {mode === 'login' ? 'Bem-vindo de volta' : 'Criar sua conta'}
+                  {mode === 'login'
+                    ? 'Bem-vindo de volta'
+                    : mode === 'register'
+                    ? 'Criar sua conta'
+                    : 'Recuperar Senha'}
                 </h1>
                 <p className="text-text-light text-xs sm:text-sm mt-1.5">
                   {mode === 'login'
                     ? 'Entre para gerenciar e enviar seus correios elegantes'
-                    : 'Preencha os dados abaixo para começar'}
+                    : mode === 'register'
+                    ? 'Preencha os dados abaixo para começar'
+                    : 'Digite seu e-mail para receber as instruções de recuperação'}
                 </p>
               </div>
 
               {/* Mode switch tabs */}
-              <div className="relative flex p-1 bg-gray-100/80 rounded-2xl mb-6 border border-gray-200/40">
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('login')}
-                  className={`relative flex-1 py-2 text-sm font-medium rounded-xl transition-all duration-200 z-10 ${
-                    mode === 'login' ? 'text-primary font-semibold' : 'text-text-light hover:text-text'
-                  }`}
-                >
-                  {mode === 'login' && (
-                    <motion.div
-                      layoutId="authTabPill"
-                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                      className="absolute inset-0 bg-white rounded-xl shadow-xs border border-black/5"
-                    />
-                  )}
-                  <span className="relative z-10">Entrar</span>
-                </button>
+              {mode !== 'forgot' && (
+                <div className="relative flex p-1 bg-gray-100/80 rounded-2xl mb-6 border border-gray-200/40">
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('login')}
+                    className={`relative flex-1 py-2 text-sm font-medium rounded-xl transition-all duration-200 z-10 ${
+                      mode === 'login' ? 'text-primary font-semibold' : 'text-text-light hover:text-text'
+                    }`}
+                  >
+                    {mode === 'login' && (
+                      <motion.div
+                        layoutId="authTabPill"
+                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                        className="absolute inset-0 bg-white rounded-xl shadow-xs border border-black/5"
+                      />
+                    )}
+                    <span className="relative z-10">Entrar</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('register')}
-                  className={`relative flex-1 py-2 text-sm font-medium rounded-xl transition-all duration-200 z-10 ${
-                    mode === 'register' ? 'text-primary font-semibold' : 'text-text-light hover:text-text'
-                  }`}
-                >
-                  {mode === 'register' && (
-                    <motion.div
-                      layoutId="authTabPill"
-                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                      className="absolute inset-0 bg-white rounded-xl shadow-xs border border-black/5"
-                    />
-                  )}
-                  <span className="relative z-10">Criar Conta</span>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('register')}
+                    className={`relative flex-1 py-2 text-sm font-medium rounded-xl transition-all duration-200 z-10 ${
+                      mode === 'register' ? 'text-primary font-semibold' : 'text-text-light hover:text-text'
+                    }`}
+                  >
+                    {mode === 'register' && (
+                      <motion.div
+                        layoutId="authTabPill"
+                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                        className="absolute inset-0 bg-white rounded-xl shadow-xs border border-black/5"
+                      />
+                    )}
+                    <span className="relative z-10">Criar Conta</span>
+                  </button>
+                </div>
+              )}
 
               {error && (
                 <motion.div
@@ -314,7 +352,71 @@ export function Auth() {
               )}
 
               <AnimatePresence mode="wait">
-                {mode === 'login' ? (
+                {mode === 'forgot' ? (
+                  <motion.form
+                    key="forgot-form"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    onSubmit={forgotForm.handleSubmit(handleForgot)}
+                    className="flex flex-col gap-4"
+                    noValidate
+                  >
+                    {forgotSent ? (
+                      <div className="text-center py-4 space-y-3">
+                        <div className="w-14 h-14 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto text-emerald-600 shadow-md shadow-emerald-500/15">
+                          <Check size={28} />
+                        </div>
+                        <h3 className="text-lg font-bold text-text">E-mail Enviado! 💌</h3>
+                        <p className="text-xs text-text-light leading-relaxed">
+                          Se o e-mail informado estiver cadastrado, você receberá as instruções para redefinir sua senha em instantes. Verifique sua caixa de entrada e pasta de spam.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleTabChange('login')}
+                          className="mt-3 w-full font-medium"
+                        >
+                          Voltar para o Login
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Input
+                          label="E-mail Cadastrado"
+                          type="email"
+                          id="forgot-email"
+                          autoComplete="email"
+                          placeholder="seu@email.com"
+                          leftIcon={<Mail className="w-4 h-4" />}
+                          error={forgotForm.formState.errors.email?.message}
+                          {...forgotForm.register('email')}
+                        />
+
+                        <Button
+                          type="submit"
+                          isLoading={isSubmitting}
+                          size="lg"
+                          className="mt-2 w-full text-base font-semibold"
+                        >
+                          <span>Enviar Link de Recuperação</span>
+                          <ArrowRight size={18} />
+                        </Button>
+
+                        <div className="text-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => handleTabChange('login')}
+                            className="text-xs text-primary font-semibold hover:underline"
+                          >
+                            Voltar para o Login
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </motion.form>
+                ) : mode === 'login' ? (
                   <motion.form
                     key="login-form"
                     initial={{ opacity: 0, y: 6 }}
@@ -336,26 +438,41 @@ export function Auth() {
                       {...loginForm.register('email')}
                     />
 
-                    <Input
-                      label="Senha"
-                      type={showPassword ? 'text' : 'password'}
-                      id="login-password"
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      leftIcon={<Lock className="w-4 h-4" />}
-                      rightElement={
+                    <div>
+                      <Input
+                        label="Senha"
+                        type={showPassword ? 'text' : 'password'}
+                        id="login-password"
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        leftIcon={<Lock className="w-4 h-4" />}
+                        rightElement={
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="p-1 text-text-muted hover:text-text focus:outline-hidden transition-colors"
+                            aria-label={showPassword ? 'Ocultar senha' : 'Ver senha'}
+                          >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        }
+                        error={loginForm.formState.errors.password?.message}
+                        {...loginForm.register('password')}
+                      />
+                      <div className="flex justify-end mt-1.5">
                         <button
                           type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="p-1 text-text-muted hover:text-text focus:outline-hidden transition-colors"
-                          aria-label={showPassword ? 'Ocultar senha' : 'Ver senha'}
+                          onClick={() => {
+                            setMode('forgot')
+                            setError('')
+                            setForgotSent(false)
+                          }}
+                          className="text-xs text-text-light hover:text-primary transition-colors focus:outline-hidden"
                         >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          Esqueci minha senha
                         </button>
-                      }
-                      error={loginForm.formState.errors.password?.message}
-                      {...loginForm.register('password')}
-                    />
+                      </div>
+                    </div>
 
                     <Button
                       type="submit"
@@ -381,6 +498,7 @@ export function Auth() {
                     </div>
                   </motion.form>
                 ) : (
+
                   <motion.form
                     key="register-form"
                     initial={{ opacity: 0, y: 6 }}

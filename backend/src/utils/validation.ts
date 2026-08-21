@@ -44,6 +44,16 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('E-mail inválido'),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token de recuperação é obrigatório'),
+  password: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
+});
+
+
 const customerSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email().optional(),

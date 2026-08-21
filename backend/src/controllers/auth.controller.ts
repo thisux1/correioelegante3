@@ -63,3 +63,18 @@ export async function exportAccountData(req: AuthRequest, res: Response): Promis
   const data = await authService.exportUserData(req.userId!);
   res.json(data);
 }
+
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  const { email } = req.body;
+  const origin = req.headers.origin as string | undefined || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
+  const result = await authService.requestPasswordReset(email, origin);
+  res.json(result);
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const { token, password } = req.body;
+  const { user, accessToken, refreshToken } = await authService.resetPassword(token, password);
+  setCookieRefreshToken(res, refreshToken);
+  res.json({ user, accessToken, message: 'Senha redefinida com sucesso!' });
+}
+

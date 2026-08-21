@@ -1,9 +1,26 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
-import { register, login, refresh, logout, me, changePassword, deleteAccount, exportAccountData } from '../controllers/auth.controller';
+import {
+  register,
+  login,
+  refresh,
+  logout,
+  me,
+  changePassword,
+  deleteAccount,
+  exportAccountData,
+  forgotPassword,
+  resetPassword,
+} from '../controllers/auth.controller';
 import { validate } from '../middlewares/validate';
 import { authenticate } from '../middlewares/auth';
-import { registerSchema, loginSchema, changePasswordSchema } from '../utils/validation';
+import {
+  registerSchema,
+  loginSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from '../utils/validation';
 
 const router = Router();
 
@@ -25,8 +42,28 @@ const registerLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Muitas solicitações de recuperação de senha. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Muitas tentativas de redefinição de senha. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
 router.post('/register', registerLimiter, validate(registerSchema), register);
 router.post('/login', loginLimiter, validate(loginSchema), login);
+router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post('/reset-password', resetPasswordLimiter, validate(resetPasswordSchema), resetPassword);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', authenticate, me);
@@ -35,3 +72,4 @@ router.put('/password', authenticate, validate(changePasswordSchema), changePass
 router.delete('/account', authenticate, deleteAccount);
 
 export { router as authRouter };
+
