@@ -62,15 +62,16 @@ export function PaymentSuccess() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="w-10 h-10 text-emerald-600" />
+            <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-5 text-emerald-600">
+              <Check className="w-8 h-8" />
             </div>
             <h2 className="font-display text-3xl font-bold text-text mb-3">
-              Pagamento Confirmado! 🎉
+              Pagamento Confirmado
             </h2>
             <p className="text-text-light mb-8">
               Seu correio elegante está pronto para ser compartilhado.
             </p>
+
             {confirmed ? (
               <div className="flex flex-col gap-3">
                 <Link to={cardHref}>

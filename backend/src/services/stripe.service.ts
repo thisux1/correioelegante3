@@ -97,33 +97,40 @@ async function markResourcePaymentPaid(target: PaymentTarget) {
     });
 }
 
-function resolveSuccessUrl(resourceType: PaymentResourceType, resourceId: string) {
-    if (resourceType === 'page') {
-        const template = process.env.STRIPE_CHECKOUT_SUCCESS_URL_PAGE
-            ?? 'http://localhost:5173/payment/page/{pageId}/success';
-        return template.replace('{pageId}', resourceId).replace('{resourceId}', resourceId);
+function getBaseFrontendUrl(): string {
+    const raw = (process.env.FRONTEND_URL || '').trim();
+    if (!raw || (raw.includes('localhost') && process.env.NODE_ENV === 'production')) {
+        return 'https://www.correioelegante.studio';
     }
+    return raw.replace(/\/+$/, '');
+}
 
-    const template = process.env.STRIPE_CHECKOUT_SUCCESS_URL
-        ?? 'http://localhost:5173/payment/{messageId}/success';
-    return template
-        .replace('{messageId}', resourceId)
-        .replace('{resourceId}', resourceId);
+function resolveSuccessUrl(resourceType: PaymentResourceType, resourceId: string) {
+    if (process.env.STRIPE_CHECKOUT_SUCCESS_URL_PAGE && resourceType === 'page') {
+        return process.env.STRIPE_CHECKOUT_SUCCESS_URL_PAGE.replace('{pageId}', resourceId).replace('{resourceId}', resourceId);
+    }
+    if (process.env.STRIPE_CHECKOUT_SUCCESS_URL && resourceType === 'message') {
+        return process.env.STRIPE_CHECKOUT_SUCCESS_URL.replace('{messageId}', resourceId).replace('{resourceId}', resourceId);
+    }
+    const base = getBaseFrontendUrl();
+    return resourceType === 'page'
+        ? `${base}/payment/page/${resourceId}/success`
+        : `${base}/payment/${resourceId}/success`;
 }
 
 function resolveCancelUrl(resourceType: PaymentResourceType, resourceId: string) {
-    if (resourceType === 'page') {
-        const template = process.env.STRIPE_CHECKOUT_CANCEL_URL_PAGE
-            ?? 'http://localhost:5173/payment/page/{pageId}';
-        return template.replace('{pageId}', resourceId).replace('{resourceId}', resourceId);
+    if (process.env.STRIPE_CHECKOUT_CANCEL_URL_PAGE && resourceType === 'page') {
+        return process.env.STRIPE_CHECKOUT_CANCEL_URL_PAGE.replace('{pageId}', resourceId).replace('{resourceId}', resourceId);
     }
-
-    const template = process.env.STRIPE_CHECKOUT_CANCEL_URL
-        ?? 'http://localhost:5173/payment/{messageId}';
-    return template
-        .replace('{messageId}', resourceId)
-        .replace('{resourceId}', resourceId);
+    if (process.env.STRIPE_CHECKOUT_CANCEL_URL && resourceType === 'message') {
+        return process.env.STRIPE_CHECKOUT_CANCEL_URL.replace('{messageId}', resourceId).replace('{resourceId}', resourceId);
+    }
+    const base = getBaseFrontendUrl();
+    return resourceType === 'page'
+        ? `${base}/payment/page/${resourceId}`
+        : `${base}/payment/${resourceId}`;
 }
+
 
 function resolveProductDescription(params: {
     resourceType: PaymentResourceType;

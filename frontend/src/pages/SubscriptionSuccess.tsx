@@ -58,8 +58,9 @@ export function SubscriptionSuccess() {
               </div>
 
               <h1 className="font-display text-3xl font-bold text-text sm:text-4xl">
-                Parabéns! Você é <span className="text-gradient">PRO</span> 🎉
+                Parabéns! Você é <span className="text-gradient">PRO</span>
               </h1>
+
 
               <p className="mx-auto mt-3 max-w-md text-sm text-text-light sm:text-base">
                 Seu acesso ilimitado de <strong>{daysRemaining} dias</strong> está ativo. Agora você pode criar e publicar quantas cartas e páginas personalizadas desejar sem custos adicionais.

@@ -66,9 +66,22 @@ api.interceptors.response.use(
         }
 
         const accessToken = await refreshPromise
-        const { user } = useAuthStore.getState()
-        if (user) {
-          useAuthStore.getState().setAuth(user, accessToken)
+        let currentUser = useAuthStore.getState().user
+        if (!currentUser) {
+          try {
+            const { data: meData } = await axios.get('/api/auth/me', {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              withCredentials: true,
+            })
+            currentUser = meData.user || meData
+          } catch {
+            // ignore
+          }
+        }
+        if (currentUser) {
+          useAuthStore.getState().setAuth(currentUser, accessToken)
+        } else {
+          useAuthStore.setState({ accessToken, isAuthenticated: true, isLoading: false })
         }
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return api(originalRequest)

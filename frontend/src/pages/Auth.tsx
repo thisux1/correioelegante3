@@ -365,10 +365,10 @@ export function Auth() {
                   >
                     {forgotSent ? (
                       <div className="text-center py-4 space-y-3">
-                        <div className="w-14 h-14 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto text-emerald-600 shadow-md shadow-emerald-500/15">
-                          <Check size={28} />
+                        <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto text-emerald-600 shadow-xs">
+                          <Check className="w-7 h-7" />
                         </div>
-                        <h3 className="text-lg font-bold text-text">E-mail Enviado! 💌</h3>
+                        <h3 className="text-lg font-bold text-text">E-mail Enviado</h3>
                         <p className="text-xs text-text-light leading-relaxed">
                           Se o e-mail informado estiver cadastrado, você receberá as instruções para redefinir sua senha em instantes. Verifique sua caixa de entrada e pasta de spam.
                         </p>
@@ -378,6 +378,7 @@ export function Auth() {
                           onClick={() => handleTabChange('login')}
                           className="mt-3 w-full font-medium"
                         >
+
                           Voltar para o Login
                         </Button>
                       </div>

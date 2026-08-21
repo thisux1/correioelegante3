@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
-import { Lock, Eye, EyeOff, Check, ArrowRight, AlertCircle, Sparkles, Heart } from 'lucide-react'
+import { Lock, Eye, EyeOff, Check, ArrowRight, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
@@ -36,10 +36,10 @@ function getPasswordStrength(password: string): {
   if (/[A-Z]/.test(password) || /[0-9]/.test(password)) score++
   if (/[^A-Za-z0-9]/.test(password)) score++
 
-  if (score === 1) return { score: 1, label: 'Fraca', color: 'bg-rose-400' }
-  if (score === 2) return { score: 2, label: 'Razoável', color: 'bg-amber-400' }
-  if (score === 3) return { score: 3, label: 'Boa', color: 'bg-emerald-400' }
-  return { score: 4, label: 'Forte', color: 'bg-emerald-500' }
+  if (score === 1) return { score: 1, label: 'Fraca', color: 'bg-rose-500' }
+  if (score === 2) return { score: 2, label: 'Razoável', color: 'bg-amber-500' }
+  if (score === 3) return { score: 3, label: 'Boa', color: 'bg-emerald-500' }
+  return { score: 4, label: 'Forte', color: 'bg-emerald-600' }
 }
 
 export function ResetPassword() {
@@ -84,16 +84,14 @@ export function ResetPassword() {
       })
 
       setIsSuccess(true)
-      setAuth(response.data.user, response.data.accessToken)
-
-      setTimeout(() => {
-        navigate('/create', { replace: true })
-      }, 2500)
+      if (response.data?.user && response.data?.accessToken) {
+        setAuth(response.data.user, response.data.accessToken)
+      }
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { error?: string } } }
       setError(
         axiosErr.response?.data?.error ||
-          'Link de recuperação inválido ou expirado. Por favor, solicite uma nova redefinição.'
+          'Link de recuperação inválido ou expirado. Solicite uma nova redefinição de senha.'
       )
     } finally {
       setIsSubmitting(false)
@@ -105,8 +103,8 @@ export function ResetPassword() {
       <div className="min-h-[85vh] flex items-center justify-center py-12 px-4">
         <Container size="narrow">
           <Card glass className="p-8 text-center max-w-md mx-auto border border-rose-200">
-            <div className="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-600">
-              <AlertCircle size={28} />
+            <div className="w-14 h-14 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-600">
+              <AlertCircle className="w-7 h-7" />
             </div>
             <h1 className="font-display text-2xl font-bold text-text mb-2">Link Inválido</h1>
             <p className="text-sm text-text-light mb-6">
@@ -130,33 +128,44 @@ export function ResetPassword() {
           transition={{ duration: 0.35 }}
           className="max-w-md mx-auto"
         >
-          <Card glass className="p-8 shadow-xl border border-primary/20 bg-white/95">
+          <Card glass className="p-8 shadow-xl border border-border/80 bg-white/95 rounded-3xl">
             {isSuccess ? (
               <div className="text-center py-6">
-                <div className="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-lg shadow-emerald-500/20">
-                  <Check size={32} />
+                <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                  <Check className="w-8 h-8" />
                 </div>
-                <h2 className="font-display text-2xl font-bold text-text mb-2">Senha Atualizada! 🎉</h2>
+                <h2 className="font-display text-2xl font-bold text-text mb-2">Senha Atualizada</h2>
                 <p className="text-sm text-text-light mb-6">
-                  Sua nova senha foi salva com segurança. Estamos redirecionando você para sua conta...
+                  Sua nova senha foi salva com segurança. Você já pode continuar navegando na plataforma.
                 </p>
-                <Link to="/create">
-                  <Button size="lg" className="w-full">
+                <div className="flex flex-col gap-2.5">
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={() => navigate('/create', { replace: true })}
+                  >
                     <span>Continuar</span>
-                    <ArrowRight size={18} />
+                    <ArrowRight className="w-4 h-4 ml-1.5" />
                   </Button>
-                </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-text-light"
+                    onClick={() => navigate('/profile', { replace: true })}
+                  >
+                    Ir para o meu perfil
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-2">
-                    <Sparkles size={13} />
-                    Correio Elegante
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mx-auto mb-3">
+                    <Lock className="w-6 h-6" />
                   </div>
-                  <h1 className="font-display text-2xl font-bold text-text">Criar Nova Senha</h1>
+                  <h1 className="font-display text-2xl font-bold text-text">Redefinir Senha</h1>
                   <p className="text-xs text-text-light mt-1">
-                    Escolha uma nova senha forte para proteger sua conta.
+                    Digite a sua nova senha de acesso abaixo.
                   </p>
                 </div>
 
@@ -166,7 +175,7 @@ export function ResetPassword() {
                     animate={{ opacity: 1, y: 0 }}
                     className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs mb-5 flex items-start gap-2"
                   >
-                    <AlertCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
+                    <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                     <span className="leading-snug flex-1">{error}</span>
                   </motion.div>
                 )}
@@ -185,8 +194,9 @@ export function ResetPassword() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="p-1 text-text-muted hover:text-text focus:outline-hidden"
+                          aria-label={showPassword ? 'Ocultar senha' : 'Ver senha'}
                         >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       }
                       error={form.formState.errors.password?.message}
@@ -209,7 +219,7 @@ export function ResetPassword() {
                           <span>Força: {strength.label}</span>
                           {strength.score >= 3 && (
                             <span className="text-emerald-600 flex items-center gap-0.5">
-                              <Check size={10} /> Senha segura
+                              <Check className="w-3 h-3" /> Senha segura
                             </span>
                           )}
                         </div>
@@ -230,8 +240,9 @@ export function ResetPassword() {
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="p-1 text-text-muted hover:text-text focus:outline-hidden"
+                          aria-label={showConfirmPassword ? 'Ocultar senha' : 'Ver senha'}
                         >
-                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       }
                       error={form.formState.errors.confirmPassword?.message}
@@ -242,11 +253,11 @@ export function ResetPassword() {
                       <div className="mt-1 flex items-center gap-1 text-[11px]">
                         {passwordsMatch ? (
                           <span className="text-emerald-600 flex items-center gap-1 font-medium">
-                            <Check size={12} /> As senhas conferem
+                            <Check className="w-3.5 h-3.5" /> As senhas conferem
                           </span>
                         ) : (
                           <span className="text-rose-600 flex items-center gap-1 font-medium">
-                            <AlertCircle size={12} /> As senhas não coincidem
+                            <AlertCircle className="w-3.5 h-3.5" /> As senhas não coincidem
                           </span>
                         )}
                       </div>
@@ -259,8 +270,8 @@ export function ResetPassword() {
                     size="lg"
                     className="mt-2 w-full font-semibold"
                   >
-                    <span>Redefinir e Entrar</span>
-                    <Heart size={16} />
+                    <span>Salvar Nova Senha</span>
+                    <ArrowRight className="w-4 h-4 ml-1.5" />
                   </Button>
 
                   <div className="text-center pt-2">
