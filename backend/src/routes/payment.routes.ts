@@ -15,6 +15,7 @@ import {
 } from '../controllers/payment.controller';
 import { authenticate } from '../middlewares/auth';
 import { validate, validateObjectId } from '../middlewares/validate';
+import { validateTurnstile } from '../middlewares/turnstile.middleware';
 import { createPaymentSchema, createRefundRequestSchema, createSubscriptionPaymentSchema } from '../utils/validation';
 
 const router = Router();
@@ -29,10 +30,11 @@ router.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripe
 router.post('/webhook/mercadopago', express.json(), mercadopagoWebhookHandler);
 
 
-router.post('/create', authenticate, validate(createPaymentSchema), createPayment);
+router.post('/create', authenticate, validateTurnstile, validate(createPaymentSchema), createPayment);
 router.post('/refund', authenticate, validate(createRefundRequestSchema), requestRefund);
 router.post('/simulate-approval', authenticate, simulatePaymentApproval);
-router.post('/subscription/checkout', authenticate, validate(createSubscriptionPaymentSchema), createSubscriptionPayment);
+router.post('/subscription/checkout', authenticate, validateTurnstile, validate(createSubscriptionPaymentSchema), createSubscriptionPayment);
+
 router.get('/subscription/status', authenticate, getSubscriptionStatus);
 router.post('/simulate-subscription', authenticate, simulateSubscriptionApproval);
 router.get('/status/:messageId', authenticate, validateObjectId('messageId'), getPaymentStatus);

@@ -38,21 +38,22 @@ export interface PaymentStatusResponse {
 }
 
 
-function buildCreatePayload(target: PaymentTarget, paymentMethod: PaymentMethod) {
-  if (target.resourceType === 'message') {
-    return {
-      paymentMethod,
-      resourceType: target.resourceType,
-      resourceId: target.resourceId,
-      messageId: target.resourceId,
-    }
-  }
-
-  return {
+function buildCreatePayload(target: PaymentTarget, paymentMethod: PaymentMethod, turnstileToken?: string) {
+  const base: Record<string, unknown> = {
     paymentMethod,
     resourceType: target.resourceType,
     resourceId: target.resourceId,
   }
+
+  if (turnstileToken) {
+    base.turnstileToken = turnstileToken
+  }
+
+  if (target.resourceType === 'message') {
+    base.messageId = target.resourceId
+  }
+
+  return base
 }
 
 export interface SubscriptionStatusResponse {
@@ -72,26 +73,44 @@ export interface SubscriptionStatusResponse {
 }
 
 export const paymentService = {
-  createPix(target: PaymentTarget) {
-    return api.post<PixPaymentResponse>('/payments/create', buildCreatePayload(target, 'pix'))
+  createPix(target: PaymentTarget, turnstileToken?: string) {
+    const payload = buildCreatePayload(target, 'pix', turnstileToken)
+    return turnstileToken
+      ? api.post<PixPaymentResponse>('/payments/create', payload, { headers: { 'cf-turnstile-response': turnstileToken } })
+      : api.post<PixPaymentResponse>('/payments/create', payload)
   },
 
-  createCard(target: PaymentTarget) {
-    return api.post<CardPaymentResponse>('/payments/create', buildCreatePayload(target, 'credit_card'))
+  createCard(target: PaymentTarget, turnstileToken?: string) {
+    const payload = buildCreatePayload(target, 'credit_card', turnstileToken)
+    return turnstileToken
+      ? api.post<CardPaymentResponse>('/payments/create', payload, { headers: { 'cf-turnstile-response': turnstileToken } })
+      : api.post<CardPaymentResponse>('/payments/create', payload)
   },
 
-  createMercadoPagoCheckout(target: PaymentTarget) {
-    return api.post<{
-      paymentId: string
-      status: string
-      checkoutUrl: string | null
-      preferenceId: string | null
-    }>('/payments/create', {
+  createMercadoPagoCheckout(target: PaymentTarget, turnstileToken?: string) {
+    const payload: Record<string, unknown> = {
       paymentMethod: 'mercadopago_checkout',
       resourceType: target.resourceType,
       resourceId: target.resourceId,
       messageId: target.resourceType === 'message' ? target.resourceId : undefined,
-    })
+    }
+    if (turnstileToken) {
+      payload.turnstileToken = turnstileToken
+    }
+
+    return turnstileToken
+      ? api.post<{
+          paymentId: string
+          status: string
+          checkoutUrl: string | null
+          preferenceId: string | null
+        }>('/payments/create', payload, { headers: { 'cf-turnstile-response': turnstileToken } })
+      : api.post<{
+          paymentId: string
+          status: string
+          checkoutUrl: string | null
+          preferenceId: string | null
+        }>('/payments/create', payload)
   },
 
   getStatus(target: PaymentTarget) {
@@ -105,33 +124,77 @@ export const paymentService = {
     })
   },
 
-  createSubscriptionPix() {
-    return api.post<PixPaymentResponse & { amount: number; planId: string }>('/payments/subscription/checkout', {
+  createSubscriptionPix(turnstileToken?: string) {
+    const payload: Record<string, unknown> = {
       paymentMethod: 'pix',
       planId: 'monthly_unlimited',
-    })
+    }
+    if (turnstileToken) {
+      payload.turnstileToken = turnstileToken
+    }
+
+    return turnstileToken
+      ? api.post<PixPaymentResponse & { amount: number; planId: string }>(
+          '/payments/subscription/checkout',
+          payload,
+          { headers: { 'cf-turnstile-response': turnstileToken } }
+        )
+      : api.post<PixPaymentResponse & { amount: number; planId: string }>(
+          '/payments/subscription/checkout',
+          payload
+        )
   },
 
-  createSubscriptionCard() {
-    return api.post<{ sessionId: string; checkoutUrl: string | null; amount: number; planId: string }>('/payments/subscription/checkout', {
+  createSubscriptionCard(turnstileToken?: string) {
+    const payload: Record<string, unknown> = {
       paymentMethod: 'credit_card',
       planId: 'monthly_unlimited',
-    })
+    }
+    if (turnstileToken) {
+      payload.turnstileToken = turnstileToken
+    }
+
+    return turnstileToken
+      ? api.post<{ sessionId: string; checkoutUrl: string | null; amount: number; planId: string }>(
+          '/payments/subscription/checkout',
+          payload,
+          { headers: { 'cf-turnstile-response': turnstileToken } }
+        )
+      : api.post<{ sessionId: string; checkoutUrl: string | null; amount: number; planId: string }>(
+          '/payments/subscription/checkout',
+          payload
+        )
   },
 
-  createSubscriptionMercadoPagoCheckout() {
-    return api.post<{
-      paymentId: string
-      status: string
-      checkoutUrl: string | null
-      preferenceId: string | null
-      amount: number
-      planId: string
-    }>('/payments/subscription/checkout', {
+  createSubscriptionMercadoPagoCheckout(turnstileToken?: string) {
+    const payload: Record<string, unknown> = {
       paymentMethod: 'mercadopago_checkout',
       planId: 'monthly_unlimited',
-    })
+    }
+    if (turnstileToken) {
+      payload.turnstileToken = turnstileToken
+    }
+
+    return turnstileToken
+      ? api.post<{
+          paymentId: string
+          status: string
+          checkoutUrl: string | null
+          preferenceId: string | null
+          amount: number
+          planId: string
+        }>('/payments/subscription/checkout', payload, { headers: { 'cf-turnstile-response': turnstileToken } })
+      : api.post<{
+          paymentId: string
+          status: string
+          checkoutUrl: string | null
+          preferenceId: string | null
+          amount: number
+          planId: string
+        }>('/payments/subscription/checkout', payload)
   },
+
+
 
   getSubscriptionStatus() {
     return api.get<SubscriptionStatusResponse>('/payments/subscription/status')
