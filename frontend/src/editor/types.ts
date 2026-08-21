@@ -25,9 +25,22 @@ export interface BlockMeta {
   updatedAt: number
 }
 
+export type TextBlockCategory = 'title' | 'body' | 'quote' | 'signature'
+export type TextBlockAlign = 'left' | 'center' | 'right' | 'justify'
+
 export interface TextBlockProps {
   text: string
-  align?: 'left' | 'center' | 'right'
+  category?: TextBlockCategory
+  html?: string
+  fontFamily?: string
+  fontSize?: string
+  color?: string
+  align?: TextBlockAlign
+  letterSpacing?: string
+  lineHeight?: string
+  bold?: boolean
+  italic?: boolean
+  underline?: boolean
 }
 
 export interface ImageBlockProps {
@@ -118,6 +131,7 @@ export interface PolaroidPhoto {
   src: string
   caption?: string
   rotation?: number
+  width?: number
 }
 
 export interface PolaroidBlockProps {

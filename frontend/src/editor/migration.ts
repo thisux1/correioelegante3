@@ -4,8 +4,11 @@ import {
   type Block,
   type BlockType,
   type PageContent,
+  type TextBlockAlign,
+  type TextBlockCategory,
 } from '@/editor/types'
 import { resolveThemeId } from '@/editor/themes'
+import { sanitizeHtml } from '@/editor/utils/htmlSanitizer'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -28,6 +31,20 @@ function asOptionalText(value: unknown): string | undefined {
 
   const normalized = value.trim()
   return normalized.length > 0 ? normalized : undefined
+}
+
+function asTextCategory(value: unknown): TextBlockCategory | undefined {
+  if (value === 'title' || value === 'body' || value === 'quote' || value === 'signature') {
+    return value
+  }
+  return undefined
+}
+
+function asTextAlign(value: unknown): TextBlockAlign {
+  if (value === 'center' || value === 'right' || value === 'justify') {
+    return value
+  }
+  return 'left'
 }
 
 function asGalleryItems(value: unknown): Array<{ src: string; assetId?: string }> {
@@ -165,6 +182,7 @@ function asPolaroidPhotos(value: unknown): Array<{
   src: string
   caption?: string
   rotation?: number
+  width?: number
 }> {
   if (!Array.isArray(value)) {
     return []
@@ -175,13 +193,17 @@ function asPolaroidPhotos(value: unknown): Array<{
     src: string
     caption?: string
     rotation?: number
+    width?: number
   }>>((accumulator, item, index) => {
     const record = asRecord(item)
     const src = asText(record.src)
     const caption = asOptionalText(record.caption)
     const rotation = typeof record.rotation === 'number' && Number.isFinite(record.rotation)
-      ? Math.max(-25, Math.min(25, record.rotation))
+      ? Math.max(-45, Math.min(45, record.rotation))
       : 0
+    const width = typeof record.width === 'number' && Number.isFinite(record.width)
+      ? Math.max(160, Math.min(480, record.width))
+      : undefined
     const id = asOptionalText(record.id) || `polaroid-${index}-${Math.random().toString(36).slice(2, 7)}`
 
     accumulator.push({
@@ -189,6 +211,7 @@ function asPolaroidPhotos(value: unknown): Array<{
       src,
       caption,
       rotation,
+      width,
     })
 
     return accumulator
@@ -217,15 +240,37 @@ function migrateBlock(input: unknown, index: number): Block {
   }
 
   switch (type) {
-    case 'text':
+    case 'text': {
+      const textCategory = asTextCategory(props.category)
+      const textHtml = typeof props.html === 'string' ? sanitizeHtml(props.html) : undefined
+      const fontFamily = asOptionalText(props.fontFamily)
+      const fontSize = asOptionalText(props.fontSize)
+      const color = asOptionalText(props.color)
+      const letterSpacing = asOptionalText(props.letterSpacing)
+      const lineHeight = asOptionalText(props.lineHeight)
+      const bold = typeof props.bold === 'boolean' ? props.bold : undefined
+      const italic = typeof props.italic === 'boolean' ? props.italic : undefined
+      const underline = typeof props.underline === 'boolean' ? props.underline : undefined
+
       return {
         ...base,
         type: 'text',
         props: {
           text: asText(props.text),
-          align: props.align === 'center' || props.align === 'right' ? props.align : 'left',
+          align: asTextAlign(props.align),
+          ...(textCategory ? { category: textCategory } : {}),
+          ...(textHtml !== undefined ? { html: textHtml } : {}),
+          ...(fontFamily ? { fontFamily } : {}),
+          ...(fontSize ? { fontSize } : {}),
+          ...(color ? { color } : {}),
+          ...(letterSpacing ? { letterSpacing } : {}),
+          ...(lineHeight ? { lineHeight } : {}),
+          ...(bold !== undefined ? { bold } : {}),
+          ...(italic !== undefined ? { italic } : {}),
+          ...(underline !== undefined ? { underline } : {}),
         },
       }
+    }
     case 'image':
       return {
         ...base,
@@ -316,9 +361,9 @@ function migrateBlock(input: unknown, index: number): Block {
         ...base,
         type: 'envelope',
         props: {
-          recipientName: asText(props.recipientName) || 'Para o amor da minha vida',
+          recipientName: asText(props.recipientName) || 'Para quem ilumina meus dias',
           senderName: asOptionalText(props.senderName),
-          sealInitial: asOptionalText(props.sealInitial) || '💌',
+          sealInitial: asOptionalText(props.sealInitial) || 'C',
           sealColor: asOptionalText(props.sealColor) || '#e11d48',
           messageSnippet: asOptionalText(props.messageSnippet) || '',
           isOpen: typeof props.isOpen === 'boolean' ? props.isOpen : false,
@@ -329,7 +374,7 @@ function migrateBlock(input: unknown, index: number): Block {
         ...base,
         type: 'scratch',
         props: {
-          coverText: asText(props.coverText) || '✨ Raspe aqui para descobrir um segredo...',
+          coverText: asText(props.coverText) || 'Raspe suavemente para revelar a mensagem...',
           secretType: props.secretType === 'image' ? 'image' : 'text',
           secretText: asOptionalText(props.secretText) || '',
           secretImage: asOptionalText(props.secretImage) || '',
@@ -350,9 +395,9 @@ function migrateBlock(input: unknown, index: number): Block {
         type: 'quiz',
         props: {
           question: asText(props.question) || 'Quer namorar comigo?',
-          yesButtonText: asText(props.yesButtonText) || 'Sim! ❤️',
-          noButtonText: asText(props.noButtonText) || 'Não 🙈',
-          successMessage: asText(props.successMessage) || 'Você me faz a pessoa mais feliz do mundo! 🥰✨',
+          yesButtonText: asText(props.yesButtonText) || 'Sim, com todo o coração',
+          noButtonText: asText(props.noButtonText) || 'Não',
+          successMessage: asText(props.successMessage) || 'Prometo honrar cada um dos nossos dias com respeito, carinho e cumplicidade.',
           isPlayfulNo: typeof props.isPlayfulNo === 'boolean' ? props.isPlayfulNo : true,
         },
       }

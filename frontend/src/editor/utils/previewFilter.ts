@@ -7,7 +7,7 @@ function hasContent(value: string | undefined | null): boolean {
 export function shouldRenderPreviewBlock(block: Block): boolean {
   switch (block.type) {
     case 'text':
-      return hasContent(block.props.text)
+      return hasContent(block.props.text) || hasContent(block.props.html)
     case 'image':
       return hasContent(block.props.src)
     case 'music':

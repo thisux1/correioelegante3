@@ -1,0 +1,322 @@
+/* Correio Elegante — Declarações de Tipografia Self-Hosted e Locais */
+
+/* ==========================================================================
+   1. Inter (Sans-Serif Principal)
+   ========================================================================== */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: local('Inter Light'), local('Inter-Light'),
+       local('Inter');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Inter Regular'), local('Inter-Regular'),
+       local('Inter');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Inter Medium'), local('Inter-Medium'),
+       local('Inter');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Inter SemiBold'), local('Inter-SemiBold'),
+       local('Inter');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Inter Bold'), local('Inter-Bold'),
+       local('Inter');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Inter Italic'), local('Inter-Italic');
+}
+
+/* ==========================================================================
+   2. Outfit (Sans-Serif Moderna)
+   ========================================================================== */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: local('Outfit Light'), local('Outfit-Light'),
+       local('Outfit');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Outfit Regular'), local('Outfit-Regular'),
+       local('Outfit');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Outfit Medium'), local('Outfit-Medium'),
+       local('Outfit');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Outfit SemiBold'), local('Outfit-SemiBold'),
+       local('Outfit');
+}
+
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Outfit Bold'), local('Outfit-Bold'),
+       local('Outfit');
+}
+
+/* ==========================================================================
+   3. Playfair Display (Serifada Display / Títulos)
+   ========================================================================== */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Playfair Display Regular'), local('PlayfairDisplay-Regular'),
+       local('Playfair Display'), local('PlayfairDisplay');
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Playfair Display SemiBold'), local('PlayfairDisplay-SemiBold'),
+       local('Playfair Display');
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Playfair Display Bold'), local('PlayfairDisplay-Bold'),
+       local('Playfair Display');
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Playfair Display Italic'), local('PlayfairDisplay-Italic');
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Playfair Display SemiBold Italic'), local('PlayfairDisplay-SemiBoldItalic');
+}
+
+/* ==========================================================================
+   4. EB Garamond (Serifada Clássica / Literária)
+   ========================================================================== */
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('EB Garamond Regular'), local('EBGaramond-Regular'),
+       local('EB Garamond'), local('EBGaramond');
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('EB Garamond Medium'), local('EBGaramond-Medium'),
+       local('EB Garamond');
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('EB Garamond SemiBold'), local('EBGaramond-SemiBold'),
+       local('EB Garamond');
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('EB Garamond Bold'), local('EBGaramond-Bold'),
+       local('EB Garamond');
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('EB Garamond Italic'), local('EBGaramond-Italic');
+}
+
+/* ==========================================================================
+   5. Merriweather (Serifada Editorial)
+   ========================================================================== */
+@font-face {
+  font-family: 'Merriweather';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Merriweather Regular'), local('Merriweather-Regular'),
+       local('Merriweather');
+}
+
+@font-face {
+  font-family: 'Merriweather';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Merriweather Bold'), local('Merriweather-Bold'),
+       local('Merriweather');
+}
+
+@font-face {
+  font-family: 'Merriweather';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Merriweather Italic'), local('Merriweather-Italic');
+}
+
+/* ==========================================================================
+   6. Dancing Script (Caligráfica Elegante)
+   ========================================================================== */
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Dancing Script Regular'), local('DancingScript-Regular'),
+       local('Dancing Script'), local('DancingScript');
+}
+
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Dancing Script Medium'), local('DancingScript-Medium'),
+       local('Dancing Script');
+}
+
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Dancing Script SemiBold'), local('DancingScript-SemiBold'),
+       local('Dancing Script');
+}
+
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Dancing Script Bold'), local('DancingScript-Bold'),
+       local('Dancing Script');
+}
+
+/* ==========================================================================
+   7. Great Vibes (Script Fluida / Romântica)
+   ========================================================================== */
+@font-face {
+  font-family: 'Great Vibes';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Great Vibes Regular'), local('GreatVibes-Regular'),
+       local('Great Vibes'), local('GreatVibes');
+}
+
+/* ==========================================================================
+   8. Caveat (Manuscrita Casual / Afetiva)
+   ========================================================================== */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Caveat Regular'), local('Caveat-Regular'),
+       local('Caveat');
+}
+
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Caveat SemiBold'), local('Caveat-SemiBold'),
+       local('Caveat');
+}
+
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Caveat Bold'), local('Caveat-Bold'),
+       local('Caveat');
+}
+
+/* ==========================================================================
+   Variáveis e Fallbacks Canônicos do Sistema
+   ========================================================================== */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-cursive: 'Dancing Script', 'Brush Script MT', 'Segoe Script', cursive;
+  --font-serif: 'EB Garamond', Garamond, 'Times New Roman', Georgia, serif;
+  --font-handwriting: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --font-script: 'Great Vibes', 'Brush Script MT', 'Segoe Script', cursive;
+  --font-editorial: 'Merriweather', Georgia, 'Times New Roman', serif;
+  --font-outfit: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

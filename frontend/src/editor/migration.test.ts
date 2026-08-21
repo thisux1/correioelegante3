@@ -241,4 +241,79 @@ describe('migratePage', () => {
       ],
     })
   })
+
+  it('migra blocos de texto com subcategorias, html e propriedades de tipografia', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: 't-title',
+          type: 'text',
+          props: {
+            text: 'Meu Amor Eterno',
+            category: 'title',
+            html: '<h1>Meu <strong>Amor</strong> Eterno</h1>',
+            align: 'center',
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontSize: '32px',
+            color: '#e11d48',
+            bold: true,
+          },
+          meta: {},
+        },
+        {
+          id: 't-quote',
+          type: 'text',
+          props: {
+            text: 'Amar nao e olhar um para o outro...',
+            category: 'quote',
+            html: '<p>“Amar não é olhar um para o outro...”</p>',
+            align: 'justify',
+            italic: true,
+          },
+          meta: {},
+        },
+        {
+          id: 't-sig',
+          type: 'text',
+          props: {
+            text: 'Com carinho',
+            category: 'signature',
+            align: 'right',
+            fontFamily: '"Dancing Script", cursive',
+          },
+          meta: {},
+        },
+      ],
+    })
+
+    expect(migrated.blocks).toHaveLength(3)
+
+    const titleBlock = migrated.blocks[0]
+    expect(titleBlock.type).toBe('text')
+    if (titleBlock.type === 'text') {
+      expect(titleBlock.props.category).toBe('title')
+      expect(titleBlock.props.align).toBe('center')
+      expect(titleBlock.props.html).toContain('Meu <strong>Amor</strong> Eterno')
+      expect(titleBlock.props.fontSize).toBe('32px')
+      expect(titleBlock.props.color).toBe('#e11d48')
+      expect(titleBlock.props.bold).toBe(true)
+    }
+
+    const quoteBlock = migrated.blocks[1]
+    expect(quoteBlock.type).toBe('text')
+    if (quoteBlock.type === 'text') {
+      expect(quoteBlock.props.category).toBe('quote')
+      expect(quoteBlock.props.align).toBe('justify')
+      expect(quoteBlock.props.italic).toBe(true)
+    }
+
+    const sigBlock = migrated.blocks[2]
+    expect(sigBlock.type).toBe('text')
+    if (sigBlock.type === 'text') {
+      expect(sigBlock.props.category).toBe('signature')
+      expect(sigBlock.props.align).toBe('right')
+      expect(sigBlock.props.fontFamily).toBe('"Dancing Script", cursive')
+    }
+  })
 })
+

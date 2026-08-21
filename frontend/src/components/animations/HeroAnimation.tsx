@@ -247,7 +247,7 @@ function LetterSheet() {
             <line x1="28" y1="86" x2="150" y2="86" stroke="rgba(210,150,172,0.35)" strokeWidth="1.4" strokeLinecap="round" />
             <line x1="28" y1="100" x2="120" y2="100" stroke="rgba(210,150,172,0.35)" strokeWidth="1.4" strokeLinecap="round" />
             <text x="26" y="54" fill="#bf4b6b" fontSize="18" fontFamily="'Dancing Script', cursive">
-                Para você 💌
+                Para você
             </text>
         </svg>
     )

@@ -25,7 +25,7 @@ function WaxSeal({
   onClick?: () => void
 }) {
   const sealColor = color || '#e11d48'
-  const sealText = (initial || '💌').slice(0, 2)
+  const sealText = (initial || 'C').slice(0, 2)
 
   return (
     <motion.button
@@ -94,11 +94,11 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
   const props: EnvelopeBlockProps = isEnvelope
     ? block.props
     : {
-        recipientName: 'Para o amor da minha vida',
-        senderName: 'Com todo o meu amor',
-        sealInitial: '💌',
+        recipientName: 'Para quem ilumina meus dias',
+        senderName: 'Com todo o meu afeto',
+        sealInitial: 'C',
         sealColor: '#e11d48',
-        messageSnippet: 'Guardo você no lugar mais especial do meu coração...',
+        messageSnippet: 'Guardo aqui palavras que nasceram da certeza de que você é parte fundamental da minha história...',
         isOpen: false,
       }
 
@@ -136,11 +136,11 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
     return null
   }
 
-  const recipientName = props.recipientName || 'Para alguém muito especial'
+  const recipientName = props.recipientName || 'Para alguém especial'
   const senderName = props.senderName || ''
-  const sealInitial = props.sealInitial || '💌'
+  const sealInitial = props.sealInitial || 'C'
   const sealColor = props.sealColor || '#e11d48'
-  const messageSnippet = props.messageSnippet || 'Escreva aqui uma linda carta de amor...'
+  const messageSnippet = props.messageSnippet || 'Escreva aqui uma mensagem sincera...'
 
   const interactiveView = (
     <div className="mx-auto w-full max-w-lg select-none px-2 py-4">
@@ -246,7 +246,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
             type="text"
             value={props.recipientName}
             onChange={(e) => updateProp('recipientName', e.target.value)}
-            placeholder="Ex: Para o amor da minha vida"
+            placeholder="Ex: Para Helena"
             className={EDITOR_FIELD_BASE_CLASS}
             aria-label="Nome do destinatário"
           />
@@ -260,7 +260,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
             type="text"
             value={props.senderName ?? ''}
             onChange={(e) => updateProp('senderName', e.target.value)}
-            placeholder="Ex: Com todo meu amor, Thiago"
+            placeholder="Ex: Com todo meu afeto, Thiago"
             className={EDITOR_FIELD_BASE_CLASS}
             aria-label="Nome do remetente"
           />
@@ -269,16 +269,16 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <EditorInputSection
             title="Selo / Inicial do Lacre"
-            helperText="Até 2 caracteres (inicial ou emoji)."
+            helperText="Até 2 caracteres (letra ou monograma)."
           >
             <input
               type="text"
               maxLength={2}
               value={props.sealInitial ?? ''}
               onChange={(e) => updateProp('sealInitial', e.target.value)}
-              placeholder="Ex: 💌 ou T"
+              placeholder="Ex: C ou Monograma"
               className={EDITOR_FIELD_BASE_CLASS}
-              aria-label="Inicial ou emoji do lacre"
+              aria-label="Inicial do lacre"
             />
           </EditorInputSection>
 
