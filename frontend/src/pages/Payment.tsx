@@ -226,15 +226,16 @@ export function Payment() {
               animate={{ scale: 1, opacity: 1 }}
               className="py-8"
             >
-              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Check className="w-10 h-10 text-emerald-600" />
+              <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-5 text-emerald-600">
+                <Check className="w-8 h-8" />
               </div>
               <h2 className="font-display text-3xl font-bold text-text mb-3">
-                Pagamento Confirmado! 🎉
+                Pagamento Confirmado
               </h2>
               <p className="text-text-light mb-8">
                 Seu correio elegante está pronto para ser compartilhado.
               </p>
+
               <div className="flex flex-col gap-3">
                 <Link to={cardHref}>
                   <Button size="lg" className="w-full">Ver Cartão</Button>
@@ -492,6 +493,23 @@ export function Payment() {
                   )}
                 </Button>
               </div>
+
+              <div className="mb-6 rounded-2xl border border-border/80 bg-surface-raised/70 p-4 text-left text-xs text-text space-y-2.5 shadow-xs">
+                <p className="font-semibold text-text">Como pagar:</p>
+                <div className="flex items-start gap-2 text-text-light">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-bold">1</span>
+                  <span>Abra o app do seu banco ou carteira digital.</span>
+                </div>
+                <div className="flex items-start gap-2 text-text-light">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-bold">2</span>
+                  <span>Escolha pagar via Pix e selecione <strong>Pix Copia e Cola</strong> ou <strong>QR Code</strong>.</span>
+                </div>
+                <div className="flex items-start gap-2 text-text-light">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-bold">3</span>
+                  <span>Confirme o valor. A liberação do seu correio elegante acontece na hora!</span>
+                </div>
+              </div>
+
 
               <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-2">
                 <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
