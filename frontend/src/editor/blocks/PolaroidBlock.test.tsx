@@ -147,14 +147,12 @@ describe('PolaroidBlock', () => {
     expect(captionInput.value).toBe('Legenda antiga')
 
     await act(async () => {
-      captionInput.value = 'Amor da minha vida inteira 🥰'
-      captionInput.dispatchEvent(new Event('input', { bubbles: true }))
-      // React controlled input
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
         window.HTMLInputElement.prototype,
         'value',
       )?.set
       nativeInputValueSetter?.call(captionInput, 'Amor da minha vida inteira 🥰')
+      captionInput.dispatchEvent(new Event('input', { bubbles: true }))
       captionInput.dispatchEvent(new Event('change', { bubbles: true }))
     })
 

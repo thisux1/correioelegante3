@@ -27,6 +27,7 @@ import {
   FileText,
   ChevronDown,
   RotateCcw,
+  Check,
 } from 'lucide-react'
 import { sanitizeHtml, stripHtml } from '@/editor/utils/htmlSanitizer'
 import type {
@@ -90,29 +91,116 @@ const TEXT_CATEGORIES: Record<TextBlockCategory, CategoryConfig> = {
   },
 }
 
-const FONT_OPTIONS = [
-  { value: '', label: 'Padrão do Tema' },
-  { value: '"Dancing Script", "Brush Script MT", "Segoe Script", cursive', label: 'Dancing Script (Cursiva Romântica)' },
-  { value: '"Playfair Display", Georgia, "Times New Roman", serif', label: 'Playfair Display (Display Elegante)' },
-  { value: '"EB Garamond", Garamond, "Times New Roman", serif', label: 'EB Garamond (Serifada Literária)' },
-  { value: '"Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', label: 'Outfit (Moderna Geométrica)' },
-  { value: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', label: 'Inter (Sem Serifa Limpa)' },
-  { value: '"Great Vibes", "Brush Script MT", "Segoe Script", cursive', label: 'Great Vibes (Caligráfica Nobre)' },
-  { value: '"Caveat", "Segoe Print", "Brush Script MT", cursive', label: 'Caveat (Manuscrita Afetiva)' },
-  { value: '"Libre Baskerville", Georgia, "Times New Roman", serif', label: 'Libre Baskerville (Vintage)' },
-  { value: '"Merriweather", Georgia, "Times New Roman", serif', label: 'Merriweather (Clássica Editorial)' },
-  { value: '"Satisfy", "Brush Script MT", cursive', label: 'Satisfy (Cursiva Suave)' },
-  { value: '"Kaushan Script", "Brush Script MT", cursive', label: 'Kaushan Script (Pincel Expressivo)' },
+export interface FontOptionItem {
+  value: string
+  name: string
+  styleLabel: string
+  samplePhrase: string
+  fontFamily: string
+}
+
+const FONT_OPTIONS: FontOptionItem[] = [
+  {
+    value: '',
+    name: 'Padrão do Tema',
+    styleLabel: 'Tema Automático',
+    samplePhrase: 'O amor nos pequenos detalhes',
+    fontFamily: 'inherit',
+  },
+  {
+    value: '"Dancing Script", "Brush Script MT", "Segoe Script", cursive',
+    name: 'Dancing Script',
+    styleLabel: 'Cursiva Romântica',
+    samplePhrase: 'Com todo o meu afeto e carinho',
+    fontFamily: '"Dancing Script", "Brush Script MT", "Segoe Script", cursive',
+  },
+  {
+    value: '"Playfair Display", Georgia, "Times New Roman", serif',
+    name: 'Playfair Display',
+    styleLabel: 'Display Elegante',
+    samplePhrase: 'Momentos inesquecíveis para sempre',
+    fontFamily: '"Playfair Display", Georgia, "Times New Roman", serif',
+  },
+  {
+    value: '"EB Garamond", Garamond, "Times New Roman", serif',
+    name: 'EB Garamond',
+    styleLabel: 'Serifada Literária',
+    samplePhrase: 'Histórias escritas no silêncio dos dias',
+    fontFamily: '"EB Garamond", Garamond, "Times New Roman", serif',
+  },
+  {
+    value: '"Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    name: 'Outfit',
+    styleLabel: 'Moderna Geométrica',
+    samplePhrase: 'Design contemporâneo e vibrante',
+    fontFamily: '"Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  {
+    value: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    name: 'Inter',
+    styleLabel: 'Sem Serifa Limpa',
+    samplePhrase: 'Clareza e legibilidade absoluta',
+    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  {
+    value: '"Great Vibes", "Brush Script MT", "Segoe Script", cursive',
+    name: 'Great Vibes',
+    styleLabel: 'Caligráfica Nobre',
+    samplePhrase: 'Eternamente seu, com todo amor',
+    fontFamily: '"Great Vibes", "Brush Script MT", "Segoe Script", cursive',
+  },
+  {
+    value: '"Caveat", "Segoe Print", "Brush Script MT", cursive',
+    name: 'Caveat',
+    styleLabel: 'Manuscrita Afetiva',
+    samplePhrase: 'Um bilhete sincero guardado no peito',
+    fontFamily: '"Caveat", "Segoe Print", "Brush Script MT", cursive',
+  },
+  {
+    value: '"Merriweather", Georgia, "Times New Roman", serif',
+    name: 'Merriweather',
+    styleLabel: 'Clássica Editorial',
+    samplePhrase: 'Aconchego para leituras profundas',
+    fontFamily: '"Merriweather", Georgia, "Times New Roman", serif',
+  },
+  {
+    value: '"Libre Baskerville", Georgia, "Times New Roman", serif',
+    name: 'Libre Baskerville',
+    styleLabel: 'Vintage Literária',
+    samplePhrase: 'Atemporal como uma carta antiga',
+    fontFamily: '"Libre Baskerville", Georgia, "Times New Roman", serif',
+  },
+  {
+    value: '"Satisfy", "Brush Script MT", cursive',
+    name: 'Satisfy',
+    styleLabel: 'Cursiva Suave',
+    samplePhrase: 'Doçura e fluidez em cada verso',
+    fontFamily: '"Satisfy", "Brush Script MT", cursive',
+  },
+  {
+    value: '"Kaushan Script", "Brush Script MT", cursive',
+    name: 'Kaushan Script',
+    styleLabel: 'Pincel Expressivo',
+    samplePhrase: 'Expressivo e vibrante como a vida',
+    fontFamily: '"Kaushan Script", "Brush Script MT", cursive',
+  },
 ]
 
-const FONT_SIZE_OPTIONS = [
-  { value: '', label: 'Tamanho Padrão' },
-  { value: '14px', label: 'P (14px)' },
-  { value: '16px', label: 'M (16px)' },
-  { value: '18px', label: 'G (18px)' },
-  { value: '22px', label: 'GG (22px)' },
-  { value: '28px', label: 'XG (28px)' },
-  { value: '36px', label: '2XG (36px)' },
+export interface FontSizeOptionItem {
+  value: string
+  code: string
+  label: string
+  pixelSize: string
+  description: string
+}
+
+const FONT_SIZE_OPTIONS: FontSizeOptionItem[] = [
+  { value: '', code: 'Auto', label: 'Padrão', pixelSize: 'Tema', description: 'Tamanho inteligente da categoria' },
+  { value: '14px', code: 'P', label: 'Pequeno', pixelSize: '14px', description: 'Notas e detalhes sutis' },
+  { value: '16px', code: 'M', label: 'Médio', pixelSize: '16px', description: 'Corpo de texto confortável' },
+  { value: '18px', code: 'G', label: 'Grande', pixelSize: '18px', description: 'Destaque e subtítulos' },
+  { value: '22px', code: 'GG', label: 'Extra Grande', pixelSize: '22px', description: 'Frases marcantes e citações' },
+  { value: '28px', code: 'XG', label: 'Super Grande', pixelSize: '28px', description: 'Display e títulos de impacto' },
 ]
 
 const COLOR_PALETTE = [
@@ -153,8 +241,13 @@ interface SelectionToolbarPosition {
 function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editableRef = useRef<HTMLDivElement>(null)
+  const fontDropdownRef = useRef<HTMLDivElement>(null)
+  const sizeDropdownRef = useRef<HTMLDivElement>(null)
+  const colorPickerRef = useRef<HTMLDivElement>(null)
 
   const [isFocused, setIsFocused] = useState(false)
+  const [showFontDropdown, setShowFontDropdown] = useState(false)
+  const [showSizeDropdown, setShowSizeDropdown] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showHighlightPicker, setShowHighlightPicker] = useState(false)
   const [selectionPosition, setSelectionPosition] = useState<SelectionToolbarPosition | null>(null)
@@ -174,6 +267,48 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const displayHtml = htmlContent || (textContent ? textContent.replace(/\n/g, '<br/>') : '')
   const isEmpty = (stripHtml(displayHtml) || textContent).trim().length === 0
   const showPlaceholder = isEmpty && !isFocused
+
+  const selectedFontOption = FONT_OPTIONS.find((opt) => opt.value === (props.fontFamily || ''))
+  const selectedSizeOption = FONT_SIZE_OPTIONS.find((opt) => opt.value === (props.fontSize || ''))
+
+  // Click outside detection for all custom dropdowns
+  useEffect(() => {
+    if (!showFontDropdown && !showSizeDropdown && !showColorPicker && !showHighlightPicker) {
+      return
+    }
+
+    const handlePointerDownOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node
+      if (fontDropdownRef.current && !fontDropdownRef.current.contains(target)) {
+        setShowFontDropdown(false)
+      }
+      if (sizeDropdownRef.current && !sizeDropdownRef.current.contains(target)) {
+        setShowSizeDropdown(false)
+      }
+      if (colorPickerRef.current && !colorPickerRef.current.contains(target)) {
+        setShowColorPicker(false)
+      }
+    }
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowFontDropdown(false)
+        setShowSizeDropdown(false)
+        setShowColorPicker(false)
+        setShowHighlightPicker(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDownOutside)
+    document.addEventListener('touchstart', handlePointerDownOutside)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDownOutside)
+      document.removeEventListener('touchstart', handlePointerDownOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showColorPicker, showFontDropdown, showHighlightPicker, showSizeDropdown])
 
   // Sync contentEditable with incoming props when not focused
   useEffect(() => {
@@ -223,12 +358,13 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     const rangeRect = range.getBoundingClientRect()
     const containerRect = containerRef.current.getBoundingClientRect()
 
-    const top = Math.max(8, rangeRect.top - containerRect.top - 48)
+    // Position BELOW the selected text so native mobile OS context menus (which pop above) do not overlap
+    const top = rangeRect.bottom - containerRect.top + 8
     const left = Math.max(
-      10,
+      8,
       Math.min(
-        containerRect.width - 260,
-        rangeRect.left - containerRect.left + rangeRect.width / 2 - 120,
+        containerRect.width - 270,
+        rangeRect.left - containerRect.left + rangeRect.width / 2 - 130,
       ),
     )
 
@@ -680,44 +816,158 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         </div>
       </div>
 
-      {/* Discrete Typography Controls Header */}
+      {/* Discrete Typography Controls Header (Custom immersive Font & Size dropdowns) */}
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-        {/* Font Family selector */}
-        <div className="relative inline-flex items-center">
-          <Type size={13} className="pointer-events-none absolute left-2 text-text-muted" />
-          <select
-            value={props.fontFamily || ''}
-            onChange={(e) => handleFontChange(e.target.value)}
-            aria-label="Selecionar Fonte"
-            className="h-8 rounded-lg border border-primary/20 bg-white pl-6 pr-6 text-xs text-text outline-none transition-colors hover:border-primary/40 focus:border-primary focus:ring-1 focus:ring-primary/30 cursor-pointer"
-          >
-            {FONT_OPTIONS.map((opt) => (
-              <option key={opt.label} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Font Size selector */}
-        <select
-          value={props.fontSize || ''}
-          onChange={(e) => handleFontSizeChange(e.target.value)}
-          aria-label="Selecionar Tamanho"
-          className="h-8 rounded-lg border border-primary/20 bg-white px-2 text-xs text-text outline-none transition-colors hover:border-primary/40 focus:border-primary focus:ring-1 focus:ring-primary/30 cursor-pointer"
-        >
-          {FONT_SIZE_OPTIONS.map((opt) => (
-            <option key={opt.label} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Color Popover Button */}
-        <div className="relative">
+        {/* Custom Font Dropdown with rich visual preview */}
+        <div ref={fontDropdownRef} className="relative">
           <button
             type="button"
-            onClick={() => setShowColorPicker((prev) => !prev)}
+            onClick={() => {
+              setShowFontDropdown((prev) => !prev)
+              setShowSizeDropdown(false)
+              setShowColorPicker(false)
+            }}
+            aria-haspopup="listbox"
+            aria-expanded={showFontDropdown}
+            aria-label="Selecionar Fonte"
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all ${
+              showFontDropdown
+                ? 'border-primary bg-primary/10 text-primary shadow-2xs'
+                : 'border-primary/20 bg-white text-text hover:border-primary/40'
+            }`}
+          >
+            <Type size={13} className="text-primary shrink-0" />
+            <span className="max-w-[110px] truncate">{selectedFontOption?.name || 'Padrão do Tema'}</span>
+            <ChevronDown
+              size={12}
+              className={`text-text-muted transition-transform ${showFontDropdown ? 'rotate-180 text-primary' : ''}`}
+            />
+          </button>
+
+          {showFontDropdown && (
+            <div
+              role="listbox"
+              aria-label="Lista de fontes disponíveis"
+              className="absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-80 max-h-72 overflow-y-auto rounded-xl border border-primary/25 bg-white p-1.5 shadow-2xl backdrop-blur-md"
+            >
+              <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
+                Tipografia & Estilos
+              </p>
+              {FONT_OPTIONS.map((opt) => {
+                const isSelected = (props.fontFamily || '') === opt.value
+                return (
+                  <button
+                    key={opt.name}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      handleFontChange(opt.value)
+                      setShowFontDropdown(false)
+                    }}
+                    className={`group flex w-full flex-col rounded-lg p-2 text-left transition-all ${
+                      isSelected
+                        ? 'bg-primary/10 text-primary font-semibold ring-1 ring-primary/20'
+                        : 'hover:bg-primary/5 text-text'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold">{opt.name}</span>
+                        {isSelected && <Check size={12} className="text-primary" />}
+                      </div>
+                      <span className="text-[10px] text-text-light/80">{opt.styleLabel}</span>
+                    </div>
+                    <span
+                      className="mt-0.5 truncate text-sm text-text/80 group-hover:text-primary transition-colors"
+                      style={{ fontFamily: opt.fontFamily }}
+                    >
+                      {opt.samplePhrase}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Custom Font Size Dropdown with [P], [M], [G], [GG], [XG] options */}
+        <div ref={sizeDropdownRef} className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setShowSizeDropdown((prev) => !prev)
+              setShowFontDropdown(false)
+              setShowColorPicker(false)
+            }}
+            aria-haspopup="listbox"
+            aria-expanded={showSizeDropdown}
+            aria-label="Selecionar Tamanho"
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all ${
+              showSizeDropdown
+                ? 'border-primary bg-primary/10 text-primary shadow-2xs'
+                : 'border-primary/20 bg-white text-text hover:border-primary/40'
+            }`}
+          >
+            <span className="font-mono font-bold text-primary">
+              {selectedSizeOption?.code === 'Auto' ? 'Tam: Auto' : `[${selectedSizeOption?.code || 'Auto'}]`}
+            </span>
+            <ChevronDown
+              size={12}
+              className={`text-text-muted transition-transform ${showSizeDropdown ? 'rotate-180 text-primary' : ''}`}
+            />
+          </button>
+
+          {showSizeDropdown && (
+            <div
+              role="listbox"
+              aria-label="Tamanhos de texto disponíveis"
+              className="absolute left-0 top-full mt-1.5 z-50 w-52 rounded-xl border border-primary/25 bg-white p-1.5 shadow-2xl backdrop-blur-md"
+            >
+              <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
+                Tamanho do Texto
+              </p>
+              {FONT_SIZE_OPTIONS.map((opt) => {
+                const isSelected = (props.fontSize || '') === opt.value
+                return (
+                  <button
+                    key={opt.code}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      handleFontSizeChange(opt.value)
+                      setShowSizeDropdown(false)
+                    }}
+                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                      isSelected
+                        ? 'bg-primary/10 text-primary font-bold ring-1 ring-primary/20'
+                        : 'hover:bg-primary/5 text-text'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-primary w-8 text-left">
+                        [{opt.code}]
+                      </span>
+                      <span className="font-medium">{opt.label}</span>
+                    </div>
+                    <span className="text-[11px] text-text-light">{opt.pixelSize}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Color Popover Button */}
+        <div ref={colorPickerRef} className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setShowColorPicker((prev) => !prev)
+              setShowFontDropdown(false)
+              setShowSizeDropdown(false)
+            }}
             aria-label="Cor do Texto"
             title="Cor do Texto"
             className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-primary/20 bg-white px-2 text-xs text-text transition-colors hover:border-primary/40"
@@ -731,7 +981,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           </button>
 
           {showColorPicker ? (
-            <div className="absolute left-0 top-full z-30 mt-1 w-52 rounded-xl border border-primary/20 bg-white p-3 shadow-xl">
+            <div className="absolute left-0 top-full z-50 mt-1.5 w-52 rounded-xl border border-primary/20 bg-white p-3 shadow-xl">
               <p className="mb-2 text-[11px] font-semibold text-text-light uppercase tracking-wider">
                 Paleta de Cores
               </p>
@@ -826,7 +1076,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         ) : null}
       </div>
 
-      {/* Floating Word/Medium Style Selection Micro-Toolbar */}
+      {/* Floating Word/Medium Style Selection Micro-Toolbar (Positioned BELOW selection to avoid OS native menus) */}
       {selectionPosition && (
         <div
           style={{ top: `${selectionPosition.top}px`, left: `${selectionPosition.left}px` }}
@@ -887,7 +1137,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
             {showHighlightPicker && (
               <div
-                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 flex items-center gap-1 rounded-xl border border-primary/20 bg-white p-1.5 shadow-2xl z-50"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-1.5 flex items-center gap-1 rounded-xl border border-primary/20 bg-white p-1.5 shadow-2xl z-50"
                 onMouseDown={(e: ReactMouseEvent) => e.preventDefault()}
               >
                 {HIGHLIGHT_COLORS.map((h) => (
