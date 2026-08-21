@@ -96,12 +96,6 @@ export function PageCardSkeleton({
               <Skeleton variant="text" className="h-3.5 w-24 rounded-full opacity-70" />
             </div>
           </div>
-
-          {/* Bottom Action Silhouette */}
-          <div className="mt-8 border-t border-border/40 pt-6 text-center">
-            <Skeleton variant="text" className="mx-auto mb-3 h-3 w-40 rounded-md opacity-60" />
-            <Skeleton variant="rounded" className="mx-auto h-9 w-60 rounded-xl" />
-          </div>
         </div>
       </motion.div>
     </div>
