@@ -4,9 +4,10 @@ import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { Card as UICard } from '@/components/ui/Card'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
+import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
 import { messageService } from '@/services/messageService'
 import type { PageStatus, PageVisibility } from '@/editor/types'
-import { buildThemeStyle, resolveThemeId } from '@/editor/themes'
+import { buildThemeStyle, getThemeAtmosphere, resolveThemeId } from '@/editor/themes'
 
 interface CardData {
   id: string
@@ -86,16 +87,20 @@ export function Card() {
     )
   }
 
+  const atmosphere = getThemeAtmosphere(card.theme)
+
   return (
     <div
-      className="min-h-screen flex items-center justify-center pt-24 pb-16 px-6"
+      className="relative min-h-screen flex items-center justify-center pt-24 pb-16 px-6 overflow-hidden"
       style={buildThemeStyle(resolveThemeId(card.theme))}
     >
+      <AtmosphereCanvas atmosphere={atmosphere} position="fixed" />
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
-        className="w-full max-w-lg"
+        className="w-full max-w-lg relative z-10"
       >
         <CardTilt3D intensity={8}>
           <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-10 shadow-2xl">

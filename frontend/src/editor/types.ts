@@ -6,7 +6,18 @@ export const PAGE_VISIBILITY_VALUES = ['public', 'private', 'unlisted'] as const
 export type PageStatus = (typeof PAGE_STATUS_VALUES)[number]
 export type PageVisibility = (typeof PAGE_VISIBILITY_VALUES)[number]
 
-export type BlockType = 'text' | 'image' | 'timer' | 'gallery' | 'music' | 'video'
+export type BlockType =
+  | 'text'
+  | 'image'
+  | 'timer'
+  | 'gallery'
+  | 'music'
+  | 'video'
+  | 'envelope'
+  | 'scratch'
+  | 'timeline'
+  | 'quiz'
+  | 'polaroid'
 export type EditorMode = 'edit' | 'preview'
 
 export interface BlockMeta {
@@ -65,6 +76,54 @@ export interface VideoBlockProps {
   src: string
 }
 
+export interface EnvelopeBlockProps {
+  recipientName: string
+  senderName?: string
+  sealInitial?: string
+  sealColor?: string
+  messageSnippet?: string
+  isOpen?: boolean
+}
+
+export interface ScratchBlockProps {
+  coverText: string
+  secretType: 'text' | 'image'
+  secretText?: string
+  secretImage?: string
+  isRevealed?: boolean
+}
+
+export interface TimelineItem {
+  id: string
+  date: string
+  title: string
+  description?: string
+  image?: string
+}
+
+export interface TimelineBlockProps {
+  items: TimelineItem[]
+}
+
+export interface QuizBlockProps {
+  question: string
+  yesButtonText: string
+  noButtonText: string
+  successMessage: string
+  isPlayfulNo?: boolean
+}
+
+export interface PolaroidPhoto {
+  id: string
+  src: string
+  caption?: string
+  rotation?: number
+}
+
+export interface PolaroidBlockProps {
+  photos: PolaroidPhoto[]
+}
+
 export interface BlockPropsByType {
   text: TextBlockProps
   image: ImageBlockProps
@@ -72,6 +131,11 @@ export interface BlockPropsByType {
   gallery: GalleryBlockProps
   music: MusicBlockProps
   video: VideoBlockProps
+  envelope: EnvelopeBlockProps
+  scratch: ScratchBlockProps
+  timeline: TimelineBlockProps
+  quiz: QuizBlockProps
+  polaroid: PolaroidBlockProps
 }
 
 interface BlockBase<TType extends BlockType> {

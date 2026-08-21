@@ -63,4 +63,37 @@ describe('filterPreviewBlocks', () => {
     expect(visible).toHaveLength(1)
     expect(visible[0]?.type).toBe('video')
   })
+
+  it('filtra corretamente os novos blocos interativos', () => {
+    const emptyTimeline = createBlock('timeline')
+    emptyTimeline.props.items = []
+
+    const validTimeline = createBlock('timeline')
+    const envelope = createBlock('envelope')
+    const scratch = createBlock('scratch')
+    const quiz = createBlock('quiz')
+    const polaroid = createBlock('polaroid')
+
+    const emptyQuiz = createBlock('quiz')
+    emptyQuiz.props.question = ''
+
+    const visible = filterPreviewBlocks([
+      emptyTimeline,
+      validTimeline,
+      envelope,
+      scratch,
+      quiz,
+      emptyQuiz,
+      polaroid,
+    ])
+
+    expect(visible).toHaveLength(5)
+    expect(visible.map((b) => b.type)).toEqual([
+      'timeline',
+      'envelope',
+      'scratch',
+      'quiz',
+      'polaroid',
+    ])
+  })
 })

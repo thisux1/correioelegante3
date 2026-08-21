@@ -1,0 +1,5 @@
+export { EnvelopeBlock } from '@/editor/blocks/EnvelopeBlock'
+export { ScratchBlock } from '@/editor/blocks/ScratchBlock'
+export { TimelineBlock } from '@/editor/blocks/TimelineBlock'
+export { QuizBlock } from '@/editor/blocks/QuizBlock'
+export { PolaroidBlock } from '@/editor/blocks/PolaroidBlock'

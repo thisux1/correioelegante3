@@ -135,4 +135,110 @@ describe('migratePage', () => {
       },
     ])
   })
+
+  it('migra novos blocos interativos com sanitizacao completa', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: 'env-1',
+          type: 'envelope',
+          props: {
+            recipientName: '  Amor da minha vida  ',
+            senderName: '  Thiago  ',
+            sealInitial: '💌',
+            sealColor: '#e11d48',
+            messageSnippet: '  Uma linda carta de amor  ',
+            isOpen: true,
+          },
+          meta: {},
+        },
+        {
+          id: 'scr-1',
+          type: 'scratch',
+          props: {
+            coverText: 'Raspe aqui',
+            secretType: 'text',
+            secretText: 'Te amo',
+            isRevealed: false,
+          },
+          meta: {},
+        },
+        {
+          id: 'time-1',
+          type: 'timeline',
+          props: {
+            items: [
+              { id: 'item-1', date: '2024', title: 'Primeiro Beijo', description: 'Inesquecível', image: 'https://img' },
+            ],
+          },
+          meta: {},
+        },
+        {
+          id: 'quiz-1',
+          type: 'quiz',
+          props: {
+            question: 'Quer namorar comigo?',
+            yesButtonText: 'Sim!',
+            noButtonText: 'Não',
+            successMessage: 'Eba!',
+            isPlayfulNo: true,
+          },
+          meta: {},
+        },
+        {
+          id: 'pol-1',
+          type: 'polaroid',
+          props: {
+            photos: [
+              { id: 'p1', src: 'https://photo.jpg', caption: 'Viagem', rotation: 3 },
+            ],
+          },
+          meta: {},
+        },
+      ],
+    })
+
+    expect(migrated.blocks).toHaveLength(5)
+    expect(migrated.blocks[0].type).toBe('envelope')
+    expect(migrated.blocks[0].props).toEqual({
+      recipientName: 'Amor da minha vida',
+      senderName: 'Thiago',
+      sealInitial: '💌',
+      sealColor: '#e11d48',
+      messageSnippet: 'Uma linda carta de amor',
+      isOpen: true,
+    })
+
+    expect(migrated.blocks[1].type).toBe('scratch')
+    expect(migrated.blocks[1].props).toEqual({
+      coverText: 'Raspe aqui',
+      secretType: 'text',
+      secretText: 'Te amo',
+      secretImage: '',
+      isRevealed: false,
+    })
+
+    expect(migrated.blocks[2].type).toBe('timeline')
+    expect(migrated.blocks[2].props).toEqual({
+      items: [
+        { id: 'item-1', date: '2024', title: 'Primeiro Beijo', description: 'Inesquecível', image: 'https://img' },
+      ],
+    })
+
+    expect(migrated.blocks[3].type).toBe('quiz')
+    expect(migrated.blocks[3].props).toEqual({
+      question: 'Quer namorar comigo?',
+      yesButtonText: 'Sim!',
+      noButtonText: 'Não',
+      successMessage: 'Eba!',
+      isPlayfulNo: true,
+    })
+
+    expect(migrated.blocks[4].type).toBe('polaroid')
+    expect(migrated.blocks[4].props).toEqual({
+      photos: [
+        { id: 'p1', src: 'https://photo.jpg', caption: 'Viagem', rotation: 3 },
+      ],
+    })
+  })
 })

@@ -21,6 +21,16 @@ export function shouldRenderPreviewBlock(block: Block): boolean {
       return block.props.images.some((image) => hasContent(image))
     case 'timer':
       return hasContent(block.props.targetDate)
+    case 'envelope':
+      return hasContent(block.props.recipientName) || hasContent(block.props.messageSnippet)
+    case 'scratch':
+      return hasContent(block.props.coverText) || hasContent(block.props.secretText) || hasContent(block.props.secretImage)
+    case 'timeline':
+      return Array.isArray(block.props.items) && block.props.items.length > 0
+    case 'quiz':
+      return hasContent(block.props.question)
+    case 'polaroid':
+      return Array.isArray(block.props.photos) && block.props.photos.length > 0
     default:
       return true
   }
