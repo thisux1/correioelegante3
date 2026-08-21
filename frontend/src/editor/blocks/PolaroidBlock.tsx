@@ -118,6 +118,13 @@ function PolaroidCard({
     e.stopPropagation()
 
     if (!cardRef.current) return
+    const target = e.currentTarget
+    try {
+      target.setPointerCapture(e.pointerId)
+    } catch {
+      // safe fallback if pointer capture is not supported
+    }
+
     const cardEl = cardRef.current
     const rect = cardEl.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
@@ -145,7 +152,12 @@ function PolaroidCard({
       onUpdateRotation(rounded)
     }
 
-    const onPointerUp = () => {
+    const onPointerUp = (upEvent: PointerEvent) => {
+      try {
+        target.releasePointerCapture(upEvent.pointerId)
+      } catch {
+        // safe fallback
+      }
       setIsRotating(false)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
@@ -161,6 +173,13 @@ function PolaroidCard({
     e.stopPropagation()
 
     if (!cardRef.current) return
+    const target = e.currentTarget
+    try {
+      target.setPointerCapture(e.pointerId)
+    } catch {
+      // safe fallback if pointer capture is not supported
+    }
+
     const cardEl = cardRef.current
     const rect = cardEl.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
@@ -185,7 +204,12 @@ function PolaroidCard({
       onUpdateWidth(clampedWidth)
     }
 
-    const onPointerUp = () => {
+    const onPointerUp = (upEvent: PointerEvent) => {
+      try {
+        target.releasePointerCapture(upEvent.pointerId)
+      } catch {
+        // safe fallback
+      }
       setIsResizing(false)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
@@ -263,13 +287,15 @@ function PolaroidCard({
       }}
     >
       {/* Hidden File Input for Direct Upload */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/avif"
-        className="hidden"
-        onChange={handleFileInputChange}
-      />
+      {isEditMode && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          className="hidden"
+          onChange={handleFileInputChange}
+        />
+      )}
 
       {/* Washi Tape Decorativa */}
       <WashiTape className="-top-3 left-1/2 -translate-x-1/2 rotate-[-2deg]" />
@@ -375,64 +401,69 @@ function PolaroidCard({
         )}
       </AnimatePresence>
 
-      {/* Top Interactive Rotation Handle & Stem */}
+      {/* Top Interactive Rotation Handle & Stem (Canva / Figma Clean Dot Style) */}
       {isSelected && isEditMode && (
         <>
           {/* Vertical Connecting Stem */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-0.5 bg-primary/70"
+            className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 h-6 w-0.5 bg-primary/70"
           />
 
-          {/* Circular Rotation Handle */}
+          {/* Circular Clean Rotation Handle (Canva / Figma style) */}
           <button
             type="button"
             onPointerDown={handleRotationPointerDown}
-            className={`absolute -top-12 left-1/2 -translate-x-1/2 z-40 flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary bg-white shadow-lg transition-transform hover:scale-115 active:scale-95 ${
-              isRotating ? 'cursor-grabbing ring-2 ring-primary ring-offset-2' : 'cursor-grab'
+            style={{ touchAction: 'none' }}
+            className={`absolute -top-10 left-1/2 -translate-x-1/2 z-40 flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary bg-white shadow-lg transition-transform hover:scale-120 active:scale-105 ${
+              isRotating ? 'cursor-grabbing ring-2 ring-primary ring-offset-1 scale-110' : 'cursor-grab'
             }`}
             title="Arrastar para girar a foto"
             aria-label="Girar Polaroid"
           >
-            <RotateCw size={14} className={`text-primary ${isRotating ? 'animate-spin' : ''}`} />
+            <RotateCw size={13} className={`text-primary ${isRotating ? 'animate-spin' : ''}`} />
           </button>
 
           {/* Rotation Tooltip Badge while dragging */}
           {isRotating && (
-            <div className="pointer-events-none absolute -top-19 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md">
+            <div className="pointer-events-none absolute -top-17 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md whitespace-nowrap">
               {currentRotation > 0 ? `+${currentRotation}` : currentRotation}°
             </div>
           )}
         </>
       )}
 
-      {/* Corner Resize Handles */}
+      {/* Corner Resize Handles with touchAction: none */}
       {isSelected && isEditMode && (
         <>
           <div
             onPointerDown={handleResizePointerDown}
+            style={{ touchAction: 'none' }}
             className="absolute -top-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
           <div
             onPointerDown={handleResizePointerDown}
+            style={{ touchAction: 'none' }}
             className="absolute -top-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
           <div
             onPointerDown={handleResizePointerDown}
+            style={{ touchAction: 'none' }}
             className="absolute -bottom-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
           <div
             onPointerDown={handleResizePointerDown}
+            style={{ touchAction: 'none' }}
             className="absolute -bottom-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
 
           {/* Size Tooltip Badge while resizing */}
           {isResizing && (
-            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md">
+            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md whitespace-nowrap">
               {currentWidth}px
             </div>
           )}
@@ -477,23 +508,27 @@ function PolaroidCard({
         )}
       </div>
 
-      {/* Legenda Estilo Manuscrito (Click-to-Type WYSIWYG) */}
-      <div className="mt-3 min-h-[36px] px-1 text-center">
+      {/* Legenda Estilo Manuscrito (Click-to-Type WYSIWYG) - Previne quebra e estourar moldura */}
+      <div className="mt-3 min-h-[36px] px-1 text-center overflow-hidden">
         {isEditMode ? (
           <input
             type="text"
             value={photo.caption ?? ''}
+            maxLength={40}
             onChange={(e) => onUpdateCaption(e.target.value)}
             onClick={(e) => {
               e.stopPropagation()
               onSelect()
             }}
             placeholder="Escreva uma legenda..."
-            className="w-full bg-transparent text-center font-cursive text-xl leading-snug text-text placeholder:font-sans placeholder:text-xs placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary/60 focus:outline-none transition-colors py-0.5"
+            className="w-full bg-transparent text-center font-cursive text-xl leading-snug text-text placeholder:font-sans placeholder:text-xs placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary/60 focus:outline-none transition-colors py-0.5 overflow-hidden text-ellipsis whitespace-nowrap"
             aria-label="Legenda da foto polaroid"
           />
         ) : (
-          <p className="font-cursive text-xl leading-snug text-text">
+          <p
+            className="font-cursive text-xl leading-snug text-text overflow-hidden text-ellipsis whitespace-nowrap px-1"
+            title={photo.caption || undefined}
+          >
             {photo.caption || ''}
           </p>
         )}
@@ -538,7 +573,7 @@ function PolaroidBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
     const newPhoto: PolaroidPhoto = {
       id: generatePhotoId(),
       src: '',
-      caption: 'Nosso momento especial',
+      caption: 'Nossa viagem',
       rotation: nextRotation,
       width: 260,
     }

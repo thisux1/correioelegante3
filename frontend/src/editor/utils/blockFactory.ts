@@ -217,13 +217,13 @@ export function createBlock(type: BlockType): Block {
             {
               id: generateBlockId(),
               src: '',
-              caption: 'Um instante guardado na memória',
+              caption: 'Primeiro café',
               rotation: -2,
             },
             {
               id: generateBlockId(),
               src: '',
-              caption: 'A serenidade de estar ao seu lado',
+              caption: 'Aquele domingo',
               rotation: 2.5,
             },
           ],
