@@ -217,10 +217,10 @@ export function harmonizePalette(
   const primary = hslToHex(hsl.h, clamp(Math.max(hsl.s, 70), 60, 95), clamp(hsl.l, 55, 70))
   const background = hslToHex(hsl.h, clamp(Math.min(hsl.s, 35), 15, 32), 7)
   const surface = hslToHex(hsl.h, clamp(Math.min(hsl.s, 30), 12, 28), 12)
-  const surfaceGlass = toHslaString(hsl.h, 25, 12, 0.86)
-  const border = hslToHex(hsl.h, clamp(Math.min(hsl.s, 45), 25, 45), 24)
+  const surfaceGlass = toHslaString(hsl.h, 25, 12, 0.92)
+  const border = hslToHex(hsl.h, clamp(Math.min(hsl.s, 45), 25, 45), 30)
   const text = hslToHex(hsl.h, clamp(Math.min(hsl.s, 15), 5, 20), 96)
-  const textLight = hslToHex(hsl.h, clamp(Math.min(hsl.s, 20), 8, 25), 68)
+  const textLight = hslToHex(hsl.h, clamp(Math.min(hsl.s, 20), 8, 25), 74)
   const sealColor = hslToHex(hsl.h, clamp(Math.max(hsl.s, 80), 70, 98), 58)
 
   const washiBg = hslToHex(accentHsl.h, clamp(Math.min(accentHsl.s, 40), 15, 35), 22)
