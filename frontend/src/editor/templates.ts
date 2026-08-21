@@ -81,13 +81,13 @@ export const templates: Template[] = [
             {
               id: 'photo-1',
               src: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=600&q=80',
-              caption: 'A primeira tarde em que a conversa não teve hora para acabar',
+              caption: 'Primeiro café',
               rotation: -3,
             },
             {
               id: 'photo-2',
               src: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=600&q=80',
-              caption: 'Quando compreendi que meu lar era ao seu lado',
+              caption: 'Nosso cantinho',
               rotation: 3.5,
             },
           ],
@@ -174,13 +174,13 @@ export const templates: Template[] = [
             {
               id: 'aniv-p1',
               src: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=600&q=80',
-              caption: 'O riso solto em uma tarde comum de domingo',
+              caption: 'Aquele domingo',
               rotation: -2.5,
             },
             {
               id: 'aniv-p2',
               src: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80',
-              caption: 'A serenidade de quem encontrou onde descansar o coração',
+              caption: 'Para sempre',
               rotation: 2,
             },
           ],
@@ -282,7 +282,7 @@ export const templates: Template[] = [
             {
               id: 'poetic-p1',
               src: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=600&q=80',
-              caption: 'A lembrança de um instante que não se apaga',
+              caption: 'Instante eterno',
               rotation: 1.8,
             },
           ],

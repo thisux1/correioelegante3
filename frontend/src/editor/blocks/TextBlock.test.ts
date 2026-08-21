@@ -85,6 +85,113 @@ describe('TextBlock', () => {
     }
   })
 
+  it('abre o dropdown customizado imersivo de fontes com preview e altera fonte', async () => {
+    const block: Block = {
+      id: 'text-1',
+      type: 'text',
+      version: 1,
+      props: {
+        text: 'Texto estilizado',
+        category: 'body',
+        align: 'left',
+      },
+      meta: { createdAt: Date.now(), updatedAt: Date.now() },
+    }
+
+    let updatedBlock: Block = block
+    const onUpdate: NonNullable<BlockComponentProps['onUpdate']> = vi.fn((updater) => {
+      updatedBlock = updater(updatedBlock)
+    })
+
+    const root = ReactDOM.createRoot(container)
+    await act(async () => {
+      root.render(React.createElement(TextBlock, { block, mode: 'edit', onUpdate }))
+    })
+
+    const fontTrigger = container.querySelector('button[aria-label="Selecionar Fonte"]') as HTMLButtonElement
+    expect(fontTrigger).not.toBeNull()
+
+    // Abre o dropdown
+    await act(async () => {
+      fontTrigger.click()
+    })
+
+    const fontListbox = container.querySelector('[role="listbox"][aria-label="Lista de fontes disponíveis"]')
+    expect(fontListbox).not.toBeNull()
+    expect(fontListbox?.textContent).toContain('Dancing Script')
+    expect(fontListbox?.textContent).toContain('Playfair Display')
+
+    // Clica na opção Dancing Script
+    const dancingScriptBtn = Array.from(fontListbox?.querySelectorAll('button') || []).find(
+      (b) => b.textContent?.includes('Dancing Script'),
+    )
+    expect(dancingScriptBtn).toBeDefined()
+
+    await act(async () => {
+      dancingScriptBtn?.click()
+    })
+
+    expect(onUpdate).toHaveBeenCalled()
+    if (updatedBlock.type === 'text') {
+      expect(updatedBlock.props.fontFamily).toContain('Dancing Script')
+    }
+  })
+
+  it('abre o dropdown customizado de tamanho [P], [M], [G], [GG], [XG] e altera tamanho', async () => {
+    const block: Block = {
+      id: 'text-1',
+      type: 'text',
+      version: 1,
+      props: {
+        text: 'Texto com tamanho',
+        category: 'body',
+        align: 'left',
+      },
+      meta: { createdAt: Date.now(), updatedAt: Date.now() },
+    }
+
+    let updatedBlock: Block = block
+    const onUpdate: NonNullable<BlockComponentProps['onUpdate']> = vi.fn((updater) => {
+      updatedBlock = updater(updatedBlock)
+    })
+
+    const root = ReactDOM.createRoot(container)
+    await act(async () => {
+      root.render(React.createElement(TextBlock, { block, mode: 'edit', onUpdate }))
+    })
+
+    const sizeTrigger = container.querySelector('button[aria-label="Selecionar Tamanho"]') as HTMLButtonElement
+    expect(sizeTrigger).not.toBeNull()
+
+    // Abre o dropdown
+    await act(async () => {
+      sizeTrigger.click()
+    })
+
+    const sizeListbox = container.querySelector('[role="listbox"][aria-label="Tamanhos de texto disponíveis"]')
+    expect(sizeListbox).not.toBeNull()
+    expect(sizeListbox?.textContent).toContain('[P]')
+    expect(sizeListbox?.textContent).toContain('[M]')
+    expect(sizeListbox?.textContent).toContain('[G]')
+    expect(sizeListbox?.textContent).toContain('[GG]')
+    expect(sizeListbox?.textContent).toContain('[XG]')
+
+    // Clica em [G] (18px)
+    const gBtn = Array.from(sizeListbox?.querySelectorAll('button') || []).find(
+      (b) => b.textContent?.includes('[G]'),
+    )
+    expect(gBtn).toBeDefined()
+
+    await act(async () => {
+      gBtn?.click()
+    })
+
+    expect(onUpdate).toHaveBeenCalled()
+    if (updatedBlock.type === 'text') {
+      expect(updatedBlock.props.fontSize).toBe('18px')
+    }
+  })
+
   it('renderiza corretamente no modo preview para categoria citacao', async () => {
     const quoteBlock: Block = {
       id: 'quote-1',

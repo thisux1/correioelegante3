@@ -78,6 +78,12 @@ describe('MediaField', () => {
     })
 
     const uploadButton = host.querySelector('button[aria-label="Upload de arquivo para Imagem principal"]')
+    const toggleUrlButton = Array.from(host.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('Usar URL manual'),
+    )
+    act(() => {
+      toggleUrlButton?.click()
+    })
     const urlInput = host.querySelector('input[aria-label="Colar URL para Imagem principal"]')
 
     expect(uploadButton).not.toBeNull()
@@ -138,7 +144,7 @@ describe('MediaField', () => {
     })
 
     const statusText = host.textContent ?? ''
-    expect(statusText.includes('Arquivo pronto para uso.')).toBe(true)
+    expect(statusText.includes('Upload concluido') || statusText.includes('ja pode ser usado')).toBe(true)
     unmount()
   })
 
