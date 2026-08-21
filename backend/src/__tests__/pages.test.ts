@@ -30,8 +30,9 @@ const basePageShape = {
   },
   status: 'published',
   visibility: 'public',
-  publishedAt: new Date(),
+  publishedAt: new Date() as Date | null,
   paymentStatus: 'pending',
+
   paymentId: null,
   paymentProvider: null,
   paymentMethod: null,
@@ -462,6 +463,47 @@ describe('POST /api/pages', () => {
       },
     ]);
   });
+
+  it('201 — status: published sem publishedAt auto-popula publishedAt', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage({
+      status: 'published',
+      publishedAt: new Date(),
+    }));
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: basePageShape.content,
+        status: 'published',
+        visibility: 'public',
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.page.status).toBe('published');
+    expect(res.body.page.publishedAt).toBeTruthy();
+  });
+
+  it('201 — status: draft com publishedAt limpa publishedAt para null', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage({
+      status: 'draft',
+      publishedAt: null,
+    }));
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: basePageShape.content,
+        status: 'draft',
+        visibility: 'public',
+        publishedAt: '2026-03-19T12:00:00.000Z',
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.page.status).toBe('draft');
+    expect(res.body.page.publishedAt).toBeNull();
+  });
 });
 
 describe('PUT /api/pages/:id', () => {
@@ -479,7 +521,62 @@ describe('PUT /api/pages/:id', () => {
     expect(res.status).toBe(409);
     expect(res.body.code).toBe('PAGE_VERSION_CONFLICT');
   });
+
+  it('200 — atualiza draft para published sem publishedAt e auto-popula data', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'draft',
+      publishedAt: null,
+      version: 1,
+    }));
+    vi.mocked(prisma.page.update).mockResolvedValue(makePage({
+      status: 'published',
+      publishedAt: new Date(),
+      version: 2,
+    }));
+
+    const res = await request(app)
+      .put(`/api/pages/${pageId}`)
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: basePageShape.content,
+        status: 'published',
+        visibility: 'public',
+        version: 1,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.page.status).toBe('published');
+    expect(res.body.page.publishedAt).toBeTruthy();
+  });
+
+  it('200 — atualiza published para draft e reseta publishedAt para null', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'published',
+      publishedAt: new Date(),
+      version: 1,
+    }));
+    vi.mocked(prisma.page.update).mockResolvedValue(makePage({
+      status: 'draft',
+      publishedAt: null,
+      version: 2,
+    }));
+
+    const res = await request(app)
+      .put(`/api/pages/${pageId}`)
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: basePageShape.content,
+        status: 'draft',
+        visibility: 'public',
+        version: 1,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.page.status).toBe('draft');
+    expect(res.body.page.publishedAt).toBeNull();
+  });
 });
+
 
 describe('GET /api/pages/:id', () => {
   it('404 — draft public nao deve ser visivel para visitante', async () => {

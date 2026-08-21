@@ -56,6 +56,11 @@ function mapBackendPage(page: BackendPage): PageSummary {
 
 export const pageService = {
   async savePage(input: SavePageInput): Promise<SavePageResult> {
+    const publishedAt =
+      input.status === 'published'
+        ? (input.publishedAt || new Date().toISOString())
+        : (input.status === 'draft' || input.status === 'archived' ? null : (input.publishedAt ?? null))
+
     const payload = {
       content: {
         blocks: input.content.blocks,
@@ -64,9 +69,10 @@ export const pageService = {
       },
       status: input.status,
       visibility: input.visibility,
-      publishedAt: input.publishedAt ?? null,
+      publishedAt,
       version: input.version,
     }
+
 
     if (!input.pageId) {
       const response = await api.post<{ page: BackendPage }>('/pages', payload)

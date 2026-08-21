@@ -36,19 +36,8 @@ export const messageSchema = z.object({
   status: pageStatusSchema.optional(),
   visibility: pageVisibilitySchema.optional(),
   publishedAt: z.string().datetime({ offset: true }).nullable().optional(),
-}).superRefine((value, ctx) => {
-  const lifecycle = pageLifecycleSchema.safeParse({
-    status: value.status,
-    visibility: value.visibility,
-    publishedAt: value.publishedAt,
-  });
-
-  if (!lifecycle.success) {
-    for (const issue of lifecycle.error.issues) {
-      ctx.addIssue(issue);
-    }
-  }
 });
+
 
 export const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Senha atual é obrigatória'),
@@ -173,48 +162,21 @@ const pageContentSchema = z
     }
   });
 
-export const createPageSchema = z
-  .object({
-    content: pageContentSchema,
-    status: pageStatusSchema.optional(),
-    visibility: pageVisibilitySchema.optional(),
-    publishedAt: z.string().datetime({ offset: true }).nullable().optional(),
-  })
-  .superRefine((value, ctx) => {
-    const lifecycle = pageLifecycleSchema.safeParse({
-      status: value.status,
-      visibility: value.visibility,
-      publishedAt: value.publishedAt,
-    });
+export const createPageSchema = z.object({
+  content: pageContentSchema,
+  status: pageStatusSchema.optional(),
+  visibility: pageVisibilitySchema.optional(),
+  publishedAt: z.string().datetime({ offset: true }).nullable().optional(),
+});
 
-    if (!lifecycle.success) {
-      for (const issue of lifecycle.error.issues) {
-        ctx.addIssue(issue);
-      }
-    }
-  });
+export const updatePageSchema = z.object({
+  content: pageContentSchema,
+  status: pageStatusSchema.optional(),
+  visibility: pageVisibilitySchema.optional(),
+  publishedAt: z.string().datetime({ offset: true }).nullable().optional(),
+  version: z.number().int().min(1, 'Versao da pagina invalida').optional(),
+});
 
-export const updatePageSchema = z
-  .object({
-    content: pageContentSchema,
-    status: pageStatusSchema.optional(),
-    visibility: pageVisibilitySchema.optional(),
-    publishedAt: z.string().datetime({ offset: true }).nullable().optional(),
-    version: z.number().int().min(1, 'Versao da pagina invalida').optional(),
-  })
-  .superRefine((value, ctx) => {
-    const lifecycle = pageLifecycleSchema.safeParse({
-      status: value.status,
-      visibility: value.visibility,
-      publishedAt: value.publishedAt,
-    });
-
-    if (!lifecycle.success) {
-      for (const issue of lifecycle.error.issues) {
-        ctx.addIssue(issue);
-      }
-    }
-  });
 
 export const assetUploadUrlSchema = z.object({
   kind: assetKindSchema,
