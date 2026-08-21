@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { registerNavigator } from '@/app/navigation'
 import { Layout } from '@/components/layout/Layout'
 import { ScrollToTop } from '@/components/layout/ScrollToTop'
@@ -90,12 +90,21 @@ function RouterNavigationBridge() {
   return null
 }
 
+function RouteErrorBoundary({ children }: { children: ReactNode }) {
+  const location = useLocation()
+  return (
+    <ErrorBoundary resetKey={location.pathname + location.search}>
+      {children}
+    </ErrorBoundary>
+  )
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
       <RouterNavigationBridge />
       <ScrollToTop />
-      <ErrorBoundary>
+      <RouteErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route element={<Layout />}>
@@ -126,7 +135,7 @@ export function AppRouter() {
             </Route>
           </Routes>
         </Suspense>
-      </ErrorBoundary>
+      </RouteErrorBoundary>
     </BrowserRouter>
   )
 }
