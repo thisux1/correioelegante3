@@ -14,6 +14,7 @@ import {
   Infinity as InfinityIcon,
   ArrowRight,
   RefreshCw,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -34,8 +35,10 @@ export function Pricing() {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingMethod, setLoadingMethod] = useState<'pix' | 'credit_card' | 'mercadopago_checkout' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
+
 
   const isSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
 
@@ -86,6 +89,7 @@ export function Pricing() {
 
   const handleStartPix = async () => {
     setIsLoading(true)
+    setLoadingMethod('pix')
     setError(null)
     try {
       const { data } = await paymentService.createSubscriptionPix()
@@ -96,11 +100,13 @@ export function Pricing() {
       setError(axiosErr.response?.data?.error || 'Erro ao gerar Pix da assinatura. Tente novamente.')
     } finally {
       setIsLoading(false)
+      setLoadingMethod(null)
     }
   }
 
   const handleStartCardStripe = async () => {
     setIsLoading(true)
+    setLoadingMethod('credit_card')
     setError(null)
     try {
       const { data } = await paymentService.createSubscriptionCard()
@@ -114,11 +120,13 @@ export function Pricing() {
       setError(axiosErr.response?.data?.error || 'Erro ao iniciar pagamento com cartão.')
     } finally {
       setIsLoading(false)
+      setLoadingMethod(null)
     }
   }
 
   const handleStartMercadoPago = async () => {
     setIsLoading(true)
+    setLoadingMethod('mercadopago_checkout')
     setError(null)
     try {
       const { data } = await paymentService.createSubscriptionMercadoPagoCheckout()
@@ -132,8 +140,10 @@ export function Pricing() {
       setError(axiosErr.response?.data?.error || 'Erro ao iniciar Checkout do Mercado Pago.')
     } finally {
       setIsLoading(false)
+      setLoadingMethod(null)
     }
   }
+
 
   const handleCopyPix = async () => {
     if (!pixData?.pixQrCode) return
@@ -458,7 +468,11 @@ export function Pricing() {
                       <p className="text-xs text-text-light">Liberação imediata via QR Code</p>
                     </div>
                   </div>
-                  <Badge variant="success" className="text-xs">Mais Rápido</Badge>
+                  {loadingMethod === 'pix' ? (
+                    <Loader2 size={20} className="animate-spin shrink-0 aspect-square text-emerald-600" />
+                  ) : (
+                    <Badge variant="success" className="text-xs">Mais Rápido</Badge>
+                  )}
                 </button>
 
                 <button
@@ -476,7 +490,11 @@ export function Pricing() {
                       <p className="text-xs text-text-light">Stripe Checkout seguro</p>
                     </div>
                   </div>
-                  <ArrowRight size={18} className="text-text-muted transition-transform group-hover:translate-x-1" />
+                  {loadingMethod === 'credit_card' ? (
+                    <Loader2 size={20} className="animate-spin shrink-0 aspect-square text-violet-600" />
+                  ) : (
+                    <ArrowRight size={18} className="text-text-muted transition-transform group-hover:translate-x-1" />
+                  )}
                 </button>
 
                 <button
@@ -494,9 +512,14 @@ export function Pricing() {
                       <p className="text-xs text-text-light">Boleto, saldo MP ou cartão</p>
                     </div>
                   </div>
-                  <ArrowRight size={18} className="text-text-muted transition-transform group-hover:translate-x-1" />
+                  {loadingMethod === 'mercadopago_checkout' ? (
+                    <Loader2 size={20} className="animate-spin shrink-0 aspect-square text-sky-600" />
+                  ) : (
+                    <ArrowRight size={18} className="text-text-muted transition-transform group-hover:translate-x-1" />
+                  )}
                 </button>
               </div>
+
 
               {/* Dev Simulation Button */}
               {import.meta.env.DEV ? (
