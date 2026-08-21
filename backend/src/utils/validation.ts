@@ -75,6 +75,7 @@ export const createSubscriptionPaymentSchema = z.object({
   planId: z.enum(['monthly_unlimited']).optional().default('monthly_unlimited'),
   customer: customerSchema,
   cardData: cardDataSchema,
+  turnstileToken: z.string().max(2048).optional(),
 });
 
 export const createPaymentSchema = z.object({
@@ -94,7 +95,9 @@ export const createPaymentSchema = z.object({
     .optional(),
   customer: customerSchema,
   cardData: cardDataSchema,
+  turnstileToken: z.string().max(2048).optional(),
 }).superRefine((value, ctx) => {
+
   const hasLegacy = Boolean(value.messageId);
   const hasNew = Boolean(value.resourceType && value.resourceId);
 

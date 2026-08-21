@@ -35,6 +35,7 @@ app.use(
         scriptSrc: [
           "'self'",
           "'unsafe-inline'",
+          'https://challenges.cloudflare.com',
           'https://js.stripe.com',
           'https://sdk.mercadopago.com',
           'https://http2.mlstatic.com',
@@ -60,6 +61,7 @@ app.use(
         ],
         connectSrc: [
           "'self'",
+          'https://challenges.cloudflare.com',
           'https://api.stripe.com',
           'https://api.mercadopago.com',
           'https://*.mercadopago.com',
@@ -71,6 +73,7 @@ app.use(
         ],
         frameSrc: [
           "'self'",
+          'https://challenges.cloudflare.com',
           'https://js.stripe.com',
           'https://hooks.stripe.com',
           'https://www.mercadopago.com',
@@ -80,6 +83,7 @@ app.use(
           'https://*.pagseguro.com',
           'https://*.pagbank.com.br',
         ],
+
         objectSrc: ["'none'"],
         upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
       },

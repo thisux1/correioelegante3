@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
 import { useNavigate, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import {
@@ -22,6 +23,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { Container } from '@/components/layout/Container'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
+import { Turnstile, type TurnstileRef } from '@/components/ui/Turnstile'
 import { useAuthStore } from '@/store/authStore'
 import { paymentService, type PixPaymentResponse } from '@/services/paymentService'
 
@@ -36,8 +38,11 @@ export function Pricing() {
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMethod, setLoadingMethod] = useState<'pix' | 'credit_card' | 'mercadopago_checkout' | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileRef>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
+
 
 
   const isSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
@@ -92,10 +97,11 @@ export function Pricing() {
     setLoadingMethod('pix')
     setError(null)
     try {
-      const { data } = await paymentService.createSubscriptionPix()
+      const { data } = await paymentService.createSubscriptionPix(turnstileToken || undefined)
       setPixData(data)
       setCheckoutStep('pix')
     } catch (err: unknown) {
+      turnstileRef.current?.reset()
       const axiosErr = err as { response?: { data?: { error?: string } } }
       setError(axiosErr.response?.data?.error || 'Erro ao gerar Pix da assinatura. Tente novamente.')
     } finally {
@@ -109,13 +115,14 @@ export function Pricing() {
     setLoadingMethod('credit_card')
     setError(null)
     try {
-      const { data } = await paymentService.createSubscriptionCard()
+      const { data } = await paymentService.createSubscriptionCard(turnstileToken || undefined)
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl
       } else {
         setError('Não foi possível redirecionar para o pagamento seguro no momento.')
       }
     } catch (err: unknown) {
+      turnstileRef.current?.reset()
       const axiosErr = err as { response?: { data?: { error?: string } } }
       setError(axiosErr.response?.data?.error || 'Erro ao iniciar pagamento com cartão.')
     } finally {
@@ -129,13 +136,14 @@ export function Pricing() {
     setLoadingMethod('mercadopago_checkout')
     setError(null)
     try {
-      const { data } = await paymentService.createSubscriptionMercadoPagoCheckout()
+      const { data } = await paymentService.createSubscriptionMercadoPagoCheckout(turnstileToken || undefined)
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl
       } else {
         setError('Não foi possível abrir o Checkout do Mercado Pago.')
       }
     } catch (err: unknown) {
+      turnstileRef.current?.reset()
       const axiosErr = err as { response?: { data?: { error?: string } } }
       setError(axiosErr.response?.data?.error || 'Erro ao iniciar Checkout do Mercado Pago.')
     } finally {
@@ -143,6 +151,7 @@ export function Pricing() {
       setLoadingMethod(null)
     }
   }
+
 
 
   const handleCopyPix = async () => {
@@ -450,10 +459,21 @@ export function Pricing() {
                 <p className="text-xs font-medium text-text-light mt-1">Acesso irrestrito por 30 dias corridos</p>
               </div>
 
+              <div className="my-2 flex justify-center">
+                <Turnstile
+                  ref={turnstileRef}
+                  action="subscription_checkout"
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => turnstileRef.current?.reset()}
+                />
+              </div>
+
               <p className="text-xs font-semibold text-text-light">Escolha a forma de pagamento:</p>
 
               <div className="grid grid-cols-1 gap-3">
                 <button
+
                   type="button"
                   onClick={handleStartPix}
                   disabled={isLoading}

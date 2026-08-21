@@ -66,4 +66,29 @@ describe('paymentService', () => {
     expect(api.get).toHaveBeenCalledWith('/payments/subscription/status')
     expect(res.data.isSubscribed).toBe(true)
   })
+
+  it('createPix envia turnstileToken no payload e headers quando fornecido', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: { paymentId: '123' } })
+
+    await paymentService.createPix(
+      { resourceType: 'page', resourceId: '507f1f77bcf86cd799439022' },
+      'cf_token_sample'
+    )
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/payments/create',
+      {
+        paymentMethod: 'pix',
+        resourceType: 'page',
+        resourceId: '507f1f77bcf86cd799439022',
+        turnstileToken: 'cf_token_sample',
+      },
+      {
+        headers: {
+          'cf-turnstile-response': 'cf_token_sample',
+        },
+      }
+    )
+  })
 })
+
