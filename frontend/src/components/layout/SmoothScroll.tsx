@@ -42,10 +42,10 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
       root
       options={{
         autoRaf: false,
-        duration: 1.2,
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        duration: 1.8,
+        easing: (t: number) => 1 - Math.pow(1 - t, 4),
         smoothWheel: true,
-        wheelMultiplier: 1,
+        wheelMultiplier: 1.15,
         touchMultiplier: 1,
       }}
       ref={lenisRef}
