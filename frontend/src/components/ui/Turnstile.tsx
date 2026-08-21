@@ -40,6 +40,13 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(function Turns
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | null>(null)
+  const callbacksRef = useRef({ onSuccess, onError, onExpire })
+
+  // Mantém as referências dos callbacks sempre atualizadas sem disparar re-renders do widget
+  useEffect(() => {
+    callbacksRef.current = { onSuccess, onError, onExpire }
+  }, [onSuccess, onError, onExpire])
+
   const siteKey =
     import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAEXPctCvP81tBls0'
 
@@ -51,7 +58,7 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(function Turns
           try {
             window.turnstile.reset(widgetIdRef.current)
           } catch {
-            // Ignora erro se widget já tiver sido desmontado
+            // Ignora se o widget já não existir
           }
         }
       },
@@ -62,9 +69,10 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(function Turns
   useEffect(() => {
     let isMounted = true
 
-    // Carrega o script da Cloudflare Turnstile caso ainda não esteja presente
-    if (!document.getElementById('cloudflare-turnstile-api')) {
-      const script = document.createElement('script')
+    // Carrega o script oficial do Cloudflare Turnstile sob demanda
+    let script = document.getElementById('cloudflare-turnstile-api') as HTMLScriptElement | null
+    if (!script) {
+      script = document.createElement('script')
       script.id = 'cloudflare-turnstile-api'
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
       script.async = true
@@ -72,47 +80,72 @@ export const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(function Turns
       document.head.appendChild(script)
     }
 
-    const checkAndRender = () => {
-      if (!isMounted) return
-      if (window.turnstile && containerRef.current && !widgetIdRef.current) {
-        try {
-          widgetIdRef.current = window.turnstile.render(containerRef.current, {
-            sitekey: siteKey,
-            action,
-            theme,
-            size: 'flexible',
-            callback: (token: string) => {
-              if (isMounted) onSuccess(token)
-            },
-            'error-callback': () => {
-              if (isMounted && onError) onError()
-            },
-            'expired-callback': () => {
-              if (isMounted && onExpire) onExpire()
-            },
-          })
-        } catch {
-          // Trata falhas transitórias
-        }
+    const renderWidget = () => {
+      if (!isMounted || widgetIdRef.current || !containerRef.current || !window.turnstile) {
+        return
+      }
+
+      try {
+        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+          sitekey: siteKey,
+          action,
+          theme,
+          size: 'flexible',
+          callback: (token: string) => {
+            if (isMounted) {
+              callbacksRef.current.onSuccess(token)
+            }
+          },
+          'error-callback': () => {
+            if (isMounted && callbacksRef.current.onError) {
+              callbacksRef.current.onError()
+            }
+          },
+          'expired-callback': () => {
+            if (isMounted && callbacksRef.current.onExpire) {
+              callbacksRef.current.onExpire()
+            }
+          },
+        })
+      } catch {
+        // Trata tentativas concorrentes de renderização
       }
     }
 
-    const interval = setInterval(checkAndRender, 100)
-    checkAndRender()
+    if (window.turnstile) {
+      renderWidget()
+    } else {
+      script.addEventListener('load', renderWidget)
+    }
+
+    // Polling de segurança caso o script já tenha carregado antes do listener
+    const pollInterval = setInterval(() => {
+      if (!isMounted) {
+        clearInterval(pollInterval)
+        return
+      }
+      if (window.turnstile && !widgetIdRef.current) {
+        renderWidget()
+        clearInterval(pollInterval)
+      }
+    }, 150)
 
     return () => {
       isMounted = false
-      clearInterval(interval)
+      clearInterval(pollInterval)
+      if (script) {
+        script.removeEventListener('load', renderWidget)
+      }
       if (widgetIdRef.current && window.turnstile) {
         try {
           window.turnstile.remove(widgetIdRef.current)
         } catch {
-          // Ignora limpeza
+          // Ignora limpeza em caso de desmontagem
         }
         widgetIdRef.current = null
       }
     }
-  }, [siteKey, action, theme, onSuccess, onError, onExpire])
+  }, [siteKey, action, theme])
 
   return (
     <div

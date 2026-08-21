@@ -29,7 +29,7 @@ import { paymentService, type PixPaymentResponse } from '@/services/paymentServi
 
 export function Pricing() {
   const navigate = useNavigate()
-  const { isAuthenticated, user, initAuth } = useAuthStore()
+  const { isAuthenticated, user, refreshUser } = useAuthStore()
 
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState<'select' | 'pix' | 'success'>('select')
@@ -56,7 +56,7 @@ export function Pricing() {
         const { data } = await paymentService.getSubscriptionStatus()
         if (data.isSubscribed) {
           setCheckoutStep('success')
-          await initAuth()
+          await refreshUser()
           clearInterval(interval)
           setTimeout(() => {
             navigate('/planos/sucesso')
@@ -68,7 +68,7 @@ export function Pricing() {
     }, 3500)
 
     return () => clearInterval(interval)
-  }, [checkoutStep, isCheckoutModalOpen, navigate, initAuth])
+  }, [checkoutStep, isCheckoutModalOpen, navigate, refreshUser])
 
   // Countdown do Pix
   useEffect(() => {
@@ -170,13 +170,14 @@ export function Pricing() {
     setError(null)
     try {
       await paymentService.simulateSubscriptionApproval()
-      await initAuth()
+      await refreshUser()
       setCheckoutStep('success')
       setTimeout(() => {
         setIsCheckoutModalOpen(false)
         navigate('/planos/sucesso')
       }, 1000)
     } catch {
+
       setError('Falha ao simular aprovação.')
     } finally {
       setIsSimulating(false)
