@@ -251,6 +251,24 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showHighlightPicker, setShowHighlightPicker] = useState(false)
   const [selectionPosition, setSelectionPosition] = useState<SelectionToolbarPosition | null>(null)
+  const [activeFormats, setActiveFormats] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+    strikeThrough: false,
+  })
+  const [formatFeedback, setFormatFeedback] = useState<string | null>(null)
+  const feedbackTimeoutRef = useRef<number | null>(null)
+
+  const triggerFeedback = useCallback((msg: string) => {
+    setFormatFeedback(msg)
+    if (feedbackTimeoutRef.current) {
+      window.clearTimeout(feedbackTimeoutRef.current)
+    }
+    feedbackTimeoutRef.current = window.setTimeout(() => {
+      setFormatFeedback(null)
+    }, 1400)
+  }, [])
 
   const isTextBlock = block.type === 'text'
   const props: TextBlockProps = isTextBlock
@@ -358,17 +376,26 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     const rangeRect = range.getBoundingClientRect()
     const containerRect = containerRef.current.getBoundingClientRect()
 
-    // Position BELOW the selected text so native mobile OS context menus (which pop above) do not overlap
-    const top = rangeRect.bottom - containerRect.top + 8
+    // Position comfortably BELOW the selected text so native mobile OS context menus do not overlap
+    const top = rangeRect.bottom - containerRect.top + 18
     const left = Math.max(
       8,
       Math.min(
-        containerRect.width - 270,
-        rangeRect.left - containerRect.left + rangeRect.width / 2 - 130,
+        containerRect.width - 290,
+        rangeRect.left - containerRect.left + rangeRect.width / 2 - 145,
       ),
     )
 
     setSelectionPosition({ top, left })
+
+    if (typeof document !== 'undefined') {
+      setActiveFormats({
+        bold: Boolean(document.queryCommandState?.('bold')),
+        italic: Boolean(document.queryCommandState?.('italic')),
+        underline: Boolean(document.queryCommandState?.('underline')),
+        strikeThrough: Boolean(document.queryCommandState?.('strikeThrough')),
+      })
+    }
   }, [mode])
 
   useEffect(() => {
@@ -435,7 +462,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   // Formatting execution (Word/Medium inline tools)
   const executeFormat = useCallback(
-    (command: string, value: string | undefined = undefined) => {
+    (command: string, value: string | undefined = undefined, label?: string) => {
       if (typeof document === 'undefined') {
         return
       }
@@ -446,9 +473,31 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       if (editableRef.current) {
         commitUpdate(editableRef.current.innerHTML)
       }
+
+      const isBold = Boolean(document.queryCommandState?.('bold'))
+      const isItalic = Boolean(document.queryCommandState?.('italic'))
+      const isUnderline = Boolean(document.queryCommandState?.('underline'))
+      const isStrike = Boolean(document.queryCommandState?.('strikeThrough'))
+
+      setActiveFormats({
+        bold: isBold,
+        italic: isItalic,
+        underline: isUnderline,
+        strikeThrough: isStrike,
+      })
+
+      if (label) {
+        triggerFeedback(label)
+      } else {
+        if (command === 'bold') triggerFeedback(isBold ? 'Negrito aplicado' : 'Negrito removido')
+        if (command === 'italic') triggerFeedback(isItalic ? 'Itálico aplicado' : 'Itálico removido')
+        if (command === 'underline') triggerFeedback(isUnderline ? 'Sublinhado aplicado' : 'Sublinhado removido')
+        if (command === 'strikeThrough') triggerFeedback(isStrike ? 'Tachado aplicado' : 'Tachado removido')
+      }
+
       updateSelectionToolbar()
     },
-    [commitUpdate, updateSelectionToolbar],
+    [commitUpdate, triggerFeedback, updateSelectionToolbar],
   )
 
   const applyHighlight = useCallback(
@@ -484,10 +533,11 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         commitUpdate(editableRef.current.innerHTML)
       }
 
+      triggerFeedback('Destaque aplicado')
       setShowHighlightPicker(false)
       updateSelectionToolbar()
     },
-    [commitUpdate, updateSelectionToolbar],
+    [commitUpdate, triggerFeedback, updateSelectionToolbar],
   )
 
   const handleKeyDown = useCallback(
@@ -732,7 +782,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   return (
     <div
       ref={containerRef}
-      className="relative rounded-2xl border border-primary/20 bg-white/90 p-4 shadow-sm backdrop-blur-xs transition-all hover:border-primary/30"
+      className="relative overflow-visible rounded-2xl border border-primary/20 bg-white/90 p-4 shadow-sm backdrop-blur-xs transition-all hover:border-primary/30"
     >
       {/* Category Tabs */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-primary/10 pb-3">
@@ -848,7 +898,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <div
               role="listbox"
               aria-label="Lista de fontes disponíveis"
-              className="absolute left-0 top-full mt-1.5 z-50 w-72 sm:w-80 max-h-72 overflow-y-auto rounded-xl border border-primary/25 bg-white p-1.5 shadow-2xl backdrop-blur-md"
+              className="absolute left-0 top-full mt-2 z-50 w-72 sm:w-84 max-h-80 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
             >
               <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
                 Tipografia & Estilos
@@ -865,7 +915,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                       handleFontChange(opt.value)
                       setShowFontDropdown(false)
                     }}
-                    className={`group flex w-full flex-col rounded-lg p-2 text-left transition-all ${
+                    className={`group flex w-full flex-col rounded-xl p-2.5 text-left transition-all ${
                       isSelected
                         ? 'bg-primary/10 text-primary font-semibold ring-1 ring-primary/20'
                         : 'hover:bg-primary/5 text-text'
@@ -922,7 +972,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <div
               role="listbox"
               aria-label="Tamanhos de texto disponíveis"
-              className="absolute left-0 top-full mt-1.5 z-50 w-52 rounded-xl border border-primary/25 bg-white p-1.5 shadow-2xl backdrop-blur-md"
+              className="absolute left-0 top-full mt-2 z-50 w-56 max-h-72 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
             >
               <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
                 Tamanho do Texto
@@ -939,7 +989,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                       handleFontSizeChange(opt.value)
                       setShowSizeDropdown(false)
                     }}
-                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                    className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs transition-all ${
                       isSelected
                         ? 'bg-primary/10 text-primary font-bold ring-1 ring-primary/20'
                         : 'hover:bg-primary/5 text-text'
@@ -981,7 +1031,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           </button>
 
           {showColorPicker ? (
-            <div className="absolute left-0 top-full z-50 mt-1.5 w-52 rounded-xl border border-primary/20 bg-white p-3 shadow-xl">
+            <div className="absolute left-0 top-full z-50 mt-2 w-64 rounded-2xl border border-primary/20 bg-white p-3.5 shadow-2xl backdrop-blur-md">
               <p className="mb-2 text-[11px] font-semibold text-text-light uppercase tracking-wider">
                 Paleta de Cores
               </p>
@@ -992,7 +1042,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     type="button"
                     title={c.label}
                     onClick={() => handleColorChange(c.value)}
-                    className="h-7 w-7 rounded-lg border border-black/10 transition-transform hover:scale-110 flex items-center justify-center"
+                    className="h-8 w-8 rounded-xl border border-black/10 transition-transform hover:scale-110 flex items-center justify-center"
                     style={{ backgroundColor: c.hex === 'transparent' ? '#ffffff' : c.hex }}
                   >
                     {c.value === '' && <RotateCcw size={11} className="text-text-light" />}
@@ -1005,7 +1055,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                   type="color"
                   value={props.color?.startsWith('#') ? props.color : '#e11d48'}
                   onChange={(e) => handleColorChange(e.target.value)}
-                  className="h-7 w-7 cursor-pointer rounded-md border border-primary/20 bg-transparent p-0"
+                  className="h-7 w-7 cursor-pointer rounded-lg border border-primary/20 bg-transparent p-0"
                   aria-label="Seletor customizado de cor"
                 />
                 <span className="text-xs text-text-light">Cor customizada</span>
@@ -1053,7 +1103,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       </div>
 
       {/* Editable Container */}
-      <div className="relative">
+      <div className="relative overflow-visible">
         <div
           ref={editableRef}
           contentEditable
@@ -1080,7 +1130,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       {selectionPosition && (
         <div
           style={{ top: `${selectionPosition.top}px`, left: `${selectionPosition.left}px` }}
-          className="absolute z-40 flex items-center gap-0.5 rounded-xl border border-primary/25 bg-white/95 px-1.5 py-1 shadow-xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150"
+          className="absolute z-50 flex items-center gap-1 rounded-2xl border border-primary/30 bg-white/98 px-2 py-1.5 shadow-2xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5"
           onMouseDown={(e: ReactMouseEvent) => e.preventDefault()}
         >
           <button
@@ -1088,39 +1138,55 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             onClick={() => executeFormat('bold')}
             aria-label="Negrito"
             title="Negrito (Ctrl+B)"
-            className="rounded-lg p-1.5 text-text hover:bg-primary/15 hover:text-primary transition-colors"
+            className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
+              activeFormats.bold
+                ? 'bg-primary text-white font-bold shadow-xs scale-105 ring-2 ring-primary/40'
+                : 'text-text hover:bg-primary/15 hover:text-primary active:scale-95'
+            }`}
           >
-            <Bold size={14} />
+            <Bold size={15} />
           </button>
           <button
             type="button"
             onClick={() => executeFormat('italic')}
             aria-label="Itálico"
             title="Itálico (Ctrl+I)"
-            className="rounded-lg p-1.5 text-text hover:bg-primary/15 hover:text-primary transition-colors"
+            className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
+              activeFormats.italic
+                ? 'bg-primary text-white font-bold shadow-xs scale-105 ring-2 ring-primary/40'
+                : 'text-text hover:bg-primary/15 hover:text-primary active:scale-95'
+            }`}
           >
-            <Italic size={14} />
+            <Italic size={15} />
           </button>
           <button
             type="button"
             onClick={() => executeFormat('underline')}
             aria-label="Sublinhado"
             title="Sublinhado (Ctrl+U)"
-            className="rounded-lg p-1.5 text-text hover:bg-primary/15 hover:text-primary transition-colors"
+            className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
+              activeFormats.underline
+                ? 'bg-primary text-white font-bold shadow-xs scale-105 ring-2 ring-primary/40'
+                : 'text-text hover:bg-primary/15 hover:text-primary active:scale-95'
+            }`}
           >
-            <Underline size={14} />
+            <Underline size={15} />
           </button>
           <button
             type="button"
             onClick={() => executeFormat('strikeThrough')}
             aria-label="Tachado"
             title="Tachado"
-            className="rounded-lg p-1.5 text-text hover:bg-primary/15 hover:text-primary transition-colors"
+            className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
+              activeFormats.strikeThrough
+                ? 'bg-primary text-white font-bold shadow-xs scale-105 ring-2 ring-primary/40'
+                : 'text-text hover:bg-primary/15 hover:text-primary active:scale-95'
+            }`}
           >
-            <Strikethrough size={14} />
+            <Strikethrough size={15} />
           </button>
 
-          <div className="h-4 w-px bg-primary/20 mx-0.5" />
+          <div className="h-4 w-px bg-primary/20 mx-1" />
 
           {/* Highlight Color Trigger */}
           <div className="relative">
@@ -1129,15 +1195,15 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               onClick={() => setShowHighlightPicker((prev) => !prev)}
               aria-label="Marca-texto / Destaque"
               title="Cor de Destaque"
-              className="rounded-lg p-1.5 text-text hover:bg-primary/15 hover:text-primary transition-colors flex items-center gap-1"
+              className="flex h-8 items-center gap-1 rounded-xl px-2 text-text transition-colors hover:bg-primary/15 hover:text-primary active:scale-95"
             >
-              <Highlighter size={14} className="text-amber-500" />
-              <ChevronDown size={10} className="text-text-muted" />
+              <Highlighter size={15} className="text-amber-500" />
+              <ChevronDown size={11} className="text-text-muted" />
             </button>
 
             {showHighlightPicker && (
               <div
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-1.5 flex items-center gap-1 rounded-xl border border-primary/20 bg-white p-1.5 shadow-2xl z-50"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 flex items-center gap-1.5 rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl z-50 backdrop-blur-md"
                 onMouseDown={(e: ReactMouseEvent) => e.preventDefault()}
               >
                 {HIGHLIGHT_COLORS.map((h) => (
@@ -1146,26 +1212,34 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     type="button"
                     title={h.label}
                     onClick={() => applyHighlight(h.value)}
-                    className="h-6 w-6 rounded-md border border-black/10 transition-transform hover:scale-115"
+                    className="h-7 w-7 rounded-lg border border-black/10 transition-transform hover:scale-120 active:scale-95"
                     style={{ backgroundColor: h.value }}
                   />
                 ))}
                 <button
                   type="button"
                   title="Remover destaque"
-                  onClick={() => executeFormat('removeFormat')}
-                  className="rounded-md border border-primary/20 p-1 text-text-light hover:text-primary transition-colors"
+                  onClick={() => executeFormat('removeFormat', undefined, 'Formatação limpa')}
+                  className="rounded-lg border border-primary/20 p-1.5 text-text-light hover:bg-primary/10 hover:text-primary transition-colors"
                 >
-                  <RotateCcw size={12} />
+                  <RotateCcw size={13} />
                 </button>
               </div>
             )}
           </div>
+
+          {/* Real-time Formatting Feedback Badge */}
+          {formatFeedback && (
+            <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-black/85 px-2 py-0.5 font-mono text-[11px] font-bold text-white shadow-md animate-in fade-in zoom-in-90 duration-150">
+              ✓ {formatFeedback}
+            </div>
+          )}
         </div>
       )}
     </div>
   )
 }
+
 
 function areTextBlockPropsEqual(prev: BlockComponentProps, next: BlockComponentProps) {
   return (
