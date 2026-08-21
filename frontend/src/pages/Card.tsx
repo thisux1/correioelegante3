@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { Card as UICard } from '@/components/ui/Card'
@@ -125,11 +125,11 @@ export function Card() {
             </div>
 
             {card.mediaUrl && (
-              <div className="mb-8 rounded-2xl overflow-hidden">
+              <div className="mb-8 rounded-2xl overflow-hidden shadow-xs">
                 <img
                   src={card.mediaUrl}
                   alt="Mídia anexada"
-                  className="w-full object-cover"
+                  className="w-full object-cover rounded-2xl"
                 />
               </div>
             )}
@@ -142,9 +142,25 @@ export function Card() {
                   year: 'numeric',
                 })}
               </p>
-              <p className="text-xs text-text-muted flex items-center justify-center gap-1">
-                💌 Correio Elegante
+              <p className="text-xs text-text-muted flex items-center justify-center gap-1.5 font-medium">
+                <Heart className="w-3.5 h-3.5 text-primary fill-primary" />
+                <span>Correio Elegante</span>
               </p>
+            </div>
+
+            <div className="mt-6 pt-5 border-t border-border/40 text-center">
+              <p className="text-xs text-text-light mb-2.5">
+                Gostou desse correio elegante?
+              </p>
+              <Link to="/create">
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold shadow-xs hover:bg-primary/90 transition-colors"
+                >
+                  <Heart className="w-3.5 h-3.5 fill-white" />
+                  <span>Envie um correio especial também</span>
+                </button>
+              </Link>
             </div>
           </div>
         </CardTilt3D>
