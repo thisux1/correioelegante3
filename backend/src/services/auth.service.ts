@@ -1,9 +1,12 @@
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../utils/prisma';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { AppError } from '../utils/AppError';
 import { LEGAL_DOCUMENT_VERSIONS, type LegalDocumentType } from '../constants/legalDocuments';
 import { CloudinaryMediaProvider } from './cloudinaryMediaProvider';
+import { sendPasswordResetEmail } from './email.service';
+
 
 const mediaProvider = new CloudinaryMediaProvider();
 
@@ -232,3 +235,89 @@ export async function exportUserData(userId: string) {
         refundRequests,
     };
 }
+
+export async function requestPasswordReset(email: string, origin?: string) {
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+
+    // Mensagem genérica para evitar enumeração de contas
+    const genericResponse = {
+        message: 'Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha.',
+    };
+
+    if (!user) {
+        return genericResponse;
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            resetPasswordToken: tokenHash,
+            resetPasswordExpires: expiresAt,
+        },
+    });
+
+    const baseUrl = origin || process.env.FRONTEND_URL || 'https://www.correioelegante.studio';
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`;
+
+    await sendPasswordResetEmail({
+        to: user.email,
+        resetUrl,
+    });
+
+    return genericResponse;
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+    const user = await prisma.user.findFirst({
+        where: {
+            resetPasswordToken: tokenHash,
+            resetPasswordExpires: {
+                gt: new Date(),
+            },
+        },
+    });
+
+    if (!user) {
+        throw new AppError('Link de recuperação inválido ou expirado. Solicite uma nova redefinição.', 400, 'AUTH_INVALID_RESET_TOKEN');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            password: hashedPassword,
+            resetPasswordToken: null,
+            resetPasswordExpires: null,
+        },
+    });
+
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    const isSubscribed = Boolean(
+        user.subscriptionStatus === 'active' &&
+        user.subscriptionExpiresAt &&
+        new Date(user.subscriptionExpiresAt).getTime() > Date.now()
+    );
+
+    return {
+        user: {
+            id: user.id,
+            email: user.email,
+            isSubscribed,
+            subscriptionStatus: user.subscriptionStatus,
+            subscriptionPlan: user.subscriptionPlan,
+            subscriptionExpiresAt: user.subscriptionExpiresAt,
+        },
+        accessToken,
+        refreshToken,
+    };
+}
+

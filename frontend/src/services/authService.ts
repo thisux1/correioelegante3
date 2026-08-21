@@ -35,6 +35,8 @@ interface MeResponse {
 export const authService = {
   register: (data: RegisterData) => api.post<AuthResponse>('/auth/register', data),
   login: (data: LoginData) => api.post<AuthResponse>('/auth/login', data),
+  forgotPassword: (email: string) => api.post<{ message: string }>('/auth/forgot-password', { email }),
+  resetPassword: (data: { token: string; password: string }) => api.post<AuthResponse & { message: string }>('/auth/reset-password', data),
   refresh: () => api.post<{ accessToken: string }>('/auth/refresh'),
   logout: () => api.post<{ message: string }>('/auth/logout'),
   me: () => api.get<MeResponse>('/auth/me'),
