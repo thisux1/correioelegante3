@@ -205,4 +205,61 @@ describe('PolaroidBlock', () => {
       expect(updatedBlock.props.photos.length).toBe(2)
     }
   })
+
+  it('exibe ponto de ancoragem central e haste radial ao selecionar foto, e reseta para 0° com duplo clique', async () => {
+    const block: Block = {
+      id: 'polaroid-1',
+      type: 'polaroid',
+      version: 1,
+      props: {
+        photos: [
+          {
+            id: 'p-1',
+            src: 'https://example.com/photo1.jpg',
+            caption: 'Viagem incrível',
+            rotation: 18.5,
+            width: 260,
+          },
+        ],
+      },
+      meta: { createdAt: Date.now(), updatedAt: Date.now() },
+    }
+
+    let updatedBlock: Block = block
+    const onUpdate: NonNullable<BlockComponentProps['onUpdate']> = vi.fn((updater) => {
+      updatedBlock = updater(updatedBlock)
+    })
+
+    const root = ReactDOM.createRoot(container)
+    await act(async () => {
+      root.render(React.createElement(PolaroidBlock, { block, mode: 'edit', onUpdate }))
+    })
+
+    const card = container.querySelector('[role="button"]') as HTMLDivElement
+    expect(card).not.toBeNull()
+
+    await act(async () => {
+      card.click()
+    })
+
+    // Verifica presença do ponto de ancoragem central e da haste radial (estilo Lightroom / Camera Raw)
+    const centralAnchor = container.querySelector('[data-testid="central-anchor-point"]')
+    expect(centralAnchor).not.toBeNull()
+
+    const radialStem = container.querySelector('[data-testid="radial-stem"]')
+    expect(radialStem).not.toBeNull()
+
+    // Verifica que duplo-clique no puxador de rotação reseta o ângulo para 0°
+    const rotateHandle = container.querySelector('button[title="Arrastar para girar a foto"]') as HTMLButtonElement
+    expect(rotateHandle).not.toBeNull()
+
+    await act(async () => {
+      rotateHandle.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }))
+    })
+
+    expect(onUpdate).toHaveBeenCalled()
+    if (updatedBlock.type === 'polaroid') {
+      expect(updatedBlock.props.photos[0].rotation).toBe(0)
+    }
+  })
 })

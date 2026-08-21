@@ -124,7 +124,7 @@ export function Card() {
             </p>
 
             <div className="mb-8 rounded-2xl border border-border bg-surface-glass p-6 backdrop-blur-sm">
-              <p className="font-cursive text-xl text-text leading-relaxed text-center">
+              <p className="font-cursive text-2xl sm:text-3xl text-text leading-relaxed text-center">
                 {card.message}
               </p>
             </div>
