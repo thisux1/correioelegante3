@@ -66,6 +66,7 @@ model Message {
   updatedAt     DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
   @@index([paymentId])
   @@index([status, visibility])
 }
@@ -87,6 +88,7 @@ model Page {
   updatedAt       DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, updatedAt(sort: Desc)])
   @@index([userId, paymentStatus])
   @@index([paymentId])
   @@index([status, visibility])

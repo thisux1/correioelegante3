@@ -7,6 +7,14 @@ import {
 } from '../contracts/page.contract';
 import { isUserSubscribed } from './subscription.service';
 
+function sanitizeText(input: string): string {
+  return input
+    .replace(/<[^>]*>/g, '')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001F\u007F]/g, '')
+    .trim();
+}
+
 export async function createMessage(
     userId: string,
     data: MessageInput
@@ -21,8 +29,8 @@ export async function createMessage(
 
     return prisma.message.create({
         data: {
-            message: data.message,
-            recipient: data.recipient,
+            message: sanitizeText(data.message),
+            recipient: sanitizeText(data.recipient),
             theme: data.theme,
             status: lifecycle.status,
             visibility: lifecycle.visibility,

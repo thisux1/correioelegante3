@@ -523,11 +523,16 @@ export function Pricing() {
                 Escaneie o QR Code no app do seu banco ou use a chave Copia e Cola.
               </p>
 
-              {pixData.pixQrCode ? (
+              {pixData.pixQrCodeUrl ? (
+                <div className="mx-auto flex w-fit justify-center rounded-2xl border border-primary/20 bg-white p-4 shadow-sm">
+                  <img src={pixData.pixQrCodeUrl} alt="QR Code Pix" width={200} height={200} className="rounded-xl" />
+                </div>
+              ) : pixData.pixQrCode ? (
                 <div className="mx-auto flex w-fit justify-center rounded-2xl border border-primary/20 bg-white p-4 shadow-sm">
                   <QRCodeSVG value={pixData.pixQrCode} size={200} />
                 </div>
               ) : null}
+
 
               {secondsLeft !== null ? (
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">

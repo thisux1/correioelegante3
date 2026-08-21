@@ -1,0 +1,17 @@
+{
+  "name": "Correio Elegante",
+  "short_name": "Correio Elegante",
+  "description": "Envie mensagens carinhosas, pague com Pix e surpreenda alguém especial com um correio elegante digital que emociona.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf2f8",
+  "theme_color": "#e11d48",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

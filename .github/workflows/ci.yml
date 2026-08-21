@@ -6,12 +6,16 @@ on:
   pull_request:
     branches: [main, master]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   backend:
-    name: Backend — test & build
+    name: Backend — lint, typecheck, test & build
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +37,14 @@ jobs:
         env:
           DATABASE_URL: mongodb://localhost:27017/ci_placeholder
 
+      - name: Lint
+        working-directory: backend
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: backend
+        run: npm run typecheck
+
       - name: Rodar testes
         working-directory: backend
         run: npm test
@@ -45,8 +57,12 @@ jobs:
         working-directory: backend
         run: npm run build
 
+      - name: Auditoria de dependências
+        working-directory: backend
+        run: npm audit --audit-level=high --omit=dev
+
   frontend:
-    name: Frontend — lint, test & build
+    name: Frontend — lint, typecheck, test & build
     runs-on: ubuntu-latest
 
     steps:
@@ -66,6 +82,10 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
       - name: Testes
         working-directory: frontend
         run: npm run test
@@ -73,3 +93,36 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npm run build
+
+      - name: Auditoria de dependências
+        working-directory: frontend
+        run: npm audit --audit-level=high --omit=dev
+
+  my-video:
+    name: My Video — lint & typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: my-video/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: my-video
+        run: npm ci
+
+      - name: Lint
+        working-directory: my-video
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: my-video
+        run: npm run typecheck
+
+      - name: Auditoria de dependências
+        working-directory: my-video
+        run: npm audit --audit-level=high --omit=dev

@@ -68,10 +68,15 @@ function canAccessPage(params: {
   visibility: string;
   ownerUserId: string;
   requesterUserId?: string;
+  paymentStatus?: string | null;
 }): boolean {
   const isOwner = Boolean(params.requesterUserId) && params.requesterUserId === params.ownerUserId;
   if (isOwner) {
     return true;
+  }
+
+  if (params.paymentStatus !== 'paid') {
+    return false;
   }
 
   if (params.status !== 'published') {
@@ -176,11 +181,17 @@ export async function getPageById(pageId: string, requesterUserId?: string) {
     throw new AppError('Pagina nao encontrada', 404);
   }
 
+  const isOwner = Boolean(requesterUserId) && requesterUserId === page.userId;
+  if (!isOwner && page.paymentStatus !== 'paid') {
+    throw new AppError('Página não encontrada ou com pagamento pendente', 404);
+  }
+
   const hasAccess = canAccessPage({
     status: page.status,
     visibility: page.visibility,
     ownerUserId: page.userId,
     requesterUserId,
+    paymentStatus: page.paymentStatus,
   });
 
   if (!hasAccess) {

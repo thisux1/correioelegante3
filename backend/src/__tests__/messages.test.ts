@@ -61,6 +61,29 @@ describe('POST /api/messages', () => {
         expect(res.body.message.recipient).toBe('Ana');
     });
 
+    it('201 — sanitiza tags HTML em message e recipient', async () => {
+        vi.mocked(prisma.message.create).mockImplementation((async (args: any) => ({
+            ...mockMessage,
+            message: args.data.message,
+            recipient: args.data.recipient,
+        })) as any);
+
+        const token = makeToken();
+        const res = await request(app)
+            .post('/api/messages')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                recipient: '<b>Ana</b><script>alert(1)</script>',
+                message: '<p>Olá <strong>Mundo</strong></p>',
+                theme: 'classic',
+            });
+
+        expect(res.status).toBe(201);
+        const createCall = vi.mocked(prisma.message.create).mock.calls.at(-1);
+        expect(createCall?.[0].data.recipient).toBe('Anaalert(1)');
+        expect(createCall?.[0].data.message).toBe('Olá Mundo');
+    });
+
     it('401 — sem autenticação', async () => {
         const res = await request(app)
             .post('/api/messages')
