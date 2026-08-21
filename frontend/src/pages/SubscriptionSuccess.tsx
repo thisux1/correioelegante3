@@ -5,12 +5,14 @@ import { Check, Sparkles, Heart, Zap, ArrowRight, Infinity as InfinityIcon } fro
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Container } from '@/components/layout/Container'
+import { SuccessPageSkeleton } from '@/components/ui/SuccessPageSkeleton'
 import { useAuthStore } from '@/store/authStore'
 import { paymentService } from '@/services/paymentService'
 
 export function SubscriptionSuccess() {
   const { refreshUser } = useAuthStore()
   const [daysRemaining, setDaysRemaining] = useState<number>(30)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
@@ -24,6 +26,10 @@ export function SubscriptionSuccess() {
         }
       } catch {
         // Fallback default 30 dias
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
 
@@ -33,6 +39,10 @@ export function SubscriptionSuccess() {
       isMounted = false
     }
   }, [refreshUser])
+
+  if (isLoading) {
+    return <SuccessPageSkeleton />
+  }
 
 
   return (

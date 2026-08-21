@@ -6,6 +6,7 @@ import { Container } from '@/components/layout/Container'
 import { AlertTriangle, CheckCircle2, LoaderCircle, RefreshCcw, Smartphone, Monitor } from 'lucide-react'
 
 import { Modal } from '@/components/ui/Modal'
+import { EditorSkeleton } from '@/components/ui/EditorSkeleton'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
 import { EditorCanvas } from '@/editor/components/EditorCanvas'
@@ -826,9 +827,9 @@ export function Editor() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="rounded-3xl border border-primary/20 bg-white/80 p-8 text-center"
+              className="w-full"
             >
-              <p className="text-sm text-text-light">Preparando sua página...</p>
+              <EditorSkeleton showHeader={false} />
             </motion.section>
           ) : mode === 'edit' ? (
             <motion.section

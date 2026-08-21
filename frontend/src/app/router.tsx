@@ -27,12 +27,68 @@ const Error404 = lazy(() => import('@/pages/Error404').then(m => ({ default: m.E
 const Error500 = lazy(() => import('@/pages/Error500').then(m => ({ default: m.Error500 })))
 const ErrorSession = lazy(() => import('@/pages/ErrorSession').then(m => ({ default: m.ErrorSession })))
 
-function PageLoader() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-    </div>
-  )
+import { Container } from '@/components/layout/Container'
+import { EditorSkeleton } from '@/components/ui/EditorSkeleton'
+import { CreatePageSkeleton } from '@/components/ui/CreatePageSkeleton'
+import { PricingPageSkeleton } from '@/components/ui/PricingPageSkeleton'
+import { PaymentPageSkeleton } from '@/components/ui/PaymentPageSkeleton'
+import { AuthPageSkeleton } from '@/components/ui/AuthPageSkeleton'
+import { ProfileCardSkeleton } from '@/components/ui/ProfileCardSkeleton'
+import { PageCardSkeleton } from '@/components/ui/PageCardSkeleton'
+import { LegalPageSkeleton } from '@/components/ui/LegalPageSkeleton'
+import { SuccessPageSkeleton } from '@/components/ui/SuccessPageSkeleton'
+
+export function PageLoader() {
+  const location = useLocation()
+  const path = location?.pathname || ''
+
+  if (path.startsWith('/editor')) {
+    return <EditorSkeleton />
+  }
+
+  if (path.startsWith('/create')) {
+    return <CreatePageSkeleton />
+  }
+
+  if (path === '/planos/sucesso') {
+    return <SuccessPageSkeleton />
+  }
+
+  if (path.startsWith('/planos') || path.startsWith('/pricing')) {
+    return <PricingPageSkeleton />
+  }
+
+  if (path.includes('/payment') && path.endsWith('/success')) {
+    return <SuccessPageSkeleton />
+  }
+
+  if (path.startsWith('/payment')) {
+    return <PaymentPageSkeleton />
+  }
+
+  if (path.startsWith('/auth')) {
+    return <AuthPageSkeleton />
+  }
+
+  if (path.startsWith('/profile')) {
+    return (
+      <div className="min-h-screen pt-28 pb-16 px-4">
+        <Container size="default">
+          <div className="mb-8 space-y-2">
+            <div className="h-8 w-48 rounded-xl bg-primary/20 animate-pulse" />
+            <div className="h-4 w-72 rounded-md bg-primary/10 animate-pulse" />
+          </div>
+          <ProfileCardSkeleton count={3} />
+        </Container>
+      </div>
+    )
+  }
+
+  if (path.startsWith('/card')) {
+    return <PageCardSkeleton />
+  }
+
+  return <LegalPageSkeleton />
 }
 
 function ProtectedRoute({ children }: { children: ReactNode }) {

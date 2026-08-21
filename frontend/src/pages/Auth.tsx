@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
+import { AuthPageSkeleton } from '@/components/ui/AuthPageSkeleton'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
@@ -125,7 +126,11 @@ function getPasswordStrength(password: string): {
   return { score: 3, label: 'Forte (ótima senha)', color: 'bg-emerald-500', bgColor: 'text-emerald-600' }
 }
 
-export function Auth() {
+export interface AuthProps {
+  isLoading?: boolean
+}
+
+export function Auth({ isLoading = false }: AuthProps = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : (searchParams.get('mode') === 'forgot' ? 'forgot' : 'login')
@@ -269,6 +274,10 @@ export function Auth() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isLoading) {
+    return <AuthPageSkeleton />
   }
 
   return (

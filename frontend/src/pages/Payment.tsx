@@ -6,6 +6,7 @@ import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone, Zap
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { PaymentPageSkeleton } from '@/components/ui/PaymentPageSkeleton'
 import { Container } from '@/components/layout/Container'
 import { Turnstile, type TurnstileRef } from '@/components/ui/Turnstile'
 import { useAuthStore } from '@/store/authStore'
@@ -24,9 +25,16 @@ declare global {
 
 type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 
-export function Payment() {
+export interface PaymentProps {
+  isLoading?: boolean
+}
+
+export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
   const location = useLocation()
   const { messageId, pageId } = useParams<{ messageId?: string; pageId?: string }>()
+  const isAuthLoading = useAuthStore((state) => state.isLoading)
+  const isPageLoading = propIsLoading ?? isAuthLoading
+
   const [step, setStep] = useState<Step>('select')
   const [pixData, setPixData] = useState<PixPaymentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -193,6 +201,10 @@ export function Payment() {
 
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
+  }
+
+  if (isPageLoading) {
+    return <PaymentPageSkeleton />
   }
 
   if (!target) {

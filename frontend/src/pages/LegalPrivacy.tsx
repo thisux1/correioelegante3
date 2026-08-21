@@ -1,7 +1,15 @@
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
+import { LegalPageSkeleton } from '@/components/ui/LegalPageSkeleton'
 
-export function LegalPrivacy() {
+export interface LegalPrivacyProps {
+  isLoading?: boolean
+}
+
+export function LegalPrivacy({ isLoading }: LegalPrivacyProps = {}) {
+  if (isLoading) {
+    return <LegalPageSkeleton />
+  }
   return (
     <div className="min-h-screen pt-28 pb-16">
       <Container size="narrow">
