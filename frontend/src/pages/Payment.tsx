@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion } from 'framer-motion'
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Container } from '@/components/layout/Container'
+import { Turnstile, type TurnstileRef } from '@/components/ui/Turnstile'
 import { useAuthStore } from '@/store/authStore'
 import {
   paymentService,
@@ -30,9 +31,12 @@ export function Payment() {
   const [pixData, setPixData] = useState<PixPaymentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMethod, setLoadingMethod] = useState<PaymentMethod | 'mercadopago_checkout' | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileRef>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+
 
 
   useEffect(() => {
@@ -106,7 +110,7 @@ export function Payment() {
 
     try {
       if (method === 'pix') {
-        const response = await paymentService.createPix(target)
+        const response = await paymentService.createPix(target, turnstileToken || undefined)
         if (response.data.status === 'paid') {
           setStep('paid')
           return
@@ -120,7 +124,7 @@ export function Payment() {
           setError('Não foi possível gerar a chave Pix. Tente novamente.')
         }
       } else {
-        const response = await paymentService.createCard(target)
+        const response = await paymentService.createCard(target, turnstileToken || undefined)
         if (response.data.checkoutUrl) {
           window.location.href = response.data.checkoutUrl
         } else {
@@ -128,6 +132,7 @@ export function Payment() {
         }
       }
     } catch (err: unknown) {
+      turnstileRef.current?.reset()
       const axiosErr = err as { response?: { data?: { error?: string } } }
       setError(axiosErr.response?.data?.error || 'Erro ao criar pagamento. Tente recarregar a página.')
     } finally {
@@ -143,13 +148,14 @@ export function Payment() {
     setError(null)
 
     try {
-      const response = await paymentService.createMercadoPagoCheckout(target)
+      const response = await paymentService.createMercadoPagoCheckout(target, turnstileToken || undefined)
       if (response.data.checkoutUrl) {
         window.location.href = response.data.checkoutUrl
       } else {
         setError('Não foi possível iniciar o Checkout do Mercado Pago.')
       }
     } catch (err: unknown) {
+      turnstileRef.current?.reset()
       const axiosErr = err as { response?: { data?: { error?: string } } }
       setError(axiosErr.response?.data?.error || 'Erro ao iniciar checkout do Mercado Pago.')
     } finally {
@@ -157,6 +163,7 @@ export function Payment() {
       setLoadingMethod(null)
     }
   }
+
 
 
   async function handleCopy() {
@@ -313,8 +320,19 @@ export function Payment() {
                 </motion.div>
               )}
 
+              <div className="mb-4 flex justify-center">
+                <Turnstile
+                  ref={turnstileRef}
+                  action="payment_checkout"
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => turnstileRef.current?.reset()}
+                />
+              </div>
+
               <div className="flex flex-col gap-4 mb-6">
                 <button
+
                   onClick={() => handleSelectMethod('pix')}
                   disabled={isLoading}
                   className="flex items-center gap-4 p-5 rounded-2xl border-2 border-transparent bg-emerald-50 hover:border-emerald-400 hover:bg-emerald-100 transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed group"
