@@ -91,7 +91,7 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
       const textValue = block.props.text.trim()
       return (
         <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-primary">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface/80 text-primary">
             <Type size={14} />
           </span>
           <p className="min-w-0 flex-1 truncate font-cursive text-lg text-text">
@@ -106,7 +106,7 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
       const alt = block.props.alt?.trim() || 'Sem conteudo'
       return (
         <div className="flex min-w-0 items-center gap-3">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-primary/20 bg-white/80">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border bg-surface/80">
             {src ? (
               <img src={src} alt={alt} className="h-full w-full object-cover" loading="lazy" />
             ) : (
@@ -128,7 +128,7 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
       const count = items.length
       return (
         <div className="flex min-w-0 items-center gap-3">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-primary/20 bg-white/80">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border bg-surface/80">
             {first ? (
               <img src={first} alt="Preview da galeria" className="h-full w-full object-cover" loading="lazy" />
             ) : (
@@ -168,7 +168,7 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
 
       return (
         <div className="flex min-w-0 items-center gap-3">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-primary/20 bg-white/80">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border bg-surface/80">
             {cover ? (
               <img src={cover} alt={`Capa de ${title}`} className="h-full w-full object-cover" loading="lazy" />
             ) : (
@@ -191,7 +191,7 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
       const canPlay = src.startsWith('http://') || src.startsWith('https://')
       return (
         <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-primary">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface/80 text-primary">
             <Film size={14} />
           </span>
           <p className="min-w-0 flex-1 truncate text-sm text-text-light">
@@ -206,7 +206,7 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
       const targetDate = block.props.targetDate?.trim()
       return (
         <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-primary">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface/80 text-primary">
             <CalendarDays size={14} />
           </span>
           <div className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ function CollapsedPreview({ block, onExpand }: CollapsedPreviewProps) {
 
     return (
       <div className="flex min-w-0 items-center gap-3">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-white/80 text-primary">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface/80 text-primary">
           <CalendarDays size={14} />
         </span>
         <p className="min-w-0 flex-1 truncate text-sm text-text-light">
@@ -603,7 +603,7 @@ export function EditorCanvas() {
 
   if (blockIds.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-primary/35 bg-white/70 px-6 py-16 text-center shadow-sm">
+      <div className="rounded-3xl border border-dashed border-border bg-surface text-text px-6 py-16 text-center shadow-sm">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Sparkles size={20} />
         </div>
@@ -634,7 +634,7 @@ export function EditorCanvas() {
               <motion.div
                 initial={{ opacity: 0.75, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-[min(86vw,44rem)] rounded-2xl border border-primary/35 bg-white/95 p-3 shadow-2xl"
+                className="w-[min(86vw,44rem)] rounded-2xl border border-border bg-surface text-text p-3 shadow-2xl"
               >
                 <BlockRenderer block={activeBlock} mode="preview" />
               </motion.div>

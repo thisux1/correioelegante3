@@ -683,7 +683,7 @@ export function Editor() {
       return 'border-emerald-200 bg-emerald-50 text-emerald-700'
     }
 
-    return 'border-primary/20 bg-white/80 text-text'
+    return 'border-border bg-surface/80 text-text'
   }, [saveState])
 
   const atmosphere = getThemeAtmosphere(theme)
@@ -704,7 +704,7 @@ export function Editor() {
               ? 'border-primary/30 bg-primary/10 text-primary'
               : saveState === 'saved'
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-primary/20 bg-white/80 text-text-light'}`}
+                : 'border-border bg-surface/80 text-text-light'}`}
             role="status"
             aria-live="polite"
           >
@@ -850,7 +850,7 @@ export function Editor() {
               transition={{ duration: 0.2 }}
             >
               <div className="flex justify-center items-center gap-2 mb-6">
-                <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white/85 border border-border shadow-xs">
+                <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-surface/85 border border-border shadow-xs">
                   <button
                     type="button"
                     onClick={() => setPreviewDevice('desktop')}

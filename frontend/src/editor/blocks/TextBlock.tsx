@@ -782,10 +782,10 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   return (
     <div
       ref={containerRef}
-      className="relative overflow-visible rounded-2xl border border-primary/20 bg-white/90 p-4 shadow-sm backdrop-blur-xs transition-all hover:border-primary/30"
+      className="relative overflow-visible rounded-2xl border border-border bg-surface-glass p-4 shadow-sm backdrop-blur-xs transition-all hover:border-primary/30"
     >
       {/* Category Tabs */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-primary/10 pb-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
         <div
           role="tablist"
           aria-label="Categorias de texto"
@@ -806,8 +806,8 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                 title={cat.description}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
                   isSelected
-                    ? 'bg-white text-primary shadow-xs ring-1 ring-primary/20'
-                    : 'text-text-light hover:bg-white/60 hover:text-text'
+                    ? 'bg-surface text-primary shadow-xs ring-1 ring-primary/20'
+                    : 'text-text-light hover:bg-surface/60 hover:text-text'
                 }`}
               >
                 <Icon size={13} className={isSelected ? 'text-primary' : 'text-text-light'} />
@@ -818,7 +818,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         </div>
 
         {/* Alignment quick toggles */}
-        <div className="flex items-center rounded-lg border border-primary/15 bg-white/80 p-0.5 shadow-2xs">
+        <div className="flex items-center rounded-lg border border-border bg-surface/80 p-0.5 shadow-2xs">
           <button
             type="button"
             onClick={() => handleAlignChange('left')}
@@ -883,7 +883,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all ${
               showFontDropdown
                 ? 'border-primary bg-primary/10 text-primary shadow-2xs'
-                : 'border-primary/20 bg-white text-text hover:border-primary/40'
+                : 'border-border bg-surface text-text hover:border-primary/40'
             }`}
           >
             <Type size={13} className="text-primary shrink-0" />
@@ -898,7 +898,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <div
               role="listbox"
               aria-label="Lista de fontes disponíveis"
-              className="absolute left-0 top-full mt-2 z-[100] w-72 sm:w-84 max-h-80 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
+              className="absolute left-0 top-full mt-2 z-[100] w-72 sm:w-84 max-h-80 overflow-y-auto rounded-2xl border border-border bg-surface text-text p-2 shadow-2xl backdrop-blur-md"
             >
               <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
                 Tipografia & Estilos
@@ -956,7 +956,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all ${
               showSizeDropdown
                 ? 'border-primary bg-primary/10 text-primary shadow-2xs'
-                : 'border-primary/20 bg-white text-text hover:border-primary/40'
+                : 'border-border bg-surface text-text hover:border-primary/40'
             }`}
           >
             <span className="font-mono font-bold text-primary">
@@ -972,7 +972,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <div
               role="listbox"
               aria-label="Tamanhos de texto disponíveis"
-              className="absolute left-0 top-full mt-2 z-[100] w-56 max-h-72 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
+              className="absolute left-0 top-full mt-2 z-[100] w-56 max-h-72 overflow-y-auto rounded-2xl border border-border bg-surface text-text p-2 shadow-2xl backdrop-blur-md"
             >
               <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
                 Tamanho do Texto
@@ -1020,18 +1020,18 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             }}
             aria-label="Cor do Texto"
             title="Cor do Texto"
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-primary/20 bg-white px-2 text-xs text-text transition-colors hover:border-primary/40"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-2 text-xs text-text transition-colors hover:border-primary/40"
           >
             <Palette size={13} className="text-primary" />
             <span
-              className="h-3.5 w-3.5 rounded-full border border-black/10 shadow-2xs"
+              className="h-3.5 w-3.5 rounded-full border border-border shadow-2xs"
               style={{ backgroundColor: props.color || 'var(--color-text)' }}
             />
             <ChevronDown size={11} className="text-text-muted" />
           </button>
 
           {showColorPicker ? (
-            <div className="absolute left-0 top-full z-[100] mt-2 w-64 rounded-2xl border border-primary/20 bg-white p-3.5 shadow-2xl backdrop-blur-md">
+            <div className="absolute left-0 top-full z-[100] mt-2 w-64 rounded-2xl border border-border bg-surface text-text p-3.5 shadow-2xl backdrop-blur-md">
               <p className="mb-2 text-[11px] font-semibold text-text-light uppercase tracking-wider">
                 Paleta de Cores
               </p>
@@ -1042,20 +1042,20 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     type="button"
                     title={c.label}
                     onClick={() => handleColorChange(c.value)}
-                    className="h-8 w-8 rounded-xl border border-black/10 transition-transform hover:scale-110 flex items-center justify-center"
-                    style={{ backgroundColor: c.hex === 'transparent' ? '#ffffff' : c.hex }}
+                    className="h-8 w-8 rounded-xl border border-border transition-transform hover:scale-110 flex items-center justify-center"
+                    style={{ backgroundColor: c.hex === 'transparent' ? 'transparent' : c.hex }}
                   >
                     {c.value === '' && <RotateCcw size={11} className="text-text-light" />}
                   </button>
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 pt-2 border-t border-primary/10">
+              <div className="flex items-center gap-2 pt-2 border-t border-border">
                 <input
                   type="color"
                   value={props.color?.startsWith('#') ? props.color : '#e11d48'}
                   onChange={(e) => handleColorChange(e.target.value)}
-                  className="h-7 w-7 cursor-pointer rounded-lg border border-primary/20 bg-transparent p-0"
+                  className="h-7 w-7 cursor-pointer rounded-lg border border-border bg-transparent p-0"
                   aria-label="Seletor customizado de cor"
                 />
                 <span className="text-xs text-text-light">Cor customizada</span>
@@ -1065,7 +1065,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         </div>
 
         {/* Block Quick Styles */}
-        <div className="flex items-center rounded-lg border border-primary/15 bg-white p-0.5">
+        <div className="flex items-center rounded-lg border border-border bg-surface p-0.5">
           <button
             type="button"
             onClick={() => handleToggleBlockStyle('bold')}
@@ -1113,13 +1113,13 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           style={customStyles}
-          className={`min-h-[4.5rem] whitespace-pre-wrap break-words rounded-xl border border-primary/20 bg-white px-3.5 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${categoryConfig.defaultFontClass} ${categoryConfig.defaultSizeClass} ${alignClass} text-text`}
+          className={`min-h-[4.5rem] whitespace-pre-wrap break-words rounded-xl border border-border bg-surface px-3.5 py-3 text-text outline-none transition-colors placeholder:text-text-light/50 focus-visible:ring-2 focus-visible:ring-primary/30 ${categoryConfig.defaultFontClass} ${categoryConfig.defaultSizeClass} ${alignClass}`}
           aria-label="Editor de texto do bloco"
         />
 
         {showPlaceholder ? (
           <span
-            className={`pointer-events-none absolute inset-x-3.5 top-3 select-none leading-relaxed text-text-light/60 ${categoryConfig.defaultFontClass} ${categoryConfig.defaultSizeClass} ${alignClass}`}
+            className={`pointer-events-none absolute inset-x-3.5 top-3 select-none leading-relaxed text-text-light/50 ${categoryConfig.defaultFontClass} ${categoryConfig.defaultSizeClass} ${alignClass}`}
           >
             {categoryConfig.placeholder}
           </span>
@@ -1130,7 +1130,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       {selectionPosition && (
         <div
           style={{ top: `${selectionPosition.top}px`, left: `${selectionPosition.left}px` }}
-          className="absolute z-[100] flex items-center gap-1 rounded-2xl border border-primary/30 bg-white/98 px-2 py-1.5 shadow-2xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5"
+          className="absolute z-[100] flex items-center gap-1 rounded-2xl border border-border bg-surface text-text px-2 py-1.5 shadow-2xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150 ring-1 ring-border/50"
           onMouseDown={(e: ReactMouseEvent) => e.preventDefault()}
         >
           <button
@@ -1186,7 +1186,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <Strikethrough size={15} />
           </button>
 
-          <div className="h-4 w-px bg-primary/20 mx-1" />
+          <div className="h-4 w-px bg-border mx-1" />
 
           {/* Highlight Color Trigger */}
           <div className="relative">
@@ -1203,7 +1203,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
             {showHighlightPicker && (
               <div
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 flex items-center gap-1.5 rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl z-[100] backdrop-blur-md"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 flex items-center gap-1.5 rounded-2xl border border-border bg-surface text-text p-2 shadow-2xl z-[100] backdrop-blur-md"
                 onMouseDown={(e: ReactMouseEvent) => e.preventDefault()}
               >
                 {HIGHLIGHT_COLORS.map((h) => (
@@ -1212,7 +1212,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     type="button"
                     title={h.label}
                     onClick={() => applyHighlight(h.value)}
-                    className="h-7 w-7 rounded-lg border border-black/10 transition-transform hover:scale-120 active:scale-95"
+                    className="h-7 w-7 rounded-lg border border-border transition-transform hover:scale-120 active:scale-95"
                     style={{ backgroundColor: h.value }}
                   />
                 ))}
@@ -1220,7 +1220,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                   type="button"
                   title="Remover destaque"
                   onClick={() => executeFormat('removeFormat', undefined, 'Formatação limpa')}
-                  className="rounded-lg border border-primary/20 p-1.5 text-text-light hover:bg-primary/10 hover:text-primary transition-colors"
+                  className="rounded-lg border border-border p-1.5 text-text-light hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   <RotateCcw size={13} />
                 </button>

@@ -485,113 +485,183 @@ export function Profile() {
                   const isCopied = copiedPageId === page.id
 
                   return (
-                    <Card
+                    <div
                       key={page.id}
-                      glass
-                      hover
-                      className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 transition-all ${
-                        isPublished ? 'border-emerald-500/20 bg-white/90' : 'bg-white/70'
-                      }`}
+                      className={`group relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-md ${
+                        isPublished
+                          ? 'bg-gradient-to-br from-surface to-background/80 border border-primary/20 shadow-xs'
+                          : 'bg-gradient-to-br from-amber-500/5 to-surface border border-dashed border-amber-500/30 shadow-xs'
+                      } p-4 sm:p-5`}
                     >
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-text text-sm sm:text-base break-words">
-                            {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
-                          </p>
+                      {/* Silhueta da dobra do envelope fechado ou folha despontando no rascunho */}
+                      {isPublished ? (
+                        <>
+                          {/* Dobra suave no topo do envelope selado */}
+                          <div
+                            className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-12 bg-primary/5 rounded-b-[100%] border-b border-primary/15 transition-all group-hover:bg-primary/10"
+                            aria-hidden="true"
+                          />
+                          <div
+                            className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary/25 to-transparent"
+                            aria-hidden="true"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          {/* Folha interna de carta despontando levemente do envelope entreaberto */}
+                          <div
+                            className="pointer-events-none absolute top-0 right-12 sm:right-16 -translate-y-1.5 w-24 sm:w-32 h-3.5 bg-amber-100/80 rounded-t-sm border-t border-x border-amber-300/60 shadow-xs rotate-1"
+                            aria-hidden="true"
+                          >
+                            <div className="w-full h-full border-b border-dashed border-amber-200/50" />
+                          </div>
+                          <div
+                            className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent"
+                            aria-hidden="true"
+                          />
+                        </>
+                      )}
+
+                      <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Seção esquerda: Selo de cera / Ícone + Título + Carimbos / Indicadores + Metadados */}
+                        <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
                           {isPublished ? (
-                            <Badge variant="success" className="text-[11px] font-semibold">
-                              Publicada
-                            </Badge>
-                          ) : (
-                            <Badge variant="warning" className="text-[11px] font-semibold">
-                              Rascunho
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-text-muted">
-                          <span>
-                            {isPublished && page.publishedAt
-                              ? `Publicada em: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
-                              : `Atualizada em: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
-                          </span>
-                          <span>•</span>
-                          <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
-                        {isPublished && publicHref ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleCopyLink(page)}
-                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-text hover:bg-surface-raised transition-colors flex-1 sm:flex-initial"
-                              title="Copiar link da carta"
+                            /* Selo de Cera (Wax Seal) em 3D rubi/dourado com monograma de coração */
+                            <div
+                              className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-md text-white flex items-center justify-center border border-white/40 ring-2 ring-primary/20 shrink-0 transition-transform group-hover:scale-105"
+                              title="Carta Selada com Lacre de Cera"
                             >
-                              {isCopied ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                  <span className="text-emerald-600">Copiado!</span>
-                                </>
+                              <Heart className="w-4 h-4 fill-white/90 text-white drop-shadow-xs" />
+                            </div>
+                          ) : (
+                            /* Ícone caligráfico de rascunho / confecção */
+                            <div
+                              className="w-9 h-9 rounded-full bg-amber-500/10 text-amber-600 border border-dashed border-amber-400/50 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                              title="Rascunho em confecção"
+                            >
+                              <Pencil className="w-4 h-4 text-amber-600" />
+                            </div>
+                          )}
+
+                          <div className="min-w-0 flex-1 space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-text text-sm sm:text-base break-words">
+                                {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
+                              </p>
+
+                              {isPublished ? (
+                                /* Carimbo postal discreto indicando 'Selada & Entregue' */
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-dashed border-primary/40 bg-primary/5 text-primary-dark text-[10px] font-mono tracking-wider uppercase -rotate-1 select-none">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary/70" />
+                                  <span>Selada & Entregue</span>
+                                </div>
                               ) : (
-                                <>
-                                  <Copy className="w-3.5 h-3.5 text-text-muted" />
-                                  <span>Copiar Link</span>
-                                </>
+                                /* Indicador caligráfico de 'Em confecção / Não selada' */
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-800 text-[10px] font-mono tracking-wider uppercase select-none">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                  <span>Em confecção / Não selada</span>
+                                </div>
                               )}
-                            </button>
+                            </div>
 
-                            {isAbsoluteUrl(publicHref) ? (
-                              <a
-                                href={publicHref}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex-1 sm:flex-initial"
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-text-muted">
+                              <span>
+                                {isPublished && page.publishedAt
+                                  ? `Publicada em: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
+                                  : `Atualizada em: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
+                              </span>
+                              <span>•</span>
+                              <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
+                              {page.theme ? (
+                                <>
+                                  <span>•</span>
+                                  <span className="capitalize">{page.theme}</span>
+                                </>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Seção direita: Ações rápidas */}
+                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0">
+                          {isPublished && publicHref ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyLink(page)}
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-text hover:bg-surface-raised transition-colors flex-1 sm:flex-initial"
+                                title="Copiar link da carta"
                               >
-                                <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
-                                  <Eye className="w-3.5 h-3.5 mr-1" />
-                                  Ver Carta
-                                </Button>
-                              </a>
-                            ) : (
-                              <Link to={publicHref} className="flex-1 sm:flex-initial">
-                                <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
-                                  <Eye className="w-3.5 h-3.5 mr-1" />
-                                  Ver Carta
-                                </Button>
-                              </Link>
-                            )}
-                          </>
-                        ) : null}
+                                {isCopied ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span className="text-emerald-600">Copiado!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5 text-text-muted" />
+                                    <span>Copiar Link</span>
+                                  </>
+                                )}
+                              </button>
 
-                        <Link to={`/editor/${page.id}`} className="flex-1 sm:flex-initial">
-                          <Button variant="ghost" size="sm" className="w-full text-xs font-semibold">
-                            <Pencil className="w-3.5 h-3.5 mr-1" />
-                            Editar
-                          </Button>
-                        </Link>
+                              {isAbsoluteUrl(publicHref) ? (
+                                <a
+                                  href={publicHref}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex-1 sm:flex-initial"
+                                >
+                                  <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
+                                    <Eye className="w-3.5 h-3.5 mr-1" />
+                                    Ver Carta
+                                  </Button>
+                                </a>
+                              ) : (
+                                <Link to={publicHref} className="flex-1 sm:flex-initial">
+                                  <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
+                                    <Eye className="w-3.5 h-3.5 mr-1" />
+                                    Ver Carta
+                                  </Button>
+                                </Link>
+                              )}
+                            </>
+                          ) : null}
 
-                        {shouldShowPayNow(page) ? (
-                          <Link to={`/payment/page/${page.id}`} className="flex-1 sm:flex-initial">
-                            <Button size="sm" className="w-full text-xs font-semibold shadow-xs">
-                              <Zap className="w-3.5 h-3.5 mr-1" />
-                              Pagar e Publicar
+                          <Link to={`/editor/${page.id}`} className="flex-1 sm:flex-initial">
+                            <Button
+                              variant={isPublished ? 'ghost' : 'outline'}
+                              size="sm"
+                              className={`w-full text-xs font-semibold ${
+                                !isPublished ? 'border-amber-300/70 text-amber-900 hover:bg-amber-50/60' : ''
+                              }`}
+                            >
+                              <Pencil className="w-3.5 h-3.5 mr-1" />
+                              Editar
                             </Button>
                           </Link>
-                        ) : null}
 
-                        <button
-                          type="button"
-                          onClick={() => setPageToDelete(page)}
-                          className="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                          title="Excluir carta"
-                          aria-label="Excluir carta"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          {shouldShowPayNow(page) ? (
+                            <Link to={`/payment/page/${page.id}`} className="flex-1 sm:flex-initial">
+                              <Button size="sm" className="w-full text-xs font-semibold shadow-xs">
+                                <Zap className="w-3.5 h-3.5 mr-1" />
+                                Pagar e Publicar
+                              </Button>
+                            </Link>
+                          ) : null}
+
+                          <button
+                            type="button"
+                            onClick={() => setPageToDelete(page)}
+                            className="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Excluir carta"
+                            aria-label="Excluir carta"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </Card>
+                    </div>
                   )
                 })}
               </div>
