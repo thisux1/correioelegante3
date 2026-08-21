@@ -14,33 +14,14 @@ export const pageVisibilitySchema = z.enum(PAGE_VISIBILITY_VALUES, {
   errorMap: () => ({ message: 'Visibilidade invalida. Use public, private ou unlisted.' }),
 });
 
-export const pageLifecycleSchema = z
-  .object({
-    status: pageStatusSchema.default('draft'),
-    visibility: pageVisibilitySchema.default('public'),
-    publishedAt: z.string().datetime({ offset: true }).nullable().optional(),
-  })
-  .superRefine((value, ctx) => {
-    const hasPublishedAt = Boolean(value.publishedAt);
-
-    if (value.status === 'published' && !hasPublishedAt) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['publishedAt'],
-        message: 'publishedAt e obrigatorio quando status = published.',
-      });
-    }
-
-    if (value.status !== 'published' && hasPublishedAt) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['publishedAt'],
-        message: 'publishedAt so pode existir quando status = published.',
-      });
-    }
-  });
+export const pageLifecycleSchema = z.object({
+  status: pageStatusSchema.default('draft'),
+  visibility: pageVisibilitySchema.default('public'),
+  publishedAt: z.string().datetime({ offset: true }).nullable().optional(),
+});
 
 export type PageLifecycleDto = z.infer<typeof pageLifecycleSchema>;
+
 
 export type LifecycleLike = {
   status?: string | null;
