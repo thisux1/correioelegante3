@@ -104,8 +104,9 @@ export function AppRouter() {
               <Route path="/pricing" element={<Navigate to="/planos" replace />} />
               <Route path="/planos/sucesso" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
               <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
-              <Route path="/auth/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
               <Route path="/contact" element={<Contact />} />
+
               <Route path="/legal/terms" element={<LegalTerms />} />
               <Route path="/legal/privacy" element={<LegalPrivacy />} />
               <Route path="/legal/cookies" element={<LegalCookies />} />

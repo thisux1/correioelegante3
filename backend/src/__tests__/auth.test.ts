@@ -311,8 +311,12 @@ describe('POST /api/auth/forgot-password', () => {
 // ── POST /api/auth/reset-password ─────────────────────────────────────────────
 describe('POST /api/auth/reset-password', () => {
     it('200 — redefine senha com token válido', async () => {
-        vi.mocked(prisma.user.findFirst).mockResolvedValue(mockUser);
+        vi.mocked(prisma.user.findFirst).mockResolvedValue({
+            ...mockUser,
+            resetPasswordExpires: new Date(Date.now() + 3600000),
+        });
         vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+
 
         const res = await request(app)
             .post('/api/auth/reset-password')
