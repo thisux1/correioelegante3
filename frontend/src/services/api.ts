@@ -89,7 +89,9 @@ api.interceptors.response.use(
         localStorage.removeItem('@ce:session')
         useAuthStore.getState().clearAuth()
 
-        if (typeof window !== 'undefined' && window.location.pathname !== '/session-expired') {
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+        const isPublicPath = ['/', '/auth', '/contact', '/legal', '/card', '/planos'].some(p => currentPath === p || currentPath.startsWith(`${p}/`))
+        if (!isPublicPath && currentPath !== '/session-expired') {
           navigateTo('/session-expired', { replace: true })
         }
 

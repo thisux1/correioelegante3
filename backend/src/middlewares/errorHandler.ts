@@ -30,6 +30,15 @@ export function errorHandler(
     return;
   }
 
+  // Prisma validation errors (e.g. malformed ObjectId, wrong query shape)
+  if (err.name === 'PrismaClientValidationError') {
+    res.status(400).json({
+      error: 'Requisição inválida ou identificador mal formatado',
+      code: 'VALIDATION_ERROR',
+    });
+    return;
+  }
+
   // Prisma known request errors
   if (err.name === 'PrismaClientKnownRequestError') {
     const prismaErr = err as Error & { code?: string };
@@ -40,10 +49,10 @@ export function errorHandler(
       });
       return;
     }
-    if (prismaErr.code === 'P2023') {
-      res.status(400).json({
-        error: 'Identificador inválido',
-        code: 'INVALID_ID',
+    if (prismaErr.code === 'P2023' || prismaErr.code === 'P2025') {
+      res.status(404).json({
+        error: 'Recurso não encontrado ou identificador inválido',
+        code: 'NOT_FOUND',
       });
       return;
     }
@@ -58,5 +67,6 @@ export function errorHandler(
   console.error('Unexpected error:', err);
   res.status(500).json({
     error: 'Erro interno do servidor',
+    code: 'INTERNAL_SERVER_ERROR',
   });
 }
