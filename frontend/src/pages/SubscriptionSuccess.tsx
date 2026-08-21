@@ -9,23 +9,31 @@ import { useAuthStore } from '@/store/authStore'
 import { paymentService } from '@/services/paymentService'
 
 export function SubscriptionSuccess() {
-  const { initAuth } = useAuthStore()
+  const { refreshUser } = useAuthStore()
   const [daysRemaining, setDaysRemaining] = useState<number>(30)
 
   useEffect(() => {
+    let isMounted = true
+
     async function loadStatus() {
       try {
-        await initAuth()
+        await refreshUser()
         const { data } = await paymentService.getSubscriptionStatus()
-        if (data.daysRemaining) {
+        if (isMounted && data.daysRemaining) {
           setDaysRemaining(data.daysRemaining)
         }
       } catch {
-        // Fallback default
+        // Fallback default 30 dias
       }
     }
+
     loadStatus()
-  }, [initAuth])
+
+    return () => {
+      isMounted = false
+    }
+  }, [refreshUser])
+
 
   return (
     <div className="min-h-screen pb-16 pt-28">
