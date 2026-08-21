@@ -6,17 +6,16 @@ import {
   Eye,
   Image as ImageIcon,
   Images,
-  LoaderCircle,
   Music2,
   Palette,
   Pencil,
   Plus,
-  Save,
   Timer,
   Video,
   Type,
   CreditCard,
 } from 'lucide-react'
+
 import { MAX_BLOCKS, type BlockType } from '@/editor/types'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
@@ -57,10 +56,11 @@ interface ToolbarControlsProps {
   toggleThemeMenu: () => void
   addFromOption: (type: AvailableBlockType) => void
   onSelectTheme: (themeId: string) => void
-  onSave: () => void
+  onSave?: () => void
   showPublishCta: boolean
   onPublishCtaClick: () => void
 }
+
 
 function AddMenu({
   isDisabled,
@@ -297,7 +297,6 @@ function ToolbarControls({
   toggleThemeMenu,
   addFromOption,
   onSelectTheme,
-  onSave,
   showPublishCta,
   onPublishCtaClick,
 }: ToolbarControlsProps) {
@@ -306,7 +305,7 @@ function ToolbarControls({
   const selectedTheme = getThemeById(normalizedSelectedThemeId)
 
   const isSaving = saveState === 'saving'
-  const saveLabel = isSaving ? 'Salvando...' : saveState === 'saved' ? 'Salvo' : saveState === 'error' ? 'Erro ao salvar' : 'Salvar'
+
 
   const compactBtnBase = 'flex w-full min-h-11 items-center justify-center rounded-lg bg-transparent p-0 text-primary transition-colors hover:bg-white/60 active:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'
   const compactBtnAccent = 'flex w-full min-h-11 items-center justify-center rounded-lg bg-primary p-0 text-white shadow-[0_8px_20px_-10px_rgba(236,72,153,0.5)] transition-colors hover:bg-primary-dark'
@@ -407,45 +406,6 @@ function ToolbarControls({
         </motion.button>
       )}
 
-      <motion.button
-        layoutId="toolbar-btn-save"
-        layout="position"
-        type="button"
-        onClick={onSave}
-        disabled={isSaving}
-        whileTap={shouldReduceMotion ? undefined : { scale: isSaving ? 1 : 0.97 }}
-        animate={shouldReduceMotion
-          ? { borderColor: saveState === 'saved' ? 'rgba(16,185,129,0.45)' : saveState === 'error' ? 'rgba(239,68,68,0.45)' : 'rgba(236,72,153,0.3)' }
-          : saveState === 'saved'
-            ? { scale: [1, 1.03, 1], borderColor: 'rgba(16,185,129,0.45)' }
-            : saveState === 'error'
-              ? { x: [0, -2, 2, 0], borderColor: 'rgba(239,68,68,0.45)' }
-              : { scale: 1, x: 0 }}
-        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.26, ease: [0.19, 1, 0.22, 1] }}
-        className={useCompactButtons
-          ? `${compactBtnBase} disabled:opacity-60`
-          : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface/80 px-3.5 text-sm font-medium text-text-light transition-colors hover:bg-surface hover:text-text disabled:cursor-not-allowed disabled:opacity-60'}
-        aria-label={isSaving ? 'Salvando rascunho' : 'Salvar rascunho'}
-        title={saveLabel}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          {isSaving ? (
-            <motion.span key="saving-icon" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
-              <LoaderCircle size={16} className="animate-spin" />
-            </motion.span>
-          ) : saveState === 'saved' ? (
-            <motion.span key="saved-icon" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
-              <Check size={16} />
-            </motion.span>
-          ) : (
-            <motion.span key="default-icon" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
-              <Save size={16} />
-            </motion.span>
-          )}
-        </AnimatePresence>
-        {!useCompactButtons ? (saveState === 'saved' ? 'Salvo' : isSaving ? 'Salvando...' : 'Salvar Rascunho') : null}
-      </motion.button>
-
       {showPublishCta ? (
         <>
           {separator}
@@ -465,6 +425,7 @@ function ToolbarControls({
           </motion.button>
         </>
       ) : null}
+
 
       {separator}
 
@@ -507,13 +468,14 @@ function ToolbarControls({
 }
 
 interface EditorToolbarProps {
-  onSave: () => void
+  onSave?: () => void
   saveState: 'idle' | 'saving' | 'saved' | 'error'
   hasPageId: boolean
   selectedThemeId: string
   showPublishCta: boolean
   onPublishCtaClick: () => void
 }
+
 
 function useLayoutBehavior() {
   const [isMobile, setIsMobile] = useState(false)
