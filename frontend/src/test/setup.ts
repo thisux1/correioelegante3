@@ -26,6 +26,29 @@ Object.defineProperty(window, 'localStorage', {
   writable: true,
 })
 
+// Mock de IntersectionObserver para framer-motion e componentes animados
+if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
+  class IntersectionObserverMock implements IntersectionObserver {
+    readonly root: Element | Document | null = null
+    readonly rootMargin: string = ''
+    readonly thresholds: ReadonlyArray<number> = []
+    disconnect = vi.fn()
+    observe = vi.fn()
+    takeRecords = vi.fn(() => [])
+    unobserve = vi.fn()
+  }
+  Object.defineProperty(window, 'IntersectionObserver', {
+    writable: true,
+    configurable: true,
+    value: IntersectionObserverMock,
+  })
+  Object.defineProperty(globalThis, 'IntersectionObserver', {
+    writable: true,
+    configurable: true,
+    value: IntersectionObserverMock,
+  })
+}
+
 afterEach(() => {
   window.localStorage.clear()
 })

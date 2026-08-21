@@ -1,9 +1,25 @@
-import { memo, useCallback, useMemo } from 'react'
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Trash2, ArrowUp, ArrowDown, Sparkles, Heart } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  Sparkles,
+  Heart,
+  Camera,
+  Upload,
+  RotateCw,
+} from 'lucide-react'
 import type { BlockComponentProps, TimelineBlockProps, TimelineItem } from '@/editor/types'
-import { MediaField } from '@/editor/components/MediaField'
-import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
+import { assetService } from '@/services/assetService'
 
 function generateItemId(): string {
   return `timeline-item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -18,6 +34,11 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
       }
 
   const items = useMemo(() => (Array.isArray(props.items) ? props.items : []), [props.items])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [activeUploadIndex, setActiveUploadIndex] = useState<number | null>(null)
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
+
+  const isEditMode = mode === 'edit'
 
   const updateItems = useCallback(
     (newItems: TimelineItem[]) => {
@@ -80,16 +101,80 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
     [items, updateItems],
   )
 
+  const handleTriggerUpload = useCallback((index: number) => {
+    setActiveUploadIndex(index)
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleFileInputChange = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file || activeUploadIndex === null) return
+
+      const targetIndex = activeUploadIndex
+      const localUrl = URL.createObjectURL(file)
+      handleUpdateItem(targetIndex, 'image', localUrl)
+      setUploadingIndex(targetIndex)
+
+      try {
+        const asset = await assetService.uploadFileFlow({ file, kind: 'image' })
+        if (asset.publicUrl) {
+          handleUpdateItem(targetIndex, 'image', asset.publicUrl)
+        }
+      } catch {
+        // Retains local preview if upload fails
+      } finally {
+        setUploadingIndex(null)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
+    },
+    [activeUploadIndex, handleUpdateItem],
+  )
+
   if (!isTimeline) {
     return null
   }
 
-  const previewTimeline = (
-    <div className="relative mx-auto w-full max-w-2xl py-4">
+  return (
+    <div className="relative mx-auto w-full max-w-2xl py-4 select-none">
+      {/* Hidden File Input for Direct Inline Photo Upload */}
+      {isEditMode && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          className="hidden"
+          onChange={handleFileInputChange}
+        />
+      )}
+
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-primary/30 p-8 text-center text-text-light">
-          <Sparkles className="mx-auto mb-2 text-primary" size={28} />
-          <p className="text-sm">Nenhum momento adicionado na linha do tempo ainda.</p>
+        <div
+          onClick={isEditMode ? handleAddItem : undefined}
+          className={`flex min-h-[180px] flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
+            isEditMode
+              ? 'cursor-pointer border-primary/30 bg-white/70 hover:border-primary/50 hover:bg-primary/5'
+              : 'border-primary/20 bg-white/40'
+          }`}
+        >
+          <Sparkles className="text-primary" size={28} />
+          <p className="text-sm font-bold text-text">Nenhum momento adicionado na linha do tempo ainda.</p>
+          <p className="text-xs text-text-light">
+            {isEditMode
+              ? 'Clique aqui para adicionar seu primeiro marco inesquecível.'
+              : 'Esta linha do tempo está vazia no momento.'}
+          </p>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleAddItem}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-primary-dark"
+            >
+              <Plus size={14} /> Adicionar Primeiro Momento
+            </button>
+          )}
         </div>
       ) : (
         <div className="relative">
@@ -116,37 +201,160 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     <Heart size={12} fill="currentColor" />
                   </div>
 
-                  {/* Conteúdo do Card */}
+                  {/* Conteúdo do Card com Edição Direta WYSIWYG */}
                   <div className="ml-12 w-[calc(100%-3.5rem)] sm:ml-0 sm:w-1/2 sm:px-6">
                     <div
-                      className={`rounded-2xl border border-primary/20 bg-white/90 p-5 shadow-lg backdrop-blur-xs transition-shadow duration-300 hover:shadow-xl ${
-                        isEven ? 'sm:text-right' : 'sm:text-left'
-                      }`}
+                      className={`group relative rounded-2xl border bg-white/95 p-5 shadow-lg backdrop-blur-xs transition-all duration-300 ${
+                        isEditMode
+                          ? 'border-primary/30 hover:border-primary/50 hover:shadow-xl'
+                          : 'border-primary/20 hover:shadow-xl'
+                      } ${isEven ? 'sm:text-right' : 'sm:text-left'}`}
                     >
-                      {/* Badge da Data */}
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
-                        {item.date || 'Data especial'}
-                      </span>
+                      {/* Top Header do Card: Data + Barra de Ações Compacta */}
+                      <div
+                        className={`flex items-center gap-2 justify-between ${
+                          isEven ? 'sm:flex-row-reverse' : ''
+                        } mb-2`}
+                      >
+                        {/* Badge / Edição da Data */}
+                        {isEditMode ? (
+                          <input
+                            type="text"
+                            value={item.date}
+                            onChange={(e) => handleUpdateItem(index, 'date', e.target.value)}
+                            placeholder="Data do marco"
+                            aria-label="Data do marco"
+                            className="inline-block max-w-[190px] rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary placeholder:text-primary/40 border border-dashed border-transparent hover:border-primary/40 focus:border-primary focus:bg-primary/15 focus:outline-none transition-colors"
+                          />
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+                            {item.date || 'Data especial'}
+                          </span>
+                        )}
 
-                      {/* Título */}
-                      <h4 className="mt-2 text-lg font-bold text-text sm:text-xl">
-                        {item.title || 'Título do Momento'}
-                      </h4>
+                        {/* Barra Compacta de Ações (Modo Edição com Progressive Disclosure) */}
+                        {isEditMode && (
+                          <div
+                            className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity bg-white/90 rounded-xl border border-primary/20 p-0.5 shadow-2xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => handleMoveItem(index, 'up')}
+                              className="rounded-lg p-1 text-text-light transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-light"
+                              aria-label="Mover para cima"
+                              title="Mover para cima"
+                            >
+                              <ArrowUp size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === items.length - 1}
+                              onClick={() => handleMoveItem(index, 'down')}
+                              className="rounded-lg p-1 text-text-light transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-light"
+                              aria-label="Mover para baixo"
+                              title="Mover para baixo"
+                            >
+                              <ArrowDown size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItem(index)}
+                              className="rounded-lg p-1 text-red-500 transition-colors hover:bg-red-50"
+                              aria-label="Remover marco"
+                              title="Remover marco"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
 
-                      {/* Foto do Marco (se houver) */}
+                      {/* Título do Marco */}
+                      {isEditMode ? (
+                        <input
+                          type="text"
+                          value={item.title}
+                          onChange={(e) => handleUpdateItem(index, 'title', e.target.value)}
+                          placeholder="Título do Momento"
+                          aria-label="Título do marco"
+                          className={`mt-1 w-full bg-transparent text-lg font-bold text-text sm:text-xl placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors py-0.5 ${
+                            isEven ? 'sm:text-right' : 'sm:text-left'
+                          }`}
+                        />
+                      ) : (
+                        <h4 className="mt-1 text-lg font-bold text-text sm:text-xl">
+                          {item.title || 'Título do Momento'}
+                        </h4>
+                      )}
+
+                      {/* Foto do Marco */}
                       {item.image ? (
-                        <div className="my-3 overflow-hidden rounded-xl border border-primary/15 shadow-xs">
+                        <div className="relative my-3 overflow-hidden rounded-xl border border-primary/15 shadow-xs group/img">
                           <img
                             src={item.image}
-                            alt={item.title}
+                            alt={item.title || 'Foto do marco'}
                             className="h-44 w-full object-cover transition-transform duration-300 hover:scale-105"
                           />
+                          {isEditMode && (
+                            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity backdrop-blur-2xs">
+                              <button
+                                type="button"
+                                onClick={() => handleTriggerUpload(index)}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-white/95 px-3 py-1.5 text-xs font-bold text-text shadow-md hover:bg-white hover:text-primary transition-colors"
+                              >
+                                <Upload size={13} className="text-primary" />
+                                <span>Trocar Foto</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateItem(index, 'image', '')}
+                                className="inline-flex items-center gap-1 rounded-xl bg-red-500/90 px-2.5 py-1.5 text-xs font-bold text-white shadow-md hover:bg-red-600 transition-colors"
+                                title="Remover Foto"
+                                aria-label="Remover foto"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : isEditMode ? (
+                        <div className="my-3">
+                          <button
+                            type="button"
+                            onClick={() => handleTriggerUpload(index)}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] py-2.5 px-3 text-xs font-semibold text-primary transition-all hover:border-primary/60 hover:bg-primary/10 hover:scale-[1.01] active:scale-[0.99]"
+                          >
+                            {uploadingIndex === index ? (
+                              <>
+                                <RotateCw size={14} className="animate-spin text-primary" />
+                                <span>Enviando foto...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Camera size={15} />
+                                <span>Adicionar Foto ao Momento</span>
+                              </>
+                            )}
+                          </button>
                         </div>
                       ) : null}
 
-                      {/* Descrição */}
-                      {item.description ? (
-                        <p className="font-cursive mt-2 whitespace-pre-wrap text-base leading-relaxed text-text-light sm:text-lg">
+                      {/* Descrição com Tipografia Legível (font-sans text-sm sm:text-base) */}
+                      {isEditMode ? (
+                        <textarea
+                          rows={3}
+                          value={item.description ?? ''}
+                          onChange={(e) => handleUpdateItem(index, 'description', e.target.value)}
+                          placeholder="Conte o que tornou esse dia tão inesquecível..."
+                          aria-label="Descrição do marco"
+                          className={`mt-2 w-full resize-none rounded-xl bg-transparent font-sans text-sm sm:text-base leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-primary/30 focus:border-primary/50 focus:bg-white/50 focus:outline-none p-1.5 transition-colors ${
+                            isEven ? 'sm:text-right' : 'sm:text-left'
+                          }`}
+                        />
+                      ) : item.description ? (
+                        <p className="mt-2 font-sans text-sm sm:text-base leading-relaxed text-text/85 whitespace-pre-wrap">
                           {item.description}
                         </p>
                       ) : null}
@@ -156,130 +364,22 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
               )
             })}
           </div>
+
+          {/* Botão Discreto e Elegante + Adicionar Momento no Final da Linha do Tempo (Modo Edição) */}
+          {isEditMode && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="inline-flex items-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-white/90 px-6 py-3 text-sm font-bold text-primary shadow-xs backdrop-blur-xs transition-all hover:border-primary hover:bg-primary/5 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Plus size={16} />
+                <span>Adicionar Momento</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
-    </div>
-  )
-
-  if (mode === 'preview') {
-    return previewTimeline
-  }
-
-  return (
-    <div className="space-y-4 rounded-2xl border border-primary/20 bg-white/80 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-bold text-text">Linha do Tempo dos Nossos Momentos</h3>
-          <p className="text-xs text-text-light">
-            Adicione marcos, datas e fotos para reviver a história de vocês.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleAddItem}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-primary-dark"
-        >
-          <Plus size={14} /> Novo Marco
-        </button>
-      </div>
-
-      {previewTimeline}
-
-      <div className="space-y-4 pt-2">
-        {items.map((item, index) => (
-          <div
-            key={item.id || index}
-            className="space-y-3 rounded-xl border border-primary/20 bg-white/95 p-4 shadow-sm"
-          >
-            <div className="flex items-center justify-between border-b border-primary/10 pb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                Marco {index + 1}
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  disabled={index === 0}
-                  onClick={() => handleMoveItem(index, 'up')}
-                  className="rounded-lg p-1 text-text-light transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-30"
-                  aria-label="Mover para cima"
-                >
-                  <ArrowUp size={14} />
-                </button>
-                <button
-                  type="button"
-                  disabled={index === items.length - 1}
-                  onClick={() => handleMoveItem(index, 'down')}
-                  className="rounded-lg p-1 text-text-light transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-30"
-                  aria-label="Mover para baixo"
-                >
-                  <ArrowDown size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveItem(index)}
-                  className="rounded-lg p-1 text-red-500 transition-colors hover:bg-red-50"
-                  aria-label="Remover marco"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <EditorInputSection
-                title="Data / Época"
-                helperText="Ex: 12 de Junho de 2023, Primeiro Olhar..."
-              >
-                <input
-                  type="text"
-                  value={item.date}
-                  onChange={(e) => handleUpdateItem(index, 'date', e.target.value)}
-                  placeholder="Ex: O início de tudo"
-                  className={EDITOR_FIELD_BASE_CLASS}
-                  aria-label="Data do marco"
-                />
-              </EditorInputSection>
-
-              <EditorInputSection
-                title="Título do Marco"
-                helperText="Ex: Nosso Primeiro Encontro"
-              >
-                <input
-                  type="text"
-                  value={item.title}
-                  onChange={(e) => handleUpdateItem(index, 'title', e.target.value)}
-                  placeholder="Ex: Primeiro Beijo"
-                  className={EDITOR_FIELD_BASE_CLASS}
-                  aria-label="Título do marco"
-                />
-              </EditorInputSection>
-            </div>
-
-            <MediaField
-              kind="image"
-              label="Foto do Marco (Opcional)"
-              value={{ src: item.image || '' }}
-              onChange={(val) => handleUpdateItem(index, 'image', val.src)}
-              onRemove={() => handleUpdateItem(index, 'image', '')}
-              helperText="Insira uma foto marcante deste momento."
-            />
-
-            <EditorInputSection
-              title="Descrição / Lembrança"
-              helperText="Conte o que tornou esse dia tão inesquecível."
-            >
-              <textarea
-                rows={2}
-                value={item.description ?? ''}
-                onChange={(e) => handleUpdateItem(index, 'description', e.target.value)}
-                placeholder="Ex: Aquele dia em que tudo começou com uma conversa que parecia nunca ter fim..."
-                className={EDITOR_FIELD_BASE_CLASS}
-                aria-label="Descrição do marco"
-              />
-            </EditorInputSection>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

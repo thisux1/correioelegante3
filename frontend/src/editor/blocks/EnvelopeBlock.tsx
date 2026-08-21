@@ -219,11 +219,11 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     onChange={(e) => updateProp('recipientName', e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder="Para quem ilumina meus dias"
-                    className="w-full bg-transparent font-cursive text-base font-semibold uppercase tracking-widest text-primary/90 placeholder:text-primary/30 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors py-0.5"
+                    className="w-full bg-transparent font-sans text-xs sm:text-sm font-bold uppercase tracking-widest text-primary/90 placeholder:text-primary/30 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors py-0.5"
                     aria-label="Nome do destinatário"
                   />
                 ) : (
-                  <p className="font-cursive text-sm font-semibold uppercase tracking-widest text-primary/80">
+                  <p className="font-sans text-xs sm:text-sm font-bold uppercase tracking-widest text-primary/80">
                     {recipientName}
                   </p>
                 )}
@@ -240,11 +240,11 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     onChange={(e) => updateProp('messageSnippet', e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder="Escreva aqui a mensagem especial revelada ao abrir a carta..."
-                    className="w-full resize-none rounded-xl bg-transparent font-cursive text-lg leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-amber-400/40 focus:border-primary/40 focus:bg-white/40 focus:outline-none p-1.5 transition-colors"
+                    className="w-full resize-none rounded-xl bg-transparent font-cursive text-xl sm:text-2xl leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-amber-400/40 focus:border-primary/40 focus:bg-white/40 focus:outline-none p-1.5 transition-colors"
                     aria-label="Mensagem interna da carta"
                   />
                 ) : (
-                  <p className="font-cursive whitespace-pre-wrap text-lg leading-relaxed text-text">
+                  <p className="font-cursive whitespace-pre-wrap text-xl sm:text-2xl leading-relaxed text-text">
                     {messageSnippet || 'Uma mensagem sincera guardada com todo carinho...'}
                   </p>
                 )}
@@ -259,11 +259,11 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     onChange={(e) => updateProp('senderName', e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder="Com todo o meu afeto, Seu Nome"
-                    className="w-full max-w-[240px] bg-transparent text-right font-cursive text-sm italic text-text-light placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors py-0.5"
+                    className="w-full max-w-[240px] bg-transparent text-right font-serif text-sm sm:text-base italic font-medium text-text-light placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors py-0.5"
                     aria-label="Nome do remetente"
                   />
                 ) : senderName ? (
-                  <p className="font-cursive text-sm italic text-text-light">{senderName}</p>
+                  <p className="font-serif text-sm sm:text-base italic font-medium text-text-light">{senderName}</p>
                 ) : null}
               </div>
             </motion.div>
@@ -442,11 +442,11 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     onChange={(e) => updateProp('senderName', e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder="Com todo meu afeto, Seu Nome"
-                    className="w-full max-w-[240px] mx-auto bg-transparent text-center font-cursive text-sm italic text-text-light placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors py-0.5"
+                    className="w-full max-w-[240px] mx-auto bg-transparent text-center font-serif text-sm sm:text-base italic font-medium text-text-light placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:outline-none transition-colors py-0.5"
                     aria-label="Nome do remetente no envelope"
                   />
                 ) : senderName ? (
-                  <p className="font-cursive text-sm italic">{senderName}</p>
+                  <p className="font-serif text-sm sm:text-base italic font-medium text-text-light">{senderName}</p>
                 ) : null}
               </div>
             </div>
