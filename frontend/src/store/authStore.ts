@@ -39,9 +39,10 @@ export interface AuthState {
   clearAuth: () => void
   setLoading: (loading: boolean) => void
   initAuth: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
@@ -59,8 +60,33 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
 
+  refreshUser: async () => {
+    const token = get().accessToken
+    if (!token) return
+
+    try {
+      const { data: userData } = await withTimeout(
+        axios.get('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+          timeout: INIT_AUTH_TIMEOUT_MS,
+        }),
+        INIT_AUTH_TIMEOUT_MS
+      )
+
+      set({
+        user: userData.user || userData,
+      })
+    } catch {
+      // Ignora erro se for apenas refresh de background
+    }
+  },
+
   initAuth: async () => {
-    set({ isLoading: true })
+    // Se já estiver autenticado com token válido, não bloqueia a UI inteira com isLoading
+    if (!get().isAuthenticated) {
+      set({ isLoading: true })
+    }
 
     if (!localStorage.getItem('@ce:session')) {
       set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false })
@@ -100,3 +126,4 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }))
+
