@@ -24,10 +24,15 @@ import { Modal } from '@/components/ui/Modal'
 import { Container } from '@/components/layout/Container'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { Turnstile, type TurnstileRef } from '@/components/ui/Turnstile'
+import { PricingPageSkeleton } from '@/components/ui/PricingPageSkeleton'
 import { useAuthStore } from '@/store/authStore'
 import { paymentService, type PixPaymentResponse } from '@/services/paymentService'
 
-export function Pricing() {
+export interface PricingProps {
+  isLoading?: boolean
+}
+
+export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {}) {
   const navigate = useNavigate()
   const { isAuthenticated, user, refreshUser } = useAuthStore()
 
@@ -187,7 +192,11 @@ export function Pricing() {
   const formatCountdown = (secs: number) => {
     const m = Math.floor(secs / 60)
     const s = secs % 60
-    return `${m}:${s.toString().padStart(2, '0')}`
+    return `${m}:${s < 10 ? '0' : ''}${s}`
+  }
+
+  if (propIsLoading) {
+    return <PricingPageSkeleton />
   }
 
   return (

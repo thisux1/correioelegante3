@@ -2,6 +2,7 @@ import { Github, Linkedin, Mail, ExternalLink, Briefcase } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
+import { LegalPageSkeleton } from '@/components/ui/LegalPageSkeleton'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 
 const contactLinks = [
@@ -37,7 +38,14 @@ const contactLinks = [
   }
 ]
 
-export function Contact() {
+export interface ContactProps {
+  isLoading?: boolean
+}
+
+export function Contact({ isLoading }: ContactProps = {}) {
+  if (isLoading) {
+    return <LegalPageSkeleton />
+  }
   return (
     <div className="min-h-screen pt-28 pb-16 relative overflow-hidden">
       <Container size="narrow">

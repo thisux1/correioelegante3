@@ -4,9 +4,14 @@ import { motion } from 'framer-motion'
 import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { SuccessPageSkeleton } from '@/components/ui/SuccessPageSkeleton'
 import { paymentService, type PaymentTarget } from '@/services/paymentService'
 
-export function PaymentSuccess() {
+export interface PaymentSuccessProps {
+  isLoading?: boolean
+}
+
+export function PaymentSuccess({ isLoading }: PaymentSuccessProps = {}) {
   const location = useLocation()
   const { messageId, pageId } = useParams<{ messageId?: string; pageId?: string }>()
   const [confirmed, setConfirmed] = useState(false)
@@ -53,6 +58,10 @@ export function PaymentSuccess() {
     check()
     return () => clearInterval(interval)
   }, [target])
+
+  if (isLoading) {
+    return <SuccessPageSkeleton />
+  }
 
   return (
     <div className="min-h-screen pt-28 pb-16 px-6">

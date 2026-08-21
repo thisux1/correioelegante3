@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ChevronRight, FilePlus2, Shapes } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
+import { CreatePageSkeleton } from '@/components/ui/CreatePageSkeleton'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { Container } from '@/components/layout/Container'
 import { templates } from '@/editor/templates'
@@ -17,10 +18,16 @@ const categoryLabel = {
   poetic: 'Poetico',
 }
 
-export function Create() {
+export interface CreateProps {
+  isLoading?: boolean
+}
+
+export function Create({ isLoading: propIsLoading }: CreateProps = {}) {
   const navigate = useNavigate()
   const location = useLocation()
   const userId = useAuthStore((state) => state.user?.id)
+  const isAuthLoading = useAuthStore((state) => state.isLoading)
+  const isLoading = propIsLoading ?? isAuthLoading
 
   const editorDecision = resolveEditorAccessForUser(userId)
   const canUseEditor = editorDecision.enabled
@@ -39,6 +46,10 @@ export function Create() {
   }, [location.state])
 
   const templateCards = useMemo(() => templates, [])
+
+  if (isLoading) {
+    return <CreatePageSkeleton />
+  }
 
   return (
     <div className="min-h-screen pt-28 pb-16">
