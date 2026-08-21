@@ -34,7 +34,9 @@ export function createBlock(type: BlockType): Block {
         type: 'text',
         version: BLOCK_VERSION,
         props: {
-          text: 'Novo texto',
+          category: 'body',
+          text: 'Escreva sua mensagem aqui...',
+          html: '',
           align: 'left',
         },
         meta: {
@@ -64,7 +66,7 @@ export function createBlock(type: BlockType): Block {
         version: BLOCK_VERSION,
         props: {
           targetDate: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-          label: 'Contagem regressiva',
+          label: 'Tempo compartilhado',
         },
         meta: {
           createdAt: now,
@@ -124,11 +126,11 @@ export function createBlock(type: BlockType): Block {
         type: 'envelope',
         version: BLOCK_VERSION,
         props: {
-          recipientName: 'Para o amor da minha vida',
-          senderName: 'Com todo o meu amor',
-          sealInitial: '💌',
+          recipientName: 'Para quem ilumina meus dias',
+          senderName: 'Com todo o meu afeto',
+          sealInitial: 'C',
           sealColor: '#e11d48',
-          messageSnippet: 'Guardo você no lugar mais especial do meu coração. Cada dia ao seu lado é um presente inesquecível...',
+          messageSnippet: 'Guardo aqui palavras que nasceram da certeza de que você é parte fundamental da minha história.',
           isOpen: false,
         },
         meta: {
@@ -142,9 +144,9 @@ export function createBlock(type: BlockType): Block {
         type: 'scratch',
         version: BLOCK_VERSION,
         props: {
-          coverText: '✨ Raspe aqui com carinho para descobrir...',
+          coverText: 'Raspe suavemente para revelar a mensagem',
           secretType: 'text',
-          secretText: 'Você é a razão do meu sorriso mais sincero todos os dias! Te amo para sempre! ❤️',
+          secretText: 'Minha vida se tornou incomparavelmente melhor desde o momento em que você chegou.',
           secretImage: '',
           isRevealed: false,
         },
@@ -162,23 +164,23 @@ export function createBlock(type: BlockType): Block {
           items: [
             {
               id: generateBlockId(),
-              date: 'O Começo',
-              title: 'Primeiro Olhar',
-              description: 'O momento em que nossos olhos se cruzaram e tudo começou a fazer sentido.',
+              date: 'O início',
+              title: 'Primeiro encontro',
+              description: 'A tarde em que uma conversa despretensiosa mudou o rumo dos meus dias.',
               image: '',
             },
             {
               id: generateBlockId(),
-              date: 'Inesquecível',
-              title: 'Nosso Primeiro Encontro',
-              description: 'Conversas que duraram horas e risadas que ecoam na memória.',
+              date: 'A caminhada',
+              title: 'Nossa primeira viagem',
+              description: 'Descobrindo que qualquer destino ganha sentido quando estamos juntos.',
               image: '',
             },
             {
               id: generateBlockId(),
-              date: 'Para Sempre',
-              title: 'Hoje e o Futuro',
-              description: 'A certeza de que escolher você é a melhor decisão de todos os meus dias.',
+              date: 'O presente',
+              title: 'A certeza do caminho',
+              description: 'A tranquilidade de saber que escolher você é a melhor decisão de todos os dias.',
               image: '',
             },
           ],
@@ -195,9 +197,9 @@ export function createBlock(type: BlockType): Block {
         version: BLOCK_VERSION,
         props: {
           question: 'Quer namorar comigo?',
-          yesButtonText: 'Sim! Mil vezes sim! ❤️',
-          noButtonText: 'Não 🙈',
-          successMessage: 'Você me faz a pessoa mais feliz do mundo todo! Prometo te fazer sorrir todos os dias! 🥰💍✨',
+          yesButtonText: 'Sim, com todo o coração',
+          noButtonText: 'Não',
+          successMessage: 'Prometo honrar cada um dos nossos dias com respeito, carinho e cumplicidade.',
           isPlayfulNo: true,
         },
         meta: {
@@ -215,13 +217,13 @@ export function createBlock(type: BlockType): Block {
             {
               id: generateBlockId(),
               src: '',
-              caption: 'O melhor sorriso do mundo ✨',
+              caption: 'Um instante guardado na memória',
               rotation: -2,
             },
             {
               id: generateBlockId(),
               src: '',
-              caption: 'Momentos que guardo no peito 💕',
+              caption: 'A serenidade de estar ao seu lado',
               rotation: 2.5,
             },
           ],

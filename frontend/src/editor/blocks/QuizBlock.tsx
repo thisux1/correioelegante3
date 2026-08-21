@@ -5,12 +5,12 @@ import type { BlockComponentProps, QuizBlockProps } from '@/editor/types'
 import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 
 const PLAYFUL_REASONS = [
-  'Certeza? Pense bem! 😉',
-  'Ops, esse botão tá quebrado! 😂',
-  'Nem vem! Só aceito sim! 💕',
-  'Tentativa negada com sucesso! 🙈',
-  'O botão fugiu! 🏃‍♂️💨',
-  'Você não tem escolha! 🥰',
+  'Tem certeza? Pense com calma.',
+  'Ops, este botão parece indisponível.',
+  'Esta opção não está no roteiro.',
+  'Tentativa recusada com carinho.',
+  'O botão desviou do caminho.',
+  'A resposta certa está logo ao lado.',
 ]
 
 const HEARTS_STATIC = Array.from({ length: 32 }, (_, i) => ({
@@ -60,9 +60,9 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     ? block.props
     : {
         question: 'Quer namorar comigo?',
-        yesButtonText: 'Sim! Mil vezes sim! ❤️',
-        noButtonText: 'Não 🙈',
-        successMessage: 'Você me faz a pessoa mais feliz do mundo todo! Prometo te amar para sempre! 🥰💍✨',
+        yesButtonText: 'Sim, com todo o coração',
+        noButtonText: 'Não',
+        successMessage: 'Prometo honrar cada um dos nossos dias com respeito, carinho e cumplicidade.',
         isPlayfulNo: true,
       }
 
@@ -119,11 +119,11 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   const question = props.question || 'Aceita ser o amor da minha vida?'
-  const yesText = props.yesButtonText || 'Sim! ❤️'
-  const noText = props.noButtonText || 'Não 🙈'
+  const yesText = props.yesButtonText || 'Sim, com todo o coração'
+  const noText = props.noButtonText || 'Não'
   const successMessage =
     props.successMessage ||
-    'Você me faz a pessoa mais feliz do mundo! Prometo cuidar de você todos os dias! 🥰✨'
+    'Prometo honrar cada um dos nossos dias com respeito, carinho e cumplicidade.'
 
   const interactiveCard = (
     <div
@@ -236,7 +236,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         {interactiveCard}
         {hasAnsweredYes && (
           <p className="mt-3 text-center text-xs font-semibold text-primary">
-            🎉 Uma decisão cheia de amor para a vida inteira!
+            Uma decisão cheia de afeto para a vida inteira.
           </p>
         )}
       </div>
@@ -280,13 +280,13 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <EditorInputSection
             title="Texto do Botão 'SIM'"
-            helperText="O botão que dispara a chuva de amor."
+            helperText="O botão que confirma a resposta."
           >
             <input
               type="text"
               value={props.yesButtonText}
               onChange={(e) => updateProp('yesButtonText', e.target.value)}
-              placeholder="Ex: Sim! Mil vezes sim! ❤️"
+              placeholder="Ex: Sim, com todo o coração"
               className={EDITOR_FIELD_BASE_CLASS}
               aria-label="Texto do botão sim"
             />
@@ -300,7 +300,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               type="text"
               value={props.noButtonText}
               onChange={(e) => updateProp('noButtonText', e.target.value)}
-              placeholder="Ex: Não 🙈"
+              placeholder="Ex: Não"
               className={EDITOR_FIELD_BASE_CLASS}
               aria-label="Texto do botão não"
             />
@@ -331,7 +331,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             rows={3}
             value={props.successMessage}
             onChange={(e) => updateProp('successMessage', e.target.value)}
-            placeholder="Ex: Você me faz a pessoa mais feliz do mundo! Prometo te fazer sorrir todos os dias! 🥰💍✨"
+            placeholder="Ex: Prometo honrar cada um dos nossos dias com respeito, carinho e cumplicidade."
             className={EDITOR_FIELD_BASE_CLASS}
             aria-label="Mensagem de sucesso"
           />

@@ -275,7 +275,7 @@ export function Payment() {
                       size="lg"
                       className="w-full font-bold shadow-md shadow-primary/20 text-base"
                     >
-                      {isLoading ? 'Publicando...' : '✨ Publicar Agora Gratuitamente'}
+                      {isLoading ? 'Publicando...' : 'Publicar Agora Gratuitamente'}
                     </Button>
                   </div>
                 </div>

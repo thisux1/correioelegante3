@@ -1,3 +1,4 @@
+@import "./assets/fonts.css";
 @import "tailwindcss";
 
 @theme {
@@ -16,9 +17,14 @@
   --color-gold: #d4a574;
   --color-gold-light: #e8c9a0;
 
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-cursive: "Dancing Script", cursive;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-cursive: "Dancing Script", "Brush Script MT", "Segoe Script", cursive;
+  --font-serif: "EB Garamond", Garamond, "Times New Roman", Georgia, serif;
+  --font-handwriting: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+  --font-script: "Great Vibes", "Brush Script MT", "Segoe Script", cursive;
+  --font-editorial: "Merriweather", Georgia, "Times New Roman", serif;
+  --font-outfit: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
 }

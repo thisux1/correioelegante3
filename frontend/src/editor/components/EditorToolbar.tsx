@@ -19,12 +19,20 @@ import {
   Milestone,
   HelpCircle,
   Camera,
+  Sun,
+  Moon,
+  Heart,
 } from 'lucide-react'
 
 import { MAX_BLOCKS, type BlockType } from '@/editor/types'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
 import { getThemeById, resolveThemeId, themeCatalog } from '@/editor/themes'
+import {
+  encodePersonaThemeId,
+  isPersonaThemeId,
+  parsePersonaThemeId,
+} from '@/editor/utils/colorHarmonizer'
 import { useShallow } from 'zustand/react/shallow'
 
 type AvailableBlockType = BlockType
@@ -166,6 +174,12 @@ function ThemeMenu({
 }) {
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
 
+  const isPersonaSelected = isPersonaThemeId(selectedThemeId)
+  const parsedPersona = parsePersonaThemeId(selectedThemeId)
+
+  const personaPrimary = parsedPersona?.primary || '#e11d48'
+  const personaMood = parsedPersona?.mood || 'light'
+
   const selectedIndex = Math.max(
     0,
     themeCatalog.findIndex((theme) => theme.id === selectedThemeId),
@@ -182,19 +196,21 @@ function ThemeMenu({
   }
 
   useEffect(() => {
-    requestAnimationFrame(() => {
-      itemRefs.current[selectedIndex]?.focus()
-    })
-  }, [selectedIndex])
+    if (!isPersonaSelected) {
+      requestAnimationFrame(() => {
+        itemRefs.current[selectedIndex]?.focus()
+      })
+    }
+  }, [isPersonaSelected, selectedIndex])
 
   const positionClassName =
     placement === 'left'
-      ? 'absolute right-full top-0 z-30 mr-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute right-full top-0 z-30 mr-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
       : placement === 'right'
-      ? 'absolute left-full top-0 z-30 ml-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute left-full top-0 z-30 ml-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
       : placement === 'up'
-      ? 'absolute bottom-full left-0 z-30 mb-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
-      : 'absolute left-0 top-full z-30 mt-2 w-60 max-h-[65vh] overflow-y-auto rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute bottom-full left-0 z-30 mb-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
+      : 'absolute left-0 top-full z-30 mt-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
 
   const initialMotion = shouldReduceMotion
     ? placement === 'left'
@@ -232,6 +248,22 @@ function ThemeMenu({
     none: 'Clássico',
   }
 
+  const personaQuickColors = [
+    { label: 'Rosa Amor', color: '#e11d48' },
+    { label: 'Magenta Pink', color: '#db2777' },
+    { label: 'Lavanda', color: '#8b5cf6' },
+    { label: 'Azul Céu', color: '#2563eb' },
+    { label: 'Turquesa', color: '#06b6d4' },
+    { label: 'Esmeralda', color: '#059669' },
+    { label: 'Ouro Sunset', color: '#d97706' },
+    { label: 'Terracota', color: '#ea580c' },
+  ]
+
+  const handleApplyPersonaColor = (color: string, mood: 'light' | 'dark' = personaMood) => {
+    const newThemeId = encodePersonaThemeId(color, mood)
+    onSelect(newThemeId)
+  }
+
   return (
     <motion.div
       className={positionClassName}
@@ -243,61 +275,160 @@ function ThemeMenu({
       exit={exitMotion}
       transition={shouldReduceMotion ? { duration: 0.2, ease: [0.19, 1, 0.22, 1] } : { type: 'spring', stiffness: 220, damping: 26, mass: 1 } }
     >
-      {themeCatalog.map((theme, index) => {
-        const isSelected = selectedThemeId === theme.id
+      {/* Seção Destacada: As Cores da Sua Pessoa */}
+      <div className={`mb-3 rounded-xl border p-3 transition-colors ${
+        isPersonaSelected
+          ? 'border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-sm'
+          : 'border-primary/20 bg-primary/5 hover:border-primary/30'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Heart size={14} className="fill-primary/20 text-primary" />
+            <span className="text-xs font-bold text-text">As Cores da Sua Pessoa</span>
+          </div>
+          {isPersonaSelected ? (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-primary">
+              <Check size={12} /> Ativo
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-[11px] leading-tight text-text-light">
+          Escolha a cor favorita de quem você ama e o clima da carta:
+        </p>
 
-        return (
-          <motion.button
-            key={theme.id}
+        {/* Swatches rápidos e seletor nativo */}
+        <div className="mt-2.5 flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 flex-1">
+            {personaQuickColors.map((swatch) => {
+              const isCurrent = personaPrimary.toLowerCase() === swatch.color.toLowerCase()
+              return (
+                <button
+                  key={swatch.color}
+                  type="button"
+                  title={swatch.label}
+                  onClick={() => handleApplyPersonaColor(swatch.color, personaMood)}
+                  className={`h-6 w-6 rounded-full border shadow-xs transition-transform hover:scale-115 active:scale-95 ${
+                    isCurrent ? 'ring-2 ring-primary ring-offset-1 border-white scale-110' : 'border-white/80'
+                  }`}
+                  style={{ backgroundColor: swatch.color }}
+                  aria-label={`Cor ${swatch.label}`}
+                />
+              )
+            })}
+          </div>
+
+          <label
+            title="Escolher qualquer cor personalizada"
+            className="relative flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-primary/30 bg-white shadow-xs transition-transform hover:scale-110 active:scale-95"
+          >
+            <input
+              type="color"
+              value={personaPrimary}
+              onChange={(e) => handleApplyPersonaColor(e.target.value, personaMood)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label="Seletor de cor personalizada"
+            />
+            <span
+              className="h-4 w-4 rounded-full border border-black/10"
+              style={{ backgroundColor: personaPrimary }}
+            />
+          </label>
+        </div>
+
+        {/* Mood: Dia / Noite */}
+        <div className="mt-2.5 flex items-center gap-1 rounded-lg bg-black/5 p-0.5">
+          <button
             type="button"
-            onClick={() => onSelect(theme.id)}
-            ref={(element) => {
-              itemRefs.current[index] = element
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'ArrowDown') {
-                event.preventDefault()
-                focusItemByIndex(index + 1)
-              } else if (event.key === 'ArrowUp') {
-                event.preventDefault()
-                focusItemByIndex(index - 1)
-              } else if (event.key === 'Home') {
-                event.preventDefault()
-                focusItemByIndex(0)
-              } else if (event.key === 'End') {
-                event.preventDefault()
-                focusItemByIndex(themeCatalog.length - 1)
-              }
-            }}
-            role="menuitemradio"
-            aria-checked={isSelected}
-            aria-label={`Tema ${theme.name}`}
-            tabIndex={isSelected ? 0 : -1}
-            initial={shouldReduceMotion ? { opacity: 0, y: 4 } : { opacity: 0, y: 10, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            whileHover={shouldReduceMotion ? undefined : { x: 2 }}
-            transition={shouldReduceMotion ? { duration: 0.12, delay: 0.012 * index, ease: [0.19, 1, 0.22, 1] } : { type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.03 * index }}
-            className={`flex w-full items-center gap-3 rounded-lg border px-2 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 hover:bg-primary/5 ${
-              isSelected
-                ? 'border-primary/35 bg-primary/10 text-primary'
-                : 'border-transparent text-text hover:border-primary/20'
+            onClick={() => handleApplyPersonaColor(personaPrimary, 'light')}
+            className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold transition-all ${
+              personaMood === 'light'
+                ? 'bg-white text-primary shadow-xs'
+                : 'text-text-light hover:text-text'
             }`}
           >
-            <span
-              className="h-8 w-8 rounded-md border border-white/70 shadow-sm"
-              style={{ background: theme.thumbnail }}
-              aria-hidden="true"
-            />
-            <span className="flex-1 min-w-0">
-              <span className="block truncate font-medium">{theme.name}</span>
-              <span className="block text-xs text-text-light truncate">
-                {theme.atmosphere ? atmosphereLabels[theme.atmosphere] || 'Fonte e paleta' : 'Fonte e paleta'}
+            <Sun size={12} /> Dia Suave
+          </button>
+          <button
+            type="button"
+            onClick={() => handleApplyPersonaColor(personaPrimary, 'dark')}
+            className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold transition-all ${
+              personaMood === 'dark'
+                ? 'bg-stone-900 text-white shadow-xs'
+                : 'text-text-light hover:text-text'
+            }`}
+          >
+            <Moon size={12} /> Noite Estrelada
+          </button>
+        </div>
+      </div>
+
+      {/* Divisor de catálogo */}
+      <div className="my-2.5 flex items-center gap-2 px-1">
+        <div className="h-px flex-1 bg-primary/15" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-text-light/60">
+          Temas Prontos
+        </span>
+        <div className="h-px flex-1 bg-primary/15" />
+      </div>
+
+      {/* Catálogo de temas clássicos */}
+      <div className="space-y-1">
+        {themeCatalog.map((theme, index) => {
+          const isSelected = !isPersonaSelected && selectedThemeId === theme.id
+
+          return (
+            <motion.button
+              key={theme.id}
+              type="button"
+              onClick={() => onSelect(theme.id)}
+              ref={(element) => {
+                itemRefs.current[index] = element
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowDown') {
+                  event.preventDefault()
+                  focusItemByIndex(index + 1)
+                } else if (event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  focusItemByIndex(index - 1)
+                } else if (event.key === 'Home') {
+                  event.preventDefault()
+                  focusItemByIndex(0)
+                } else if (event.key === 'End') {
+                  event.preventDefault()
+                  focusItemByIndex(themeCatalog.length - 1)
+                }
+              }}
+              role="menuitemradio"
+              aria-checked={isSelected}
+              aria-label={`Tema ${theme.name}`}
+              tabIndex={isSelected ? 0 : -1}
+              initial={shouldReduceMotion ? { opacity: 0, y: 4 } : { opacity: 0, y: 10, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              whileHover={shouldReduceMotion ? undefined : { x: 2 }}
+              transition={shouldReduceMotion ? { duration: 0.12, delay: 0.012 * index, ease: [0.19, 1, 0.22, 1] } : { type: 'spring', stiffness: 290, damping: 24, mass: 0.9, delay: 0.03 * index }}
+              className={`flex w-full items-center gap-3 rounded-lg border px-2.5 py-1.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 hover:bg-primary/5 ${
+                isSelected
+                  ? 'border-primary/35 bg-primary/10 text-primary font-medium'
+                  : 'border-transparent text-text hover:border-primary/20'
+              }`}
+            >
+              <span
+                className="h-7 w-7 rounded-md border border-white/70 shadow-xs shrink-0"
+                style={{ background: theme.thumbnail }}
+                aria-hidden="true"
+              />
+              <span className="flex-1 min-w-0">
+                <span className="block truncate text-xs font-semibold">{theme.name}</span>
+                <span className="block text-[10px] text-text-light truncate">
+                  {theme.atmosphere ? atmosphereLabels[theme.atmosphere] || 'Fonte e paleta' : 'Fonte e paleta'}
+                </span>
               </span>
-            </span>
-            {isSelected ? <Check size={14} /> : null}
-          </motion.button>
-        )
-      })}
+              {isSelected ? <Check size={14} /> : null}
+            </motion.button>
+          )
+        })}
+      </div>
     </motion.div>
   )
 }
