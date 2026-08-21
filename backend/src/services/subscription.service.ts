@@ -89,7 +89,7 @@ export async function getUserSubscription(userId: string) {
 
 export async function activateUserSubscription(params: {
   userId: string;
-  provider: 'mercadopago' | 'stripe' | 'system';
+  provider: 'pagbank' | 'mercadopago' | 'stripe' | 'system';
   providerPaymentId?: string;
   paymentMethod?: string;
   durationDays?: number;
@@ -102,6 +102,27 @@ export async function activateUserSubscription(params: {
 
   if (!user) {
     throw new AppError('Usuário não encontrado', 404);
+  }
+
+  // Verificação de idempotência por providerPaymentId
+  if (params.providerPaymentId) {
+    const existingActiveSub = await prisma.subscription.findFirst({
+      where: {
+        userId: params.userId,
+        providerPaymentId: params.providerPaymentId,
+        status: 'active',
+      },
+    });
+    if (existingActiveSub) {
+      const now = Date.now();
+      const expiresAt = existingActiveSub.expiresAt;
+      return {
+        success: true,
+        isSubscribed: true,
+        expiresAt,
+        daysRemaining: Math.max(0, Math.ceil((expiresAt.getTime() - now) / (1000 * 60 * 60 * 24))),
+      };
+    }
   }
 
   const now = Date.now();

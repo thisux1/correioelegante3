@@ -211,7 +211,7 @@ export async function createCardPaymentForResource(target: PaymentTarget, userId
     };
 }
 
-export async function handleWebhook(rawBody: Buffer, signature: string) {
+export async function handleWebhook(rawBody: Buffer | string | Record<string, unknown>, signature: string) {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {
         throw new AppError('STRIPE_WEBHOOK_SECRET não configurado', 500);
@@ -224,7 +224,10 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
     let event: Stripe.Event;
 
     try {
-        event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+        const payload = Buffer.isBuffer(rawBody) || typeof rawBody === 'string'
+            ? rawBody
+            : JSON.stringify(rawBody);
+        event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
     } catch {
         throw new AppError('Assinatura do webhook inválida', 400);
     }

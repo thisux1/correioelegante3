@@ -23,6 +23,7 @@ vi.mock('../utils/prisma', () => ({
         },
         subscription: {
             findUnique: vi.fn(),
+            findFirst: vi.fn(),
             findMany: vi.fn(),
             create: vi.fn(),
             update: vi.fn(),

@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 
@@ -11,6 +11,21 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, children, title, className = '' }: ModalProps) {
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -34,17 +49,22 @@ export function Modal({ isOpen, onClose, children, title, className = '' }: Moda
               }
             }}
           >
-            <div className={`relative w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-rose-100/80 ring-1 ring-black/5 text-text ${className}`}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={title ? 'modal-title' : undefined}
+              className={`relative w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-rose-100/80 ring-1 ring-black/5 text-text ${className}`}
+            >
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Fechar"
-                className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/5 text-text-light hover:bg-black/10 hover:text-text transition-colors"
+                className="absolute top-4 right-4 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-black/5 text-text-light hover:bg-black/10 hover:text-text transition-colors"
               >
                 <X size={18} />
               </button>
               {title && (
-                <h2 className="font-display text-2xl font-bold text-text mb-6 pr-8">
+                <h2 id="modal-title" className="font-display text-2xl font-bold text-text mb-6 pr-8">
                   {title}
                 </h2>
               )}

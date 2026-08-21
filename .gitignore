@@ -79,8 +79,15 @@ INTERVIEW_PRESENTATION_SCRIPT.md
 !backend/package-lock.json
 !frontend/package.json
 !frontend/package-lock.json
+!my-video/package.json
+!my-video/tsconfig.json
+!my-video/package-lock.json
+!vercel.json
 !opencode.json
-my-video/
+my-video/build/
+my-video/node_modules/
+my-video/out/
+
 .plan/
 templates.examples/
 /screenshots/

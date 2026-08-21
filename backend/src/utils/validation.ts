@@ -55,16 +55,31 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
 });
 
+const customerSchema = z.object({
+  name: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  tax_id: z.string().min(11).max(18).optional(),
+}).optional();
+
+const cardDataSchema = z.object({
+  encrypted: z.string().min(1, 'Token criptografado do cartão é obrigatório'),
+  holderName: z.string().min(1, 'Nome no cartão é obrigatório'),
+  installments: z.number().int().min(1).max(12).optional().default(1),
+  customer: customerSchema,
+}).optional();
+
 export const createSubscriptionPaymentSchema = z.object({
-  paymentMethod: z.enum(['pix', 'credit_card', 'mercadopago_checkout'], {
-    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".' }),
+  paymentMethod: z.enum(['pix', 'credit_card', 'pagbank_card', 'mercadopago_checkout'], {
+    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix", "credit_card", "pagbank_card" ou "mercadopago_checkout".' }),
   }),
   planId: z.enum(['monthly_unlimited']).optional().default('monthly_unlimited'),
+  customer: customerSchema,
+  cardData: cardDataSchema,
 });
 
 export const createPaymentSchema = z.object({
-  paymentMethod: z.enum(['pix', 'credit_card', 'mercadopago_checkout'], {
-    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix", "credit_card" ou "mercadopago_checkout".' }),
+  paymentMethod: z.enum(['pix', 'credit_card', 'pagbank_card', 'mercadopago_checkout'], {
+    errorMap: () => ({ message: 'Método de pagamento inválido. Use "pix", "credit_card", "pagbank_card" ou "mercadopago_checkout".' }),
   }),
   messageId: z
     .string()
@@ -77,6 +92,8 @@ export const createPaymentSchema = z.object({
     .min(1, 'resourceId é obrigatório')
     .regex(/^[a-f\d]{24}$/i, 'resourceId inválido')
     .optional(),
+  customer: customerSchema,
+  cardData: cardDataSchema,
 }).superRefine((value, ctx) => {
   const hasLegacy = Boolean(value.messageId);
   const hasNew = Boolean(value.resourceType && value.resourceId);
@@ -105,6 +122,7 @@ export const createPaymentSchema = z.object({
     });
   }
 });
+
 
 export const createRefundRequestSchema = z.object({
   resourceType: z.enum(['message', 'page'], {

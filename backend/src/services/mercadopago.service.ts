@@ -393,7 +393,7 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
             const rawDataId = (body.data as Record<string, unknown> | undefined)?.id;
             const dataId = typeof rawDataId === 'string' || typeof rawDataId === 'number'
                 ? String(rawDataId)
-                : undefined;
+                : (typeof body.id === 'string' || typeof body.id === 'number' ? String(body.id) : undefined);
             const manifest = `id:${dataId};request-id:${requestId};ts:${ts}`;
             const expectedHash = crypto
                 .createHmac('sha256', webhookSecret)
@@ -401,8 +401,10 @@ export async function handleWebhook(body: Record<string, unknown>, signature: st
                 .digest('hex');
 
             if (expectedHash !== v1) {
-                console.warn('Mercado Pago webhook signature mismatch, proceeding with direct API payment verification.');
+                throw new AppError('Assinatura inválida', 401);
             }
+        } else {
+            throw new AppError('Assinatura inválida', 401);
         }
     }
 

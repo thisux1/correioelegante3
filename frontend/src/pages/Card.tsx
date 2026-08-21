@@ -53,6 +53,17 @@ export function Card() {
     return () => abortController.abort()
   }, [id])
 
+  useEffect(() => {
+    if (card?.recipient) {
+      document.title = `Correio Elegante — Para ${card.recipient}`
+    } else {
+      document.title = 'Correio Elegante'
+    }
+    return () => {
+      document.title = 'Correio Elegante'
+    }
+  }, [card])
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
