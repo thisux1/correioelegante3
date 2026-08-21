@@ -112,10 +112,21 @@ function PolaroidCard({
     }
   }, [isEditMode, isSelected, onDeselect])
 
-  // Direct Interactive Rotation Dragging
+  const lastPointerDownTimeRef = useRef<number>(0)
+
+  // Direct Interactive Rotation Dragging (Lightroom / Camera Raw style)
   const handleRotationPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // Double click / double tap detection to reset to 0°
+    const now = Date.now()
+    if (now - lastPointerDownTimeRef.current < 320) {
+      onUpdateRotation(0)
+      lastPointerDownTimeRef.current = 0
+      return
+    }
+    lastPointerDownTimeRef.current = now
 
     if (!cardRef.current) return
     const target = e.currentTarget
@@ -133,16 +144,17 @@ function PolaroidCard({
     setIsRotating(true)
 
     const onPointerMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault()
       const dx = moveEvent.clientX - centerX
       const dy = moveEvent.clientY - centerY
 
-      // Calculate angle from center
+      // Calculate angle from center (0° is straight up)
       let deg = (Math.atan2(dy, dx) * 180) / Math.PI + 90
       while (deg > 180) deg -= 360
       while (deg < -180) deg += 360
 
-      // Magnetic snap to 0° within 2 degrees
-      if (Math.abs(deg) < 2) {
+      // Magnetic snap to 0° within 1.5 degrees
+      if (Math.abs(deg) < 1.5) {
         deg = 0
       }
 
@@ -161,10 +173,12 @@ function PolaroidCard({
       setIsRotating(false)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerUp)
     }
 
-    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointermove', onPointerMove, { passive: false })
     window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerUp)
   }
 
   // Direct Fluid Corner Resize Dragging
@@ -191,6 +205,7 @@ function PolaroidCard({
     setIsResizing(true)
 
     const onPointerMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault()
       const currentDistance = Math.hypot(
         moveEvent.clientX - centerX,
         moveEvent.clientY - centerY,
@@ -213,10 +228,12 @@ function PolaroidCard({
       setIsResizing(false)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerUp)
     }
 
-    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointermove', onPointerMove, { passive: false })
     window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerUp)
   }
 
   // File Upload Handler
@@ -401,33 +418,76 @@ function PolaroidCard({
         )}
       </AnimatePresence>
 
-      {/* Top Interactive Rotation Handle & Stem (Canva / Figma Clean Dot Style) */}
+      {/* Central Anchor Point & Radial Stem (Adobe Lightroom / Camera Raw Mask Style) */}
       {isSelected && isEditMode && (
         <>
-          {/* Vertical Connecting Stem */}
+          {/* Central Anchor Crosshair / Pivot Point at (50%, 50%) */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 h-6 w-0.5 bg-primary/70"
+            data-testid="central-anchor-point"
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center justify-center"
+          >
+            {/* Subtle Crosshair Reticle */}
+            <div
+              className={`relative flex items-center justify-center rounded-full border bg-white/95 shadow-sm backdrop-blur-2xs transition-all duration-150 ${
+                isRotating
+                  ? 'h-6 w-6 border-primary ring-4 ring-primary/25 scale-110 shadow-md'
+                  : 'h-5 w-5 border-primary/60'
+              }`}
+            >
+              {/* Horizontal & Vertical Crosshair Ticks */}
+              <div className="absolute h-px w-2.5 bg-primary/70" />
+              <div className="absolute h-2.5 w-px bg-primary/70" />
+              {/* Central Pivot Dot */}
+              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+            </div>
+
+            {/* Protractor / Angle Compass Ring during active rotation */}
+            {isRotating && (
+              <div className="pointer-events-none absolute h-28 w-28 rounded-full border border-dashed border-primary/40 animate-in fade-in zoom-in-90 duration-150" />
+            )}
+          </div>
+
+          {/* Radial Connecting Stem from Central Pivot to Top Rotation Handle */}
+          <div
+            aria-hidden="true"
+            data-testid="radial-stem"
+            className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 transition-all ${
+              isRotating
+                ? 'w-[2px] bg-primary shadow-xs'
+                : 'w-0.5 border-l border-dashed border-primary/70'
+            }`}
+            style={{
+              top: '-2.75rem',
+              height: 'calc(50% + 2.75rem)',
+            }}
           />
 
-          {/* Circular Clean Rotation Handle (Canva / Figma style) */}
+          {/* Circular Clean Rotation Handle (Lightroom / Camera Raw style) */}
           <button
             type="button"
             onPointerDown={handleRotationPointerDown}
+            onDoubleClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onUpdateRotation(0)
+            }}
             style={{ touchAction: 'none' }}
-            className={`absolute -top-10 left-1/2 -translate-x-1/2 z-40 flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary bg-white shadow-lg transition-transform hover:scale-120 active:scale-105 ${
-              isRotating ? 'cursor-grabbing ring-2 ring-primary ring-offset-1 scale-110' : 'cursor-grab'
+            className={`absolute -top-11 left-1/2 -translate-x-1/2 z-40 flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary bg-white shadow-lg transition-transform hover:scale-125 active:scale-105 ${
+              isRotating
+                ? 'cursor-grabbing ring-4 ring-primary/25 scale-115 bg-primary text-white'
+                : 'cursor-grab text-primary'
             }`}
             title="Arrastar para girar a foto"
             aria-label="Girar Polaroid"
           >
-            <RotateCw size={13} className={`text-primary ${isRotating ? 'animate-spin' : ''}`} />
+            <RotateCw size={13} className={isRotating ? 'text-white' : 'text-primary'} />
           </button>
 
-          {/* Rotation Tooltip Badge while dragging */}
+          {/* Rotation Angle Tooltip Badge with Real-time Angle */}
           {isRotating && (
-            <div className="pointer-events-none absolute -top-17 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md whitespace-nowrap">
-              {currentRotation > 0 ? `+${currentRotation}` : currentRotation}°
+            <div className="pointer-events-none absolute -top-19 left-1/2 -translate-x-1/2 z-50 rounded-lg bg-neutral-900/90 px-2.5 py-1 font-mono text-xs font-bold text-white shadow-xl ring-1 ring-white/20 backdrop-blur-xs whitespace-nowrap animate-in fade-in duration-100">
+              {currentRotation > 0 ? `+${currentRotation}°` : `${currentRotation}°`}
             </div>
           )}
         </>
@@ -463,7 +523,7 @@ function PolaroidCard({
 
           {/* Size Tooltip Badge while resizing */}
           {isResizing && (
-            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-md bg-black/85 px-2 py-0.5 font-mono text-xs font-bold text-white shadow-md whitespace-nowrap">
+            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-lg bg-neutral-900/90 px-2.5 py-1 font-mono text-xs font-bold text-white shadow-xl ring-1 ring-white/20 backdrop-blur-xs whitespace-nowrap animate-in fade-in duration-100">
               {currentWidth}px
             </div>
           )}
@@ -521,12 +581,12 @@ function PolaroidCard({
               onSelect()
             }}
             placeholder="Escreva uma legenda..."
-            className="w-full bg-transparent text-center font-cursive text-xl leading-snug text-text placeholder:font-sans placeholder:text-xs placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary/60 focus:outline-none transition-colors py-0.5 overflow-hidden text-ellipsis whitespace-nowrap"
+            className="w-full bg-transparent text-center font-cursive text-xl sm:text-2xl leading-relaxed text-text placeholder:font-sans placeholder:text-xs placeholder:text-text-light/40 border-b border-dashed border-transparent hover:border-primary/30 focus:border-primary/60 focus:outline-none transition-colors py-0.5 overflow-hidden text-ellipsis whitespace-nowrap"
             aria-label="Legenda da foto polaroid"
           />
         ) : (
           <p
-            className="font-cursive text-xl leading-snug text-text overflow-hidden text-ellipsis whitespace-nowrap px-1"
+            className="font-cursive text-xl sm:text-2xl leading-relaxed text-text overflow-hidden text-ellipsis whitespace-nowrap px-1"
             title={photo.caption || undefined}
           >
             {photo.caption || ''}

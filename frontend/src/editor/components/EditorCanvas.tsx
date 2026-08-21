@@ -585,6 +585,7 @@ export function EditorCanvas() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.99 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
+            className={`relative ${selectedBlockId === blockId ? 'z-40' : 'z-10'}`}
           >
             <CanvasBlock
               blockId={blockId}
@@ -598,7 +599,7 @@ export function EditorCanvas() {
         ))}
       </AnimatePresence>
     </div>
-  ), [blockIds, isDragging, isMobile, requestDelete, selectBlock, shouldReduceMotion])
+  ), [blockIds, isDragging, isMobile, requestDelete, selectBlock, selectedBlockId, shouldReduceMotion])
 
   if (blockIds.length === 0) {
     return (

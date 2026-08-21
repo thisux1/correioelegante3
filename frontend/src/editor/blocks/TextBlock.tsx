@@ -85,7 +85,7 @@ const TEXT_CATEGORIES: Record<TextBlockCategory, CategoryConfig> = {
     icon: PenTool,
     placeholder: 'Com todo o meu afeto, Seu Nome',
     defaultFontClass: 'font-cursive',
-    defaultSizeClass: 'text-2xl md:text-3xl',
+    defaultSizeClass: 'text-2xl md:text-3xl leading-relaxed',
     defaultAlign: 'right',
     description: 'Caligrafia cursiva fluida para o remetente',
   },
@@ -898,7 +898,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <div
               role="listbox"
               aria-label="Lista de fontes disponíveis"
-              className="absolute left-0 top-full mt-2 z-50 w-72 sm:w-84 max-h-80 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
+              className="absolute left-0 top-full mt-2 z-[100] w-72 sm:w-84 max-h-80 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
             >
               <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
                 Tipografia & Estilos
@@ -972,7 +972,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <div
               role="listbox"
               aria-label="Tamanhos de texto disponíveis"
-              className="absolute left-0 top-full mt-2 z-50 w-56 max-h-72 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
+              className="absolute left-0 top-full mt-2 z-[100] w-56 max-h-72 overflow-y-auto rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl backdrop-blur-md"
             >
               <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
                 Tamanho do Texto
@@ -1031,7 +1031,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           </button>
 
           {showColorPicker ? (
-            <div className="absolute left-0 top-full z-50 mt-2 w-64 rounded-2xl border border-primary/20 bg-white p-3.5 shadow-2xl backdrop-blur-md">
+            <div className="absolute left-0 top-full z-[100] mt-2 w-64 rounded-2xl border border-primary/20 bg-white p-3.5 shadow-2xl backdrop-blur-md">
               <p className="mb-2 text-[11px] font-semibold text-text-light uppercase tracking-wider">
                 Paleta de Cores
               </p>
@@ -1130,7 +1130,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       {selectionPosition && (
         <div
           style={{ top: `${selectionPosition.top}px`, left: `${selectionPosition.left}px` }}
-          className="absolute z-50 flex items-center gap-1 rounded-2xl border border-primary/30 bg-white/98 px-2 py-1.5 shadow-2xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5"
+          className="absolute z-[100] flex items-center gap-1 rounded-2xl border border-primary/30 bg-white/98 px-2 py-1.5 shadow-2xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5"
           onMouseDown={(e: ReactMouseEvent) => e.preventDefault()}
         >
           <button
@@ -1203,7 +1203,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
             {showHighlightPicker && (
               <div
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 flex items-center gap-1.5 rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl z-50 backdrop-blur-md"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 flex items-center gap-1.5 rounded-2xl border border-primary/25 bg-white p-2 shadow-2xl z-[100] backdrop-blur-md"
                 onMouseDown={(e: ReactMouseEvent) => e.preventDefault()}
               >
                 {HIGHLIGHT_COLORS.map((h) => (
