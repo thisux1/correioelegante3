@@ -93,12 +93,12 @@ function AddMenu({
 }) {
   const positionClassName =
     placement === 'left'
-      ? 'absolute right-full top-0 z-30 mr-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute right-full top-0 z-[170] mr-2 w-44 rounded-xl border border-border bg-surface text-text p-2 shadow-xl backdrop-blur-md'
       : placement === 'right'
-      ? 'absolute left-full top-0 z-30 ml-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute left-full top-0 z-[170] ml-2 w-44 rounded-xl border border-border bg-surface text-text p-2 shadow-xl backdrop-blur-md'
       : placement === 'up'
-      ? 'absolute bottom-full left-0 z-30 mb-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
-      : 'absolute left-0 top-full z-30 mt-2 w-44 rounded-xl border border-primary/20 bg-white/95 p-2 shadow-xl'
+      ? 'absolute bottom-full left-0 z-[170] mb-2 w-44 rounded-xl border border-border bg-surface text-text p-2 shadow-xl backdrop-blur-md'
+      : 'absolute left-0 top-full z-[170] mt-2 w-44 rounded-xl border border-border bg-surface text-text p-2 shadow-xl backdrop-blur-md'
 
   const initialMotion = shouldReduceMotion
     ? placement === 'left'
@@ -205,12 +205,12 @@ function ThemeMenu({
 
   const positionClassName =
     placement === 'left'
-      ? 'absolute right-full top-0 z-30 mr-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
+      ? 'absolute right-full top-0 z-[170] mr-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-border bg-surface text-text p-3 shadow-2xl backdrop-blur-md'
       : placement === 'right'
-      ? 'absolute left-full top-0 z-30 ml-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
+      ? 'absolute left-full top-0 z-[170] ml-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-border bg-surface text-text p-3 shadow-2xl backdrop-blur-md'
       : placement === 'up'
-      ? 'absolute bottom-full left-0 z-30 mb-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
-      : 'absolute left-0 top-full z-30 mt-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-2xl backdrop-blur-md'
+      ? 'absolute bottom-full left-0 z-[170] mb-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-border bg-surface text-text p-3 shadow-2xl backdrop-blur-md'
+      : 'absolute left-0 top-full z-[170] mt-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-border bg-surface text-text p-3 shadow-2xl backdrop-blur-md'
 
   const initialMotion = shouldReduceMotion
     ? placement === 'left'
@@ -319,7 +319,7 @@ function ThemeMenu({
 
           <label
             title="Escolher qualquer cor personalizada"
-            className="relative flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-primary/30 bg-white shadow-xs transition-transform hover:scale-110 active:scale-95"
+            className="relative flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-surface shadow-xs transition-transform hover:scale-110 active:scale-95"
           >
             <input
               type="color"
@@ -329,7 +329,7 @@ function ThemeMenu({
               aria-label="Seletor de cor personalizada"
             />
             <span
-              className="h-4 w-4 rounded-full border border-black/10"
+              className="h-4 w-4 rounded-full border border-border"
               style={{ backgroundColor: personaPrimary }}
             />
           </label>
@@ -342,7 +342,7 @@ function ThemeMenu({
             onClick={() => handleApplyPersonaColor(personaPrimary, 'light')}
             className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold transition-all ${
               personaMood === 'light'
-                ? 'bg-white text-primary shadow-xs'
+                ? 'bg-surface text-primary shadow-xs'
                 : 'text-text-light hover:text-text'
             }`}
           >
@@ -460,7 +460,7 @@ function ToolbarControls({
   const isSaving = saveState === 'saving'
 
 
-  const compactBtnBase = 'flex w-full min-h-11 items-center justify-center rounded-lg bg-transparent p-0 text-primary transition-colors hover:bg-white/60 active:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'
+  const compactBtnBase = 'flex w-full min-h-11 items-center justify-center rounded-lg bg-transparent p-0 text-primary transition-colors hover:bg-surface/60 active:bg-surface/80 disabled:cursor-not-allowed disabled:opacity-40'
   const compactBtnAccent = 'flex w-full min-h-11 items-center justify-center rounded-lg bg-primary p-0 text-white shadow-[0_8px_20px_-10px_rgba(236,72,153,0.5)] transition-colors hover:bg-primary-dark'
   const separator = isVerticalDock ? <div className="h-px w-4/5 self-center bg-primary/10" /> : null
 
@@ -504,7 +504,7 @@ function ToolbarControls({
           disabled={mode !== 'edit'}
           className={useCompactButtons
             ? compactBtnBase
-            : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/25 bg-white/80 px-3 text-sm font-medium text-text transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40'}
+            : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-text transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40'}
           aria-label="Selecionar tema"
           aria-expanded={isThemeMenuOpen}
           aria-haspopup="menu"
@@ -599,7 +599,7 @@ function ToolbarControls({
               ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
               : isSaving
                 ? 'border-primary/30 bg-primary/10 text-primary'
-                : 'border-primary/15 bg-white/70 text-text-light'}`}
+                : 'border-border bg-surface text-text-light'}`}
         aria-live="polite"
       >
         {useCompactButtons
@@ -612,7 +612,7 @@ function ToolbarControls({
         layout="position"
         className={useCompactButtons
           ? 'w-full text-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-text-muted'
-          : 'rounded-xl border border-primary/15 bg-white/70 px-3 py-2 text-xs font-medium text-text-light'}
+          : 'rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-text-light'}
       >
         {blocksCount}/{MAX_BLOCKS}
       </motion.span>
@@ -870,7 +870,7 @@ export function EditorToolbar({
             </motion.div>
           </div>
         ) : (
-          <div className={`fixed ${dockSide === 'right' ? 'right-0' : 'left-0'} top-0 bottom-0 z-40 flex items-center pointer-events-none`}>
+          <div className={`fixed ${dockSide === 'right' ? 'right-0' : 'left-0'} top-0 bottom-0 z-[150] flex items-center pointer-events-none`}>
             <AnimatePresence initial={false}>
               <motion.div
                 key="vertical-dock"
@@ -889,13 +889,14 @@ export function EditorToolbar({
                   <motion.button
                     type="button"
                     onClick={() => setIsVerticalDockOpen((current) => !current)}
-                    className="flex w-11 h-11 items-center justify-center transition-colors hover:bg-white/80 active:bg-white/90"
+                    className="z-[160] flex w-11 h-11 items-center justify-center transition-colors hover:bg-surface/80 active:bg-surface/90"
                     aria-label={isVerticalDockOpen ? 'Fechar barra de ferramentas' : 'Abrir barra de ferramentas'}
                     aria-expanded={isVerticalDockOpen}
                     aria-controls="editor-toolbar-vertical-dock"
                     title={isVerticalDockOpen ? 'Fechar barra' : 'Abrir barra'}
                     initial={false}
                     style={{
+                      zIndex: 160,
                       animation: `${dockSide === 'right' ? 'tab-slide-in-right' : 'tab-slide-in-left'} 0.4s cubic-bezier(0.19, 1, 0.22, 1) 0.4s both`,
                       position: 'absolute',
                       top: '1rem',
