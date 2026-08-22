@@ -76,9 +76,9 @@ describe('EnvelopeUnboxing', () => {
       )
     })
 
-    // 1. Avião voa, tem impacto no solo e desdobra no envelope
+    // 1. Avião voa em zigue-zague, tem impacto no solo e desdobra no envelope
     await act(async () => {
-      vi.advanceTimersByTime(2200)
+      vi.advanceTimersByTime(3500)
     })
 
     // 2. Toca no botão de abrir o envelope
