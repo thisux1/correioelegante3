@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, RotateCcw, Heart } from 'lucide-react'
 
 function HeartConfetti() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
+  const particles = Array.from({ length: 24 }, (_, i) => ({
     id: i,
-    angle: (i * (360 / 20) * Math.PI) / 180,
-    distance: 55 + (i % 4) * 30,
+    angle: (i * (360 / 24) * Math.PI) / 180,
+    distance: 60 + (i % 4) * 35,
     size: 10 + (i % 3) * 6,
-    color: ['#ec4899', '#f43f5e', '#fb7185', '#fda4af', '#f59e0b'][i % 5],
+    color: ['#ffffff', '#fb7185', '#fda4af', '#fecdd3', '#fde047'][i % 5],
   }))
 
   return (
@@ -24,7 +24,7 @@ function HeartConfetti() {
             animate={{
               x: targetX,
               y: targetY,
-              scale: [0, 1.35, 0],
+              scale: [0, 1.4, 0],
               opacity: [1, 1, 0],
               rotate: (p.id % 2 === 0 ? 1 : -1) * 180,
             }}
@@ -49,11 +49,11 @@ interface InteractiveScratchCanvasProps {
 }
 
 export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
-  coverText = 'Raspe suavemente aqui para descobrir a surpresa...',
+  coverText = 'Raspe com o mouse ou o dedo para revelar...',
   secretText,
   secretSubtitle = 'Surpresa Revelada',
   minScratchThreshold = 40,
-  height = 140,
+  height = 145,
   onRevealed,
 }: InteractiveScratchCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -62,6 +62,7 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
   const [scratchPercent, setScratchPercent] = useState(0)
   const [isRevealed, setIsRevealed] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const animFrameRef = useRef<number | null>(null)
 
   const drawCover = useCallback((canvas: HTMLCanvasElement) => {
     const ctx = canvas.getContext('2d', { willReadFrequently: true })
@@ -70,42 +71,55 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
     const width = canvas.width
     const height = canvas.height
 
-    // Gradiente metálico prateado/dourado rosé de alta definição
-    const gradient = ctx.createLinearGradient(0, 0, width, height)
-    gradient.addColorStop(0, '#fde2e4')
-    gradient.addColorStop(0.25, '#fad2e1')
-    gradient.addColorStop(0.5, '#fecdd3')
-    gradient.addColorStop(0.75, '#fce7f3')
-    gradient.addColorStop(1, '#fed7aa')
-
+    // 1. Película metálica rica em Ouro Champagne & Prata Rosé
     ctx.globalCompositeOperation = 'source-over'
+    ctx.globalAlpha = 1.0
+
+    const gradient = ctx.createLinearGradient(0, 0, width, height)
+    gradient.addColorStop(0, '#fef08a')    // Ouro suave
+    gradient.addColorStop(0.2, '#fde047')  // Ouro vibrante
+    gradient.addColorStop(0.45, '#fecdd3') // Rosé
+    gradient.addColorStop(0.7, '#fed7aa')  // Champagne
+    gradient.addColorStop(0.9, '#fbcfe8')  // Rosa claro
+    gradient.addColorStop(1, '#fde047')    // Ouro
+
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, width, height)
 
-    // Partículas de brilho / poeira cintilante na folha
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)'
-    for (let i = 0; i < 70; i++) {
-      const px = (Math.sin(i * 127) * 0.5 + 0.5) * width
-      const py = (Math.cos(i * 47) * 0.5 + 0.5) * height
+    // 2. Reflexos especulares metálicos
+    const specGrad = ctx.createLinearGradient(0, 0, width, 0)
+    specGrad.addColorStop(0, 'rgba(255, 255, 255, 0)')
+    specGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.45)')
+    specGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0)')
+    specGrad.addColorStop(0.75, 'rgba(255, 255, 255, 0.35)')
+    specGrad.addColorStop(1, 'rgba(255, 255, 255, 0)')
+    ctx.fillStyle = specGrad
+    ctx.fillRect(0, 0, width, height)
+
+    // 3. Textura de micro-brilhos cintilantes
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)'
+    for (let i = 0; i < 90; i++) {
+      const px = (Math.sin(i * 137.5) * 0.5 + 0.5) * width
+      const py = (Math.cos(i * 73.1) * 0.5 + 0.5) * height
       ctx.beginPath()
-      ctx.arc(px, py, (i % 3) + 1.2, 0, Math.PI * 2)
+      ctx.arc(px, py, (i % 3) + 1, 0, Math.PI * 2)
       ctx.fill()
     }
 
-    // Moldura tracejada decorativa no canvas
-    ctx.strokeStyle = 'rgba(225, 29, 72, 0.25)'
-    ctx.lineWidth = 2
+    // 4. Borda tracejada elegante
+    ctx.strokeStyle = '#be123c'
+    ctx.lineWidth = 1.8
     ctx.setLineDash([6, 6])
-    ctx.strokeRect(8, 8, width - 16, height - 16)
+    ctx.strokeRect(10, 10, width - 20, height - 20)
     ctx.setLineDash([])
 
-    // Texto da Capa
-    ctx.fillStyle = '#4c0519'
-    ctx.font = 'bold 14px sans-serif'
+    // 5. Ícone central de varinha/brilho
+    ctx.fillStyle = '#881337'
+    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.9)'
-    ctx.shadowBlur = 5
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.95)'
+    ctx.shadowBlur = 4
 
     const lines = coverText.split('\n')
     const lineHeight = 20
@@ -129,17 +143,19 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
     const height = canvas.height
     const imageData = ctx.getImageData(0, 0, width, height)
     const data = imageData.data
-    let transparentPixels = 0
-    const totalPixels = data.length / 4
 
-    // Amostragem de pixels para alta performance
-    for (let i = 3; i < data.length; i += 64) {
-      if (data[i] === 0) {
-        transparentPixels += 16
+    const sampleStep = 16 // amostragem precisa
+    let transparentCount = 0
+    let totalSampled = 0
+
+    for (let i = 3; i < data.length; i += sampleStep * 4) {
+      totalSampled++
+      if (data[i] < 128) {
+        transparentCount++
       }
     }
 
-    return Math.min(100, Math.round((transparentPixels / totalPixels) * 100))
+    return totalSampled > 0 ? Math.min(100, Math.round((transparentCount / totalSampled) * 100)) : 0
   }, [])
 
   useEffect(() => {
@@ -172,31 +188,39 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (!ctx) return
 
+      // 100% de remoção opaca limpa (sem translucidez)
       ctx.globalCompositeOperation = 'destination-out'
-      ctx.lineWidth = 42
+      ctx.fillStyle = '#000000'
+      ctx.strokeStyle = '#000000'
+      ctx.lineWidth = 48
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
 
+      ctx.beginPath()
       if (lastPoint.current) {
-        ctx.beginPath()
         ctx.moveTo(lastPoint.current.x, lastPoint.current.y)
         ctx.lineTo(x, y)
         ctx.stroke()
       } else {
-        ctx.beginPath()
-        ctx.arc(x, y, 21, 0, Math.PI * 2)
+        ctx.arc(x, y, 24, 0, Math.PI * 2)
         ctx.fill()
       }
 
       lastPoint.current = { x, y }
 
-      const percent = calculateScratchPercent()
-      setScratchPercent(percent)
+      // Throttle de cálculo do percentual para fluidez a 60fps
+      if (!animFrameRef.current) {
+        animFrameRef.current = requestAnimationFrame(() => {
+          animFrameRef.current = null
+          const percent = calculateScratchPercent()
+          setScratchPercent(percent)
 
-      if (percent >= minScratchThreshold && !isRevealed) {
-        setIsRevealed(true)
-        setShowConfetti(true)
-        onRevealed?.()
+          if (percent >= minScratchThreshold && !isRevealed) {
+            setIsRevealed(true)
+            setShowConfetti(true)
+            onRevealed?.()
+          }
+        })
       }
     },
     [calculateScratchPercent, isRevealed, minScratchThreshold, onRevealed]
@@ -205,6 +229,11 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (isRevealed) return
     isDrawing.current = true
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      // safe fallback
+    }
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
@@ -219,9 +248,14 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
     scratch(x, y)
   }
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     isDrawing.current = false
     lastPoint.current = null
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      // safe fallback
+    }
   }
 
   const handleReset = (e: React.MouseEvent) => {
@@ -236,15 +270,18 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
   }
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border-2 border-pink-300/80 bg-[#fff5f8] shadow-sm select-none" style={{ minHeight: height }}>
+    <div
+      className="relative w-full rounded-2xl overflow-hidden border-2 border-rose-300 shadow-md select-none"
+      style={{ minHeight: height, touchAction: 'none' }}
+    >
       {showConfetti && <HeartConfetti />}
 
-      {/* Conteúdo Secreto Ocultado / Revelado */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 bg-gradient-to-br from-[#fff0f4] to-[#ffe4ec]">
-        <span className="text-xs font-bold text-[#e11d48] uppercase tracking-wider mb-1 flex items-center gap-1">
-          <Sparkles size={13} /> {secretSubtitle}
+      {/* Fundo de Alto Contraste (Vinho Escuro & Rubi Profundo com Texto Branco Puro) */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 bg-gradient-to-br from-[#4c0519] via-[#881337] to-[#be123c] text-white shadow-inner">
+        <span className="text-xs font-extrabold text-[#fde047] uppercase tracking-wider mb-1.5 flex items-center gap-1.5 drop-shadow-xs">
+          <Sparkles size={14} className="text-[#fde047]" /> {secretSubtitle}
         </span>
-        <p className="font-display font-bold text-base sm:text-lg text-[#4c0519] leading-snug">
+        <p className="font-display font-bold text-base sm:text-lg text-white leading-snug drop-shadow-xs">
           {secretText}
         </p>
 
@@ -254,19 +291,19 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
             animate={{ opacity: 1, y: 0 }}
             type="button"
             onClick={handleReset}
-            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#be123c] hover:text-[#e11d48] transition-colors cursor-pointer"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#fecdd3] hover:text-white transition-colors cursor-pointer bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-xs"
           >
-            <RotateCcw size={12} /> Raspar novamente
+            <RotateCcw size={13} /> Raspar novamente
           </motion.button>
         )}
       </div>
 
-      {/* Camada de Raspadinha Interativa (Canvas) */}
+      {/* Camada de Raspadinha Interativa (Película Metálica Ouro Champagne) */}
       <AnimatePresence>
         {!isRevealed && (
           <motion.div
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.45, ease: 'easeOut' } }}
+            exit={{ opacity: 0, transition: { duration: 0.35, ease: 'easeOut' } }}
             className="absolute inset-0 z-10 touch-none cursor-crosshair"
           >
             <canvas
@@ -274,11 +311,11 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
+              onPointerCancel={handlePointerUp}
               className="w-full h-full block"
             />
             {scratchPercent > 0 && scratchPercent < minScratchThreshold && (
-              <div className="absolute bottom-2 right-3 pointer-events-none text-[11px] font-bold text-[#4c0519] bg-white/85 px-2 py-0.5 rounded-full shadow-xs backdrop-blur-2xs">
+              <div className="absolute bottom-2.5 right-3 pointer-events-none text-xs font-bold text-[#4c0519] bg-white/95 px-2.5 py-1 rounded-full shadow-md border border-rose-200">
                 {scratchPercent}% raspado
               </div>
             )}
