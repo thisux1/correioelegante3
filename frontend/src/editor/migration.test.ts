@@ -65,9 +65,52 @@ describe('migratePage', () => {
       src: 'https://cdn/audio.mp3',
       coverSrc: '',
       coverAssetId: undefined,
-      tracks: [{ src: 'https://cdn/audio.mp3', assetId: 'a2', title: 'x', artist: undefined, coverSrc: undefined, coverAssetId: undefined }],
+      tracks: [{
+        src: 'https://cdn/audio.mp3',
+        assetId: 'a2',
+        title: 'x',
+        artist: undefined,
+        coverSrc: undefined,
+        coverAssetId: undefined,
+        syncedLyrics: undefined,
+        plainLyrics: undefined,
+      }],
       title: 'x',
       artist: '',
+      playerStyle: 'minimal',
+      syncedLyrics: undefined,
+      plainLyrics: undefined,
+      showLyrics: true,
+    })
+  })
+
+  it('preserva playerStyle vinyl e syncedLyrics em bloco de musica', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: 'm-vinyl',
+          type: 'music',
+          props: {
+            src: 'https://cdn/song.mp3',
+            title: 'Yellow',
+            artist: 'Coldplay',
+            playerStyle: 'vinyl',
+            syncedLyrics: '[00:10.00] Look at the stars',
+            showLyrics: true,
+          },
+          meta: {},
+        },
+      ],
+    })
+
+    expect(migrated.blocks[0].type).toBe('music')
+    expect(migrated.blocks[0].props).toMatchObject({
+      src: 'https://cdn/song.mp3',
+      title: 'Yellow',
+      artist: 'Coldplay',
+      playerStyle: 'vinyl',
+      syncedLyrics: '[00:10.00] Look at the stars',
+      showLyrics: true,
     })
   })
 

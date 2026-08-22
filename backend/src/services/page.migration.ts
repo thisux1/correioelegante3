@@ -207,6 +207,10 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       const legacyArtist = asOptionalText(props.artist);
       const legacyCoverSrc = asOptionalText(props.coverSrc);
       const legacyCoverAssetId = asOptionalText(props.coverAssetId);
+      const legacySyncedLyrics = asOptionalText(props.syncedLyrics);
+      const legacyPlainLyrics = asOptionalText(props.plainLyrics);
+      const playerStyle = props.playerStyle === 'vinyl' ? 'vinyl' : 'minimal';
+      const showLyrics = typeof props.showLyrics === 'boolean' ? props.showLyrics : true;
       const tracks = Array.isArray(props.tracks)
         ? props.tracks.reduce<Array<{
           src: string;
@@ -215,6 +219,8 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
           artist?: string;
           coverSrc?: string;
           coverAssetId?: string;
+          syncedLyrics?: string;
+          plainLyrics?: string;
         }>>((accumulator, track) => {
           const record = asRecord(track);
           const src = asText(record.src);
@@ -229,6 +235,8 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
             artist: asOptionalText(record.artist),
             coverSrc: asOptionalText(record.coverSrc),
             coverAssetId: asOptionalText(record.coverAssetId),
+            syncedLyrics: asOptionalText(record.syncedLyrics),
+            plainLyrics: asOptionalText(record.plainLyrics),
           });
           return accumulator;
         }, []).slice(0, 30)
@@ -243,6 +251,8 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
               artist: legacyArtist,
               coverSrc: legacyCoverSrc,
               coverAssetId: legacyCoverAssetId,
+              syncedLyrics: legacySyncedLyrics,
+              plainLyrics: legacyPlainLyrics,
             }]
           : []);
       const mirrorTrack = normalizedTracks[0];
@@ -255,6 +265,10 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         tracks: normalizedTracks,
         title: legacyTitle ?? mirrorTrack?.title,
         artist: legacyArtist ?? mirrorTrack?.artist,
+        playerStyle,
+        syncedLyrics: legacySyncedLyrics ?? mirrorTrack?.syncedLyrics,
+        plainLyrics: legacyPlainLyrics ?? mirrorTrack?.plainLyrics,
+        showLyrics,
       };
       }
     case 'video':
