@@ -117,63 +117,73 @@ interface StackedEnvelopeProps {
 function StackedEnvelope({ flapProgress }: StackedEnvelopeProps) {
     const springFlap = useSpring(flapProgress, { stiffness: 150, damping: 20, mass: 0.6 })
     const flapRotateX = useTransform(springFlap, [0, 1], [0, -180])
-    const waxSealOpacity = useTransform(springFlap, [0, 0.35], [1, 0])
+    const waxSealOpacity = useTransform(springFlap, [0, 0.40], [1, 0])
+    // When closed/opening (0 to 90deg), flap sits at z-30 in front of the front pocket.
+    // When rotated past 90deg (halfway), flap drops to z-0 behind the emerging letter!
+    const flapZIndex = useTransform(springFlap, (v) => (v < 0.5 ? 30 : 0))
 
-    // Letter starts inside pocket (y = 20) and rises up out of the envelope (y = -88)
-    const letterSlideY = useTransform(springFlap, [0, 0.20, 1], [24, 18, -88])
-    const letterScale = useTransform(springFlap, [0, 0.20, 1], [0.88, 0.90, 1.02])
-    const letterRotate = useTransform(springFlap, [0, 0.20, 1], [0, 1, -2])
+    // Letter starts inside pocket (y = 24) and rises up out of the envelope (y = -88)
+    const letterSlideY = useTransform(springFlap, [0, 0.25, 1], [24, 18, -88])
+    const letterScale = useTransform(springFlap, [0, 0.25, 1], [0.88, 0.90, 1.02])
+    const letterRotate = useTransform(springFlap, [0, 0.25, 1], [0, 1, -2])
 
     return (
         <div className="relative w-[300px] h-[217px] perspective-[800px] select-none">
-            {/* ── LAYER 1: BACK WALL & UNFOLDING FLAP ── */}
-            <svg viewBox="0 0 180 130" className="absolute inset-0 w-full h-full" fill="none" overflow="visible">
+            {/* ── LAYER 1: BACK WALL (z-0) ── */}
+            <svg viewBox="0 0 180 130" className="absolute inset-0 w-full h-full z-0" fill="none" overflow="visible">
                 {/* Envelope Back Wall */}
                 <rect x="0" y="30" width="180" height="100" rx="6"
                     fill="#ffe8ef"
                     stroke="rgba(244,63,94,0.3)"
                     strokeWidth="1.2"
                 />
-
-                {/* Top Flap — unfolds upwards around top crease (y=30) */}
-                <motion.g
-                    style={{
-                        originX: '90px',
-                        originY: '30px',
-                        transformBox: 'view-box',
-                        transformStyle: 'preserve-3d',
-                        rotateX: flapRotateX,
-                    }}
-                >
-                    {/* Exterior Flap */}
-                    <polygon
-                        points="0,30 180,30 90,75"
-                        fill="#ffffff"
-                        stroke="rgba(244,63,94,0.45)"
-                        strokeWidth="1.2"
-                    />
-                    {/* Interior Lining (showing when rotated up) */}
-                    <polygon
-                        points="0,30 180,30 90,75"
-                        fill="#fecdd3"
-                        opacity="0.9"
-                        style={{ transform: 'rotateY(180deg)', transformOrigin: '90px 30px' }}
-                    />
-                    {/* Wax seal */}
-                    <motion.g style={{ opacity: waxSealOpacity }}>
-                        <circle cx="90" cy="46" r="11" fill="#e11d48" />
-                        <circle cx="90" cy="46" r="9" fill="#be123c" />
-                        <path
-                            d="M90 49 C90 49 84 45 84 41.5 C84 39.5 85.5 38 87.5 38 C88.7 38 89.6 38.7 90 39.5 C90.4 38.7 91.3 38 92.5 38 C94.5 38 96 39.5 96 41.5 C96 45 90 49 90 49Z"
-                            fill="white"
-                        />
-                    </motion.g>
-                </motion.g>
             </svg>
 
-            {/* ── LAYER 2: THE LETTER (SANDWICHED IN MIDDLE, SLIDING OUT) ── */}
+            {/* ── DYNAMIC FLAP (Switches from z-30 in front to z-0 in back when rotating past 90deg!) ── */}
             <motion.div
-                className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                style={{ zIndex: flapZIndex }}
+            >
+                <svg viewBox="0 0 180 130" className="w-full h-full" fill="none" overflow="visible">
+                    <motion.g
+                        style={{
+                            originX: '90px',
+                            originY: '30px',
+                            transformBox: 'view-box',
+                            transformStyle: 'preserve-3d',
+                            rotateX: flapRotateX,
+                        }}
+                    >
+                        {/* Exterior Flap (visible when closed/opening 0 to 90deg) */}
+                        <polygon
+                            points="0,30 180,30 90,75"
+                            fill="#ffffff"
+                            stroke="rgba(244,63,94,0.45)"
+                            strokeWidth="1.2"
+                        />
+                        {/* Interior Lining (visible when rotated 90 to 180deg) */}
+                        <polygon
+                            points="0,30 180,30 90,75"
+                            fill="#fecdd3"
+                            opacity="0.9"
+                            style={{ transform: 'rotateY(180deg)', transformOrigin: '90px 30px' }}
+                        />
+                        {/* Wax seal */}
+                        <motion.g style={{ opacity: waxSealOpacity }}>
+                            <circle cx="90" cy="46" r="11" fill="#e11d48" />
+                            <circle cx="90" cy="46" r="9" fill="#be123c" />
+                            <path
+                                d="M90 49 C90 49 84 45 84 41.5 C84 39.5 85.5 38 87.5 38 C88.7 38 89.6 38.7 90 39.5 C90.4 38.7 91.3 38 92.5 38 C94.5 38 96 39.5 96 41.5 C96 45 90 49 90 49Z"
+                                fill="white"
+                            />
+                        </motion.g>
+                    </motion.g>
+                </svg>
+            </motion.div>
+
+            {/* ── LAYER 2: THE LETTER (z-10, Sandwiched between back/open flap and front pocket) ── */}
+            <motion.div
+                className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-10"
                 style={{
                     top: '28px',
                     y: letterSlideY,
@@ -185,8 +195,8 @@ function StackedEnvelope({ flapProgress }: StackedEnvelopeProps) {
                 <LetterSheet />
             </motion.div>
 
-            {/* ── LAYER 3: FRONT POCKET (IN FRONT OF THE LOWER PART OF THE LETTER) ── */}
-            <svg viewBox="0 0 180 130" className="absolute inset-0 w-full h-full pointer-events-none" fill="none" overflow="visible">
+            {/* ── LAYER 3: FRONT POCKET (z-20, In Front of the Lower Part of the Letter) ── */}
+            <svg viewBox="0 0 180 130" className="absolute inset-0 w-full h-full pointer-events-none z-20" fill="none" overflow="visible">
                 {/* Left fold */}
                 <polygon
                     points="0,30 90,80 0,130"
