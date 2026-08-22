@@ -17,12 +17,12 @@ type InteractiveStage =
   | 'unfolded'          // Avião se desdobrou no envelope fechado com lacre
   | 'opening-seal'      // Lacre quebrando e aba abrindo
   | 'ready-to-pull'     // Aba aberta, carta pronta para ser puxada
-  | 'expanding-letter'  // A mesma carta sobe e cresce continuamente sem unmount
+  | 'expanding-letter'  // A mesma carta sobe e cresce continuamente com feixes de luz e confetes
   | 'whiteout'          // Clarão branco suave e transição seamless
   | 'finished'
 
 /**
- * Síntese suave de impacto e arpeggio mágico usando Web Audio API nativa
+ * Síntese suave de impacto no solo via Web Audio API
  */
 function playLandingChime() {
   try {
@@ -38,7 +38,7 @@ function playLandingChime() {
 
     const now = ctx.currentTime
 
-    // 1. Som sutil de impacto suave no solo
+    // Som de impacto suave no solo
     const impactOsc = ctx.createOscillator()
     const impactGain = ctx.createGain()
     impactOsc.type = 'sine'
@@ -51,24 +51,65 @@ function playLandingChime() {
     impactOsc.start(now)
     impactOsc.stop(now + 0.22)
 
-    // 2. Arpeggio mágico de abertura
+    // Arpeggio de apresentação
     const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51]
     notes.forEach((freq, index) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
 
       osc.type = 'sine'
-      osc.frequency.setValueAtTime(freq, now + 0.1 + index * 0.09)
+      osc.frequency.setValueAtTime(freq, now + 0.1 + index * 0.08)
 
-      gain.gain.setValueAtTime(0, now + 0.1 + index * 0.09)
-      gain.gain.linearRampToValueAtTime(0.14, now + 0.1 + index * 0.09 + 0.03)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1 + index * 0.09 + 1.2)
+      gain.gain.setValueAtTime(0, now + 0.1 + index * 0.08)
+      gain.gain.linearRampToValueAtTime(0.12, now + 0.1 + index * 0.08 + 0.03)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1 + index * 0.08 + 1.1)
 
       osc.connect(gain)
       gain.connect(ctx.destination)
 
-      osc.start(now + 0.1 + index * 0.09)
-      osc.stop(now + 0.1 + index * 0.09 + 1.3)
+      osc.start(now + 0.1 + index * 0.08)
+      osc.stop(now + 0.1 + index * 0.08 + 1.2)
+    })
+  } catch {
+    // Ignora se bloqueado
+  }
+}
+
+/**
+ * Grande acorde celestial de revelação da carta (Harp Glissando + Bell Harmonics)
+ */
+function playGrandRevealChime() {
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) return
+
+    const ctx = new AudioContextClass()
+    if (ctx.state === 'suspended') {
+      ctx.resume()
+    }
+
+    const now = ctx.currentTime
+    // Glissando ascendente luxuoso (D4, F#4, A4, C#5, E5, A5, C#6, E6)
+    const glissNotes = [293.66, 369.99, 440.0, 554.37, 659.25, 880.0, 1108.73, 1318.51]
+
+    glissNotes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = idx % 2 === 0 ? 'sine' : 'triangle'
+      osc.frequency.setValueAtTime(freq, now + idx * 0.05)
+
+      gain.gain.setValueAtTime(0, now + idx * 0.05)
+      gain.gain.linearRampToValueAtTime(0.18, now + idx * 0.05 + 0.04)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.05 + 1.8)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now + idx * 0.05)
+      osc.stop(now + idx * 0.05 + 1.9)
     })
   } catch {
     // Ignora se bloqueado
@@ -160,6 +201,92 @@ function ImpactShockwave({ color }: { color: string }) {
           />
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * Feixes de luz volumétricos divinos (God Rays) giratórios
+ */
+function VolumetricLightBeams({ color }: { color: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.3, rotate: 0 }}
+      animate={{
+        opacity: [0, 0.9, 0.7, 0],
+        scale: [0.3, 1.4, 2.2],
+        rotate: 90,
+      }}
+      transition={{ duration: 1.1, ease: 'easeOut' }}
+      className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center overflow-hidden"
+    >
+      <div
+        className="w-[850px] h-[850px] rounded-full blur-[1px]"
+        style={{
+          background: `conic-gradient(from 0deg, transparent 0deg, ${color}55 25deg, transparent 50deg, #fbbf2466 85deg, transparent 110deg, ${color}55 155deg, transparent 180deg, #fbbf2466 225deg, transparent 250deg, ${color}55 295deg, transparent 330deg, #fbbf2466 350deg, transparent 360deg)`,
+          maskImage: 'radial-gradient(circle at center, black 15%, transparent 70%)',
+          WebkitMaskImage: 'radial-gradient(circle at center, black 15%, transparent 70%)',
+        }}
+      />
+    </motion.div>
+  )
+}
+
+/**
+ * Explosão de confetes mágicos, corações 3D e poeira dourada na revelação
+ */
+function GrandRevealParticles({ color = '#e11d48' }: { color?: string }) {
+  const particles = Array.from({ length: 36 }, (_, i) => {
+    const angle = (i * (360 / 36) * Math.PI) / 180
+    const distance = 90 + (i % 6) * 45
+    return {
+      id: i,
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance - 40,
+      scale: 0.8 + (i % 4) * 0.35,
+      rotateZ: (i * 47) % 360,
+      isHeart: i % 3 === 0,
+      isStar: i % 3 === 1,
+      colorVariant: i % 2 === 0 ? color : '#fbbf24',
+    }
+  })
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+      {/* Onda de choque prismática */}
+      <motion.div
+        initial={{ scale: 0.2, opacity: 1 }}
+        animate={{ scale: [0.2, 2.5, 4], opacity: [1, 0.8, 0] }}
+        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute w-44 h-44 rounded-full border-4 border-amber-300 shadow-[0_0_60px_rgba(251,191,36,0.8)]"
+      />
+
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          initial={{ x: 0, y: 0, scale: 0, opacity: 1, rotate: 0 }}
+          animate={{
+            x: p.x,
+            y: p.y,
+            scale: [0, p.scale, 0],
+            opacity: [1, 1, 0],
+            rotate: [0, p.rotateZ],
+          }}
+          transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute flex items-center justify-center"
+        >
+          {p.isHeart ? (
+            <Heart size={20 * p.scale} fill={p.colorVariant} style={{ color: p.colorVariant }} className="filter drop-shadow-md" />
+          ) : p.isStar ? (
+            <Sparkles size={18 * p.scale} className="text-amber-300 filter drop-shadow-lg" />
+          ) : (
+            <div
+              className="rounded-full bg-gradient-to-tr from-amber-300 to-rose-400 shadow-md shadow-amber-300/80"
+              style={{ width: 10 * p.scale, height: 10 * p.scale }}
+            />
+          )}
+        </motion.div>
+      ))}
     </div>
   )
 }
@@ -275,31 +402,34 @@ function EnvelopeUnboxingComponent({
     }, 600)
   }, [stage])
 
-  // Gesto 2: Usuário puxa a carta para cima (Seamless sem unmount nem cortes)
+  // Gesto 2: Usuário puxa a carta para cima -> Dispara feixes divinos, chuva de partículas e som celestial
   const handlePullLetter = useCallback(() => {
     if (stage !== 'ready-to-pull' && stage !== 'opening-seal') return
 
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try {
-        navigator.vibrate(40)
+        navigator.vibrate([40, 60, 40])
       } catch {
         // ignora
       }
     }
 
-    // A mesma carta continua subindo em direção à tela
+    // Toca o acorde celestial
+    playGrandRevealChime()
+
+    // A mesma carta continua subindo em direção à tela com efeitos cinematográficos
     setStage('expanding-letter')
 
     // Clarão branco suave
     setTimeout(() => {
       setStage('whiteout')
-    }, 750)
+    }, 850)
 
     // Finaliza e entrega a página pronta
     setTimeout(() => {
       setStage('finished')
       onOpenComplete?.()
-    }, 1300)
+    }, 1400)
   }, [stage, onOpenComplete])
 
   const handleSkip = useCallback(() => {
@@ -327,9 +457,19 @@ function EnvelopeUnboxingComponent({
         transition={{ duration: 0.35 }}
         className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden select-none pb-8 sm:pb-12"
         style={{
-          background: `radial-gradient(circle at center, ${primaryColor}25 0%, rgba(10, 6, 12, 0.95) 100%)`,
+          background: `radial-gradient(circle at center, ${primaryColor}28 0%, rgba(10, 6, 12, 0.96) 100%)`,
         }}
       >
+        {/* Feixes Divinos de Luz (God Rays) na Revelação */}
+        {stage === 'expanding-letter' && (
+          <VolumetricLightBeams color={primaryColor} />
+        )}
+
+        {/* Chuva de Confetes & Corações 3D na Revelação */}
+        {stage === 'expanding-letter' && (
+          <GrandRevealParticles color={primaryColor} />
+        )}
+
         {/* Botão de Pular */}
         <div className="absolute top-6 right-6 z-50">
           <button
@@ -344,7 +484,7 @@ function EnvelopeUnboxingComponent({
 
         {/* Aura de luz ambiente */}
         <div
-          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 h-[520px] w-[520px] rounded-full blur-[130px] opacity-35"
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 h-[540px] w-[540px] rounded-full blur-[140px] opacity-40"
           style={{ backgroundColor: primaryColor }}
           aria-hidden="true"
         />
@@ -431,13 +571,13 @@ function EnvelopeUnboxingComponent({
           </div>
         )}
 
-        {/* 3. FASE DO ENVELOPE E DA CARTA PERSISTENTE (SEM UNMOUNT) */}
+        {/* 3. FASE DO ENVELOPE E DA CARTA PERSISTENTE */}
         {isEnvelopeVisible && (
           <div
             className="relative w-full max-w-[430px] h-[270px] sm:h-[290px] flex items-center justify-center z-20 px-4 mt-auto mb-4"
             style={{ perspective: 1200 }}
           >
-            {/* Corpo do Envelope: esvazia e some suavemente quando a carta expande */}
+            {/* Corpo do Envelope */}
             <motion.div
               initial={{ scale: 0.7, opacity: 0.6 }}
               animate={
@@ -460,7 +600,7 @@ function EnvelopeUnboxingComponent({
                 }}
               />
 
-              {/* A CARTA PERSISTENTE: Continua do exato ponto do dedo sem cortes */}
+              {/* A CARTA PERSISTENTE */}
               <motion.div
                 drag={stage === 'ready-to-pull' ? 'y' : false}
                 dragConstraints={{ top: -320, bottom: 0 }}
@@ -485,7 +625,7 @@ function EnvelopeUnboxingComponent({
                 }
                 transition={
                   stage === 'expanding-letter'
-                    ? { duration: 0.85, ease: [0.16, 1, 0.3, 1] }
+                    ? { duration: 0.9, ease: [0.16, 1, 0.3, 1] }
                     : stage === 'ready-to-pull'
                     ? { duration: 0.65, ease: 'easeOut' }
                     : undefined
@@ -536,7 +676,7 @@ function EnvelopeUnboxingComponent({
                 </div>
               </motion.div>
 
-              {/* Bolso Frontal do Envelope (Fades out when letter is expanding) */}
+              {/* Bolso Frontal do Envelope */}
               <motion.div
                 animate={
                   stage === 'expanding-letter'
