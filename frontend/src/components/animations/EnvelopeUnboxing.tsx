@@ -17,7 +17,7 @@ type InteractiveStage =
   | 'unfolded'          // Avião se desdobrou no envelope fechado com lacre
   | 'opening-seal'      // Lacre quebrando e aba abrindo
   | 'ready-to-pull'     // Aba aberta, carta pronta para ser puxada
-  | 'expanding-letter'  // Carta expandindo sem envelope nenhum de fundo
+  | 'expanding-letter'  // A mesma carta sobe e cresce continuamente sem unmount
   | 'whiteout'          // Clarão branco suave e transição seamless
   | 'finished'
 
@@ -275,7 +275,7 @@ function EnvelopeUnboxingComponent({
     }, 600)
   }, [stage])
 
-  // Gesto 2: Usuário puxa a carta para cima (Seamless sem cortes ao soltar o dedo)
+  // Gesto 2: Usuário puxa a carta para cima (Seamless sem unmount nem cortes)
   const handlePullLetter = useCallback(() => {
     if (stage !== 'ready-to-pull' && stage !== 'opening-seal') return
 
@@ -287,7 +287,7 @@ function EnvelopeUnboxingComponent({
       }
     }
 
-    // A carta expande em tela cheia isolada de forma limpa e contínua
+    // A mesma carta continua subindo em direção à tela
     setStage('expanding-letter')
 
     // Clarão branco suave
@@ -310,6 +310,12 @@ function EnvelopeUnboxingComponent({
   if (stage === 'finished') {
     return null
   }
+
+  const isEnvelopeVisible =
+    stage === 'unfolded' ||
+    stage === 'opening-seal' ||
+    stage === 'ready-to-pull' ||
+    stage === 'expanding-letter'
 
   return (
     <AnimatePresence>
@@ -345,7 +351,12 @@ function EnvelopeUnboxingComponent({
 
         {/* Cabeçalho informativo no topo */}
         <motion.div
-          animate={{ opacity: 1, y: 0 }}
+          animate={
+            stage === 'expanding-letter'
+              ? { opacity: 0, y: -20 }
+              : { opacity: 1, y: 0 }
+          }
+          transition={{ duration: 0.4 }}
           className="pt-10 sm:pt-14 text-center z-20 space-y-1 px-4"
         >
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 border border-white/15 text-xs font-medium tracking-wide uppercase">
@@ -360,7 +371,7 @@ function EnvelopeUnboxingComponent({
           ) : null}
         </motion.div>
 
-        {/* 1. FASE DO VOO EM ZIGUE-ZAGUE ORGÂNICO (MAIS TEMPO DE TELA) */}
+        {/* 1. FASE DO VOO EM ZIGUE-ZAGUE ORGÂNICO */}
         {stage === 'airplane-flight' && (
           <div className="relative w-full h-full flex items-center justify-center pointer-events-none my-auto">
             <motion.div
@@ -383,7 +394,6 @@ function EnvelopeUnboxingComponent({
               }}
               className="relative flex items-center justify-center"
             >
-              {/* O avião se inclina de forma natural acompanhando as curvas do zigue-zague */}
               <motion.div
                 initial={{ rotate: 22 }}
                 animate={{
@@ -402,7 +412,7 @@ function EnvelopeUnboxingComponent({
           </div>
         )}
 
-        {/* 2. FASE DE IMPACTO NO CHÃO (SQUASH & STRETCH + POEIRA MÁGICA) */}
+        {/* 2. FASE DE IMPACTO NO CHÃO */}
         {stage === 'impact' && (
           <div className="relative flex items-center justify-center my-auto translate-y-[15vh]">
             <ImpactShockwave color={primaryColor} />
@@ -421,16 +431,20 @@ function EnvelopeUnboxingComponent({
           </div>
         )}
 
-        {/* 3. FASE DO ENVELOPE (POSICIONADO MAIS BAIXO NA TELA PARA DAR ESPAÇO AO PUXAR) */}
-        {(stage === 'unfolded' || stage === 'opening-seal' || stage === 'ready-to-pull') && (
+        {/* 3. FASE DO ENVELOPE E DA CARTA PERSISTENTE (SEM UNMOUNT) */}
+        {isEnvelopeVisible && (
           <div
             className="relative w-full max-w-[430px] h-[270px] sm:h-[290px] flex items-center justify-center z-20 px-4 mt-auto mb-4"
             style={{ perspective: 1200 }}
           >
-            {/* Corpo do Envelope */}
+            {/* Corpo do Envelope: esvazia e some suavemente quando a carta expande */}
             <motion.div
               initial={{ scale: 0.7, opacity: 0.6 }}
-              animate={{ scale: 1, opacity: 1 }}
+              animate={
+                stage === 'expanding-letter'
+                  ? { scale: 0.85, y: 120, opacity: 0 }
+                  : { scale: 1, y: 0, opacity: 1 }
+              }
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full h-full rounded-2xl shadow-2xl border border-white/20 overflow-visible"
               style={{
@@ -446,24 +460,33 @@ function EnvelopeUnboxingComponent({
                 }}
               />
 
-              {/* Carta física: escala só cresce após sair do envelope */}
+              {/* A CARTA PERSISTENTE: Continua do exato ponto do dedo sem cortes */}
               <motion.div
                 drag={stage === 'ready-to-pull' ? 'y' : false}
                 dragConstraints={{ top: -320, bottom: 0 }}
                 dragElastic={0.25}
                 style={{
-                  y: dragY,
-                  scale: letterScale,
+                  y: stage === 'expanding-letter' ? undefined : dragY,
+                  scale: stage === 'expanding-letter' ? undefined : letterScale,
                   backgroundColor: surfaceColor,
                   color: textColor,
                 }}
                 animate={
-                  stage === 'ready-to-pull'
+                  stage === 'expanding-letter'
+                    ? {
+                        y: -360,
+                        scale: 3.6,
+                        opacity: [1, 1, 0.3],
+                        zIndex: 70,
+                      }
+                    : stage === 'ready-to-pull'
                     ? { y: [-15, -45, -35] }
                     : { y: 0 }
                 }
                 transition={
-                  stage === 'ready-to-pull'
+                  stage === 'expanding-letter'
+                    ? { duration: 0.85, ease: [0.16, 1, 0.3, 1] }
+                    : stage === 'ready-to-pull'
                     ? { duration: 0.65, ease: 'easeOut' }
                     : undefined
                 }
@@ -477,9 +500,9 @@ function EnvelopeUnboxingComponent({
                     handlePullLetter()
                   }
                 }}
-                className={`absolute inset-x-4 top-4 bottom-3 rounded-2xl p-6 shadow-2xl border border-primary/25 flex flex-col justify-between cursor-grab active:cursor-grabbing z-20 ${
-                  stage === 'ready-to-pull' ? 'ring-4 ring-amber-300/70 ring-offset-2' : ''
-                }`}
+                className={`absolute inset-x-4 top-4 bottom-3 rounded-2xl p-6 shadow-2xl border border-primary/25 flex flex-col justify-between cursor-grab active:cursor-grabbing ${
+                  stage === 'expanding-letter' ? 'z-50 shadow-[0_30px_90px_rgba(0,0,0,0.6)]' : 'z-20'
+                } ${stage === 'ready-to-pull' ? 'ring-4 ring-amber-300/70 ring-offset-2' : ''}`}
               >
                 {/* Dica de puxar a carta no topo */}
                 {stage === 'ready-to-pull' && (
@@ -513,8 +536,16 @@ function EnvelopeUnboxingComponent({
                 </div>
               </motion.div>
 
-              {/* Bolso Frontal do Envelope */}
-              <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-2xl">
+              {/* Bolso Frontal do Envelope (Fades out when letter is expanding) */}
+              <motion.div
+                animate={
+                  stage === 'expanding-letter'
+                    ? { opacity: 0 }
+                    : { opacity: 1 }
+                }
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-2xl"
+              >
                 <svg
                   className="absolute inset-0 w-full h-full"
                   viewBox="0 0 100 100"
@@ -537,12 +568,12 @@ function EnvelopeUnboxingComponent({
                     className="filter drop-shadow-md"
                   />
                 </svg>
-              </div>
+              </motion.div>
 
               {/* Aba Superior Triangular */}
               <motion.div
                 animate={
-                  stage === 'opening-seal' || stage === 'ready-to-pull'
+                  stage === 'opening-seal' || stage === 'ready-to-pull' || stage === 'expanding-letter'
                     ? { rotateX: -180, zIndex: 10 }
                     : { rotateX: 0, zIndex: 35 }
                 }
@@ -608,36 +639,7 @@ function EnvelopeUnboxingComponent({
           </div>
         )}
 
-        {/* 4. FASE DE EXPANSÃO SEAMLESS DA CARTA (SEM CORTE AO SOLTAR O DEDO) */}
-        {stage === 'expanding-letter' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
-            <motion.div
-              initial={{ scale: 1.2, y: -60, opacity: 1 }}
-              animate={{
-                scale: [1.2, 2.4, 4.8],
-                y: [-60, -160, -320],
-                opacity: [1, 1, 0.2],
-              }}
-              transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-lg rounded-3xl p-8 shadow-2xl border border-primary/25"
-              style={{
-                backgroundColor: surfaceColor,
-                color: textColor,
-              }}
-            >
-              <div className="space-y-4 text-center">
-                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                  <Heart size={24} fill="currentColor" />
-                </div>
-                <h3 className="font-display font-bold text-2xl text-primary">
-                  {recipientName ? `Para ${recipientName}` : 'Uma Carta Especial'}
-                </h3>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* 5. BOTÃO GUIA / CONVITE AO TOQUE */}
+        {/* 4. BOTÃO GUIA / CONVITE AO TOQUE */}
         {stage === 'unfolded' && (
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -655,13 +657,13 @@ function EnvelopeUnboxingComponent({
           </motion.div>
         )}
 
-        {/* 6. CLARÃO BRANCO DE TRANSIÇÃO FINAL SEAMLESS */}
+        {/* 5. CLARÃO BRANCO DE TRANSIÇÃO FINAL SEAMLESS */}
         {stage === 'whiteout' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0.95] }}
             transition={{ duration: 0.55, ease: 'easeInOut' }}
-            className="fixed inset-0 z-[70] bg-white pointer-events-none"
+            className="fixed inset-0 z-[80] bg-white pointer-events-none"
           />
         )}
       </motion.div>
