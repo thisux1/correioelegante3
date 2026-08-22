@@ -679,234 +679,220 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           style={{ background: 'var(--color-primary, #e11d48)' }}
         />
 
-        {/* LAYOUT INTEGRADO: TOCA-DISCOS & VINIL + LETRA SIMULTÂNEOS */}
-        <div className={`relative z-10 ${showLyrics ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start' : 'max-w-md mx-auto'}`}>
-          {/* Coluna 1: O Toca-Discos Vintage com Agulha Animada & Controles */}
-          <div className={showLyrics ? 'lg:col-span-6 space-y-4' : 'w-full space-y-4'}>
-            <VintagePlayerDeck
-              coverSrc={resolvedCover}
-              title={safeTitle}
-              artist={safeArtist}
-              isPlaying={isActuallyPlaying}
-              progressPercent={progressPercent}
-              currentTime={playback.state.currentTime}
-              duration={effectiveDuration}
-              onClick={() => { void playback.togglePlay() }}
-            />
+        {/* LAYOUT INTEGRADO: TOCA-DISCOS & VINIL COM LETRAS DIRETAMENTE INTEGRADAS */}
+        <div className="relative z-10 max-w-sm sm:max-w-md mx-auto flex flex-col items-center space-y-3">
+          {/* Toca-Discos Vintage */}
+          <VintagePlayerDeck
+            coverSrc={resolvedCover}
+            title={safeTitle}
+            artist={safeArtist}
+            isPlaying={isActuallyPlaying}
+            progressPercent={progressPercent}
+            currentTime={playback.state.currentTime}
+            duration={effectiveDuration}
+            onClick={() => { void playback.togglePlay() }}
+          />
 
-            {/* Informações da Faixa */}
-            <div className="text-center sm:text-left px-1">
-              <h3 className="font-display font-bold text-xl sm:text-2xl text-text truncate">
-                {safeTitle}
-              </h3>
-              <p className="text-sm font-medium text-text-light truncate mt-0.5">
-                {safeArtist}
-              </p>
-            </div>
-
-            {/* Barra de Progresso com Tempo */}
-            <div className="space-y-1.5 px-1">
-              <div
-                className="group/track relative h-3 flex items-center cursor-pointer"
-                onClick={(e) => handleSeekFromProgressBar(e.clientX, e.currentTarget as HTMLDivElement)}
-                role="slider"
-                aria-label="Progresso da música"
-                aria-valuemin={0}
-                aria-valuemax={effectiveDuration}
-                aria-valuenow={playback.state.currentTime}
-              >
-                <div className="w-full h-1.5 group-hover/track:h-2 rounded-full bg-border/80 overflow-hidden transition-all">
-                  <div
-                    className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-100"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
-                <div
-                  className="absolute h-3.5 w-3.5 rounded-full bg-primary border-2 border-white shadow-md opacity-0 group-hover/track:opacity-100 transition-opacity pointer-events-none -translate-x-1/2"
-                  style={{ left: `${progressPercent}%` }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] text-text-light font-mono tabular-nums">
-                <span>{formatTime(playback.state.currentTime)}</span>
-                <span>{formatTime(effectiveDuration)}</span>
-              </div>
-            </div>
-
-            {/* Controles de Reprodução */}
-            <div className="flex items-center justify-between gap-3 pt-1 px-1">
-              {/* Aleatório / Volume */}
-              <div className="flex items-center gap-2">
-                {isPlaylistMode && (
-                  <button
-                    type="button"
-                    onClick={playback.toggleShuffle}
-                    className={`p-2 rounded-full transition-colors cursor-pointer ${
-                      playback.state.isShuffleEnabled ? 'text-primary' : 'text-text-light hover:text-text'
-                    }`}
-                    aria-label="Modo aleatório"
-                  >
-                    <Shuffle size={16} />
-                  </button>
-                )}
-
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsVolumeOpen((prev) => !prev)}
-                    className="p-2 text-text-light hover:text-text transition-colors cursor-pointer"
-                    aria-label="Volume"
-                  >
-                    {playback.state.isMuted || playback.state.volume <= 0.01 ? (
-                      <VolumeX size={17} />
-                    ) : (
-                      <Volume2 size={17} />
-                    )}
-                  </button>
-
-                  {isVolumeOpen && (
-                    <div className="absolute bottom-full left-0 mb-2 p-2.5 bg-surface rounded-xl border border-border shadow-xl z-20 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={playback.toggleMute}
-                        className="text-text-light hover:text-text"
-                      >
-                        {playback.state.isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                      </button>
-                      <input
-                        type="range"
-                        min={0}
-                        max={1}
-                        step={0.05}
-                        value={playback.state.isMuted ? 0 : playback.state.volume}
-                        onChange={(e) => playback.setVolume(Number(e.target.value))}
-                        className="w-20 h-1.5 accent-primary cursor-pointer"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Botões Centrais de Faixa & Play/Pause */}
-              <div className="flex items-center gap-3 sm:gap-4">
-                {isPlaylistMode && (
-                  <button
-                    type="button"
-                    onClick={playback.prevTrack}
-                    disabled={!playback.canGoPrev}
-                    className="p-2 text-text-light hover:text-text disabled:opacity-30 transition-colors cursor-pointer"
-                    aria-label="Faixa anterior"
-                  >
-                    <SkipBack size={20} />
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => { void playback.togglePlay() }}
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-primary via-primary to-primary-dark text-white shadow-[0_10px_25px_rgba(225,29,72,0.4)] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center cursor-pointer"
-                  aria-label={isActuallyPlaying ? 'Pausar música' : 'Tocar música'}
-                >
-                  {isActuallyPlaying ? <Pause size={22} /> : <Play size={22} className="translate-x-0.5" />}
-                </button>
-
-                {isPlaylistMode && (
-                  <button
-                    type="button"
-                    onClick={playback.nextTrack}
-                    disabled={!playback.canGoNext}
-                    className="p-2 text-text-light hover:text-text disabled:opacity-30 transition-colors cursor-pointer"
-                    aria-label="Próxima faixa"
-                  >
-                    <SkipForward size={20} />
-                  </button>
-                )}
-              </div>
-
-              {/* Botão de Playlist Dropdown */}
-              <div>
-                {isPlaylistMode ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsPlaylistOpen((prev) => !prev)}
-                    className={`p-2 rounded-xl transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold ${
-                      isPlaylistOpen ? 'bg-primary/15 text-primary' : 'text-text-light hover:text-text'
-                    }`}
-                    aria-label="Ver todas as faixas"
-                  >
-                    <span>{playlistLength} faixas</span>
-                    {isPlaylistOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  </button>
-                ) : (
-                  <div className="w-8" />
-                )}
-              </div>
-            </div>
-
-            {/* Gaveta de Playlist Expandida */}
-            {isPlaylistMode && isPlaylistOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="mt-3 pt-3 border-t border-border/60 space-y-1"
-              >
-                <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
-                  {normalizedPlaylist.map((track, idx) => {
-                    const isCurrent = idx === safeTrackIndex
-                    return (
-                      <button
-                        key={`vinyl-pl-${track.src}-${idx}`}
-                        type="button"
-                        onClick={() => playback.setActiveTrackIndex(idx)}
-                        className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
-                          isCurrent
-                            ? 'bg-primary/15 text-primary font-bold'
-                            : 'text-text-light hover:bg-surface-raised hover:text-text'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 truncate">
-                          <span className="text-[11px] w-4 text-center font-mono opacity-60">
-                            {idx + 1}
-                          </span>
-                          <span className="truncate">{track.title || `Faixa ${idx + 1}`}</span>
-                        </div>
-                        {track.artist && (
-                          <span className="text-[11px] text-text-light/70 truncate max-w-[110px] ml-2">
-                            {track.artist}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </motion.div>
-            )}
+          {/* Informações da Faixa */}
+          <div className="w-full text-center px-1">
+            <h3 className="font-display font-bold text-base sm:text-lg text-text truncate">
+              {safeTitle}
+            </h3>
+            <p className="text-xs text-text-light truncate mt-0.5">
+              {safeArtist}
+            </p>
           </div>
 
-          {/* Coluna 2: Letras Sincronizadas em Tempo Real (Perfeitamente Visíveis no Mobile e Desktop) */}
-          {showLyrics && (
-            <div className="lg:col-span-6 rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col justify-between h-full min-h-[280px] sm:min-h-[400px]">
-              <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-2">
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-text">
-                  <FileText size={16} className="text-primary" />
-                  <span>Letra da Música</span>
-                </div>
-                <span className="text-[10px] sm:text-xs font-mono text-text-light">
-                  {hasLyrics ? 'Sincronizada • Toque para pular' : 'Karaokê'}
-                </span>
-              </div>
+          {/* Letras Integradas em 3 Linhas (Diretamente no componente) */}
+          {showLyrics && hasLyrics && (
+            <div className="w-full py-0.5">
+              <SyncedLyricsView
+                syncedLyrics={currentSyncedLyrics}
+                plainLyrics={currentPlainLyrics}
+                currentTime={playback.state.currentTime}
+                isPlaying={isActuallyPlaying}
+                onSeek={(time) => playback.seek(time)}
+              />
+            </div>
+          )}
 
-              <div className="flex-1 flex flex-col justify-center">
-                <SyncedLyricsView
-                  syncedLyrics={currentSyncedLyrics}
-                  plainLyrics={currentPlainLyrics}
-                  currentTime={playback.state.currentTime}
-                  isPlaying={isActuallyPlaying}
-                  onSeek={(time) => playback.seek(time)}
+          {/* Barra de Progresso com Tempo */}
+          <div className="w-full space-y-1 px-1">
+            <div
+              className="group/track relative h-3 flex items-center cursor-pointer"
+              onClick={(e) => handleSeekFromProgressBar(e.clientX, e.currentTarget as HTMLDivElement)}
+              role="slider"
+              aria-label="Progresso da música"
+              aria-valuemin={0}
+              aria-valuemax={effectiveDuration}
+              aria-valuenow={playback.state.currentTime}
+            >
+              <div className="w-full h-1.5 group-hover/track:h-2 rounded-full bg-border/80 overflow-hidden transition-all">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-100"
+                  style={{ width: `${progressPercent}%` }}
                 />
               </div>
+              <div
+                className="absolute h-3.5 w-3.5 rounded-full bg-primary border-2 border-white shadow-md opacity-0 group-hover/track:opacity-100 transition-opacity pointer-events-none -translate-x-1/2"
+                style={{ left: `${progressPercent}%` }}
+              />
             </div>
+
+            <div className="flex items-center justify-between text-[11px] text-text-light font-mono tabular-nums">
+              <span>{formatTime(playback.state.currentTime)}</span>
+              <span>{formatTime(effectiveDuration)}</span>
+            </div>
+          </div>
+
+          {/* Controles de Reprodução */}
+          <div className="w-full flex items-center justify-between gap-3 pt-0.5 px-1">
+            {/* Aleatório / Volume */}
+            <div className="flex items-center gap-2">
+              {isPlaylistMode && (
+                <button
+                  type="button"
+                  onClick={playback.toggleShuffle}
+                  className={`p-2 rounded-full transition-colors cursor-pointer ${
+                    playback.state.isShuffleEnabled ? 'text-primary' : 'text-text-light hover:text-text'
+                  }`}
+                  aria-label="Modo aleatório"
+                >
+                  <Shuffle size={16} />
+                </button>
+              )}
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsVolumeOpen((prev) => !prev)}
+                  className="p-2 text-text-light hover:text-text transition-colors cursor-pointer"
+                  aria-label="Volume"
+                >
+                  {playback.state.isMuted || playback.state.volume <= 0.01 ? (
+                    <VolumeX size={17} />
+                  ) : (
+                    <Volume2 size={17} />
+                  )}
+                </button>
+
+                {isVolumeOpen && (
+                  <div className="absolute bottom-full left-0 mb-2 p-2.5 bg-surface rounded-xl border border-border shadow-xl z-20 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={playback.toggleMute}
+                      className="text-text-light hover:text-text"
+                    >
+                      {playback.state.isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                    </button>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={playback.state.isMuted ? 0 : playback.state.volume}
+                      onChange={(e) => playback.setVolume(Number(e.target.value))}
+                      className="w-20 h-1.5 accent-primary cursor-pointer"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Botões Centrais de Faixa & Play/Pause */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              {isPlaylistMode && (
+                <button
+                  type="button"
+                  onClick={playback.prevTrack}
+                  disabled={!playback.canGoPrev}
+                  className="p-2 text-text-light hover:text-text disabled:opacity-30 transition-colors cursor-pointer"
+                  aria-label="Faixa anterior"
+                >
+                  <SkipBack size={20} />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => { void playback.togglePlay() }}
+                className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-gradient-to-br from-primary via-primary to-primary-dark text-white shadow-[0_10px_25px_rgba(225,29,72,0.4)] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center cursor-pointer"
+                aria-label={isActuallyPlaying ? 'Pausar música' : 'Tocar música'}
+              >
+                {isActuallyPlaying ? <Pause size={20} /> : <Play size={20} className="translate-x-0.5" />}
+              </button>
+
+              {isPlaylistMode && (
+                <button
+                  type="button"
+                  onClick={playback.nextTrack}
+                  disabled={!playback.canGoNext}
+                  className="p-2 text-text-light hover:text-text disabled:opacity-30 transition-colors cursor-pointer"
+                  aria-label="Próxima faixa"
+                >
+                  <SkipForward size={20} />
+                </button>
+              )}
+            </div>
+
+            {/* Botão de Playlist Dropdown */}
+            <div>
+              {isPlaylistMode ? (
+                <button
+                  type="button"
+                  onClick={() => setIsPlaylistOpen((prev) => !prev)}
+                  className={`p-2 rounded-xl transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold ${
+                    isPlaylistOpen ? 'bg-primary/15 text-primary' : 'text-text-light hover:text-text'
+                  }`}
+                  aria-label="Ver todas as faixas"
+                >
+                  <span>{playlistLength} faixas</span>
+                  {isPlaylistOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+              ) : (
+                <div className="w-8" />
+              )}
+            </div>
+          </div>
+
+          {/* Gaveta de Playlist Expandida */}
+          {isPlaylistMode && isPlaylistOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="w-full mt-2 pt-2.5 border-t border-border/60 space-y-1"
+            >
+              <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+                {normalizedPlaylist.map((track, idx) => {
+                  const isCurrent = idx === safeTrackIndex
+                  return (
+                    <button
+                      key={`vinyl-pl-${track.src}-${idx}`}
+                      type="button"
+                      onClick={() => playback.setActiveTrackIndex(idx)}
+                      className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                        isCurrent
+                          ? 'bg-primary/15 text-primary font-bold'
+                          : 'text-text-light hover:bg-surface-raised hover:text-text'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <span className="text-[11px] w-4 text-center font-mono opacity-60">
+                          {idx + 1}
+                        </span>
+                        <span className="truncate">{track.title || `Faixa ${idx + 1}`}</span>
+                      </div>
+                      {track.artist && (
+                        <span className="text-[11px] text-text-light/70 truncate max-w-[110px] ml-2">
+                          {track.artist}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </motion.div>
           )}
         </div>
       </div>
@@ -1131,26 +1117,15 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          className="mt-3 pt-3 border-t border-border/60"
+          className="mt-2.5 pt-2 border-t border-border/60"
         >
-          <div className="flex items-center justify-between text-xs font-bold text-text mb-2 px-1">
-            <div className="flex items-center gap-1.5">
-              <FileText size={14} className="text-primary" />
-              <span>Letra da Música</span>
-            </div>
-            <span className="text-[10px] font-mono text-text-light">
-              Toque na estrofe para pular
-            </span>
-          </div>
-          <div className="max-h-48 overflow-y-auto rounded-xl border border-border/60 bg-surface-raised/60 p-2">
-            <SyncedLyricsView
-              syncedLyrics={currentSyncedLyrics}
-              plainLyrics={currentPlainLyrics}
-              currentTime={playback.state.currentTime}
-              isPlaying={isActuallyPlaying}
-              onSeek={(time) => playback.seek(time)}
-            />
-          </div>
+          <SyncedLyricsView
+            syncedLyrics={currentSyncedLyrics}
+            plainLyrics={currentPlainLyrics}
+            currentTime={playback.state.currentTime}
+            isPlaying={isActuallyPlaying}
+            onSeek={(time) => playback.seek(time)}
+          />
         </motion.div>
       )}
 
