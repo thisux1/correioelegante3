@@ -41,13 +41,13 @@ export function FAQSection() {
       <Container size="narrow">
         <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
           <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-pink-100/80 dark:bg-pink-950/40 text-primary mb-4 border border-pink-200/60 dark:border-pink-900/30 shadow-xs">
+            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-pink-100 text-[#e11d48] mb-4 border border-pink-300 shadow-xs">
               <HelpCircle size={24} />
             </div>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold text-rose-950 dark:text-rose-100 mb-3">
-              Dúvidas <span className="text-gradient">Frequentes</span>
+            <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-3 tracking-tight">
+              Dúvidas <span className="text-[#e11d48]">Frequentes</span>
             </h2>
-            <p className="text-base sm:text-lg text-rose-900/70 dark:text-rose-300/70 max-w-md mx-auto">
+            <p className="text-base sm:text-lg text-[#701a35] font-medium max-w-md mx-auto">
               Tudo o que você precisa saber para criar sua surpresa com tranquilidade.
             </p>
           </div>
@@ -56,19 +56,19 @@ export function FAQSection() {
         <div className="space-y-4">
           {faqs.map((faq, index) => (
             <SectionReveal key={index} delay={index * 0.08} scrollRange={[0.02, 0.14, 0.88, 1.0]}>
-              <div className="border border-pink-200/70 dark:border-pink-900/40 rounded-3xl overflow-hidden bg-white/90 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-900 transition-all shadow-sm">
+              <div className="border-2 border-pink-200 rounded-3xl overflow-hidden bg-white hover:border-pink-300 transition-all shadow-sm">
                 <button
                   type="button"
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
                   className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none cursor-pointer"
                 >
-                  <span className="font-bold text-rose-950 dark:text-rose-100 text-base sm:text-lg pr-4">
+                  <span className="font-bold text-[#4c0519] text-base sm:text-lg pr-4">
                     {faq.question}
                   </span>
                   <motion.div
                     animate={{ rotate: openIndex === index ? 180 : 0 }}
                     transition={{ duration: 0.25 }}
-                    className="shrink-0 text-primary"
+                    className="shrink-0 text-[#e11d48]"
                   >
                     <ChevronDown size={20} />
                   </motion.div>
@@ -81,7 +81,7 @@ export function FAQSection() {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
                     >
-                      <div className="px-6 pb-5 text-sm sm:text-base text-rose-900/75 dark:text-rose-300/75 leading-relaxed border-t border-pink-100/60 dark:border-pink-900/30 pt-3">
+                      <div className="px-6 pb-5 text-sm sm:text-base text-[#701a35] leading-relaxed border-t border-pink-100 pt-3">
                         {faq.answer}
                       </div>
                     </motion.div>

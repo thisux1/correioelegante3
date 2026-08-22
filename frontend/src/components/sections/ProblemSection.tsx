@@ -33,13 +33,13 @@ export function ProblemSection() {
       <Container size="default">
         <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-pink-100/80 dark:bg-pink-950/40 text-primary font-bold text-xs uppercase tracking-wider mb-4 border border-pink-200/60 dark:border-pink-900/30">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-pink-100 text-[#be123c] font-bold text-xs uppercase tracking-wider mb-4 border border-pink-300/80 shadow-xs">
               Por que Correio Elegante?
             </span>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold text-rose-950 dark:text-rose-100 mb-4">
-              Mais do que palavras, <span className="text-gradient">um momento inesquecível</span>
+            <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-4 tracking-tight">
+              Mais do que palavras, <span className="text-[#e11d48]">um momento inesquecível</span>
             </h2>
-            <p className="text-base sm:text-lg text-rose-900/70 dark:text-rose-300/70 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-[#701a35] font-medium max-w-2xl mx-auto">
               Transforme seus sentimentos em uma experiência visual e sonora que toca fundo na alma.
             </p>
           </div>
@@ -58,30 +58,30 @@ export function ProblemSection() {
                   >
                     <Card
                       glass
-                      className="h-full flex flex-col justify-between p-8 rounded-3xl border border-pink-200/70 dark:border-pink-900/40 bg-gradient-to-b from-white/95 via-rose-50/60 to-white/95 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/90 shadow-xl shadow-pink-500/5 hover:shadow-2xl hover:shadow-pink-500/15 transition-all duration-300"
+                      className="h-full flex flex-col justify-between p-8 rounded-3xl border-2 border-pink-200/90 bg-white/95 shadow-xl shadow-rose-500/5 hover:shadow-2xl hover:shadow-rose-500/15 transition-all duration-300"
                       data-no-ink="true"
                     >
                       <div>
                         <div className="flex items-center justify-between mb-6">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-950/50 dark:to-rose-900/30 border border-pink-200/60 dark:border-pink-800/40 flex items-center justify-center shadow-xs">
-                            <Icon className="w-7 h-7 text-primary" />
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-100 to-rose-100 border border-pink-300/70 flex items-center justify-center shadow-xs">
+                            <Icon className="w-7 h-7 text-[#e11d48]" />
                           </div>
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-primary/80 bg-pink-100/60 dark:bg-pink-950/40 px-2.5 py-1 rounded-lg border border-pink-200/40">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-[#be123c] bg-pink-100 px-2.5 py-1 rounded-lg border border-pink-200">
                             {item.badge}
                           </span>
                         </div>
 
-                        <h3 className="font-display text-xl sm:text-2xl font-bold text-rose-950 dark:text-rose-100 mb-3 leading-snug">
+                        <h3 className="font-display text-xl sm:text-2xl font-bold text-[#4c0519] mb-3 leading-snug">
                           {item.title}
                         </h3>
-                        <p className="text-sm sm:text-base text-rose-900/75 dark:text-rose-300/75 leading-relaxed">
+                        <p className="text-sm sm:text-base text-[#701a35] leading-relaxed">
                           {item.description}
                         </p>
                       </div>
 
-                      <div className="mt-8 pt-4 border-t border-pink-100/70 dark:border-pink-900/30 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-primary/40" />
-                        <span className="text-xs font-semibold text-primary">Feito com afeto digital</span>
+                      <div className="mt-8 pt-4 border-t border-pink-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#e11d48]" />
+                        <span className="text-xs font-bold text-[#be123c]">Feito com afeto digital</span>
                       </div>
                     </Card>
                   </motion.div>
