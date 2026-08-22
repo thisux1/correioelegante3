@@ -6,6 +6,7 @@ import { Card as UICard } from '@/components/ui/Card'
 import { PageCardSkeleton } from '@/components/ui/PageCardSkeleton'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
+import { EnvelopeUnboxing } from '@/components/animations/EnvelopeUnboxing'
 import { messageService } from '@/services/messageService'
 import type { PageStatus, PageVisibility } from '@/editor/types'
 import { buildThemeStyle, getThemeAtmosphere, resolveThemeId } from '@/editor/themes'
@@ -27,6 +28,7 @@ export function Card() {
   const [card, setCard] = useState<CardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isEnvelopeOpened, setIsEnvelopeOpened] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -93,9 +95,22 @@ export function Card() {
     >
       <AtmosphereCanvas atmosphere={atmosphere} position="fixed" />
 
+      {/* Ritual de Abertura do Envelope em Tela Cheia */}
+      {!isEnvelopeOpened && (
+        <EnvelopeUnboxing
+          recipientName={card.recipient}
+          theme={card.theme}
+          onOpenComplete={() => setIsEnvelopeOpened(true)}
+        />
+      )}
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        animate={{
+          opacity: isEnvelopeOpened ? 1 : 0,
+          scale: isEnvelopeOpened ? 1 : 0.9,
+          y: isEnvelopeOpened ? 0 : 30,
+        }}
         transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
         className="w-full max-w-lg relative z-10"
       >
