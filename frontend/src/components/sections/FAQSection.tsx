@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, HelpCircle } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { ScrollSection } from '@/components/layout/ScrollSection'
 import { Container } from '@/components/layout/Container'
@@ -39,11 +39,9 @@ export function FAQSection() {
   return (
     <ScrollSection id="faq" className="section-spacing">
       <Container size="narrow">
+        {/* Cabeçalho sem badges */}
         <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
           <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-pink-100 text-[#e11d48] mb-4 border border-pink-300 shadow-xs">
-              <HelpCircle size={24} />
-            </div>
             <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-3 tracking-tight">
               Dúvidas <span className="text-[#e11d48]">Frequentes</span>
             </h2>
