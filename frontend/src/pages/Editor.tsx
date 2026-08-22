@@ -5,7 +5,9 @@ import { isAxiosError } from 'axios'
 import { Container } from '@/components/layout/Container'
 import {
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
+  Heart,
   LoaderCircle,
   RefreshCcw,
   Smartphone,
@@ -708,6 +710,99 @@ export function Editor() {
     savePage,
   })
 
+  const handlePublish = useCallback(async () => {
+    if (isPublishingRef.current) return
+    isPublishingRef.current = true
+    isNavigatingToPaymentRef.current = true
+    try {
+      setSaveState('saving')
+      setFeedback('Salvando página e preparando publicação...')
+      const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
+      const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
+
+      let resultPageId = currentPageId
+      let paymentStatus = ''
+
+      try {
+        const result = await pageService.savePage({
+          pageId: currentPageId,
+          content: {
+            blocks,
+            theme,
+            version: PAGE_VERSION,
+          },
+          status: targetStatus,
+          visibility,
+          version: pageVersion,
+        })
+        resultPageId = result.page.id
+        paymentStatus = result.page.paymentStatus || ''
+        setDraftContext(result.page.id, result.page.updatedAt)
+        setStatus(result.page.status)
+        setPageVersion(result.page.version)
+      } catch (saveErr) {
+        if (isAxiosError(saveErr) && saveErr.response?.status === 409 && currentPageId) {
+          const latest = await pageService.loadPage(currentPageId)
+          const retry = await pageService.savePage({
+            pageId: currentPageId,
+            content: { blocks, theme, version: PAGE_VERSION },
+            status: targetStatus,
+            visibility,
+            version: latest.version,
+          })
+          resultPageId = retry.page.id
+          paymentStatus = retry.page.paymentStatus || ''
+          setDraftContext(retry.page.id, retry.page.updatedAt)
+          setStatus(retry.page.status)
+          setPageVersion(retry.page.version)
+        } else {
+          throw saveErr
+        }
+      }
+
+      if (!resultPageId) {
+        throw new Error('Não foi possível identificar a página salva.')
+      }
+
+      if (userSubscribed || paymentStatus === 'paid' || targetStatus === 'published') {
+        setStatus('published')
+        setSaveState('saved')
+        setFeedback('Carta salva e publicada com sucesso!')
+        setCurrentPageId(resultPageId)
+        setIsShareModalOpen(true)
+        isPublishingRef.current = false
+        isNavigatingToPaymentRef.current = false
+        if (!currentPageId) {
+          navigate(`/editor/${resultPageId}`, { replace: true })
+        }
+        return
+      }
+
+      const destination = `/payment/page/${resultPageId}`
+      window.location.assign(destination)
+    } catch (error) {
+      isPublishingRef.current = false
+      isNavigatingToPaymentRef.current = false
+      setSaveState('error')
+      setFeedback(
+        isAxiosError<{ error?: string }>(error)
+          ? error.response?.data?.error ?? 'Não foi possível salvar a página para publicação. Tente novamente.'
+          : 'Não foi possível salvar a página para publicação. Tente novamente.',
+      )
+    }
+  }, [
+    blocks,
+    currentPageId,
+    navigate,
+    pageVersion,
+    setDraftContext,
+    status,
+    theme,
+    user?.isSubscribed,
+    user?.subscriptionStatus,
+    visibility,
+  ])
+
   const feedbackClassName = useMemo(() => {
     if (saveState === 'error') {
       return 'border-red-500/30 bg-red-500/10 text-red-600'
@@ -745,16 +840,14 @@ export function Editor() {
             </Link>
 
             {status === 'published' ? (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 type="button"
                 onClick={() => setIsShareModalOpen(true)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs sm:text-sm font-bold text-primary hover:bg-primary/20 transition-all shadow-xs cursor-pointer"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-primary/25 hover:bg-primary-dark transition-all cursor-pointer"
               >
                 <Share2 size={16} />
                 <span>Compartilhar</span>
-              </motion.button>
+              </button>
             ) : null}
           </div>
         </div>
@@ -815,87 +908,7 @@ export function Editor() {
           showPublishCta={showPublishCta}
           status={status}
           onShareClick={() => setIsShareModalOpen(true)}
-          onPublishCtaClick={async () => {
-            if (isPublishingRef.current) return
-            isPublishingRef.current = true
-            isNavigatingToPaymentRef.current = true
-            try {
-              setSaveState('saving')
-              setFeedback('Salvando página e preparando publicação...')
-              const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
-              const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
-
-              let resultPageId = currentPageId
-              let paymentStatus = ''
-
-              try {
-                const result = await pageService.savePage({
-                  pageId: currentPageId,
-                  content: {
-                    blocks,
-                    theme,
-                    version: PAGE_VERSION,
-                  },
-                  status: targetStatus,
-                  visibility,
-                  version: pageVersion,
-                })
-                resultPageId = result.page.id
-                paymentStatus = result.page.paymentStatus || ''
-                setDraftContext(result.page.id, result.page.updatedAt)
-                setStatus(result.page.status)
-                setPageVersion(result.page.version)
-              } catch (saveErr) {
-                if (isAxiosError(saveErr) && saveErr.response?.status === 409 && currentPageId) {
-                  const latest = await pageService.loadPage(currentPageId)
-                  const retry = await pageService.savePage({
-                    pageId: currentPageId,
-                    content: { blocks, theme, version: PAGE_VERSION },
-                    status: targetStatus,
-                    visibility,
-                    version: latest.version,
-                  })
-                  resultPageId = retry.page.id
-                  paymentStatus = retry.page.paymentStatus || ''
-                  setDraftContext(retry.page.id, retry.page.updatedAt)
-                  setStatus(retry.page.status)
-                  setPageVersion(retry.page.version)
-                } else {
-                  throw saveErr
-                }
-              }
-
-              if (!resultPageId) {
-                throw new Error('Não foi possível identificar a página salva.')
-              }
-
-              if (userSubscribed || paymentStatus === 'paid' || targetStatus === 'published') {
-                setStatus('published')
-                setSaveState('saved')
-                setFeedback('Carta salva e publicada com sucesso!')
-                setCurrentPageId(resultPageId)
-                setIsShareModalOpen(true)
-                isPublishingRef.current = false
-                isNavigatingToPaymentRef.current = false
-                if (!currentPageId) {
-                  navigate(`/editor/${resultPageId}`, { replace: true })
-                }
-                return
-              }
-
-              const destination = `/payment/page/${resultPageId}`
-              window.location.assign(destination)
-            } catch (error) {
-              isPublishingRef.current = false
-              isNavigatingToPaymentRef.current = false
-              setSaveState('error')
-              setFeedback(
-                isAxiosError<{ error?: string }>(error)
-                  ? error.response?.data?.error ?? 'Não foi possível salvar a página para publicação. Tente novamente.'
-                  : 'Não foi possível salvar a página para publicação. Tente novamente.',
-              )
-            }
-          }}
+          onPublishCtaClick={handlePublish}
         />
 
         <AnimatePresence mode="wait" initial={false}>
@@ -971,6 +984,47 @@ export function Editor() {
           )}
 
         </AnimatePresence>
+
+        {/* Botão Largo de Publicação no Final da Carta */}
+        {!isLoadingPage && blocks.length > 0 ? (
+          <div className="mt-12 mb-8 flex flex-col items-center justify-center text-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (status === 'published') {
+                  setIsShareModalOpen(true)
+                } else {
+                  void handlePublish()
+                }
+              }}
+              disabled={saveState === 'saving'}
+              className="w-full max-w-lg min-h-[58px] py-4 px-8 rounded-2xl bg-gradient-to-r from-[#e11d48] to-[#be123c] hover:from-[#f43f5e] hover:to-[#e11d48] text-white font-bold text-base sm:text-lg shadow-xl shadow-rose-500/25 hover:shadow-2xl hover:shadow-rose-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {status === 'published' ? (
+                <>
+                  <Share2 size={20} />
+                  <span>Compartilhar Carta Publicada</span>
+                </>
+              ) : saveState === 'saving' ? (
+                <>
+                  <LoaderCircle size={20} className="animate-spin" />
+                  <span>Publicando carta...</span>
+                </>
+              ) : (
+                <>
+                  <Heart size={20} className="fill-white" />
+                  <span>Publicar e Enviar Carta</span>
+                  <ArrowRight size={20} />
+                </>
+              )}
+            </button>
+            <p className="mt-2.5 text-xs text-text-light font-medium">
+              {status === 'published'
+                ? 'Sua carta já está online e pronta para ser compartilhada.'
+                : 'Você receberá o link exclusivo e o QR Code imediatamente após a publicação.'}
+            </p>
+          </div>
+        ) : null}
       </Container>
 
       <Modal

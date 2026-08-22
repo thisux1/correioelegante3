@@ -5,6 +5,7 @@ interface SectionRevealProps {
   children: ReactNode
   className?: string
   delay?: number
+  noFadeOut?: boolean
   /**
    * Manual scroll keyframes: [fadeInStart, fadeInEnd, fadeOutStart, fadeOutEnd]
    * Default: [0.05, 0.20, 0.85, 1.0]
@@ -12,7 +13,13 @@ interface SectionRevealProps {
   scrollRange?: [number, number, number, number]
 }
 
-export function SectionReveal({ children, className = '', delay = 0, scrollRange }: SectionRevealProps) {
+export function SectionReveal({
+  children,
+  className = '',
+  delay = 0,
+  noFadeOut = false,
+  scrollRange,
+}: SectionRevealProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   const { scrollYProgress } = useScroll({
@@ -24,13 +31,22 @@ export function SectionReveal({ children, className = '', delay = 0, scrollRange
   const defaultRange: [number, number, number, number] = [
     defaultFadeIn,
     defaultFadeIn + 0.12,
-    0.88,
-    0.98,
+    noFadeOut ? 1.0 : 0.88,
+    noFadeOut ? 1.0 : 0.98,
   ]
   const [fi, fie, fo, foe] = scrollRange ?? defaultRange
+  const shouldFadeOut = !noFadeOut && foe < 1.0
 
-  const opacity = useTransform(scrollYProgress, [fi, fie, fo, foe], [0, 1, 1, 0])
-  const y = useTransform(scrollYProgress, [fi, fie, fo, foe], [50, 0, 0, -50])
+  const opacity = useTransform(
+    scrollYProgress,
+    [fi, fie, fo, foe],
+    [0, 1, 1, shouldFadeOut ? 0 : 1]
+  )
+  const y = useTransform(
+    scrollYProgress,
+    [fi, fie, fo, foe],
+    [40, 0, 0, shouldFadeOut ? -40 : 0]
+  )
 
   return (
     <motion.div

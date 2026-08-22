@@ -8,7 +8,6 @@ import {
   Download,
   ExternalLink,
   Heart,
-  Sparkles,
   QrCode,
   MailOpen,
   MessageCircle,
@@ -160,16 +159,6 @@ export function ShareLetterModal({
                   <div className="absolute inset-1 rounded-full border border-dashed border-white/40" />
                   <Heart className="h-8 w-8 fill-white text-white drop-shadow-sm" />
                 </div>
-
-                {/* Brilho decorativo */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.25 }}
-                  className="absolute -top-1 -right-1 text-amber-400"
-                >
-                  <Sparkles size={18} className="fill-amber-400" />
-                </motion.div>
               </motion.div>
 
               <h2

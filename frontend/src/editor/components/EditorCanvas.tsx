@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { CalendarDays, Film, Image as ImageIcon, Music2, Sparkles, Type } from 'lucide-react'
+import { CalendarDays, Film, Image as ImageIcon, Music2, Heart, Type } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { Modal } from '@/components/ui/Modal'
 import { BlockControls } from '@/editor/components/BlockControls'
@@ -605,7 +605,7 @@ export function EditorCanvas() {
     return (
       <div className="rounded-3xl border border-dashed border-border bg-surface text-text px-6 py-16 text-center shadow-sm">
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Sparkles size={20} />
+          <Heart size={20} />
         </div>
         <h2 className="font-display text-2xl text-text">Comece criando seu primeiro bloco</h2>
         <p className="mt-2 text-sm text-text-light">Use o botao + para adicionar texto ou imagem e monte sua carta com calma.</p>
