@@ -336,11 +336,11 @@ function ThemeMenu({
         </div>
 
         {/* Mood: Dia / Noite */}
-        <div className="mt-2.5 flex items-center gap-1 rounded-lg bg-black/5 p-0.5">
+        <div className="mt-2.5 flex items-center gap-1 rounded-lg bg-surface-raised border border-border/60 p-0.5">
           <button
             type="button"
             onClick={() => handleApplyPersonaColor(personaPrimary, 'light')}
-            className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold transition-all ${
+            className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold transition-all cursor-pointer ${
               personaMood === 'light'
                 ? 'bg-surface text-primary shadow-xs'
                 : 'text-text-light hover:text-text'
@@ -351,9 +351,9 @@ function ThemeMenu({
           <button
             type="button"
             onClick={() => handleApplyPersonaColor(personaPrimary, 'dark')}
-            className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold transition-all ${
+            className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[11px] font-semibold transition-all cursor-pointer ${
               personaMood === 'dark'
-                ? 'bg-stone-900 text-white shadow-xs'
+                ? 'bg-surface text-primary shadow-xs'
                 : 'text-text-light hover:text-text'
             }`}
           >

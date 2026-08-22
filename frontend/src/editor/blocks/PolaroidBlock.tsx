@@ -289,18 +289,18 @@ function PolaroidCard({
           onSelect()
         }
       }}
-      className={`group relative flex flex-col select-none rounded-xl border bg-[#fffdfa] p-3.5 pb-5 transition-shadow duration-200 ${
+      className={`group relative flex flex-col select-none rounded-xl border bg-surface-raised p-3.5 pb-5 transition-shadow duration-200 ${
         isSelected && isEditMode
           ? 'z-40 border-primary/50 shadow-2xl ring-2 ring-primary/70 ring-offset-2 ring-offset-background'
-          : 'z-10 border-amber-200/50 shadow-lg hover:shadow-xl'
+          : 'z-10 border-border shadow-lg hover:shadow-xl'
       }`}
       style={{
         width: `${currentWidth}px`,
         transform: `rotate(${currentRotation}deg)`,
         boxShadow:
           isSelected && isEditMode
-            ? '0 20px 40px -10px rgba(0,0,0,0.22), 0 8px 16px -4px rgba(0,0,0,0.12)'
-            : '0 12px 28px -6px rgba(0,0,0,0.15), 0 4px 10px -2px rgba(0,0,0,0.08)',
+            ? '0 20px 40px -10px rgba(0,0,0,0.35), 0 8px 16px -4px rgba(0,0,0,0.2)'
+            : '0 12px 28px -6px rgba(0,0,0,0.25), 0 4px 10px -2px rgba(0,0,0,0.15)',
       }}
     >
       {/* Hidden File Input for Direct Upload */}
@@ -326,7 +326,7 @@ function PolaroidCard({
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
             onClick={(e) => e.stopPropagation()}
-            className="absolute -top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 rounded-2xl border border-primary/25 bg-white/95 p-1 shadow-2xl backdrop-blur-md"
+            className="absolute -top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 rounded-2xl border border-border bg-surface/95 text-text p-1 shadow-2xl backdrop-blur-md"
           >
             <button
               type="button"
@@ -359,7 +359,7 @@ function PolaroidCard({
               <span className="font-mono text-[11px]">{currentRotation}°</span>
             </button>
 
-            <div className="h-4 w-px bg-primary/20" />
+            <div className="h-4 w-px bg-border" />
 
             <button
               type="button"
@@ -374,7 +374,7 @@ function PolaroidCard({
             <button
               type="button"
               onClick={onRemove}
-              className="inline-flex items-center rounded-xl p-1.5 text-red-500 transition-colors hover:bg-red-50 active:scale-95"
+              className="inline-flex items-center rounded-xl p-1.5 text-red-500 transition-colors hover:bg-red-500/10 active:scale-95"
               title="Remover Polaroid"
               aria-label="Remover Polaroid"
             >
@@ -393,14 +393,14 @@ function PolaroidCard({
             exit={{ opacity: 0, y: -4, scale: 0.96 }}
             transition={{ duration: 0.12 }}
             onClick={(e) => e.stopPropagation()}
-            className="absolute -top-26 left-1/2 -translate-x-1/2 z-50 flex w-64 items-center gap-1.5 rounded-xl border border-primary/25 bg-white p-2 shadow-2xl"
+            className="absolute -top-26 left-1/2 -translate-x-1/2 z-50 flex w-64 items-center gap-1.5 rounded-xl border border-border bg-surface text-text p-2 shadow-2xl"
           >
             <input
               type="url"
               value={urlInputValue}
               onChange={(e) => setUrlInputValue(e.target.value)}
               placeholder="https://..."
-              className="flex-1 rounded-lg border border-primary/20 px-2 py-1 text-xs text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/40"
+              className="flex-1 rounded-lg border border-border bg-surface-raised px-2 py-1 text-xs text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary/40"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleApplyUrl()
@@ -429,10 +429,10 @@ function PolaroidCard({
           >
             {/* Subtle Crosshair Reticle */}
             <div
-              className={`relative flex items-center justify-center rounded-full border bg-white/95 shadow-sm backdrop-blur-2xs transition-all duration-150 ${
+              className={`relative flex items-center justify-center rounded-full border bg-surface/95 shadow-sm backdrop-blur-2xs transition-all duration-150 ${
                 isRotating
                   ? 'h-6 w-6 border-primary ring-4 ring-primary/25 scale-110 shadow-md'
-                  : 'h-5 w-5 border-primary/60'
+                  : 'h-5 w-5 border-border'
               }`}
             >
               {/* Horizontal & Vertical Crosshair Ticks */}
@@ -499,25 +499,25 @@ function PolaroidCard({
           <div
             onPointerDown={handleResizePointerDown}
             style={{ touchAction: 'none' }}
-            className="absolute -top-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            className="absolute -top-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-surface shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
           <div
             onPointerDown={handleResizePointerDown}
             style={{ touchAction: 'none' }}
-            className="absolute -top-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            className="absolute -top-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-surface shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
           <div
             onPointerDown={handleResizePointerDown}
             style={{ touchAction: 'none' }}
-            className="absolute -bottom-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            className="absolute -bottom-1.5 -left-1.5 z-40 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-primary bg-surface shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
           <div
             onPointerDown={handleResizePointerDown}
             style={{ touchAction: 'none' }}
-            className="absolute -bottom-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-white shadow-sm transition-transform hover:scale-130 active:scale-110"
+            className="absolute -bottom-1.5 -right-1.5 z-40 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-primary bg-surface shadow-sm transition-transform hover:scale-130 active:scale-110"
             title="Redimensionar"
           />
 
@@ -537,8 +537,8 @@ function PolaroidCard({
             fileInputRef.current?.click()
           }
         }}
-        className={`relative aspect-square w-full overflow-hidden rounded-lg bg-stone-100 shadow-inner ${
-          isEditMode && !photo.src ? 'cursor-pointer hover:bg-stone-200/80 transition-colors' : ''
+        className={`relative aspect-square w-full overflow-hidden rounded-lg bg-surface border border-border/80 shadow-inner ${
+          isEditMode && !photo.src ? 'cursor-pointer hover:bg-surface-raised transition-colors' : ''
         }`}
       >
         {photo.src ? (
@@ -686,7 +686,7 @@ function PolaroidBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
     <div className="w-full">
       {/* Top Header bar in Edit Mode */}
       {isEditMode && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-white/85 p-3.5 shadow-sm backdrop-blur-xs">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface/90 p-3.5 shadow-xs backdrop-blur-xs">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Camera size={18} />
@@ -718,8 +718,8 @@ function PolaroidBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
           onClick={isEditMode ? handleAddPhoto : undefined}
           className={`flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
             isEditMode
-              ? 'cursor-pointer border-primary/30 bg-white/60 hover:border-primary/50 hover:bg-primary/5'
-              : 'border-primary/20 bg-white/40'
+              ? 'cursor-pointer border-border hover:border-primary/50 bg-surface-raised/60 hover:bg-primary/5'
+              : 'border-border bg-surface/40'
           }`}
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">

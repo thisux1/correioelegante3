@@ -950,7 +950,7 @@ export function Profile() {
                 </p>
                 <Button
                   variant="outline"
-                  className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 sm:w-auto"
+                  className="w-full border-red-500/30 text-red-500 hover:border-red-500/50 hover:bg-red-500/10 sm:w-auto"
                   onClick={() => setIsDeleteModalOpen(true)}
                 >
                   Excluir minha conta
@@ -965,12 +965,12 @@ export function Profile() {
             >
               <div className="space-y-6">
                 <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 text-red-500">
                     <Trash2 className="h-8 w-8 text-red-500" />
                   </div>
                   <p className="mb-4 text-sm leading-relaxed text-text-light sm:text-base">
                     Tem certeza que deseja excluir sua conta? Esta ação é{' '}
-                    <strong className="text-red-600">irreversível</strong>.
+                    <strong className="text-red-500">irreversível</strong>.
                     <br />
                     Todas as suas cartas e dados serão apagados permanentemente.
                   </p>
@@ -984,7 +984,7 @@ export function Profile() {
                   ) : null}
                   <Button
                     variant="outline"
-                    className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 font-semibold"
+                    className="w-full border-red-500/30 text-red-500 hover:border-red-500/50 hover:bg-red-500/10 font-semibold"
                     onClick={handleDeleteAccount}
                     disabled={isDeletingAccount}
                   >

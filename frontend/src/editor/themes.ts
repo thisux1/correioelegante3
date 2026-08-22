@@ -361,6 +361,7 @@ type ThemeCssVariables = CSSProperties & {
   '--color-accent': string
   '--color-background': string
   '--color-surface': string
+  '--color-surface-raised': string
   '--color-surface-glass': string
   '--color-border': string
   '--color-text': string
@@ -378,8 +379,20 @@ function resolveThemeVariable(theme: Theme) {
   const fontDisplay = theme.variables.fontDisplay ?? theme.variables.font
   const fontCursive = theme.variables.fontCursive ?? theme.variables.font
 
+  // Detect dark themes (e.g. background starts with dark tone #0, #1, #2 or text is light #f/#e)
+  const isDark = theme.variables.background.startsWith('#0') ||
+    theme.variables.background.startsWith('#1') ||
+    theme.variables.background.startsWith('#2') ||
+    theme.variables.text.startsWith('#f') ||
+    theme.variables.text.startsWith('#e')
+
+  const surfaceRaised = isDark
+    ? (surface === '#18181b' ? '#27272a' : surface === '#111827' ? '#1f2937' : '#1f2430')
+    : (surface === '#ffffff' ? '#f9fafb' : '#fdf8f9')
+
   return {
     surface,
+    surfaceRaised,
     surfaceGlass,
     border,
     textLight,
@@ -403,6 +416,7 @@ export function buildThemeStyle(themeOrId?: Theme | string | null): CSSPropertie
     '--color-accent': theme.variables.accent,
     '--color-background': theme.variables.background,
     '--color-surface': resolved.surface,
+    '--color-surface-raised': resolved.surfaceRaised,
     '--color-surface-glass': resolved.surfaceGlass,
     '--color-border': resolved.border,
     '--color-text': theme.variables.text,

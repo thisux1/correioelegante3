@@ -200,10 +200,11 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
               animate={{ y: -16, opacity: 1, scale: 1 }}
               exit={{ y: 60, opacity: 0, scale: 0.94 }}
               transition={{ type: 'spring', stiffness: 240, damping: 24 }}
-              className="relative z-10 -mb-12 w-[94%] rounded-2xl border border-amber-200/90 bg-gradient-to-b from-[#fffefc] via-[#fffdf9] to-[#fbf4ea] p-6 shadow-2xl sm:p-7"
+              className="relative z-10 -mb-12 w-[94%] rounded-2xl border border-border bg-gradient-to-b from-surface via-surface-raised to-background p-6 shadow-2xl sm:p-7"
               style={{
-                backgroundImage: 'radial-gradient(#d1d5db 0.8px, transparent 0.8px)',
+                backgroundImage: 'radial-gradient(currentColor 0.6px, transparent 0.6px)',
                 backgroundSize: '18px 18px',
+                opacity: 0.98,
               }}
             >
               <div className="absolute right-4 top-4 flex items-center gap-1 text-primary/40">
@@ -240,7 +241,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     onChange={(e) => updateProp('messageSnippet', e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     placeholder="Escreva aqui a mensagem especial revelada ao abrir a carta..."
-                    className="w-full resize-none rounded-xl bg-transparent font-cursive text-xl sm:text-2xl leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-amber-400/40 focus:border-primary/40 focus:bg-white/40 focus:outline-none p-1.5 transition-colors"
+                    className="w-full resize-none rounded-xl bg-transparent font-cursive text-xl sm:text-2xl leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-primary/30 focus:border-primary/40 focus:bg-surface/40 focus:outline-none p-1.5 transition-colors"
                     aria-label="Mensagem interna da carta"
                   />
                 ) : (
@@ -283,7 +284,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
             }
             handleToggleOpen()
           }}
-          className="relative z-20 w-full cursor-pointer overflow-visible rounded-3xl border border-amber-300/50 bg-gradient-to-b from-[#fbf4ea] via-[#f5e7d6] to-[#edd7bf] p-6 shadow-xl transition-all duration-300 hover:shadow-2xl sm:p-8"
+          className="relative z-20 w-full cursor-pointer overflow-visible rounded-3xl border border-border bg-gradient-to-b from-surface-raised via-surface to-background p-6 shadow-xl transition-all duration-300 hover:shadow-2xl sm:p-8"
         >
           {/* Textura sutil e dobras decorativas */}
           <div
@@ -350,10 +351,10 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
                     transition={{ duration: 0.16 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute -bottom-2 translate-y-full left-1/2 -translate-x-1/2 z-50 w-72 rounded-2xl border border-amber-200/90 bg-white/95 p-4 shadow-2xl backdrop-blur-md"
+                    className="absolute -bottom-2 translate-y-full left-1/2 -translate-x-1/2 z-50 w-72 rounded-2xl border border-border bg-surface/95 text-text p-4 shadow-2xl backdrop-blur-md"
                   >
                     {/* Cabeçalho do Popover */}
-                    <div className="flex items-center justify-between border-b border-amber-100 pb-2 mb-3">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-3">
                       <div className="flex items-center gap-1.5">
                         <Sparkles size={14} className="text-primary" />
                         <span className="text-xs font-bold text-text">Selo de Cera</span>
@@ -361,7 +362,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                       <button
                         type="button"
                         onClick={() => setShowSealPopover(false)}
-                        className="rounded-lg p-1 text-text-light hover:bg-stone-100 hover:text-text"
+                        className="rounded-lg p-1 text-text-light hover:bg-surface-raised hover:text-text cursor-pointer"
                         aria-label="Fechar opções do selo"
                       >
                         <X size={14} />
@@ -379,7 +380,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                         value={props.sealInitial ?? ''}
                         onChange={(e) => updateProp('sealInitial', e.target.value.toUpperCase())}
                         placeholder="Ex: C"
-                        className="w-full rounded-xl border border-primary/20 bg-white px-3 py-1.5 text-center font-serif text-base font-bold text-text outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/40"
+                        className="w-full rounded-xl border border-border bg-surface px-3 py-1.5 text-center font-serif text-base font-bold text-text outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/40"
                         aria-label="Inicial do lacre"
                       />
                     </div>

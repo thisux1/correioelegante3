@@ -50,8 +50,12 @@ describe('createBlock', () => {
       coverSrc: '',
       coverAssetId: undefined,
       tracks: [],
-      title: '',
-      artist: '',
+      title: 'Nossa Trilha Sonora',
+      artist: 'Coleção de Afeto',
+      playerStyle: 'vinyl',
+      showLyrics: true,
+      syncedLyrics: '[00:00.00]Quando a agulha toca o vinil, tudo faz sentido\n[00:04.00]Cada acorde lembra o som da sua risada\n[00:08.50]Uma melodia gravada no tempo\n[00:13.00]Feita especialmente para nós dois',
+      plainLyrics: 'Quando a agulha toca o vinil, tudo faz sentido\nCada acorde lembra o som da sua risada\nUma melodia gravada no tempo\nFeita especialmente para nós dois',
     })
   })
 

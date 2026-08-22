@@ -53,7 +53,7 @@ export function Modal({ isOpen, onClose, children, title, className = '' }: Moda
               role="dialog"
               aria-modal="true"
               aria-labelledby={title ? 'modal-title' : undefined}
-              className={`relative w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-rose-100/80 ring-1 ring-black/5 text-text ${className}`}
+              className={`relative w-full max-w-lg rounded-3xl bg-surface p-6 sm:p-8 shadow-2xl border border-border ring-1 ring-black/5 text-text ${className}`}
             >
               <button
                 type="button"

@@ -1,11 +1,15 @@
+import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Music2 } from 'lucide-react'
+import { Music2, Sparkles } from 'lucide-react'
 
 interface VintagePlayerDeckProps {
   coverSrc?: string
   title?: string
   artist?: string
   isPlaying: boolean
+  progressPercent?: number
+  currentTime?: number
+  duration?: number
   onClick?: () => void
 }
 
@@ -14,15 +18,42 @@ export function VintagePlayerDeck({
   title,
   artist,
   isPlaying,
+  progressPercent = 0,
   onClick,
 }: VintagePlayerDeckProps) {
   const shouldReduceMotion = useReducedMotion()
-  const hasCover = Boolean(coverSrc && (coverSrc.startsWith('http://') || coverSrc.startsWith('https://')))
+  const hasCover = Boolean(coverSrc && (coverSrc.startsWith('http://') || coverSrc.startsWith('https://') || coverSrc.startsWith('data:')))
+
+  // Random micro-oscillation for analog VU meters when playing
+  const [vuLeft, setVuLeft] = useState(35)
+  const [vuRight, setVuRight] = useState(30)
+
+  useEffect(() => {
+    if (!isPlaying) return
+
+    const interval = setInterval(() => {
+      setVuLeft(35 + Math.random() * 45)
+      setVuRight(30 + Math.random() * 50)
+    }, 180)
+
+    return () => clearInterval(interval)
+  }, [isPlaying])
+
+  const effectiveVuLeft = isPlaying ? vuLeft : 8
+  const effectiveVuRight = isPlaying ? vuRight : 6
+
+  // Tonearm physics angles:
+  // Rest angle: 0deg (pointing to the arm rest clip)
+  // Lead-in groove (start of vinyl): 21deg
+  // Lead-out groove (end of vinyl): 35deg
+  const clampedProgress = Math.min(100, Math.max(0, progressPercent))
+  const playingAngle = 21 + (clampedProgress / 100) * 14
+  const tonearmAngle = isPlaying ? playingAngle : 0
 
   return (
     <div
       onClick={onClick}
-      className="relative flex flex-col items-center justify-center p-2 select-none group cursor-pointer"
+      className="relative flex flex-col items-center justify-center p-1 sm:p-2 select-none group cursor-pointer w-full"
       role="button"
       tabIndex={0}
       aria-label={isPlaying ? 'Pausar reprodução' : 'Iniciar reprodução'}
@@ -33,147 +64,345 @@ export function VintagePlayerDeck({
         }
       }}
     >
-      {/* 1. DISCO DE VINIL COM CAPA E BORDA ESQUERDA FÍSICA (SPINE) */}
-      <div className="relative flex items-center justify-center w-64 sm:w-72 h-44 sm:h-52">
-        {/* Disco de Vinil 3D Deslizando */}
-        <motion.div
-          initial={false}
-          animate={{
-            x: isPlaying ? (shouldReduceMotion ? 20 : 56) : 14,
-            rotate: isPlaying && !shouldReduceMotion ? 360 : 0,
-            transition: isPlaying
-              ? {
-                  x: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
-                  rotate: { duration: 3.5, repeat: Infinity, ease: 'linear' },
-                }
-              : {
-                  x: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-                  rotate: { duration: 0.8, ease: 'easeOut' },
-                },
-          }}
-          className="absolute z-10 w-36 h-36 sm:w-44 sm:h-44 rounded-full shadow-[0_14px_36px_rgba(0,0,0,0.6)] flex items-center justify-center overflow-hidden"
+      {/* ========================================================================= */}
+      {/* 1. GABINETE DO TOCA-DISCOS (TURNTABLE PLINTH / CHASSIS) */}
+      {/* ========================================================================= */}
+      <div className="relative w-full max-w-[360px] sm:max-w-[420px] aspect-[1.18/1] rounded-3xl p-3 sm:p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] border-2 border-border/80 bg-gradient-to-b from-zinc-800 via-zinc-900 to-black overflow-hidden transition-transform duration-300 group-hover:scale-[1.01]">
+        {/* Textura de Alumínio Escovado e Madeira Nobre */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-3xl opacity-30"
           style={{
-            background: 'radial-gradient(circle, #1c1c1c 0%, #0a0a0a 45%, #181818 70%, #050505 100%)',
+            backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.15) 0%, transparent 70%)',
           }}
-        >
-          {/* Ranhuras Concêntricas do Vinil */}
-          <div className="absolute inset-2 rounded-full border border-white/5" />
-          <div className="absolute inset-4 rounded-full border border-white/10" />
-          <div className="absolute inset-7 rounded-full border border-white/5" />
-          <div className="absolute inset-10 rounded-full border border-white/10" />
-          <div className="absolute inset-14 rounded-full border border-white/5" />
+        />
 
-          {/* Reflexo Especular de Luz */}
-          <div
-            className="absolute inset-0 rounded-full pointer-events-none opacity-35"
-            style={{
-              background: 'conic-gradient(from 45deg, transparent 0deg, rgba(255,255,255,0.2) 45deg, transparent 90deg, rgba(255,255,255,0.2) 225deg, transparent 270deg)',
-            }}
-          />
+        {/* 4 Pés Amortecedores nos Cantos (Pés cromados de isolamento) */}
+        <div className="absolute top-2 left-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
+        <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
+        <div className="absolute bottom-2 left-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
+        <div className="absolute bottom-2 right-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
 
-          {/* Selo Central com Foto / Monograma */}
-          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-amber-300/40 bg-primary/30 flex items-center justify-center shadow-inner">
-            {hasCover ? (
-              <img
-                src={coverSrc}
-                alt={title || 'Capa do disco'}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <Music2 size={18} className="text-white drop-shadow-sm" />
-            )}
-            <div className="absolute w-3.5 h-3.5 rounded-full bg-black/90 border border-white/30 shadow-inner" />
-          </div>
-        </motion.div>
+        {/* Placa metálica de acabamento interno */}
+        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-950 to-[#0c0d10] p-2 sm:p-3 flex flex-col justify-between shadow-inner">
 
-        {/* Capa do Álbum com BORDA ESQUERDA DESTACADA (Spine / Lombada Física) */}
-        <div className="relative z-20 w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.4)] border-2 border-border/80 border-l-[6px] border-l-primary/70 bg-surface flex items-center justify-center transition-transform duration-300 group-hover:scale-[1.02]">
-          {hasCover ? (
-            <img
-              src={coverSrc}
-              alt={title || 'Capa do Álbum'}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-surface to-background flex flex-col items-center justify-center p-3 text-center">
-              <Music2 size={30} className="text-primary mb-1.5" />
-              <p className="font-display text-xs font-bold text-text truncate max-w-full">
-                {title || 'Coleção de Momentos'}
-              </p>
+          {/* Top Bar do Toca-Discos: Marca Vintage, Luz Estroboscópica e Seletor RPM */}
+          <div className="flex items-center justify-between px-1.5 pt-0.5">
+            {/* Luz Estroboscópica / LED de Força */}
+            <div className="flex items-center gap-1.5">
+              <div className="relative flex items-center justify-center">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    isPlaying
+                      ? 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)] animate-pulse'
+                      : 'bg-zinc-700 shadow-none'
+                  }`}
+                />
+                {isPlaying && (
+                  <span className="absolute -inset-1 rounded-full bg-rose-500/30 animate-ping" />
+                )}
+              </div>
+              <span className="font-mono text-[9px] sm:text-[10px] tracking-widest text-zinc-400 font-bold uppercase">
+                {isPlaying ? '33⅓ RPM • PLAY' : 'STANDBY'}
+              </span>
             </div>
-          )}
 
-          {/* Efeito de Textura de Papelão e Dobra da Lombada */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-black/25 via-transparent to-white/10 pointer-events-none" />
-          {/* Linha de vinco da lombada esquerda */}
-          <div className="absolute left-0 inset-y-0 w-2 bg-gradient-to-r from-black/40 via-white/10 to-transparent pointer-events-none" />
-        </div>
-      </div>
+            {/* Logo do Toca-Discos */}
+            <div className="flex items-center gap-1 text-primary/80">
+              <Sparkles size={11} />
+              <span className="font-display text-[10px] sm:text-[11px] font-bold tracking-wider text-zinc-300">
+                CORREIO HI-FI
+              </span>
+            </div>
 
-      {/* 2. MECANISMO DE TOCA-FITAS VINTAGE (Cassette Tape Deck com Engrenagens Giratórias) */}
-      <div className="mt-3 w-full max-w-xs rounded-2xl border border-border/90 bg-gradient-to-b from-surface-raised to-surface p-2.5 shadow-inner">
-        {/* Janela de Vidro do Toca-Fitas */}
-        <div className="relative rounded-xl border border-border bg-slate-950/80 p-2 overflow-hidden shadow-inner flex items-center justify-between gap-2">
-          {/* Efeito de Reflexo no Vidro */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
-
-          {/* Rolo Esquerdo com Engrenagem Giratória */}
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-white/20 bg-zinc-900 shadow-sm">
-            <motion.div
-              animate={{ rotate: isPlaying && !shouldReduceMotion ? 360 : 0 }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
-              className="w-6 h-6 flex items-center justify-center text-amber-200/60"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-75">
-                <circle cx="12" cy="12" r="3" fill="#000" />
-                <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </motion.div>
+            {/* Seletor 33 / 45 RPM */}
+            <div className="flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded-md border border-white/10 text-[9px] font-mono text-zinc-400">
+              <span className={isPlaying ? 'text-primary font-bold' : 'text-zinc-500'}>33</span>
+              <span className="text-zinc-600">/</span>
+              <span className="text-zinc-600">45</span>
+            </div>
           </div>
 
-          {/* Etiqueta Central da Fita Cassete */}
-          <div className="min-w-0 flex-1 px-1.5 py-0.5 rounded bg-amber-100/90 dark:bg-zinc-800 border border-amber-300/40 text-center shadow-xs">
-            <p className="font-mono text-[10px] font-bold text-amber-950 dark:text-amber-200 truncate uppercase tracking-wider">
-              {title || 'Lado A'}
-            </p>
-            <p className="font-mono text-[8px] text-amber-900/70 dark:text-amber-300/70 truncate">
-              {artist || 'Correio Elegante Hi-Fi'}
-            </p>
+          {/* ===================================================================== */}
+          {/* 2. ÁREA CENTRAL: PRATO DE VINIL + BRAÇO COM AGULHA MECÂNICA */}
+          {/* ===================================================================== */}
+          <div className="relative flex-1 flex items-center justify-center my-1">
+
+            {/* 2.1 PRATO DE ALUMÍNIO E DISCO DE VINIL */}
+            <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-full flex items-center justify-center shadow-[0_12px_36px_rgba(0,0,0,0.8)]">
+              {/* Borda Externa Metálica com Pontos Estroboscópicos */}
+              <div className="absolute inset-0 rounded-full border-[3px] border-zinc-700 bg-zinc-950 shadow-inner flex items-center justify-center">
+                <div
+                  className="absolute inset-0.5 rounded-full border border-dashed border-zinc-500/30 pointer-events-none"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle at center, transparent 96%, rgba(255,255,255,0.2) 97%)',
+                  }}
+                />
+              </div>
+
+              {/* DISCO DE VINIL 12" GIRATÓRIO */}
+              <motion.div
+                initial={false}
+                animate={{
+                  rotate: isPlaying && !shouldReduceMotion ? 360 : 0,
+                }}
+                transition={{
+                  rotate: isPlaying
+                    ? { duration: 2.8, repeat: Infinity, ease: 'linear' }
+                    : { duration: 0.9, ease: 'easeOut' },
+                }}
+                className="relative w-[92%] h-[92%] rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.9)] flex items-center justify-center overflow-hidden"
+                style={{
+                  background: 'radial-gradient(circle, #1a1a1a 0%, #0d0d0d 38%, #141414 70%, #050505 100%)',
+                }}
+              >
+                {/* Micro-sulcos e Ranhuras Concêntricas do Vinil */}
+                <div className="absolute inset-2 rounded-full border border-white/5" />
+                <div className="absolute inset-4 rounded-full border border-white/10" />
+                <div className="absolute inset-7 rounded-full border border-white/5" />
+                <div className="absolute inset-10 rounded-full border border-white/10" />
+                <div className="absolute inset-13 rounded-full border border-white/5" />
+                <div className="absolute inset-16 rounded-full border border-white/10" />
+
+                {/* Efeito de Reflexo de Luz Especular (Conic Highlight) */}
+                <div
+                  className="absolute inset-0 rounded-full pointer-events-none opacity-40"
+                  style={{
+                    background:
+                      'conic-gradient(from 30deg, transparent 0deg, rgba(255,255,255,0.22) 45deg, transparent 90deg, rgba(255,255,255,0.18) 225deg, transparent 270deg)',
+                  }}
+                />
+
+                {/* SELO CENTRAL DO DISCO (LABEL com Capa ou Monograma) */}
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-amber-300/60 bg-gradient-to-br from-primary via-primary-dark to-rose-950 flex flex-col items-center justify-center shadow-inner text-center p-1">
+                  {hasCover ? (
+                    <img
+                      src={coverSrc}
+                      alt={title || 'Capa do disco'}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center">
+                      <Music2 size={15} className="text-white drop-shadow-md mb-0.5" />
+                      <span className="font-display text-[7px] sm:text-[8px] font-bold text-white leading-tight truncate max-w-[56px]">
+                        {title || 'Vinil Romântico'}
+                      </span>
+                      {artist && (
+                        <span className="font-mono text-[6px] text-white/70 leading-tight truncate max-w-[56px]">
+                          {artist}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Eixo Central Cromado (Spindle) */}
+                  <div className="absolute w-3.5 h-3.5 rounded-full bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-700 border border-white/60 shadow-md flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* =================================================================== */}
+            {/* 2.2 BRAÇO FONOCAPTOR REALISTA COM AGULHA (TONEARM & STYLUS NEEDLE) */}
+            {/* =================================================================== */}
+            <div className="absolute top-1 right-2 sm:right-3 w-28 sm:w-36 h-48 sm:h-56 pointer-events-none z-30">
+              {/* BASE DO BRAÇO (Gimbal assembly & Pivot) */}
+              <div className="absolute top-2 right-4 w-10 h-10 rounded-full border-2 border-zinc-600 bg-gradient-to-br from-zinc-700 via-zinc-800 to-zinc-950 shadow-lg flex items-center justify-center">
+                {/* Contrapeso cilíndrico traseiro (Counterweight) */}
+                <div className="absolute -top-3 w-5 h-6 rounded-md bg-gradient-to-r from-zinc-300 via-zinc-400 to-zinc-600 border border-black/40 shadow-md" />
+
+                {/* Anel de rolamento central */}
+                <div className="w-5 h-5 rounded-full border border-amber-300/40 bg-zinc-900 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                </div>
+
+                {/* Suporte de Descanso do Braço (Arm Rest com trava) */}
+                <div className="absolute top-14 right-1 w-3 h-5 border-l-2 border-b-2 border-zinc-500 rounded-bl-sm opacity-80" />
+              </div>
+
+              {/* HASTE DO BRAÇO GIRATÓRIA (TONEARM ROD) COM FÍSICA DE ELEVAÇÃO/QUEDA */}
+              <motion.div
+                initial={false}
+                style={{
+                  transformOrigin: 'calc(100% - 24px) 20px',
+                }}
+                animate={{
+                  rotate: tonearmAngle,
+                  y: isPlaying ? 0 : -8,
+                  scale: isPlaying ? 1 : 0.97,
+                }}
+                transition={{
+                  rotate: {
+                    duration: isPlaying ? 0.9 : 0.7,
+                    ease: [0.22, 1, 0.36, 1],
+                  },
+                  y: {
+                    duration: 0.5,
+                    delay: isPlaying ? 0.45 : 0, // Desce a agulha APÓS girar sobre o disco
+                    ease: [0.34, 1.56, 0.64, 1], // Efeito mola amortecido ao pousar
+                  },
+                  scale: {
+                    duration: 0.5,
+                    delay: isPlaying ? 0.45 : 0,
+                  },
+                }}
+                className="absolute inset-0 filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
+              >
+                {/* SVG do Braço Curvado em 'S' de Alta Precisão */}
+                <svg
+                  viewBox="0 0 140 220"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full overflow-visible"
+                >
+                  <defs>
+                    {/* Gradiente Cromado Realista para a Haste */}
+                    <linearGradient id="tonearm-chrome" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#e2e8f0" />
+                      <stop offset="30%" stopColor="#94a3b8" />
+                      <stop offset="60%" stopColor="#f8fafc" />
+                      <stop offset="100%" stopColor="#64748b" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Sombra da Haste no Vinil */}
+                  <path
+                    d="M 116 20 Q 95 70 85 110 Q 75 150 48 185 L 42 195"
+                    stroke="rgba(0,0,0,0.4)"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    className="translate-x-1 translate-y-2 blur-[1px]"
+                  />
+
+                  {/* Haste Metálica em 'S' (Tonearm Rod) */}
+                  <path
+                    d="M 116 20 Q 95 70 85 110 Q 75 150 48 185 L 42 195"
+                    stroke="url(#tonearm-chrome)"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Cabeçote / Cápsula Fonocaptora (Headshell & Cartridge) */}
+                  <g transform="translate(42, 195) rotate(-28)">
+                    {/* Corpo do Headshell */}
+                    <rect
+                      x="-7"
+                      y="-2"
+                      width="14"
+                      height="24"
+                      rx="3"
+                      fill="#1e293b"
+                      stroke="#475569"
+                      strokeWidth="1"
+                    />
+
+                    {/* Cápsula / Cartridge vermelha de alta performance */}
+                    <rect
+                      x="-5"
+                      y="14"
+                      width="10"
+                      height="8"
+                      rx="1.5"
+                      fill="#e11d48"
+                      stroke="#be123c"
+                      strokeWidth="0.5"
+                    />
+
+                    {/* Alça do cabeçote (Finger lift) */}
+                    <path
+                      d="M 7 4 Q 14 6 12 12"
+                      stroke="url(#tonearm-chrome)"
+                      strokeWidth="1.5"
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+
+                    {/* Agulha de Diamante (Stylus Needle) */}
+                    <circle
+                      cx="0"
+                      cy="23"
+                      r="1.5"
+                      fill="#ffffff"
+                      className={isPlaying ? 'animate-pulse' : ''}
+                    />
+
+                    {/* Micro ponto de luz de leitura quando tocando */}
+                    {isPlaying && (
+                      <circle
+                        cx="0"
+                        cy="23"
+                        r="3.5"
+                        fill="#f43f5e"
+                        opacity="0.6"
+                      />
+                    )}
+                  </g>
+                </svg>
+              </motion.div>
+            </div>
           </div>
 
-          {/* Rolo Direito com Engrenagem Giratória */}
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-white/20 bg-zinc-900 shadow-sm">
-            <motion.div
-              animate={{ rotate: isPlaying && !shouldReduceMotion ? 360 : 0 }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
-              className="w-6 h-6 flex items-center justify-center text-amber-200/60"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-75">
-                <circle cx="12" cy="12" r="3" fill="#000" />
-                <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </motion.div>
-          </div>
-        </div>
+          {/* ===================================================================== */}
+          {/* 3. PAINEL DE CONTROLE INFERIOR: BOTÃO START/STOP & VU METERS */}
+          {/* ===================================================================== */}
+          <div className="flex items-center justify-between pt-1 border-t border-white/10 px-1">
+            {/* Botão Físico Power / Start-Stop Metálico */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border font-mono text-[10px] font-bold tracking-wider transition-all duration-150 cursor-pointer ${
+                  isPlaying
+                    ? 'border-primary bg-primary/20 text-white shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] translate-y-0.5'
+                    : 'border-zinc-600 bg-gradient-to-b from-zinc-700 to-zinc-900 text-zinc-300 shadow-md hover:border-zinc-400'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-primary animate-pulse' : 'bg-zinc-500'}`} />
+                <span>{isPlaying ? 'STOP' : 'START'}</span>
+              </button>
 
-        {/* Medidor VU Analógico e Indicador de Fita */}
-        <div className="mt-2 flex items-center justify-between px-1 text-[9px] font-mono text-text-light">
-          <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? 'bg-red-500 animate-pulse' : 'bg-zinc-400'}`} />
-            <span className="uppercase tracking-widest">{isPlaying ? 'Tocando' : 'Pausado'}</span>
+              {/* Pitch Fader Decorativo */}
+              <div className="hidden sm:flex items-center gap-1 text-[9px] font-mono text-zinc-500">
+                <span>PITCH</span>
+                <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
+                  <div className="w-1/2 h-full bg-primary/60" />
+                </div>
+              </div>
+            </div>
+
+            {/* Medidores Analógicos Estéreo VU Meter (Ponteiros Oscilantes) */}
+            <div className="flex items-center gap-2 bg-black/60 px-2 py-1 rounded-xl border border-white/10">
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-[8px] text-zinc-500 font-bold">VU</span>
+
+                {/* Canal Esquerdo (L) */}
+                <div className="relative w-8 h-4 rounded bg-amber-950/40 border border-amber-500/20 overflow-hidden flex items-end justify-center">
+                  <div
+                    className="absolute bottom-0 w-0.5 bg-amber-400 origin-bottom transition-all duration-150"
+                    style={{
+                      height: '85%',
+                      transform: `rotate(${effectiveVuLeft - 45}deg)`,
+                    }}
+                  />
+                  <span className="text-[6px] font-mono text-amber-500/60 leading-none pb-0.5">L</span>
+                </div>
+
+                {/* Canal Direito (R) */}
+                <div className="relative w-8 h-4 rounded bg-amber-950/40 border border-amber-500/20 overflow-hidden flex items-end justify-center">
+                  <div
+                    className="absolute bottom-0 w-0.5 bg-amber-400 origin-bottom transition-all duration-150"
+                    style={{
+                      height: '85%',
+                      transform: `rotate(${effectiveVuRight - 45}deg)`,
+                    }}
+                  />
+                  <span className="text-[6px] font-mono text-amber-500/60 leading-none pb-0.5">R</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* VU Meter com Barras Dinâmicas */}
-          <div className="flex items-center gap-0.5 h-2" aria-hidden="true">
-            <span className={`w-1 rounded-xs transition-all ${isPlaying ? 'bg-emerald-500 h-2' : 'bg-emerald-500/30 h-1'}`} />
-            <span className={`w-1 rounded-xs transition-all ${isPlaying ? 'bg-emerald-500 h-2.5' : 'bg-emerald-500/30 h-1'}`} />
-            <span className={`w-1 rounded-xs transition-all ${isPlaying ? 'bg-amber-500 h-2' : 'bg-amber-500/30 h-1'}`} />
-            <span className={`w-1 rounded-xs transition-all ${isPlaying ? 'bg-red-500 h-1.5' : 'bg-red-500/30 h-1'}`} />
-          </div>
-
-          <span className="font-mono text-[9px] opacity-75">STEREO</span>
         </div>
       </div>
     </div>

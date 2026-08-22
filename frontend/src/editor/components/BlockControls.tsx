@@ -69,7 +69,7 @@ function BlockControlsComponent({
 
   return (
     <div className="pointer-events-none absolute inset-x-2 top-0 z-20 -translate-y-1/2">
-      <div className="pointer-events-auto ml-auto flex w-fit items-center gap-1 rounded-xl border border-primary/25 bg-white/95 px-2 py-1 shadow-lg backdrop-blur-sm">
+      <div className="pointer-events-auto ml-auto flex w-fit items-center gap-1 rounded-xl border border-border bg-surface/95 text-text px-2 py-1 shadow-xl backdrop-blur-md">
         {!isMobile && handleProps ? (
           <button
             type="button"
@@ -139,7 +139,7 @@ function BlockControlsComponent({
             event.stopPropagation()
             onDelete()
           }}
-          className="flex h-11 w-11 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50"
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-500/10 cursor-pointer"
           aria-label="Remover bloco"
         >
           <Trash2 size={16} />

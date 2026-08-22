@@ -10,9 +10,9 @@ interface ButtonProps extends HTMLMotionProps<'button'> {
 
 const variants = {
   primary: 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/25',
-  secondary: 'bg-white text-primary border border-primary/20 hover:bg-primary/5',
-  ghost: 'text-text-light hover:text-text hover:bg-black/5',
-  outline: 'border border-primary/30 text-primary hover:bg-primary/5',
+  secondary: 'bg-surface text-primary border border-border hover:bg-primary/10',
+  ghost: 'text-text-light hover:text-text hover:bg-primary/10',
+  outline: 'border border-primary/30 text-primary hover:bg-primary/10',
 }
 
 const sizes = {
