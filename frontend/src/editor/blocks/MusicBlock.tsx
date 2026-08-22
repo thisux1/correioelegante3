@@ -3,19 +3,22 @@ import { motion, useReducedMotion } from 'framer-motion'
 import {
   ChevronDown,
   ChevronUp,
+  FileText,
   LoaderCircle,
   Music2,
   Pause,
   Play,
   Plus,
+  Search,
   Shuffle,
   SkipBack,
   SkipForward,
+  Sparkles,
   Trash2,
   Volume2,
   VolumeX,
 } from 'lucide-react'
-import type { BlockComponentProps, MusicTrack } from '@/editor/types'
+import type { BlockComponentProps, MusicPlayerStyle, MusicTrack } from '@/editor/types'
 import { assetService, type AssetSummary } from '@/services/assetService'
 import { MediaField } from '@/editor/components/MediaField'
 import { getMusicPlayerUIMode } from '@/editor/blocks/music/getMusicPlayerUIMode'
@@ -29,6 +32,9 @@ import {
   syncLegacyMirror,
   updateTrackAtIndex,
 } from '@/editor/blocks/music/trackEditorState'
+import { VinylRecord } from '@/editor/blocks/music/VinylRecord'
+import { SyncedLyricsView } from '@/editor/blocks/music/SyncedLyricsView'
+import { getLyrics, guessMetadataFromFileName, searchLyrics, type LyricsSearchResult } from '@/services/lyricsService'
 
 const EMPTY_TRACKS: MusicTrack[] = []
 
@@ -52,13 +58,24 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const tracks = isMusicBlock ? block.props.tracks ?? EMPTY_TRACKS : EMPTY_TRACKS
   const title = isMusicBlock ? block.props.title ?? '' : ''
   const artist = isMusicBlock ? block.props.artist ?? '' : ''
+  const playerStyle: MusicPlayerStyle = isMusicBlock ? block.props.playerStyle ?? 'minimal' : 'minimal'
+  const syncedLyrics = isMusicBlock ? block.props.syncedLyrics : undefined
+  const plainLyrics = isMusicBlock ? block.props.plainLyrics : undefined
+  const showLyrics = isMusicBlock ? block.props.showLyrics ?? true : true
 
   const [selectedAsset, setSelectedAsset] = useState<AssetSummary | null>(null)
   const pollTimeoutRef = useRef<number | null>(null)
   const pollingInFlightRef = useRef(false)
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [isVolumeOpen, setIsVolumeOpen] = useState(false)
+  const [isLyricsActive, setIsLyricsActive] = useState(false)
   const [editActiveTrackIndex, setEditActiveTrackIndex] = useState(0)
+
+  // Estados de busca automática de letra
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchingLyrics, setIsSearchingLyrics] = useState(false)
+  const [lyricsResults, setLyricsResults] = useState<LyricsSearchResult[]>([])
+  const [lyricsSearchOpen, setLyricsSearchOpen] = useState(false)
 
   const editableTracks: MusicTrack[] = useMemo(() => {
     return Array.isArray(tracks) ? (tracks as MusicTrack[]) : EMPTY_TRACKS
@@ -74,7 +91,9 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     coverSrc,
     assetId,
     coverAssetId,
-  }), [artist, assetId, coverAssetId, coverSrc, src, title, tracks])
+    syncedLyrics,
+    plainLyrics,
+  }), [artist, assetId, coverAssetId, coverSrc, plainLyrics, src, syncedLyrics, title, tracks])
   const playback = useMusicPlayback(normalizedPlaylist)
 
   const activeTrack = playback.activeTrack
@@ -242,6 +261,60 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     })
   }, [block.props, editableTracks, isMusicBlock, onUpdate, safeEditTrackIndex])
 
+  const handleSetPlayerStyle = useCallback((style: MusicPlayerStyle) => {
+    if (!isMusicBlock || !onUpdate) return
+    onUpdate((currentBlock) => {
+      if (currentBlock.type !== 'music') return currentBlock
+      return {
+        ...currentBlock,
+        props: {
+          ...currentBlock.props,
+          playerStyle: style,
+        },
+      }
+    })
+  }, [isMusicBlock, onUpdate])
+
+  // Busca de Letras no LRCLIB
+  const handlePerformLyricsSearch = useCallback(async (q: string) => {
+    if (!q.trim()) return
+    setIsSearchingLyrics(true)
+    setLyricsSearchOpen(true)
+    try {
+      const results = await searchLyrics(q)
+      setLyricsResults(results)
+    } finally {
+      setIsSearchingLyrics(false)
+    }
+  }, [])
+
+  const handleApplyLyrics = useCallback((result: LyricsSearchResult) => {
+    if (!isMusicBlock || !onUpdate) return
+
+    handlePatchTrack(safeEditTrackIndex, {
+      title: result.trackName,
+      artist: result.artistName,
+      syncedLyrics: result.syncedLyrics,
+      plainLyrics: result.plainLyrics,
+    })
+
+    onUpdate((currentBlock) => {
+      if (currentBlock.type !== 'music') return currentBlock
+      return {
+        ...currentBlock,
+        props: {
+          ...currentBlock.props,
+          title: result.trackName,
+          artist: result.artistName,
+          syncedLyrics: result.syncedLyrics,
+          plainLyrics: result.plainLyrics,
+        },
+      }
+    })
+
+    setLyricsSearchOpen(false)
+  }, [handlePatchTrack, isMusicBlock, onUpdate, safeEditTrackIndex])
+
   const handleSeekFromProgressBar = useCallback((clientX: number, target: HTMLDivElement) => {
     if (effectiveDuration <= 0) return
     const rect = target.getBoundingClientRect()
@@ -259,98 +332,154 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const safeArtist = activeTrack?.artist || artist || 'Trilha Sonora'
   const resolvedCover = (activeTrack?.coverSrc || coverSrc).trim()
   const hasCover = resolvedCover.startsWith('http://') || resolvedCover.startsWith('https://')
+  const currentSyncedLyrics = activeTrack?.syncedLyrics || syncedLyrics
+  const currentPlainLyrics = activeTrack?.plainLyrics || plainLyrics
+  const hasLyrics = Boolean((currentSyncedLyrics && currentSyncedLyrics.trim()) || (currentPlainLyrics && currentPlainLyrics.trim()))
 
   // --- MODO EDIÇÃO COMPACTO E INTUITIVO ---
   if (mode === 'edit') {
     return (
-      <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-xs space-y-3.5">
-        {/* Cabeçalho compacto com botão de adicionar faixa */}
-        <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <Music2 size={16} />
+      <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-xs space-y-4">
+        {/* Topo: Título + Seletor de Estilo do Widget */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
+              <Music2 size={18} />
             </div>
             <div>
-              <p className="font-display text-sm font-bold text-text">Player de Música</p>
-              <p className="text-[11px] text-text-light">Configure o áudio, nome e artista da carta.</p>
+              <p className="font-display text-sm font-bold text-text">Widget de Música</p>
+              <p className="text-[11px] text-text-light">Escolha o visual e configure a trilha sonora.</p>
             </div>
           </div>
+
+          {/* Segmented Switcher: Minimalista vs Vinil Imersivo */}
+          <div className="flex items-center p-1 rounded-xl bg-surface-raised border border-border gap-1 w-fit">
+            <button
+              type="button"
+              onClick={() => handleSetPlayerStyle('minimal')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                playerStyle === 'minimal'
+                  ? 'bg-white dark:bg-surface text-primary shadow-xs'
+                  : 'text-text-light hover:text-text'
+              }`}
+            >
+              📱 Barra Compacta
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetPlayerStyle('vinyl')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                playerStyle === 'vinyl'
+                  ? 'bg-white dark:bg-surface text-primary shadow-xs'
+                  : 'text-text-light hover:text-text'
+              }`}
+            >
+              <span>💿 Vinil Imersivo</span>
+              <Sparkles size={11} className="text-amber-400" />
+            </button>
+          </div>
+        </div>
+
+        {/* Lista de abas de faixas (se playlist) */}
+        <div className="flex items-center justify-between gap-2">
+          {editableTracks.length > 1 ? (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              {editableTracks.map((track, index) => {
+                const isActive = index === safeEditTrackIndex
+                const trackTitle = track.title?.trim() || `Faixa ${index + 1}`
+                return (
+                  <div
+                    key={`edit-tab-${index}`}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                      isActive
+                        ? 'bg-primary text-white border-primary shadow-xs'
+                        : 'bg-surface border-border text-text-light hover:text-text'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTrack(index)}
+                      className="cursor-pointer truncate max-w-[110px]"
+                    >
+                      {trackTitle}
+                    </button>
+                    <div className="flex items-center gap-0.5 ml-1 border-l border-white/20 pl-1">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveTrack(index, 'up')}
+                        disabled={index === 0}
+                        className="text-[10px] opacity-75 hover:opacity-100 disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveTrack(index, 'down')}
+                        disabled={index === editableTracks.length - 1}
+                        className="text-[10px] opacity-75 hover:opacity-100 disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTrack(index)}
+                        className="text-[10px] text-red-300 hover:text-red-100 ml-0.5"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <span className="text-xs font-semibold text-text">Áudio da Carta</span>
+          )}
+
           <button
             type="button"
             onClick={handleAddTrack}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-primary/30 bg-primary/5 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors cursor-pointer shrink-0 ml-auto"
           >
-            <Plus size={13} />
+            <Plus size={12} />
             <span>Adicionar faixa</span>
           </button>
         </div>
 
-        {/* Lista de abas de faixas (se houver mais de 1) */}
-        {editableTracks.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-            {editableTracks.map((track, index) => {
-              const isActive = index === safeEditTrackIndex
-              const trackTitle = track.title?.trim() || `Faixa ${index + 1}`
-              return (
-                <div
-                  key={`edit-tab-${index}`}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
-                    isActive
-                      ? 'bg-primary text-white border-primary shadow-xs'
-                      : 'bg-surface border-border text-text-light hover:text-text'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleSelectTrack(index)}
-                    className="cursor-pointer truncate max-w-[120px]"
-                  >
-                    {trackTitle}
-                  </button>
-                  <div className="flex items-center gap-0.5 ml-1 border-l border-white/20 pl-1">
-                    <button
-                      type="button"
-                      onClick={() => handleMoveTrack(index, 'up')}
-                      disabled={index === 0}
-                      className="text-[10px] opacity-75 hover:opacity-100 disabled:opacity-30"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveTrack(index, 'down')}
-                      disabled={index === editableTracks.length - 1}
-                      className="text-[10px] opacity-75 hover:opacity-100 disabled:opacity-30"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTrack(index)}
-                      className="text-[10px] text-red-300 hover:text-red-100 ml-0.5"
-                    >
-                      <Trash2 size={11} />
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
         {/* Campos de edição da faixa ativa */}
         {editableTracks.length > 0 ? (
-          <div className="space-y-3">
-            {/* Uploader de Áudio */}
+          <div className="space-y-3.5">
+            {/* Uploader de Áudio com Reconhecimento Automático de Nome */}
             <MediaField
               kind="audio"
               label="Arquivo de Áudio ou Link"
               value={{ src: activeEditableTrack?.src ?? '', assetId: activeEditableTrack?.assetId }}
               onChange={(nextValue) => {
+                const guessed = guessMetadataFromFileName(nextValue.src)
+                const currentT = activeEditableTrack?.title?.trim()
+                const currentA = activeEditableTrack?.artist?.trim()
+
+                const newTitle = (!currentT && guessed.title) ? guessed.title : currentT
+                const newArtist = (!currentA && guessed.artist) ? guessed.artist : currentA
+
                 handlePatchTrack(safeEditTrackIndex, {
                   src: nextValue.src,
                   assetId: nextValue.assetId,
+                  title: newTitle,
+                  artist: newArtist,
                 })
+
+                // Auto busca de letras se tiver título e artista
+                if (newTitle && newArtist) {
+                  void getLyrics(newTitle, newArtist).then((lyricsRes) => {
+                    if (lyricsRes?.syncedLyrics || lyricsRes?.plainLyrics) {
+                      handlePatchTrack(safeEditTrackIndex, {
+                        syncedLyrics: lyricsRes.syncedLyrics,
+                        plainLyrics: lyricsRes.plainLyrics,
+                      })
+                    }
+                  })
+                }
               }}
               onRemove={() => {
                 handlePatchTrack(safeEditTrackIndex, {
@@ -361,8 +490,80 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               helperText="Envie um MP3/M4A ou cole a URL direta do áudio."
             />
 
+            {/* Smart Lyrics & Track Recognition Search Bar */}
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                  <Search size={13} />
+                  <span>Buscar Letra e Metadados (Open Source)</span>
+                </div>
+                {hasLyrics && (
+                  <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
+                    ✓ Letra Sincronizada
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      void handlePerformLyricsSearch(searchQuery)
+                    }
+                  }}
+                  placeholder="Digite nome da música ou artista (ex: Coldplay Yellow)..."
+                  className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text placeholder:text-text-light/50 focus:border-primary focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => void handlePerformLyricsSearch(searchQuery || `${activeEditableTrack?.artist ?? ''} ${activeEditableTrack?.title ?? ''}`)}
+                  disabled={isSearchingLyrics}
+                  className="px-3 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+                >
+                  {isSearchingLyrics ? <LoaderCircle size={13} className="animate-spin" /> : <Search size={13} />}
+                  <span>Buscar</span>
+                </button>
+              </div>
+
+              {/* Lista de Resultados da Busca */}
+              {lyricsSearchOpen && lyricsResults.length > 0 && (
+                <div className="max-h-48 overflow-y-auto rounded-xl border border-border bg-surface p-1.5 space-y-1 shadow-md">
+                  <div className="flex items-center justify-between px-2 py-1 text-[11px] text-text-light border-b border-border/40">
+                    <span>Músicas encontradas ({lyricsResults.length})</span>
+                    <button
+                      type="button"
+                      onClick={() => setLyricsSearchOpen(false)}
+                      className="hover:text-text cursor-pointer"
+                    >
+                      Fechar ✕
+                    </button>
+                  </div>
+                  {lyricsResults.map((item) => (
+                    <button
+                      key={`lrclib-res-${item.id}`}
+                      type="button"
+                      onClick={() => handleApplyLyrics(item)}
+                      className="w-full flex items-center justify-between p-2 rounded-lg text-left text-xs hover:bg-primary/10 transition-colors cursor-pointer"
+                    >
+                      <div className="truncate pr-2">
+                        <p className="font-semibold text-text truncate">{item.trackName}</p>
+                        <p className="text-[11px] text-text-light truncate">{item.artistName}</p>
+                      </div>
+                      <span className="text-[10px] text-primary font-bold shrink-0 bg-primary/10 px-2 py-0.5 rounded-md">
+                        {item.syncedLyrics ? 'Letra Sincronizada' : 'Texto'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Título e Artista em Grid Compacto */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-text mb-1">
                   Título da Música
@@ -371,7 +572,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                   type="text"
                   value={activeEditableTrack?.title ?? ''}
                   onChange={(e) => handlePatchTrack(safeEditTrackIndex, { title: e.target.value })}
-                  placeholder="Ex: Perfect"
+                  placeholder="Ex: Yellow"
                   className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text placeholder:text-text-light/50 focus:border-primary focus:outline-none"
                 />
               </div>
@@ -383,17 +584,17 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                   type="text"
                   value={activeEditableTrack?.artist ?? ''}
                   onChange={(e) => handlePatchTrack(safeEditTrackIndex, { artist: e.target.value })}
-                  placeholder="Ex: Ed Sheeran"
+                  placeholder="Ex: Coldplay"
                   className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text placeholder:text-text-light/50 focus:border-primary focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Capa Opcional Compacta */}
-            <div className="pt-1">
+            <div>
               <MediaField
                 kind="image"
-                label="Capa do Álbum (Opcional)"
+                label="Capa do Álbum / Disco (Opcional)"
                 value={{ src: activeEditableTrack?.coverSrc ?? '', assetId: activeEditableTrack?.coverAssetId }}
                 onChange={(nextValue) => {
                   handlePatchTrack(safeEditTrackIndex, {
@@ -407,7 +608,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                     coverAssetId: undefined,
                   })
                 }}
-                helperText="Miniatura quadrada para o player."
+                helperText="Imagem quadrada para a capa do vinil ou player."
               />
             </div>
           </div>
@@ -434,7 +635,283 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     )
   }
 
-  // --- MODO PREVIEW / PÚBLICO ULTRA-COMPACTO E ELEGANTE ---
+  // =========================================================================
+  // --- MODO PREVIEW 1: DISCO DE VINIL IMERSIVO & LETRAS SPOTIFY-STYLE ---
+  // =========================================================================
+  if (playerStyle === 'vinyl') {
+    return (
+      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-surface via-surface/95 to-surface-raised p-5 sm:p-7 shadow-xl">
+        <audio
+          ref={handleAudioRef}
+          src={activeTrack?.src ?? ''}
+          crossOrigin="anonymous"
+          preload="auto"
+          onPlay={() => playback.onPlayStateChange(true)}
+          onPause={() => playback.onPlayStateChange(false)}
+          onLoadedMetadata={(e) => playback.onLoadedMetadata(e.currentTarget.duration)}
+          onDurationChange={(e) => playback.onDurationChange(e.currentTarget.duration)}
+          onProgress={(e) => {
+            const media = e.currentTarget
+            if (!media.buffered || media.buffered.length === 0) return
+            playback.onProgress(media.buffered.end(media.buffered.length - 1))
+          }}
+          onTimeUpdate={(e) => playback.onTimeUpdate(e.currentTarget.currentTime)}
+          onEnded={playback.onEnded}
+          onError={playback.onError}
+        />
+
+        {playback.state.hasPlaybackError ? (
+          <p className="mb-3 text-center text-xs text-amber-600 font-medium">
+            Não foi possível reproduzir este áudio.
+          </p>
+        ) : null}
+
+        {/* Aura / Brilho Ambiental Romântico no Fundo */}
+        <div
+          className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full opacity-20 pointer-events-none blur-3xl"
+          style={{ background: 'var(--color-primary, #e11d48)' }}
+        />
+
+        {/* 1. DISCO DE VINIL 3D OU LETRAS SINCRONIZADAS */}
+        <div className="relative z-10 mb-6">
+          {isLyricsActive && hasLyrics ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="rounded-2xl border border-border/60 bg-surface/60 backdrop-blur-md"
+            >
+              <SyncedLyricsView
+                syncedLyrics={currentSyncedLyrics}
+                plainLyrics={currentPlainLyrics}
+                currentTime={playback.state.currentTime}
+                isPlaying={isActuallyPlaying}
+                onSeek={(time) => playback.seek(time)}
+              />
+            </motion.div>
+          ) : (
+            <VinylRecord
+              coverSrc={resolvedCover}
+              title={safeTitle}
+              isPlaying={isActuallyPlaying}
+              onClick={() => { void playback.togglePlay() }}
+            />
+          )}
+        </div>
+
+        {/* 2. INFORMAÇÕES DA FAIXA + BOTÃO DE ALTERNAR LETRA */}
+        <div className="relative z-10 flex items-center justify-between gap-4 mb-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display font-bold text-xl sm:text-2xl text-text truncate">
+              {safeTitle}
+            </h3>
+            <p className="text-sm font-medium text-text-light truncate mt-0.5">
+              {safeArtist}
+            </p>
+          </div>
+
+          {/* Botão de Letra Spotify / Apple Music */}
+          {hasLyrics && showLyrics && (
+            <button
+              type="button"
+              onClick={() => setIsLyricsActive((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer shadow-xs ${
+                isLyricsActive
+                  ? 'bg-primary text-white'
+                  : 'bg-surface border border-border text-text hover:border-primary/40'
+              }`}
+            >
+              <FileText size={13} />
+              <span>{isLyricsActive ? 'Ver Vinil' : 'Letra'}</span>
+            </button>
+          )}
+        </div>
+
+        {/* 3. BARRA DE PROGRESSO COM TEMPO */}
+        <div className="relative z-10 space-y-1.5 mb-5">
+          <div
+            className="group/track relative h-3 flex items-center cursor-pointer"
+            onClick={(e) => handleSeekFromProgressBar(e.clientX, e.currentTarget as HTMLDivElement)}
+            role="slider"
+            aria-label="Progresso da música"
+            aria-valuemin={0}
+            aria-valuemax={effectiveDuration}
+            aria-valuenow={playback.state.currentTime}
+          >
+            <div className="w-full h-1.5 group-hover/track:h-2 rounded-full bg-border/80 overflow-hidden transition-all">
+              <div
+                className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-100"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div
+              className="absolute h-3.5 w-3.5 rounded-full bg-primary border-2 border-white shadow-md opacity-0 group-hover/track:opacity-100 transition-opacity pointer-events-none -translate-x-1/2"
+              style={{ left: `${progressPercent}%` }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-text-light font-mono tabular-nums">
+            <span>{formatTime(playback.state.currentTime)}</span>
+            <span>{formatTime(effectiveDuration)}</span>
+          </div>
+        </div>
+
+        {/* 4. CONTROLES DE REPRODUÇÃO EXPANDIDOS */}
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          {/* Aleatório / Volume */}
+          <div className="flex items-center gap-2">
+            {isPlaylistMode && (
+              <button
+                type="button"
+                onClick={playback.toggleShuffle}
+                className={`p-2 rounded-full transition-colors cursor-pointer ${
+                  playback.state.isShuffleEnabled ? 'text-primary' : 'text-text-light hover:text-text'
+                }`}
+                aria-label="Modo aleatório"
+              >
+                <Shuffle size={16} />
+              </button>
+            )}
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsVolumeOpen((prev) => !prev)}
+                className="p-2 text-text-light hover:text-text transition-colors cursor-pointer"
+                aria-label="Volume"
+              >
+                {playback.state.isMuted || playback.state.volume <= 0.01 ? (
+                  <VolumeX size={17} />
+                ) : (
+                  <Volume2 size={17} />
+                )}
+              </button>
+
+              {isVolumeOpen && (
+                <div className="absolute bottom-full left-0 mb-2 p-2.5 bg-surface rounded-xl border border-border shadow-xl z-20 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={playback.toggleMute}
+                    className="text-text-light hover:text-text"
+                  >
+                    {playback.state.isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                  </button>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={playback.state.isMuted ? 0 : playback.state.volume}
+                    onChange={(e) => playback.setVolume(Number(e.target.value))}
+                    className="w-20 h-1.5 accent-primary cursor-pointer"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Botões Centrais de Faixa & Play/Pause */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {isPlaylistMode && (
+              <button
+                type="button"
+                onClick={playback.prevTrack}
+                disabled={!playback.canGoPrev}
+                className="p-2 text-text-light hover:text-text disabled:opacity-30 transition-colors cursor-pointer"
+                aria-label="Faixa anterior"
+              >
+                <SkipBack size={20} />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => { void playback.togglePlay() }}
+              className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-primary via-primary to-primary-dark text-white shadow-[0_10px_25px_rgba(225,29,72,0.4)] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center cursor-pointer"
+              aria-label={isActuallyPlaying ? 'Pausar música' : 'Tocar música'}
+            >
+              {isActuallyPlaying ? <Pause size={24} /> : <Play size={24} className="translate-x-0.5" />}
+            </button>
+
+            {isPlaylistMode && (
+              <button
+                type="button"
+                onClick={playback.nextTrack}
+                disabled={!playback.canGoNext}
+                className="p-2 text-text-light hover:text-text disabled:opacity-30 transition-colors cursor-pointer"
+                aria-label="Próxima faixa"
+              >
+                <SkipForward size={20} />
+              </button>
+            )}
+          </div>
+
+          {/* Botão de Playlist Dropdown */}
+          <div>
+            {isPlaylistMode ? (
+              <button
+                type="button"
+                onClick={() => setIsPlaylistOpen((prev) => !prev)}
+                className={`p-2 rounded-xl transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold ${
+                  isPlaylistOpen ? 'bg-primary/15 text-primary' : 'text-text-light hover:text-text'
+                }`}
+                aria-label="Ver todas as faixas"
+              >
+                <span>{playlistLength} faixas</span>
+                {isPlaylistOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+            ) : (
+              <div className="w-8" />
+            )}
+          </div>
+        </div>
+
+        {/* 5. GAVETA DE PLAYLIST EXPANDIDA */}
+        {isPlaylistMode && isPlaylistOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="mt-4 pt-4 border-t border-border/60 space-y-1"
+          >
+            <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+              {normalizedPlaylist.map((track, idx) => {
+                const isCurrent = idx === safeTrackIndex
+                return (
+                  <button
+                    key={`vinyl-pl-${track.src}-${idx}`}
+                    type="button"
+                    onClick={() => playback.setActiveTrackIndex(idx)}
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                      isCurrent
+                        ? 'bg-primary/15 text-primary font-bold'
+                        : 'text-text-light hover:bg-surface-raised hover:text-text'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <span className="text-[11px] w-4 text-center font-mono opacity-60">
+                        {idx + 1}
+                      </span>
+                      <span className="truncate">{track.title || `Faixa ${idx + 1}`}</span>
+                    </div>
+                    {track.artist && (
+                      <span className="text-[11px] text-text-light/70 truncate max-w-[110px] ml-2">
+                        {track.artist}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    )
+  }
+
+  // =========================================================================
+  // --- MODO PREVIEW 2: BARRA COMPACTA & MINIMALISTA ---
+  // =========================================================================
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-surface/90 backdrop-blur-md p-3 sm:p-3.5 shadow-sm hover:shadow-md transition-shadow">
       <audio

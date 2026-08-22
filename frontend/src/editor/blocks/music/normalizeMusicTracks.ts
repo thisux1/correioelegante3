@@ -33,7 +33,7 @@ function normalizeTrack(track: MusicTrack): RuntimeMusicTrack | null {
   }
 }
 
-function withLegacyMirrorFallback(track: RuntimeMusicTrack, props: Pick<MusicBlockProps, 'title' | 'artist' | 'coverSrc' | 'assetId' | 'coverAssetId'>): RuntimeMusicTrack {
+function withLegacyMirrorFallback(track: RuntimeMusicTrack, props: Pick<MusicBlockProps, 'title' | 'artist' | 'coverSrc' | 'assetId' | 'coverAssetId' | 'syncedLyrics' | 'plainLyrics'>): RuntimeMusicTrack {
   return {
     ...track,
     title: track.title ?? props.title,
@@ -41,10 +41,12 @@ function withLegacyMirrorFallback(track: RuntimeMusicTrack, props: Pick<MusicBlo
     coverSrc: track.coverSrc ?? props.coverSrc,
     assetId: track.assetId ?? props.assetId,
     coverAssetId: track.coverAssetId ?? props.coverAssetId,
+    syncedLyrics: track.syncedLyrics ?? props.syncedLyrics,
+    plainLyrics: track.plainLyrics ?? props.plainLyrics,
   }
 }
 
-export function normalizeMusicTracks(props: Pick<MusicBlockProps, 'tracks' | 'src' | 'title' | 'artist' | 'coverSrc' | 'assetId' | 'coverAssetId'>): RuntimeMusicTrack[] {
+export function normalizeMusicTracks(props: Pick<MusicBlockProps, 'tracks' | 'src' | 'title' | 'artist' | 'coverSrc' | 'assetId' | 'coverAssetId' | 'syncedLyrics' | 'plainLyrics'>): RuntimeMusicTrack[] {
   const rawTracks = Array.isArray(props.tracks) ? props.tracks : []
   const normalizedTracks = rawTracks
     .map(normalizeTrack)
@@ -73,5 +75,7 @@ export function normalizeMusicTracks(props: Pick<MusicBlockProps, 'tracks' | 'sr
     artist: props.artist,
     coverSrc: props.coverSrc,
     coverAssetId: props.coverAssetId,
+    syncedLyrics: props.syncedLyrics,
+    plainLyrics: props.plainLyrics,
   }]
 }
