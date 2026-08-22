@@ -96,18 +96,18 @@ function WindTrail({ isMobile }: { isMobile: boolean }) {
 
 // ── Envelope SVG ────────────────────────────────────────────────
 function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
-    const springFlap = useSpring(flapProgress, { stiffness: 160, damping: 24, mass: 0.5 })
-    const flapY = useTransform(springFlap, [0, 1], [0, 52])
-    const flapOpacity = useTransform(springFlap, [0, 0.7, 1], [1, 0.75, 0])
+    const springFlap = useSpring(flapProgress, { stiffness: 150, damping: 20, mass: 0.6 })
+    const flapRotateX = useTransform(springFlap, [0, 1], [0, -180])
 
     return (
         <svg viewBox="0 0 180 130" width="300" height="217" fill="none" xmlns="http://www.w3.org/2000/svg" overflow="visible">
-            {/* Body */}
+            {/* Envelope Back Wall */}
             <rect x="0" y="30" width="180" height="100" rx="6"
-                fill="white"
-                stroke="rgba(244,63,94,0.4)"
-                strokeWidth="1.5"
+                fill="#fff0f4"
+                stroke="rgba(244,63,94,0.3)"
+                strokeWidth="1.2"
             />
+
             {/* Left inner fold */}
             <polygon
                 points="0,30 90,75 0,130"
@@ -128,31 +128,44 @@ function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
                 fill="rgba(255,235,242,0.6)"
             />
 
-            {/* Letter lines inside envelope */}
-            <line x1="30" y1="88" x2="150" y2="88" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="30" y1="100" x2="150" y2="100" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="30" y1="112" x2="110" y2="112" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
+            {/* Letter lines inside pocket */}
+            <line x1="30" y1="88" x2="150" y2="88" stroke="rgba(225,29,72,0.25)" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="30" y1="100" x2="150" y2="100" stroke="rgba(225,29,72,0.25)" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="30" y1="112" x2="110" y2="112" stroke="rgba(225,29,72,0.25)" strokeWidth="1.5" strokeLinecap="round" />
 
-            {/* Flap — smoothly slides downwards to reveal the letter */}
+            {/* Flap — realistically unfolds upwards around top crease (y=30) */}
             <motion.g
                 style={{
-                    y: flapY,
-                    opacity: flapOpacity,
+                    originX: '90px',
+                    originY: '30px',
+                    transformBox: 'view-box',
+                    transformStyle: 'preserve-3d',
+                    rotateX: flapRotateX,
                 }}
             >
+                {/* Exterior Flap */}
                 <polygon
                     points="0,30 180,30 90,75"
-                    fill="#fff1f5"
+                    fill="#ffffff"
                     stroke="rgba(244,63,94,0.45)"
                     strokeWidth="1.2"
                 />
-                {/* Wax seal */}
-                <circle cx="90" cy="46" r="11" fill="#e11d48" />
-                <circle cx="90" cy="46" r="9" fill="#be123c" />
-                <path
-                    d="M90 49 C90 49 84 45 84 41.5 C84 39.5 85.5 38 87.5 38 C88.7 38 89.6 38.7 90 39.5 C90.4 38.7 91.3 38 92.5 38 C94.5 38 96 39.5 96 41.5 C96 45 90 49 90 49Z"
-                    fill="white"
+                {/* Interior Lining (back side of flap) */}
+                <polygon
+                    points="0,30 180,30 90,75"
+                    fill="#ffe4ec"
+                    opacity="0.9"
+                    style={{ transform: 'rotateY(180deg)', transformOrigin: '90px 30px' }}
                 />
+                {/* Wax seal — breaks and fades as the flap opens */}
+                <motion.g style={{ opacity: useTransform(springFlap, [0, 0.35], [1, 0]) }}>
+                    <circle cx="90" cy="46" r="11" fill="#e11d48" />
+                    <circle cx="90" cy="46" r="9" fill="#be123c" />
+                    <path
+                        d="M90 49 C90 49 84 45 84 41.5 C84 39.5 85.5 38 87.5 38 C88.7 38 89.6 38.7 90 39.5 C90.4 38.7 91.3 38 92.5 38 C94.5 38 96 39.5 96 41.5 C96 45 90 49 90 49Z"
+                        fill="white"
+                    />
+                </motion.g>
             </motion.g>
         </svg>
     )
