@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
-import { Card as UICard } from '@/components/ui/Card'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { PageCardSkeleton } from '@/components/ui/PageCardSkeleton'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
@@ -74,14 +74,47 @@ export function Card() {
 
   if (error || !card) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-24 px-6">
-        <UICard glass className="text-center max-w-md w-full py-12">
-          <Heart className="w-12 h-12 text-text-muted mx-auto mb-4" />
-          <h2 className="font-display text-2xl font-bold text-text mb-2">
-            Ops!
+      <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-4 bg-gradient-to-b from-[#fff5f7] via-[#fff9fa] to-[#fff5f7]">
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl bg-white border-2 border-pink-200/80 p-8 sm:p-12 shadow-2xl shadow-rose-500/10 text-center"
+        >
+          <div className="flex justify-center mb-6">
+            <Link to="/">
+              <BrandLogo size="md" />
+            </Link>
+          </div>
+
+          <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-pink-100/70 border border-pink-200 text-[#e11d48]">
+            <Heart className="w-10 h-10 text-[#e11d48]" strokeWidth={1.75} />
+          </div>
+
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#4c0519] mb-3 leading-tight">
+            Cartão não disponível
           </h2>
-          <p className="text-text-light">{error || 'Cartão não encontrado'}</p>
-        </UICard>
+
+          <p className="text-sm sm:text-base text-[#701a35] max-w-md mx-auto mb-8 leading-relaxed font-sans">
+            {error || 'Este cartão ainda não está disponível ou o link informado está incorreto.'}
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              to="/create"
+              className="w-full sm:w-auto inline-flex min-h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#e11d48] to-[#be123c] px-7 py-3 text-sm font-bold text-white shadow-lg shadow-rose-500/25 hover:from-[#f43f5e] hover:to-[#e11d48] hover:scale-[1.02] active:scale-[0.98] transition-all text-center"
+            >
+              Escrever Minha Carta
+            </Link>
+
+            <Link
+              to="/"
+              className="w-full sm:w-auto inline-flex min-h-12 items-center justify-center rounded-2xl border-2 border-pink-200 bg-white px-6 py-3 text-sm font-bold text-[#4c0519] hover:bg-rose-50 hover:text-[#e11d48] hover:border-pink-300 transition-all text-center"
+            >
+              Ir para o Início
+            </Link>
+          </div>
+        </motion.div>
       </div>
     )
   }
