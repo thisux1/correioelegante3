@@ -309,7 +309,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (effectiveSelectedAsset?.processingStatus === 'failed') {
     return (
-      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center text-amber-500 dark:text-amber-400">
+      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center text-amber-800">
         <TriangleAlert size={20} />
         <p className="text-sm font-medium">Falha no processamento do video</p>
         <p className="text-xs">{effectiveSelectedAsset.errorMessage ?? 'Tente substituir por outro arquivo.'}</p>
