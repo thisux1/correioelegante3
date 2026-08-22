@@ -1,6 +1,6 @@
-import { Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Container } from '@/components/layout/Container'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 
 export function Footer() {
   return (
@@ -15,12 +15,7 @@ export function Footer() {
             {/* Brand Column */}
             <div className="flex max-w-sm flex-col gap-6">
               <Link to="/" className="group flex w-fit items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
-                  <Heart className="h-5 w-5 fill-primary text-primary" />
-                </div>
-                <span className="font-display text-xl font-bold tracking-tight text-text">
-                  Correio <span className="text-gradient">Elegante</span>
-                </span>
+                <BrandLogo size="md" />
               </Link>
               <p className="text-sm leading-relaxed text-text-light">
                 Cartas digitais exclusivas entregues por QR Code. Porque às vezes um recado afetuoso vale mais que qualquer presente material.

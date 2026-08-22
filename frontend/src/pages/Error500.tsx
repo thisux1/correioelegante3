@@ -1,37 +1,38 @@
-import { Mail, Flame } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { ErrorLayout } from '@/components/layout/ErrorLayout'
 
 interface Error500Props {
-    onRetry?: () => void
+  onRetry?: () => void
 }
 
 export function Error500({ onRetry }: Error500Props) {
-    const customIcon = (
-        <div className="relative">
-            <Mail className="w-24 h-24 text-text/50" strokeWidth={1.5} />
-            <div className="absolute inset-0 bg-primary/20 mix-blend-multiply rounded-md backdrop-blur-[2px]" />
-            <Flame className="w-12 h-12 text-primary absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 animate-pulse" strokeWidth={1.5} />
-        </div>
-    )
+  const customIcon = (
+    <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-pink-100/70 border-2 border-pink-200 text-[#e11d48] shadow-inner">
+      <RefreshCw className="w-12 h-12 text-[#e11d48]" strokeWidth={1.75} />
+    </div>
+  )
 
-    const handleRetry = () => {
-        if (onRetry) {
-            try {
-                onRetry()
-            } catch {
-                // ignore
-            }
-        }
-        window.location.reload()
+  const handleRetry = () => {
+    if (onRetry) {
+      try {
+        onRetry()
+      } catch {
+        // ignore
+      }
     }
+    window.location.reload()
+  }
 
-    return (
-        <ErrorLayout
-            icon={customIcon}
-            title="500"
-            description="Tivemos um problema ao abrir essa carta."
-            buttonLabel="Tentar novamente"
-            onClick={handleRetry}
-        />
-    )
+  return (
+    <ErrorLayout
+      icon={customIcon}
+      badge="Instabilidade Temporária"
+      title="Tivemos um problema ao carregar"
+      description="Houve uma breve oscilação na conexão ou no carregamento da página. Clique no botão abaixo para restaurar e recarregar seu conteúdo."
+      buttonLabel="Recarregar Página"
+      onClick={handleRetry}
+      secondaryButtonLabel="Voltar para o Início"
+      secondaryTo="/"
+    />
+  )
 }

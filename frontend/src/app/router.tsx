@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, type ComponentType, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { registerNavigator } from '@/app/navigation'
 import { Layout } from '@/components/layout/Layout'
@@ -7,25 +7,63 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useAuthStore } from '@/store/authStore'
 import { resolveEditorAccessForUser } from '@/config/featureFlags'
 
-const Home = lazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
-const Create = lazy(() => import('@/pages/Create').then(m => ({ default: m.Create })))
-const Editor = lazy(() => import('@/pages/Editor').then(m => ({ default: m.Editor })))
-const Auth = lazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
-const ResetPassword = lazy(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })))
-const Profile = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
-const Contact = lazy(() => import('@/pages/Contact').then(m => ({ default: m.Contact })))
-const LegalTerms = lazy(() => import('@/pages/LegalTerms').then(m => ({ default: m.LegalTerms })))
-const LegalPrivacy = lazy(() => import('@/pages/LegalPrivacy').then(m => ({ default: m.LegalPrivacy })))
-const LegalCookies = lazy(() => import('@/pages/LegalCookies').then(m => ({ default: m.LegalCookies })))
-const Payment = lazy(() => import('@/pages/Payment').then(m => ({ default: m.Payment })))
-const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })))
-const Pricing = lazy(() => import('@/pages/Pricing').then(m => ({ default: m.Pricing })))
-const SubscriptionSuccess = lazy(() => import('@/pages/SubscriptionSuccess').then(m => ({ default: m.SubscriptionSuccess })))
-const Card = lazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
-const PageCard = lazy(() => import('@/pages/PageCard').then(m => ({ default: m.PageCard })))
-const Error404 = lazy(() => import('@/pages/Error404').then(m => ({ default: m.Error404 })))
-const Error500 = lazy(() => import('@/pages/Error500').then(m => ({ default: m.Error500 })))
-const ErrorSession = lazy(() => import('@/pages/ErrorSession').then(m => ({ default: m.ErrorSession })))
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeLazy<T extends ComponentType<any>>(
+  factory: () => Promise<{ default: T }>,
+  retries = 2,
+) {
+  return lazy(async () => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        return await factory()
+      } catch (err: unknown) {
+        const isLastAttempt = attempt === retries
+        const errMsg = (err as Error)?.message || String(err || '')
+        const isChunkError =
+          errMsg.includes('Failed to fetch dynamically imported module') ||
+          errMsg.includes('Importing a module script failed') ||
+          errMsg.includes('Loading chunk') ||
+          errMsg.includes('error loading dynamically imported module') ||
+          errMsg.includes('Failed to load module script')
+
+        if (isChunkError && isLastAttempt) {
+          const storageKey = 'last_chunk_reload_ts'
+          const lastReload = sessionStorage.getItem(storageKey)
+          const now = Date.now()
+          if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+            sessionStorage.setItem(storageKey, String(now))
+            window.location.reload()
+          }
+        }
+        if (isLastAttempt) {
+          throw err
+        }
+        await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)))
+      }
+    }
+    return factory()
+  })
+}
+
+const Home = safeLazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
+const Create = safeLazy(() => import('@/pages/Create').then(m => ({ default: m.Create })))
+const Editor = safeLazy(() => import('@/pages/Editor').then(m => ({ default: m.Editor })))
+const Auth = safeLazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
+const ResetPassword = safeLazy(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })))
+const Profile = safeLazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
+const Contact = safeLazy(() => import('@/pages/Contact').then(m => ({ default: m.Contact })))
+const LegalTerms = safeLazy(() => import('@/pages/LegalTerms').then(m => ({ default: m.LegalTerms })))
+const LegalPrivacy = safeLazy(() => import('@/pages/LegalPrivacy').then(m => ({ default: m.LegalPrivacy })))
+const LegalCookies = safeLazy(() => import('@/pages/LegalCookies').then(m => ({ default: m.LegalCookies })))
+const Payment = safeLazy(() => import('@/pages/Payment').then(m => ({ default: m.Payment })))
+const PaymentSuccess = safeLazy(() => import('@/pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })))
+const Pricing = safeLazy(() => import('@/pages/Pricing').then(m => ({ default: m.Pricing })))
+const SubscriptionSuccess = safeLazy(() => import('@/pages/SubscriptionSuccess').then(m => ({ default: m.SubscriptionSuccess })))
+const Card = safeLazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
+const PageCard = safeLazy(() => import('@/pages/PageCard').then(m => ({ default: m.PageCard })))
+const Error404 = safeLazy(() => import('@/pages/Error404').then(m => ({ default: m.Error404 })))
+const Error500 = safeLazy(() => import('@/pages/Error500').then(m => ({ default: m.Error500 })))
+const ErrorSession = safeLazy(() => import('@/pages/ErrorSession').then(m => ({ default: m.ErrorSession })))
 
 import { Container } from '@/components/layout/Container'
 import { EditorSkeleton } from '@/components/ui/EditorSkeleton'
