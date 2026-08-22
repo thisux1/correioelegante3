@@ -105,14 +105,14 @@ export function Card() {
       )}
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 24, filter: 'blur(10px)' }}
+        initial={{ opacity: 0, scale: 0.96, y: 12, filter: 'blur(4px)' }}
         animate={{
           opacity: isEnvelopeOpened ? 1 : 0,
-          scale: isEnvelopeOpened ? 1 : 0.92,
-          y: isEnvelopeOpened ? 0 : 24,
-          filter: isEnvelopeOpened ? 'blur(0px)' : 'blur(10px)',
+          scale: isEnvelopeOpened ? 1 : 0.96,
+          y: isEnvelopeOpened ? 0 : 12,
+          filter: isEnvelopeOpened ? 'blur(0px)' : 'blur(4px)',
         }}
-        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-lg relative z-10"
       >
         <CardTilt3D intensity={8}>

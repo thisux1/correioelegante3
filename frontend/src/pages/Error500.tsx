@@ -16,10 +16,13 @@ export function Error500({ onRetry }: Error500Props) {
 
     const handleRetry = () => {
         if (onRetry) {
-            onRetry()
-        } else {
-            window.location.reload()
+            try {
+                onRetry()
+            } catch {
+                // ignore
+            }
         }
+        window.location.reload()
     }
 
     return (

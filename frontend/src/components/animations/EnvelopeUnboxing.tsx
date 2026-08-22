@@ -161,7 +161,7 @@ function EnvelopeUnboxingComponent({
 
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try {
-        navigator.vibrate(40)
+        navigator.vibrate(30)
       } catch {
         // ignora
       }
@@ -170,16 +170,17 @@ function EnvelopeUnboxingComponent({
     playChime(659.25)
     setStage('paper-unfold')
 
-    // Após desdobrar em 3D, ativa a revelação luminosa da tinta que se integra com a página real
+    // Revelação ágil da tinta em 380ms
     setTimeout(() => {
       setStage('ink-reveal')
       playChime(880)
-    }, 900)
+    }, 380)
 
+    // Entrega a página pronta de forma rápida e fluida em 750ms
     setTimeout(() => {
       setStage('finished')
       onOpenComplete?.()
-    }, 1850)
+    }, 750)
   }, [stage, onOpenComplete])
 
   const handleSkip = useCallback(() => {
@@ -469,8 +470,8 @@ function EnvelopeUnboxingComponent({
             {/* A Exata Folha de Papel que Se Desdobra e se Torna a Carta Digital */}
             <motion.div
               initial={{
-                y: 80,
-                scale: 0.88,
+                y: 60,
+                scale: 0.92,
                 height: 280,
                 opacity: 0.95,
               }}
@@ -489,7 +490,7 @@ function EnvelopeUnboxingComponent({
                       opacity: 1,
                     }
               }
-              transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full max-w-3xl rounded-3xl p-6 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.6)] border-2 border-border flex flex-col justify-between overflow-hidden"
               style={{
                 backgroundColor: surfaceColor,
@@ -500,7 +501,7 @@ function EnvelopeUnboxingComponent({
               <motion.div
                 initial={{ rotateX: -90, opacity: 0 }}
                 animate={{ rotateX: 0, opacity: 1 }}
-                transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.35, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transformOrigin: 'top center', transformStyle: 'preserve-3d' }}
                 className="space-y-3 text-center border-b border-border/40 pb-5"
               >
@@ -520,7 +521,7 @@ function EnvelopeUnboxingComponent({
                   <motion.div
                     initial={{ y: '-100%', opacity: 0 }}
                     animate={{ y: ['-100%', '150%'], opacity: [0, 0.9, 0] }}
-                    transition={{ duration: 1.1, ease: 'easeInOut' }}
+                    transition={{ duration: 0.45, ease: 'easeInOut' }}
                     className="absolute inset-x-0 h-16 pointer-events-none z-30"
                     style={{
                       background: `linear-gradient(to bottom, transparent 0%, ${primaryColor}40 50%, rgba(251,191,36,0.8) 90%, transparent 100%)`,
@@ -533,7 +534,7 @@ function EnvelopeUnboxingComponent({
                 <motion.div
                   initial={{ opacity: 0.4 }}
                   animate={stage === 'ink-reveal' ? { opacity: 1 } : { opacity: 0.4 }}
-                  transition={{ duration: 0.8 }}
+                  transition={{ duration: 0.35 }}
                   className="space-y-4"
                 >
                   <div className="h-3 w-full bg-primary/15 rounded-full" />
@@ -548,7 +549,7 @@ function EnvelopeUnboxingComponent({
               <motion.div
                 initial={{ rotateX: 90, opacity: 0 }}
                 animate={{ rotateX: 0, opacity: 1 }}
-                transition={{ duration: 0.65, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.35, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transformOrigin: 'bottom center', transformStyle: 'preserve-3d' }}
                 className="pt-5 border-t border-border/40 flex items-center justify-between"
               >
