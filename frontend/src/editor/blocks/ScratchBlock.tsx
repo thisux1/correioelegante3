@@ -275,7 +275,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const secretImage = props.secretImage || ''
 
   const interactiveCard = (
-    <div className="relative mx-auto min-h-[220px] w-full max-w-md select-none overflow-hidden rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-rose-50 via-white to-pink-50 p-6 shadow-xl">
+    <div className="relative mx-auto min-h-[220px] w-full max-w-md select-none overflow-hidden rounded-2xl border border-border bg-surface-raised p-6 shadow-xl text-text">
       {/* Explosão de Confetes de Corações */}
       {showConfetti && <HeartConfettiExplosion />}
 
@@ -331,7 +331,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border border-primary/20 bg-white/80 p-4">
+    <div className="space-y-4 rounded-2xl border border-border bg-surface/90 p-4 shadow-xs">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wider text-text-light">
           Raspadinha Interativa
@@ -339,7 +339,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         <button
           type="button"
           onClick={handleReset}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-white px-2.5 py-1 text-xs font-medium text-primary shadow-xs transition-colors hover:bg-primary/10"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs font-medium text-primary shadow-xs transition-colors hover:bg-primary/10 cursor-pointer"
         >
           <RotateCcw size={13} /> Resetar Raspadinha
         </button>
@@ -347,7 +347,7 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
       {interactiveCard}
 
-      <div className="space-y-4 rounded-xl border border-primary/15 bg-white/90 p-4">
+      <div className="space-y-4 rounded-xl border border-border bg-surface-raised/80 p-4">
         <EditorInputSection
           title="Texto da Capa da Raspadinha"
           helperText="Frase estampada sobre a tinta raspável."
@@ -370,10 +370,10 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <button
               type="button"
               onClick={() => updateProp('secretType', 'text')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold transition-all ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold transition-all cursor-pointer ${
                 props.secretType === 'text'
-                  ? 'border-primary bg-primary/10 text-primary shadow-xs'
-                  : 'border-primary/20 bg-white text-text hover:bg-primary/5'
+                  ? 'border-primary bg-primary/15 text-primary shadow-xs'
+                  : 'border-border bg-surface text-text hover:bg-surface-raised'
               }`}
             >
               <Type size={16} /> Mensagem Secreta
@@ -381,10 +381,10 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <button
               type="button"
               onClick={() => updateProp('secretType', 'image')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold transition-all ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold transition-all cursor-pointer ${
                 props.secretType === 'image'
-                  ? 'border-primary bg-primary/10 text-primary shadow-xs'
-                  : 'border-primary/20 bg-white text-text hover:bg-primary/5'
+                  ? 'border-primary bg-primary/15 text-primary shadow-xs'
+                  : 'border-border bg-surface text-text hover:bg-surface-raised'
               }`}
             >
               <ImageIcon size={16} /> Foto Secreta

@@ -124,7 +124,7 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (mode === 'edit') {
     return (
-      <div className="space-y-3 rounded-2xl border border-primary/25 bg-white/80 p-4">
+      <div className="space-y-3 rounded-2xl border border-border bg-surface/90 p-4 shadow-xs">
         <EditorInputSection title="Data alvo" helperText="Escolha quando a contagem deve terminar (ou comecar).">
           <input
             type="datetime-local"
@@ -181,7 +181,7 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (!parsedTarget) {
     return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-700">
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-amber-500 dark:text-amber-400">
         Defina uma data valida para iniciar o contador.
       </div>
     )
@@ -195,7 +195,7 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const statusText = hasElapsed ? 'Tempo decorrido' : 'Contagem regressiva'
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-white/85 p-5">
+    <div className="rounded-2xl border border-border bg-surface/90 p-5 shadow-xs">
       <p className="mb-3 text-center text-sm font-medium text-text-light">{label?.trim() || statusText}</p>
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -209,7 +209,7 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         ].map((item) => (
           <div
             key={item.key}
-            className="rounded-xl border border-primary/15 bg-gradient-to-b from-white to-primary/5 px-2 py-3 text-center"
+            className="rounded-xl border border-border bg-surface-raised px-2 py-3 text-center shadow-2xs"
           >
             <p className="font-display text-2xl text-text transition-transform duration-300">{pad(item.value)}</p>
             <p className="text-[11px] uppercase tracking-wide text-text-light">{item.label}</p>

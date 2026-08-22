@@ -676,20 +676,20 @@ export function Editor() {
 
   const feedbackClassName = useMemo(() => {
     if (saveState === 'error') {
-      return 'border-red-200 bg-red-50 text-red-600'
+      return 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
     }
 
     if (saveState === 'saved') {
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
     }
 
-    return 'border-border bg-surface/80 text-text'
+    return 'border-border bg-surface/90 text-text'
   }, [saveState])
 
   const atmosphere = getThemeAtmosphere(theme)
 
   return (
-    <div className="relative min-h-screen pb-24 pt-28 md:pb-12 overflow-hidden" style={editorThemeStyle}>
+    <div className="relative min-h-screen pb-24 pt-28 md:pb-12 overflow-hidden bg-background text-text transition-colors duration-300" style={editorThemeStyle}>
       <AtmosphereCanvas atmosphere={atmosphere} position="fixed" intensity={0.5} />
       <Container size="narrow">
         <div className="mb-6">
@@ -698,13 +698,13 @@ export function Editor() {
         </div>
 
         <div className="mb-4">
-          <div className={`mb-2 inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${saveState === 'error'
-            ? 'border-red-200 bg-red-50 text-red-600'
+          <div className={`mb-2 inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium backdrop-blur-xs ${saveState === 'error'
+            ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
             : saveState === 'saving'
               ? 'border-primary/30 bg-primary/10 text-primary'
               : saveState === 'saved'
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-border bg-surface/80 text-text-light'}`}
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                : 'border-border bg-surface/85 text-text-light'}`}
             role="status"
             aria-live="polite"
           >

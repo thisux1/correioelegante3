@@ -72,6 +72,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const pollingInFlightRef = useRef(false)
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [isVolumeOpen, setIsVolumeOpen] = useState(false)
+  const [isLyricsOpen, setIsLyricsOpen] = useState(false)
   const [editActiveTrackIndex, setEditActiveTrackIndex] = useState(0)
 
   // Estados de busca automática de letra
@@ -361,7 +362,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               onClick={() => handleSetPlayerStyle('minimal')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 playerStyle === 'minimal'
-                  ? 'bg-white dark:bg-surface text-primary shadow-xs'
+                  ? 'bg-surface text-primary shadow-xs border border-border/80'
                   : 'text-text-light hover:text-text'
               }`}
             >
@@ -373,7 +374,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               onClick={() => handleSetPlayerStyle('vinyl')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 playerStyle === 'vinyl'
-                  ? 'bg-white dark:bg-surface text-primary shadow-xs'
+                  ? 'bg-surface text-primary shadow-xs border border-border/80'
                   : 'text-text-light hover:text-text'
               }`}
             >
@@ -678,20 +679,23 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           style={{ background: 'var(--color-primary, #e11d48)' }}
         />
 
-        {/* LAYOUT INTEGRADO: TOCA-FITAS & VINIL + LETRA SIMULTÂNEOS (NÃO MUTUAMENTE EXCLUSIVOS) */}
-        <div className={`relative z-10 ${hasLyrics && showLyrics ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start' : ''}`}>
-          {/* Coluna 1: O Toca-Fitas Vintage & Disco de Vinil com Lombada Esquerda */}
-          <div className={hasLyrics && showLyrics ? 'lg:col-span-6 space-y-4' : 'max-w-md mx-auto space-y-4'}>
+        {/* LAYOUT INTEGRADO: TOCA-DISCOS & VINIL + LETRA SIMULTÂNEOS */}
+        <div className={`relative z-10 ${showLyrics ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start' : 'max-w-md mx-auto'}`}>
+          {/* Coluna 1: O Toca-Discos Vintage com Agulha Animada & Controles */}
+          <div className={showLyrics ? 'lg:col-span-6 space-y-4' : 'w-full space-y-4'}>
             <VintagePlayerDeck
               coverSrc={resolvedCover}
               title={safeTitle}
               artist={safeArtist}
               isPlaying={isActuallyPlaying}
+              progressPercent={progressPercent}
+              currentTime={playback.state.currentTime}
+              duration={effectiveDuration}
               onClick={() => { void playback.togglePlay() }}
             />
 
             {/* Informações da Faixa */}
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-left px-1">
               <h3 className="font-display font-bold text-xl sm:text-2xl text-text truncate">
                 {safeTitle}
               </h3>
@@ -701,7 +705,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             </div>
 
             {/* Barra de Progresso com Tempo */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 px-1">
               <div
                 className="group/track relative h-3 flex items-center cursor-pointer"
                 onClick={(e) => handleSeekFromProgressBar(e.clientX, e.currentTarget as HTMLDivElement)}
@@ -730,7 +734,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             </div>
 
             {/* Controles de Reprodução */}
-            <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="flex items-center justify-between gap-3 pt-1 px-1">
               {/* Aleatório / Volume */}
               <div className="flex items-center gap-2">
                 {isPlaylistMode && (
@@ -880,24 +884,25 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             )}
           </div>
 
-          {/* Coluna 2: Letras Sincronizadas em Tempo Real (Visíveis ao Mesmo Tempo) */}
-          {hasLyrics && showLyrics && (
-            <div className="lg:col-span-6 rounded-2xl border border-border/70 bg-surface/70 backdrop-blur-md p-4 sm:p-5 shadow-xs flex flex-col justify-between h-full min-h-[300px] sm:min-h-[380px]">
-              <div className="flex items-center justify-between border-b border-border/50 pb-2.5 mb-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-text">
-                  <FileText size={14} className="text-primary" />
-                  <span>Letra Sincronizada</span>
+          {/* Coluna 2: Letras Sincronizadas em Tempo Real (Perfeitamente Visíveis no Mobile e Desktop) */}
+          {showLyrics && (
+            <div className="lg:col-span-6 rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col justify-between h-full min-h-[280px] sm:min-h-[400px]">
+              <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-2">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-text">
+                  <FileText size={16} className="text-primary" />
+                  <span>Letra da Música</span>
                 </div>
-                <span className="text-[10px] font-mono text-text-light">
-                  Toque em uma estrofe para avançar
+                <span className="text-[10px] sm:text-xs font-mono text-text-light">
+                  {hasLyrics ? 'Sincronizada • Toque para pular' : 'Karaokê'}
                 </span>
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col justify-center">
                 <SyncedLyricsView
                   syncedLyrics={currentSyncedLyrics}
                   plainLyrics={currentPlainLyrics}
                   currentTime={playback.state.currentTime}
+                  isPlaying={isActuallyPlaying}
                   onSeek={(time) => playback.seek(time)}
                 />
               </div>
@@ -1017,6 +1022,22 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
         {/* Controles de Reprodução Compactos */}
         <div className="flex items-center gap-1 shrink-0 pl-1">
+          {/* Botão para Abrir Letra no Modo Compacto */}
+          {hasLyrics && (
+            <button
+              type="button"
+              onClick={() => setIsLyricsOpen((prev) => !prev)}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold ${
+                isLyricsOpen ? 'bg-primary/15 text-primary' : 'text-text-light hover:text-text'
+              }`}
+              aria-label="Ver letra da música"
+              title="Ver letra"
+            >
+              <FileText size={15} />
+              <span className="hidden sm:inline text-[11px]">Letra</span>
+            </button>
+          )}
+
           {isPlaylistMode && (
             <button
               type="button"
@@ -1103,6 +1124,35 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           )}
         </div>
       </div>
+
+      {/* Gaveta de Letra da Música no Modo Compacto */}
+      {hasLyrics && isLyricsOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="mt-3 pt-3 border-t border-border/60"
+        >
+          <div className="flex items-center justify-between text-xs font-bold text-text mb-2 px-1">
+            <div className="flex items-center gap-1.5">
+              <FileText size={14} className="text-primary" />
+              <span>Letra da Música</span>
+            </div>
+            <span className="text-[10px] font-mono text-text-light">
+              Toque na estrofe para pular
+            </span>
+          </div>
+          <div className="max-h-48 overflow-y-auto rounded-xl border border-border/60 bg-surface-raised/60 p-2">
+            <SyncedLyricsView
+              syncedLyrics={currentSyncedLyrics}
+              plainLyrics={currentPlainLyrics}
+              currentTime={playback.state.currentTime}
+              isPlaying={isActuallyPlaying}
+              onSeek={(time) => playback.seek(time)}
+            />
+          </div>
+        </motion.div>
+      )}
 
       {/* Gaveta Recolhível de Playlist */}
       {isPlaylistMode && isPlaylistOpen && (

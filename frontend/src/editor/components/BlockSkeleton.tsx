@@ -126,7 +126,7 @@ function TimelineSkeleton() {
 
           {/* Card Esquerdo/Principal */}
           <div className="ml-14 w-[calc(100%-4rem)] sm:ml-0 sm:w-1/2 sm:pr-6">
-            <div className="rounded-2xl border border-primary/20 bg-white/95 p-4 shadow-md space-y-2.5">
+            <div className="rounded-2xl border border-border bg-surface/95 p-4 shadow-md space-y-2.5">
               {/* Badge de Data */}
               <div className="h-5 w-24 rounded-full bg-primary/15 animate-pulse" />
               {/* Título */}
@@ -149,7 +149,7 @@ function TimelineSkeleton() {
 
           {/* Card Direito */}
           <div className="ml-14 w-[calc(100%-4rem)] sm:ml-0 sm:w-1/2 sm:pl-6">
-            <div className="rounded-2xl border border-primary/20 bg-white/95 p-4 shadow-md space-y-2.5 sm:text-left">
+            <div className="rounded-2xl border border-border bg-surface/95 p-4 shadow-md space-y-2.5 sm:text-left">
               {/* Badge de Data */}
               <div className="h-5 w-28 rounded-full bg-primary/15 animate-pulse" />
               {/* Título */}
@@ -170,7 +170,7 @@ function TimelineSkeleton() {
 function QuizSkeleton() {
   return (
     <div className="relative mx-auto w-full max-w-lg select-none px-2 py-4">
-      <div className="relative mx-auto min-h-[260px] w-full overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-b from-[#fff7f7] via-white to-[#fff0f2] p-7 text-center shadow-lg backdrop-blur-xs sm:p-9 space-y-6">
+      <div className="relative mx-auto min-h-[260px] w-full overflow-hidden rounded-3xl border border-border bg-surface/90 p-7 text-center shadow-lg backdrop-blur-xs sm:p-9 space-y-6">
         {/* Ícone com coração pulsante */}
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner animate-pulse">
           <Heart size={28} fill="currentColor" className="text-primary/60" />
@@ -191,7 +191,7 @@ function QuizSkeleton() {
           </div>
 
           {/* Botão NÃO */}
-          <div className="inline-flex min-h-12 w-20 items-center justify-center rounded-2xl border border-primary/20 bg-white/85 px-4 py-2.5 shadow-2xs animate-pulse">
+          <div className="inline-flex min-h-12 w-20 items-center justify-center rounded-2xl border border-border bg-surface-raised px-4 py-2.5 shadow-2xs animate-pulse">
             <div className="h-4 w-8 rounded bg-primary/20" />
           </div>
         </div>
@@ -203,7 +203,7 @@ function QuizSkeleton() {
 function ScratchSkeleton() {
   return (
     <div className="relative mx-auto w-full max-w-md select-none px-2 py-4">
-      <div className="relative min-h-[220px] w-full overflow-hidden rounded-2xl border border-pink-200/80 bg-gradient-to-br from-slate-100 via-rose-100/70 to-amber-100/60 p-6 shadow-md flex flex-col items-center justify-center text-center space-y-3">
+      <div className="relative min-h-[220px] w-full overflow-hidden rounded-2xl border border-border bg-surface/90 p-6 shadow-md flex flex-col items-center justify-center text-center space-y-3">
         {/* Textura de raspadinha metálica */}
         <div
           aria-hidden="true"
@@ -216,7 +216,7 @@ function ScratchSkeleton() {
         />
 
         {/* Ícone de brilho central */}
-        <div className="relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-200/60 text-primary shadow-xs animate-pulse">
+        <div className="relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary shadow-xs animate-pulse">
           <Sparkles size={22} className="text-primary/70" />
         </div>
 
@@ -227,7 +227,7 @@ function ScratchSkeleton() {
         </div>
 
         {/* Shimmer sweep */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer pointer-events-none" />
       </div>
     </div>
   )
@@ -250,7 +250,7 @@ function TextSkeleton({
     case 'quote':
       return (
         <div className="relative mx-auto w-full max-w-lg select-none px-4 py-5">
-          <div className="relative rounded-2xl border border-primary/15 bg-white/60 p-6 text-center shadow-xs space-y-3.5">
+          <div className="relative rounded-2xl border border-border bg-surface/85 p-6 text-center shadow-xs space-y-3.5">
             <div className="mx-auto flex h-8 w-8 items-center justify-center text-primary/30">
               <Quote size={20} />
             </div>
@@ -277,7 +277,7 @@ function TextSkeleton({
     default:
       return (
         <div className="relative mx-auto w-full max-w-xl select-none px-4 py-4">
-          <div className="rounded-2xl border border-primary/10 bg-white/50 p-5 space-y-2.5 shadow-2xs">
+          <div className="rounded-2xl border border-border bg-surface/80 p-5 space-y-2.5 shadow-2xs">
             <div className="h-4 w-full rounded-md bg-primary/15 animate-pulse" />
             <div className="h-4 w-[92%] rounded-md bg-primary/15 animate-pulse" />
             <div className="h-4 w-[96%] rounded-md bg-primary/15 animate-pulse" />
@@ -291,10 +291,10 @@ function TextSkeleton({
 function ImageSkeleton() {
   return (
     <div className="relative mx-auto w-full max-w-xl select-none px-2 py-3">
-      <div className="relative h-64 sm:h-80 w-full overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-rose-50/80 via-primary/5 to-pink-50/60 shadow-xs flex flex-col items-center justify-center space-y-2">
+      <div className="relative h-64 sm:h-80 w-full overflow-hidden rounded-2xl border border-border bg-surface/90 shadow-xs flex flex-col items-center justify-center space-y-2">
         <ImageIcon size={36} className="text-primary/25 animate-pulse" />
         <div className="h-3 w-28 rounded-full bg-primary/15 animate-pulse" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer pointer-events-none" />
       </div>
     </div>
   )
@@ -303,14 +303,14 @@ function ImageSkeleton() {
 function GallerySkeleton() {
   return (
     <div className="relative mx-auto w-full max-w-2xl select-none px-2 py-3">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 rounded-2xl border border-primary/15 bg-white/60 shadow-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 rounded-2xl border border-border bg-surface/90 shadow-xs">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="relative aspect-square w-full overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-tr from-rose-100/60 via-primary/10 to-amber-50/70 flex flex-col items-center justify-center animate-pulse"
+            className="relative aspect-square w-full overflow-hidden rounded-xl border border-border bg-surface-raised flex flex-col items-center justify-center animate-pulse"
           >
             <ImageIcon size={22} className="text-primary/25" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer pointer-events-none" />
           </div>
         ))}
       </div>
@@ -321,7 +321,7 @@ function GallerySkeleton() {
 function TimerSkeleton() {
   return (
     <div className="relative mx-auto w-full max-w-lg select-none px-2 py-4">
-      <div className="rounded-2xl border border-primary/20 bg-white/85 p-5 shadow-xs space-y-4">
+      <div className="rounded-2xl border border-border bg-surface/90 p-5 shadow-xs space-y-4">
         {/* Rótulo / Legenda do timer */}
         <div className="h-4 w-36 mx-auto rounded-full bg-primary/15 animate-pulse" />
 
@@ -330,7 +330,7 @@ function TimerSkeleton() {
           {['Dias', 'Horas', 'Min', 'Seg'].map((label, idx) => (
             <div
               key={idx}
-              className="rounded-xl border border-primary/15 bg-gradient-to-b from-white to-primary/5 px-2 py-3 text-center space-y-1.5"
+              className="rounded-xl border border-border bg-surface-raised px-2 py-3 text-center space-y-1.5"
             >
               <div className="h-7 w-10 mx-auto rounded-lg bg-primary/20 animate-pulse" />
               <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-text-light/60 font-semibold">
@@ -347,7 +347,7 @@ function TimerSkeleton() {
 function MusicSkeleton() {
   return (
     <div className="relative mx-auto w-full max-w-lg select-none px-1 py-2">
-      <div className="rounded-2xl border border-primary/20 bg-white/90 p-3 shadow-sm flex items-center gap-3">
+      <div className="rounded-2xl border border-border bg-surface/95 p-3 shadow-sm flex items-center gap-3">
         {/* Capa Compacta */}
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-tr from-rose-200/60 to-primary/15 flex items-center justify-center text-primary/40 animate-pulse">
           <Music2 size={18} />
