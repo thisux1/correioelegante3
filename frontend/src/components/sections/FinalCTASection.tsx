@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Heart, Sparkles, ArrowRight } from 'lucide-react'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { MagneticButton } from '@/components/animations/MagneticButton'
 import { ScrollSection } from '@/components/layout/ScrollSection'
@@ -9,29 +9,37 @@ import { Card } from '@/components/ui/Card'
 
 export function FinalCTASection() {
   return (
-    <ScrollSection id="cta-section">
+    <ScrollSection id="cta-section" className="section-spacing">
       <Container size="narrow">
         <SectionReveal scrollRange={[0.02, 0.16, 0.9, 0.98]}>
-          <Card className="relative overflow-hidden border-none shadow-2xl bg-gradient-to-tr from-primary to-secondary p-12 md:p-24 text-center rounded-3xl" data-cursor-light="true">
-            <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10 pointer-events-none" />
+          <Card className="relative overflow-hidden border-none shadow-2xl bg-gradient-to-br from-pink-500 via-rose-500 to-rose-600 p-10 sm:p-16 md:p-20 text-center rounded-3xl" data-cursor-light="true">
+            {/* Elementos decorativos de fundo */}
+            <div className="absolute -top-12 -left-12 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-pink-400/20 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 text-white" data-no-ink="true">
-              <Heart className="w-16 h-16 text-white/90 fill-white/20 mx-auto mb-6 animate-pulse" />
-              <h2 className="font-display text-4xl md:text-6xl font-bold mb-6">
-                Bora mandar aquele recado?
+              <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white/20 backdrop-blur-md mb-6 border border-white/30 shadow-md">
+                <Heart className="w-8 h-8 text-white fill-white/30 animate-pulse" />
+              </div>
+
+              <h2 className="font-display text-3xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight drop-shadow-sm">
+                Pronto para surpreender quem você ama?
               </h2>
-              <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Leva menos de 5 minutos, prometo!
+
+              <p className="text-base sm:text-xl text-white/90 mb-10 max-w-xl mx-auto leading-relaxed font-sans">
+                Crie sua carta agora mesmo em menos de 3 minutos e veja o sorriso nascer.
               </p>
+
               <MagneticButton>
                 <Link to="/create">
                   <Button
                     variant="secondary"
                     size="lg"
-                    className="text-primary hover:bg-white/90 shadow-2xl text-lg px-10 py-5 h-auto border-none"
+                    className="bg-white text-primary hover:bg-pink-50 shadow-2xl font-bold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 h-auto rounded-2xl border-none transition-all hover:scale-105"
                   >
-                    Criar minha carta
-                    <Heart size={20} className="fill-current" />
+                    <Sparkles size={18} className="fill-primary" />
+                    <span>Escrever minha carta</span>
+                    <ArrowRight size={18} />
                   </Button>
                 </Link>
               </MagneticButton>

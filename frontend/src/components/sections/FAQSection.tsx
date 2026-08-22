@@ -6,76 +6,92 @@ import { ScrollSection } from '@/components/layout/ScrollSection'
 import { Container } from '@/components/layout/Container'
 
 const faqs = [
-    {
-        question: 'Como funciona o pagamento?',
-        answer: 'O pagamento é realizado via Pix, no valor único de R$4,00. É totalmente seguro e a confirmação é imediata para liberar seu QR Code.',
-    },
-    {
-        question: 'Posso personalizar a mensagem?',
-        answer: 'Sim! Você tem total liberdade para escrever seu texto, escolher o tema visual e visualizar como ficará antes de finalizar o pedido.',
-    },
-    {
-        question: 'O QR Code expira?',
-        answer: 'Não. Uma vez gerado, seu QR Code é vitalício. A mensagem ficará guardada em nossos servidores para ser relida sempre que quiser.',
-    },
-    {
-        question: 'Preciso criar uma conta?',
-        answer: 'Sim, pedimos um cadastro rápido (nome e e-mail) apenas para garantir que você possa acessar e gerenciar o histórico das suas mensagens enviadas.',
-    },
+  {
+    question: 'Como a pessoa que eu amo vai abrir a carta?',
+    answer:
+      'Você pode enviar o link exclusivo diretamente pelo WhatsApp, Instagram ou imprimir o QR Code de alta resolução em um cartão físico, flores ou presentes. Ao clicar no link ou escanear a câmera do celular, a carta abre instantaneamente com todas as animações, música e fotos.',
+  },
+  {
+    question: 'A pessoa precisa baixar algum aplicativo ou criar conta para ler?',
+    answer:
+      'Não! A pessoa presenteada não precisa instalar nada nem criar conta. A carta funciona diretamente no navegador de qualquer celular ou computador com carregamento instantâneo.',
+  },
+  {
+    question: 'A carta tem prazo de validade ou expira depois de um tempo?',
+    answer:
+      'Não expira. Sua carta digital fica guardada para sempre em nossos servidores. Vocês poderão revisitar essa memória romântica em qualquer data especial ao longo dos anos.',
+  },
+  {
+    question: 'Como funciona o pagamento e a liberação?',
+    answer:
+      'O pagamento é feito com rapidez e segurança via Pix ou Cartão. A confirmação ocorre em segundos, liberando na hora o seu link público, o QR Code em alta resolução e o acesso permanente.',
+  },
+  {
+    question: 'Posso editar a carta depois de pronta?',
+    answer:
+      'Sim! Enquanto estiver rascunhando ou mesmo após publicar, você pode acessar seu painel de cartas no perfil para fazer ajustes no texto, fotos ou trilha sonora.',
+  },
 ]
 
 export function FAQSection() {
-    const [openIndex, setOpenIndex] = useState<number | null>(0)
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
 
-    return (
-        <ScrollSection id="faq" className="section-spacing">
-            <Container size="narrow">
-                <SectionReveal scrollRange={[0.0, 0.10, 0.88, 1.0]}>
-                    <div className="text-center mb-16">
-                        <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/10 text-primary mb-4">
-                            <HelpCircle size={24} />
-                        </div>
-                        <h2 className="font-display text-4xl md:text-5xl font-bold text-text">
-                            Perguntas <span className="text-gradient">frequentes</span>
-                        </h2>
-                    </div>
-                </SectionReveal>
+  return (
+    <ScrollSection id="faq" className="section-spacing">
+      <Container size="narrow">
+        <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-pink-100/80 dark:bg-pink-950/40 text-primary mb-4 border border-pink-200/60 dark:border-pink-900/30 shadow-xs">
+              <HelpCircle size={24} />
+            </div>
+            <h2 className="font-display text-4xl sm:text-5xl font-bold text-rose-950 dark:text-rose-100 mb-3">
+              Dúvidas <span className="text-gradient">Frequentes</span>
+            </h2>
+            <p className="text-base sm:text-lg text-rose-900/70 dark:text-rose-300/70 max-w-md mx-auto">
+              Tudo o que você precisa saber para criar sua surpresa com tranquilidade.
+            </p>
+          </div>
+        </SectionReveal>
 
-                <div className="space-y-4">
-                    {faqs.map((faq, index) => (
-                        <SectionReveal key={index} delay={index * 0.1} scrollRange={[0.02, 0.15, 0.88, 1.0]}>
-                            <div className="border border-gray-100/50 rounded-2xl overflow-hidden bg-white/40 hover:bg-white/60 transition-colors backdrop-blur-sm">
-                                <button
-                                    onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                                    className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none"
-                                >
-                                    <span className="font-bold text-text text-lg">{faq.question}</span>
-                                    <motion.div
-                                        animate={{ rotate: openIndex === index ? 180 : 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <ChevronDown className="text-primary w-5 h-5" />
-                                    </motion.div>
-                                </button>
-                                <AnimatePresence>
-                                    {openIndex === index && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.3, ease: 'easeInOut' }}
-                                        >
-                                            <div className="px-6 pb-5 text-text-light leading-relaxed">
-                                                {faq.answer}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </SectionReveal>
-                    ))}
-                </div>
-            </Container>
-        </ScrollSection>
-    )
+        <div className="space-y-4">
+          {faqs.map((faq, index) => (
+            <SectionReveal key={index} delay={index * 0.08} scrollRange={[0.02, 0.14, 0.88, 1.0]}>
+              <div className="border border-pink-200/70 dark:border-pink-900/40 rounded-3xl overflow-hidden bg-white/90 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-900 transition-all shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none cursor-pointer"
+                >
+                  <span className="font-bold text-rose-950 dark:text-rose-100 text-base sm:text-lg pr-4">
+                    {faq.question}
+                  </span>
+                  <motion.div
+                    animate={{ rotate: openIndex === index ? 180 : 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="shrink-0 text-primary"
+                  >
+                    <ChevronDown size={20} />
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {openIndex === index && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    >
+                      <div className="px-6 pb-5 text-sm sm:text-base text-rose-900/75 dark:text-rose-300/75 leading-relaxed border-t border-pink-100/60 dark:border-pink-900/30 pt-3">
+                        {faq.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </SectionReveal>
+          ))}
+        </div>
+      </Container>
+    </ScrollSection>
+  )
 }
