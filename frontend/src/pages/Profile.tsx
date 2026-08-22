@@ -493,21 +493,95 @@ export function Profile() {
                           : 'bg-surface border-amber-500/30 hover:border-amber-500/50'
                       } p-4 sm:p-5`}
                     >
-                      {/* Linha sutil de dobra do envelope no topo */}
+                      {/* Geometria de envelope/carta física em baixa opacidade */}
                       {isPublished ? (
-                        <div
-                          className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary/10 via-primary/30 to-primary/10"
-                          aria-hidden="true"
-                        />
+                        <>
+                          {/* Dobras clássicas do envelope fechado em baixa opacidade */}
+                          <svg
+                            className="pointer-events-none absolute inset-0 h-full w-full opacity-20 dark:opacity-10 text-primary"
+                            xmlns="http://www.w3.org/2000/svg"
+                            preserveAspectRatio="none"
+                            viewBox="0 0 100 100"
+                            aria-hidden="true"
+                          >
+                            {/* Aba triangular superior fechando no centro */}
+                            <path
+                              d="M0,0 L50,55 L100,0"
+                              fill="currentColor"
+                              fillOpacity="0.12"
+                              stroke="currentColor"
+                              strokeWidth="0.8"
+                              strokeDasharray="none"
+                            />
+                            {/* Dobras inferiores do envelope */}
+                            <path
+                              d="M0,100 L50,55 L100,100"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="0.5"
+                              strokeOpacity="0.6"
+                            />
+                            {/* Linha divisória lateral */}
+                            <path
+                              d="M0,0 L0,100 M100,0 L100,100"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="0.5"
+                              strokeOpacity="0.4"
+                            />
+                          </svg>
+
+                          {/* Marca d'água sutil de carimbo postal vintage no fundo direito */}
+                          <div
+                            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none opacity-[0.06] dark:opacity-[0.08]"
+                            aria-hidden="true"
+                          >
+                            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary rotate-12">
+                              <div className="w-14 h-14 rounded-full border-2 border-dashed border-primary flex items-center justify-center text-[9px] text-center font-bold leading-tight">
+                                CORREIO<br />ELEGANTE
+                              </div>
+                              <div className="space-y-1">
+                                <div className="w-12 h-0.5 bg-primary" />
+                                <div className="w-16 h-0.5 bg-primary" />
+                                <div className="w-10 h-0.5 bg-primary" />
+                              </div>
+                            </div>
+                          </div>
+                        </>
                       ) : (
-                        <div
-                          className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500/10 via-amber-500/40 to-amber-500/10"
-                          aria-hidden="true"
-                        />
+                        <>
+                          {/* Textura de papel de carta pautado em baixa opacidade para rascunho */}
+                          <div
+                            className="pointer-events-none absolute inset-0 opacity-15 dark:opacity-10"
+                            style={{
+                              backgroundImage:
+                                'repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(217, 119, 6, 0.4) 20px)',
+                            }}
+                            aria-hidden="true"
+                          />
+
+                          {/* Aba aberta do envelope despontando no topo em baixa opacidade */}
+                          <svg
+                            className="pointer-events-none absolute top-0 inset-x-0 w-full h-4 opacity-25 dark:opacity-15 text-amber-600"
+                            xmlns="http://www.w3.org/2000/svg"
+                            preserveAspectRatio="none"
+                            viewBox="0 0 100 20"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M0,20 L50,2 L100,20"
+                              fill="currentColor"
+                              fillOpacity="0.1"
+                              stroke="currentColor"
+                              strokeWidth="0.8"
+                              strokeDasharray="2,2"
+                            />
+                          </svg>
+                        </>
                       )}
 
                       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Seção esquerda: Envelope Wax Seal / Pen Icon + Título + Metadados (SEM BADGES) */}
+                        {/* Seção esquerda: Envelope Wax Seal / Pen Icon + Título + Metadados */}
                         <div className="flex items-center gap-3.5 min-w-0 flex-1">
                           {isPublished ? (
                             /* Selo de Cera (Wax Seal) em relevo 3D rubi com coração */
@@ -582,14 +656,14 @@ export function Profile() {
                                 >
                                   <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
                                     <Eye className="w-3.5 h-3.5 mr-1" />
-                                    Ver Carta
+                                    Ver
                                   </Button>
                                 </a>
                               ) : (
                                 <Link to={publicHref} className="flex-1 sm:flex-initial">
                                   <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
                                     <Eye className="w-3.5 h-3.5 mr-1" />
-                                    Ver Carta
+                                    Ver
                                   </Button>
                                 </Link>
                               )}
