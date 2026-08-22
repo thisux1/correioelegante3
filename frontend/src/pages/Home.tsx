@@ -4,7 +4,6 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { MagneticButton } from '@/components/animations/MagneticButton'
-import { HeroClouds } from '@/components/animations/HeroClouds'
 import { HeroAnimation } from '@/components/animations/HeroAnimation'
 import { SiteAtmosphere } from '@/components/animations/SiteAtmosphere'
 import { BackgroundField } from '@/components/animations/BackgroundField'
@@ -29,18 +28,18 @@ function HeroSection() {
   })
 
   // Smooth storytelling scroll mapping with clamp
-  const focusOpacity = useTransform(scrollYProgress, [0.00, 0.16, 0.84, 0.98], [1, 0, 0, 1], { clamp: true })
-  const textY = useTransform(scrollYProgress, [0.00, 0.16, 0.84, 0.98], [0, -40, 40, 0], { clamp: true })
-  const animationOpacity = useTransform(scrollYProgress, [0.02, 0.14, 0.86, 0.98], [0, 1, 1, 0], { clamp: true })
-  const heroProgress = useTransform(scrollYProgress, [0.04, 0.90], [0, 1], { clamp: true })
+  const focusOpacity = useTransform(scrollYProgress, [0.00, 0.08, 0.90, 0.98], [1, 0, 0, 1], { clamp: true })
+  const textY = useTransform(scrollYProgress, [0.00, 0.08, 0.90, 0.98], [0, -35, 35, 0], { clamp: true })
+  const animationOpacity = useTransform(scrollYProgress, [0.01, 0.07, 0.90, 0.98], [0, 1, 1, 0], { clamp: true })
+  const heroProgress = useTransform(scrollYProgress, [0.02, 0.90], [0, 1], { clamp: true })
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: '280vh' }}>
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
-        {/* Fundo suave rosa claro & branco */}
+        {/* Fundo suave perolado e luminoso */}
         <motion.div
           style={{ opacity: focusOpacity }}
-          className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-rose-50/70 via-[#fff5f8] to-pink-50/50"
+          className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-white/90 via-[#fff8fa]/65 to-rose-50/30"
         />
 
         {/* Camada do Avião de Papel e Envelope em SVG */}
@@ -50,7 +49,6 @@ function HeroSection() {
         >
           <HeroAnimation scrollProgress={heroProgress} />
         </motion.div>
-        <HeroClouds scrollProgress={scrollYProgress} />
 
         {/* Conteúdo Textual com Alto Contraste — 100% Tema Claro */}
         <motion.div
