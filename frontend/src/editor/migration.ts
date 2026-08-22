@@ -104,6 +104,8 @@ function asMusicTracks(value: unknown): Array<{
   artist?: string
   coverSrc?: string
   coverAssetId?: string
+  syncedLyrics?: string
+  plainLyrics?: string
 }> {
   if (!Array.isArray(value)) {
     return []
@@ -116,6 +118,8 @@ function asMusicTracks(value: unknown): Array<{
     artist?: string
     coverSrc?: string
     coverAssetId?: string
+    syncedLyrics?: string
+    plainLyrics?: string
   }>>((accumulator, track) => {
     const trackRecord = asRecord(track)
     const trackSrc = asText(trackRecord.src)
@@ -130,6 +134,8 @@ function asMusicTracks(value: unknown): Array<{
       artist: asOptionalText(trackRecord.artist),
       coverSrc: asOptionalText(trackRecord.coverSrc),
       coverAssetId: asOptionalText(trackRecord.coverAssetId),
+      syncedLyrics: asOptionalText(trackRecord.syncedLyrics),
+      plainLyrics: asOptionalText(trackRecord.plainLyrics),
     })
 
     return accumulator
@@ -318,6 +324,10 @@ function migrateBlock(input: unknown, index: number): Block {
       const legacyArtist = asOptionalText(props.artist)
       const legacyCoverSrc = asOptionalText(props.coverSrc)
       const legacyCoverAssetId = asOptionalText(props.coverAssetId)
+      const legacySyncedLyrics = asOptionalText(props.syncedLyrics)
+      const legacyPlainLyrics = asOptionalText(props.plainLyrics)
+      const playerStyle = props.playerStyle === 'vinyl' ? 'vinyl' : 'minimal'
+      const showLyrics = typeof props.showLyrics === 'boolean' ? props.showLyrics : true
       const normalizedTracks = asMusicTracks(props.tracks)
       const tracks = normalizedTracks.length > 0
         ? normalizedTracks
@@ -329,6 +339,8 @@ function migrateBlock(input: unknown, index: number): Block {
               artist: legacyArtist,
               coverSrc: legacyCoverSrc,
               coverAssetId: legacyCoverAssetId,
+              syncedLyrics: legacySyncedLyrics,
+              plainLyrics: legacyPlainLyrics,
             }]
           : [])
       const mirrorTrack = tracks[0]
@@ -344,6 +356,10 @@ function migrateBlock(input: unknown, index: number): Block {
           tracks,
           title: (typeof props.title === 'string' ? props.title : undefined) ?? mirrorTrack?.title ?? '',
           artist: (typeof props.artist === 'string' ? props.artist : undefined) ?? mirrorTrack?.artist ?? '',
+          playerStyle,
+          syncedLyrics: legacySyncedLyrics ?? mirrorTrack?.syncedLyrics,
+          plainLyrics: legacyPlainLyrics ?? mirrorTrack?.plainLyrics,
+          showLyrics,
         },
       }
       }

@@ -236,6 +236,8 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
             artist?: string;
             coverSrc?: string;
             coverAssetId?: string;
+            syncedLyrics?: string;
+            plainLyrics?: string;
           }>>((accumulator, item) => {
             if (typeof item !== 'object' || item === null || Array.isArray(item)) {
               return accumulator;
@@ -257,6 +259,8 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
               coverAssetId: typeof track.coverAssetId === 'string' && /^[a-f\d]{24}$/i.test(track.coverAssetId)
                 ? track.coverAssetId
                 : undefined,
+              syncedLyrics: typeof track.syncedLyrics === 'string' ? track.syncedLyrics.slice(0, 50000) : undefined,
+              plainLyrics: typeof track.plainLyrics === 'string' ? track.plainLyrics.slice(0, 50000) : undefined,
             });
 
             return accumulator;
@@ -265,6 +269,10 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         : [];
       const title = typeof props.title === 'string' ? sanitizeText(props.title) : undefined;
       const artist = typeof props.artist === 'string' ? sanitizeText(props.artist) : undefined;
+      const playerStyle = props.playerStyle === 'vinyl' ? 'vinyl' : 'minimal';
+      const syncedLyrics = typeof props.syncedLyrics === 'string' ? props.syncedLyrics.slice(0, 50000) : undefined;
+      const plainLyrics = typeof props.plainLyrics === 'string' ? props.plainLyrics.slice(0, 50000) : undefined;
+      const showLyrics = typeof props.showLyrics === 'boolean' ? props.showLyrics : true;
       return {
         assetId,
         src,
@@ -273,6 +281,10 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         tracks,
         title,
         artist,
+        playerStyle,
+        syncedLyrics,
+        plainLyrics,
+        showLyrics,
       };
     }
     case 'video': {
