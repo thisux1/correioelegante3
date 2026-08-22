@@ -24,7 +24,7 @@ import {
   Moon,
   Heart,
   Share2,
-  FolderHeart,
+  MailOpen,
 } from 'lucide-react'
 
 import { MAX_BLOCKS, type BlockType, type PageStatus } from '@/editor/types'
@@ -586,7 +586,7 @@ function ToolbarControls({
         </>
       ) : null}
 
-      {(hasPageId || isPublished) && onShareClick ? (
+      {isPublished && onShareClick ? (
         <>
           {separator}
           {useCompactButtons ? (
@@ -628,7 +628,7 @@ function ToolbarControls({
           title="Minhas Cartas"
           aria-label="Minhas Cartas"
         >
-          <FolderHeart size={16} />
+          <MailOpen size={16} />
         </Link>
       ) : (
         <Link
@@ -636,7 +636,7 @@ function ToolbarControls({
           className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-text hover:bg-primary/10 hover:border-primary/30 transition-colors shadow-2xs"
           title="Minhas Cartas"
         >
-          <FolderHeart size={15} className="text-primary" />
+          <MailOpen size={15} className="text-primary" />
           <span>Minhas Cartas</span>
         </Link>
       )}

@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Heart,
@@ -38,9 +38,25 @@ import { Container } from '@/components/layout/Container'
 
 export function Profile() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { user, isAuthenticated, clearAuth } = useAuthStore()
 
-  const [activeTab, setActiveTab] = useState<'messages' | 'settings'>('messages')
+  const tabFromQuery = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState<'messages' | 'settings'>(
+    tabFromQuery === 'settings' ? 'settings' : 'messages'
+  )
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'settings' || tab === 'messages') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
+
+  const handleTabChange = (tab: 'messages' | 'settings') => {
+    setActiveTab(tab)
+    setSearchParams({ tab }, { replace: true })
+  }
   const [messageFilter, setMessageFilter] = useState<'all' | 'published' | 'drafts'>('all')
   const [editorPages, setEditorPages] = useState<PageSummary[]>([])
   const [isLoadingEditorPages, setIsLoadingEditorPages] = useState(false)
@@ -381,7 +397,7 @@ export function Profile() {
             <nav className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="Seções do perfil">
               <button
                 type="button"
-                onClick={() => setActiveTab('messages')}
+                onClick={() => handleTabChange('messages')}
                 className={`${tabButtonBase} ${activeTab === 'messages'
                   ? 'bg-primary text-white shadow-lg shadow-primary/25'
                   : 'text-text-light hover:bg-white/60 hover:text-text'
@@ -393,7 +409,7 @@ export function Profile() {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('settings')}
+                onClick={() => handleTabChange('settings')}
                 className={`${tabButtonBase} ${activeTab === 'settings'
                   ? 'bg-primary text-white shadow-lg shadow-primary/25'
                   : 'text-text-light hover:bg-white/60 hover:text-text'
@@ -401,7 +417,7 @@ export function Profile() {
                 aria-current={activeTab === 'settings' ? 'page' : undefined}
               >
                 <Settings size={18} />
-                Configurações
+                Configurações da Conta
               </button>
             </nav>
           </div>
