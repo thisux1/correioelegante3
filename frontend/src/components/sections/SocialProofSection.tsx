@@ -42,10 +42,10 @@ export function SocialProofSection() {
           {stats.map((stat, index) => (
             <SectionReveal key={index} delay={index * 0.08} scrollRange={[0.0, 0.12, 0.88, 1.0]}>
               <div className="text-center p-4">
-                <span className="block font-display text-4xl sm:text-5xl md:text-6xl font-bold text-primary mb-1 drop-shadow-xs">
+                <span className="block font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#e11d48] mb-1 drop-shadow-xs">
                   {stat.value}
                 </span>
-                <span className="text-sm sm:text-base font-semibold text-rose-900/70 dark:text-rose-300/70">
+                <span className="text-sm sm:text-base font-bold text-[#701a35]">
                   {stat.label}
                 </span>
               </div>
@@ -56,13 +56,13 @@ export function SocialProofSection() {
         {/* Título de Depoimentos */}
         <SectionReveal scrollRange={[0.0, 0.1, 0.88, 1.0]}>
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-pink-100/80 dark:bg-pink-950/40 text-primary font-bold text-xs uppercase tracking-wider mb-4 border border-pink-200/60 dark:border-pink-900/30">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-pink-100 text-[#be123c] font-bold text-xs uppercase tracking-wider mb-4 border border-pink-300/80 shadow-xs">
               Histórias Reais
             </span>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold text-rose-950 dark:text-rose-100 mb-4">
-              Quem enviou, <span className="text-gradient">se apaixonou</span>
+            <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-4 tracking-tight">
+              Quem enviou, <span className="text-[#e11d48]">se apaixonou</span>
             </h2>
-            <p className="text-base sm:text-lg text-rose-900/70 dark:text-rose-300/70 max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-[#701a35] font-medium max-w-xl mx-auto">
               Veja como pequenos gestos digitais criaram memórias inesquecíveis.
             </p>
           </div>
@@ -79,38 +79,38 @@ export function SocialProofSection() {
                 >
                   <Card
                     glass
-                    className="h-full flex flex-col justify-between p-8 rounded-3xl border border-pink-200/70 dark:border-pink-900/40 bg-gradient-to-b from-white/95 via-rose-50/50 to-white/95 dark:from-zinc-900/90 dark:to-zinc-900 shadow-xl shadow-pink-500/5 hover:shadow-2xl hover:shadow-pink-500/15 transition-all duration-300"
+                    className="h-full flex flex-col justify-between p-8 rounded-3xl border-2 border-pink-200 bg-white shadow-xl shadow-rose-500/5 hover:shadow-2xl hover:shadow-rose-500/15 transition-all duration-300"
                     data-no-ink="true"
                   >
                     <div>
                       {/* Estrelas de Avaliação */}
                       <div className="flex items-center gap-1 mb-4 text-amber-400">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={15} className="fill-amber-400" />
+                          <Star key={i} size={16} className="fill-amber-400" />
                         ))}
                       </div>
 
-                      <p className="text-sm sm:text-base text-rose-900/80 dark:text-rose-200/80 italic leading-relaxed mb-6 font-serif">
+                      <p className="text-sm sm:text-base text-[#4c0519] italic leading-relaxed mb-6 font-serif">
                         "{t.quote}"
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-pink-100 dark:border-pink-900/30">
+                    <div className="flex items-center justify-between pt-4 border-t border-pink-100">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 text-white font-bold text-sm flex items-center justify-center shadow-xs border border-pink-200/60">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 text-white font-bold text-sm flex items-center justify-center shadow-xs border border-pink-200">
                           {t.author[0]}
                         </div>
                         <div>
-                          <span className="block font-bold text-sm text-rose-950 dark:text-rose-100">
+                          <span className="block font-bold text-sm text-[#4c0519]">
                             {t.author}
                           </span>
-                          <span className="block text-[11px] text-rose-900/60 dark:text-rose-300/60">
+                          <span className="block text-[11px] font-medium text-[#701a35]">
                             {t.tag}
                           </span>
                         </div>
                       </div>
 
-                      <Heart size={16} className="text-primary/40 fill-primary/20" />
+                      <Heart size={16} className="text-[#e11d48] fill-[#e11d48]/20" />
                     </div>
                   </Card>
                 </motion.div>

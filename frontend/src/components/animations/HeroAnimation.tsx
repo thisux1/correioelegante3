@@ -139,6 +139,7 @@ function WindTrail({ isMobile }: { isMobile: boolean }) {
 }
 
 interface PhaseVisibility {
+    showPlane: boolean
     showTrail: boolean
     showLetter: boolean
     showBurst: boolean
@@ -146,7 +147,8 @@ interface PhaseVisibility {
 
 function getPhaseVisibility(progress: number): PhaseVisibility {
     return {
-        showTrail: progress <= 0.36,
+        showPlane: progress >= 0.04 && progress <= 0.45,
+        showTrail: progress >= 0.04 && progress <= 0.36,
         showLetter: progress >= 0.5 && progress <= 0.9,
         showBurst: progress >= 0.64 && progress <= 0.92,
     }
@@ -565,21 +567,23 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
             )}
 
             {/* ── Paper airplane ─────────────────────────────── */}
-            <motion.div
-                ref={planeRef}
-                className="absolute opacity-0"
-                style={{
-                    left: planeX,
-                    top: planeY,
-                    rotate: planeRotate,
-                    scale: planeScale,
-                    translateX: '-50%',
-                    translateY: '-50%',
-                    willChange: 'transform, opacity',
-                }}
-            >
-                <PaperAirplane />
-            </motion.div>
+            {phaseVisibility.showPlane && (
+                <motion.div
+                    ref={planeRef}
+                    className="absolute opacity-0"
+                    style={{
+                        left: planeX,
+                        top: planeY,
+                        rotate: planeRotate,
+                        scale: planeScale,
+                        translateX: '-50%',
+                        translateY: '-50%',
+                        willChange: 'transform, opacity',
+                    }}
+                >
+                    <PaperAirplane />
+                </motion.div>
+            )}
 
             {/* ── Letter emerging from envelope ──────────────── */}
             {phaseVisibility.showLetter && (
