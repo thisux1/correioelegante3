@@ -7,6 +7,7 @@ import { Card as UICard } from '@/components/ui/Card'
 import { PageCardSkeleton } from '@/components/ui/PageCardSkeleton'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
+import { EnvelopeUnboxing } from '@/components/animations/EnvelopeUnboxing'
 import { PageRenderer } from '@/editor/components/PageRenderer'
 import { buildThemeStyle, getThemeAtmosphere } from '@/editor/themes'
 import type { PageSummary } from '@/services/pageService'
@@ -17,6 +18,7 @@ export function PageCard() {
   const [page, setPage] = useState<PageSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isEnvelopeOpened, setIsEnvelopeOpened] = useState(false)
 
   useEffect(() => {
     if (!pageId) {
@@ -97,6 +99,15 @@ export function PageCard() {
 
   const atmosphere = getThemeAtmosphere(page.theme)
 
+  // Extrai informações do envelope/destinatário dos blocos da carta
+  const envelopeBlock = page.blocks.find((b) => b.type === 'envelope')
+  const envelopeProps = envelopeBlock && 'recipientName' in envelopeBlock.props
+    ? (envelopeBlock.props as { recipientName?: string; senderName?: string })
+    : undefined
+
+  const recipientName = envelopeProps?.recipientName
+  const senderName = envelopeProps?.senderName
+
   return (
     <div
       className="relative min-h-screen flex items-center justify-center pt-24 pb-16 px-6 overflow-hidden"
@@ -104,9 +115,23 @@ export function PageCard() {
     >
       <AtmosphereCanvas atmosphere={atmosphere} position="fixed" />
 
+      {/* Ritual de Abertura do Envelope em Tela Cheia */}
+      {!isEnvelopeOpened && (
+        <EnvelopeUnboxing
+          recipientName={recipientName}
+          senderName={senderName}
+          theme={page.theme}
+          onOpenComplete={() => setIsEnvelopeOpened(true)}
+        />
+      )}
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        animate={{
+          opacity: isEnvelopeOpened ? 1 : 0,
+          scale: isEnvelopeOpened ? 1 : 0.9,
+          y: isEnvelopeOpened ? 0 : 30,
+        }}
         transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
         className="w-full max-w-3xl relative z-10"
       >
