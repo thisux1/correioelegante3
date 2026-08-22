@@ -10,43 +10,43 @@ import { motion, useMotionTemplate, useSpring, useTransform, type MotionValue } 
 // ── Paper Airplane SVG ──────────────────────────────────────────
 function PaperAirplane() {
     return (
-        <svg viewBox="0 0 160 72" width="260" height="117" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 160 72" width="300" height="135" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* Far wing (peeking above) */}
             <polygon
                 points="155,36 20,6 40,42"
-                fill="#fcd5e0"
-                stroke="rgba(225,29,72,0.3)"
-                strokeWidth="0.8"
+                fill="#fbcfe8"
+                stroke="#e11d48"
+                strokeWidth="1.2"
                 strokeLinejoin="round"
             />
             {/* Near wing */}
             <polygon
                 points="155,36 6,12 40,42"
-                fill="white"
-                stroke="rgba(225,29,72,0.35)"
-                strokeWidth="1"
+                fill="#ffffff"
+                stroke="#e11d48"
+                strokeWidth="1.5"
                 strokeLinejoin="round"
             />
-            {/* Near wing detail */}
+            {/* Near wing detail highlight */}
             <polygon
                 points="155,36 70,24 6,12"
-                fill="rgba(255,240,245,0.7)"
+                fill="rgba(255,241,245,0.9)"
             />
             {/* Fuselage crease line */}
             <line
                 x1="6" y1="12" x2="155" y2="36"
-                stroke="rgba(225,29,72,0.4)"
-                strokeWidth="0.8"
+                stroke="#e11d48"
+                strokeWidth="1.2"
             />
             {/* Underbody shadow */}
             <polygon
                 points="40,42 6,12 80,48"
-                fill="#fca5a5"
-                opacity="0.45"
+                fill="#fda4af"
+                opacity="0.6"
             />
-            {/* Small heart badge on airplane */}
+            {/* Heart badge on airplane */}
             <path
-                d="M95 28 C95 25 90 23 88 26 C86 23 81 25 81 28 C81 33 88 36 88 36 C88 36 95 33 95 28 Z"
+                d="M95 28 C95 24 90 22 88 25 C86 22 81 24 81 28 C81 33 88 37 88 37 C88 37 95 33 95 28 Z"
                 fill="#e11d48"
             />
         </svg>
@@ -434,7 +434,7 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
     const c3Y = useTransform(scrollProgress, [0.00, 0.80], [0, -15], { clamp: true })
 
     const skyCenterX = useTransform(scrollProgress, [0.00, 0.75], [55, 61], { clamp: true })
-    const skyBackground = useMotionTemplate`radial-gradient(ellipse 140% 90% at ${skyCenterX}% 45%, #fff1f5 0%, #ffe4ec 30%, #fecdd3 65%, #fda4af 100%)`
+    const skyBackground = useMotionTemplate`radial-gradient(ellipse 140% 90% at ${skyCenterX}% 45%, #ffffff 0%, #fff8fa 35%, #ffeff4 70%, #ffe4ec 100%)`
 
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -498,6 +498,7 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                     scale: planeScale,
                     translateX: '-50%',
                     translateY: '-50%',
+                    filter: 'drop-shadow(0 14px 28px rgba(225,29,72,0.22)) drop-shadow(0 2px 6px rgba(0,0,0,0.06))',
                 }}
             >
                 <PaperAirplane />
