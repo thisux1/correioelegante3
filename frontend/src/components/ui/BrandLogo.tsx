@@ -16,79 +16,73 @@ export function BrandLogo({
   const isSm = size === 'sm'
   const isLg = size === 'lg'
 
-  const sealSize = isSm ? 'w-8 h-8' : isLg ? 'w-12 h-12' : 'w-9 h-9'
-  const iconSize = isSm ? 14 : isLg ? 22 : 16
+  const iconContainerSize = isSm ? 'w-7 h-7' : isLg ? 'w-10 h-10' : 'w-8 h-8'
+  const iconSize = isSm ? 16 : isLg ? 22 : 18
   const titleSize = isSm
-    ? 'text-lg leading-none'
+    ? 'text-base sm:text-lg'
     : isLg
       ? 'text-2xl sm:text-3xl'
-      : 'text-xl'
+      : 'text-lg sm:text-xl'
 
-  const SealEmblem = (
+  const MinimalistIcon = (
     <div
-      className={`relative flex ${sealSize} items-center justify-center rounded-full bg-gradient-to-br from-[#f43f5e] via-[#e11d48] to-[#be123c] text-white shadow-md shadow-rose-500/25 border border-white/50 ring-2 ring-rose-400/20 shrink-0 select-none`}
+      className={`relative flex ${iconContainerSize} items-center justify-center rounded-xl bg-pink-100/60 text-[#e11d48] border border-pink-200/70 shrink-0 transition-colors duration-200 group-hover:bg-rose-100 group-hover:border-rose-300`}
       aria-hidden="true"
     >
-      {/* Borda interna vintage pontilhada */}
-      <div className="absolute inset-0.5 rounded-full border border-dashed border-white/40" />
-
-      {/* Ícone de envelope com coração estilizado em SVG vetorial */}
       <svg
         width={iconSize}
         height={iconSize}
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="relative z-10 drop-shadow-xs"
+        className="transition-transform duration-200 group-hover:scale-105"
       >
-        {/* Envelope base */}
+        {/* Envelope minimalist frame */}
+        <rect
+          x="3"
+          y="5.5"
+          width="18"
+          height="13"
+          rx="2.5"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+        {/* Fold line */}
         <path
-          d="M3 6.5C3 5.11929 4.11929 4 5.5 4H18.5C19.8807 4 21 5.11929 21 6.5V17.5C21 18.8807 19.8807 20 18.5 20H5.5C4.11929 20 3 18.8807 3 17.5V6.5Z"
-          stroke="white"
-          strokeWidth="1.75"
+          d="M3.5 7L10.5 12.2C11.4 12.9 12.6 12.9 13.5 12.2L20.5 7"
+          stroke="currentColor"
+          strokeWidth="1.6"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* Dobra do envelope */}
-        <path
-          d="M3.5 6L12 12.5L20.5 6"
-          stroke="white"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Pequeno coração em relevo no centro */}
-        <path
-          d="M12 16.5C12 16.5 8.5 14 8.5 11.5C8.5 10 9.8 9 11 10C11.5 10.4 12 11 12 11C12 11 12.5 10.4 13 10C14.2 9 15.5 10 15.5 11.5C15.5 14 12 16.5 12 16.5Z"
-          fill="white"
-          stroke="white"
-          strokeWidth="0.5"
-        />
+        {/* Minimal dot/heart accent */}
+        <circle cx="12" cy="15.5" r="1" fill="currentColor" />
       </svg>
     </div>
   )
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
+    <div className={`group inline-flex items-center gap-2.5 select-none ${className}`}>
       {withMotion ? (
         <motion.div
-          whileHover={{ scale: 1.06, rotate: -2 }}
-          whileTap={{ scale: 0.96 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         >
-          {SealEmblem}
+          {MinimalistIcon}
         </motion.div>
       ) : (
-        SealEmblem
+        MinimalistIcon
       )}
 
       <div className="flex flex-col text-left">
-        <span className={`font-display font-extrabold tracking-tight text-[#4c0519] ${titleSize}`}>
-          Correio <span className="bg-gradient-to-r from-[#e11d48] to-[#be123c] bg-clip-text text-transparent">Elegante</span>
+        <span className={`font-display font-bold tracking-tight text-[#4c0519] ${titleSize}`}>
+          Correio <span className="font-serif italic font-normal text-[#e11d48]">Elegante</span>
         </span>
         {showTagline && (
-          <span className="text-[11px] font-medium tracking-wide text-[#701a35]/80 uppercase">
-            Cartas & Homenagens Digitais
+          <span className="text-[10px] font-medium tracking-wider text-[#701a35]/70 uppercase">
+            Cartas Digitais
           </span>
         )}
       </div>
