@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
-import { Heart, Menu, X, User } from 'lucide-react'
+import { Heart, Menu, X, User, MailOpen } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { MagneticButton } from '@/components/animations/MagneticButton'
 import { Container } from '@/components/layout/Container'
@@ -178,21 +178,33 @@ export function Header() {
 
             <div className="flex items-center gap-3">
               {isAuthenticated ? (
-                renderNavLink({
-                  to: '/profile',
-                  className: 'flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-medium',
-                  children: (
-                    <>
-                      <User size={16} />
-                      Perfil
-                      {(user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
-                        <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">
-                          PRO
-                        </span>
-                      ) : null}
-                    </>
-                  ),
-                })
+                <>
+                  {renderNavLink({
+                    to: '/profile',
+                    className: 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-sm font-semibold shadow-2xs',
+                    children: (
+                      <>
+                        <MailOpen size={16} />
+                        Minhas Cartas
+                      </>
+                    ),
+                  })}
+                  {renderNavLink({
+                    to: '/profile',
+                    className: 'flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-medium',
+                    children: (
+                      <>
+                        <User size={16} />
+                        Perfil
+                        {(user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
+                          <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">
+                            PRO
+                          </span>
+                        ) : null}
+                      </>
+                    ),
+                  })}
+                </>
               ) : (
                 renderNavLink({
                   to: '/auth',
@@ -308,6 +320,19 @@ export function Header() {
                       }`,
                   children: link.label,
                 }))}
+                {isAuthenticated && (
+                  renderNavLink({
+                    to: '/profile',
+                    onClick: () => setIsMenuOpen(false),
+                    className: 'block w-full rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3.5 text-center text-base font-bold text-primary transition-colors hover:bg-primary/20',
+                    children: (
+                      <span className="flex items-center justify-center gap-2">
+                        <MailOpen size={18} />
+                        Minhas Cartas
+                      </span>
+                    ),
+                  })
+                )}
                 {renderNavLink({
                   to: isAuthenticated ? '/profile' : '/auth',
                   onClick: () => setIsMenuOpen(false),

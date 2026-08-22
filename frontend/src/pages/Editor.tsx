@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { isAxiosError } from 'axios'
 import { Container } from '@/components/layout/Container'
-import { AlertTriangle, CheckCircle2, LoaderCircle, RefreshCcw, Smartphone, Monitor } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  LoaderCircle,
+  RefreshCcw,
+  Smartphone,
+  Monitor,
+  FolderHeart,
+  Share2,
+} from 'lucide-react'
 
 import { Modal } from '@/components/ui/Modal'
+import { ShareLetterModal } from '@/components/modals/ShareLetterModal'
 import { EditorSkeleton } from '@/components/ui/EditorSkeleton'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
@@ -429,7 +439,31 @@ export function Editor() {
   const [draftConflict, setDraftConflict] = useState<DraftConflictState | null>(null)
   const [templateConflict, setTemplateConflict] = useState<TemplateConflictState | null>(null)
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop')
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const handledTemplateKeyRef = useRef<string>('')
+
+  const { recipientName, letterTitle } = useMemo(() => {
+    let recName: string | undefined = undefined
+    let title: string | undefined = undefined
+
+    for (const block of blocks) {
+      if (block.type === 'envelope' && block.props) {
+        const p = block.props as { recipientName?: string }
+        if (p.recipientName?.trim()) {
+          recName = p.recipientName.trim()
+        }
+      }
+      if (block.type === 'text' && block.props && !title) {
+        const p = block.props as { text?: string; html?: string }
+        const txt = (p.text || p.html?.replace(/<[^>]*>/g, '') || '').trim()
+        if (txt) {
+          title = txt.length > 40 ? `${txt.slice(0, 37)}...` : txt
+        }
+      }
+    }
+
+    return { recipientName: recName, letterTitle: title }
+  }, [blocks])
 
   const isNavigatingToPaymentRef = useRef(false)
   const isPublishingRef = useRef(false)
@@ -692,9 +726,60 @@ export function Editor() {
     <div className="relative min-h-screen pb-24 pt-28 md:pb-12 overflow-hidden bg-background text-text transition-colors duration-300" style={editorThemeStyle}>
       <AtmosphereCanvas atmosphere={atmosphere} position="fixed" intensity={0.5} />
       <Container size="narrow">
-        <div className="mb-6">
-          <h1 className="font-display text-3xl text-text md:text-4xl">Crie sua carta</h1>
-          <p className="mt-1 text-sm text-text-light">Escolha cores, escreva sua mensagem e veja tudo mudar em tempo real.</p>
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-3xl text-text md:text-4xl">Crie sua carta</h1>
+              {/* Indicador de Status Explícito */}
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-bold ${
+                  status === 'published'
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                    : 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300'
+                }`}
+                role="status"
+              >
+                {status === 'published' ? (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Publicada & Compartilhável</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span>Rascunho (Ainda não publicado)</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <p className="mt-1 text-sm text-text-light">
+              Escolha cores, escreva sua mensagem e veja tudo mudar em tempo real.
+            </p>
+          </div>
+
+          {/* Ações Imediatas no Topo */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/profile"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs sm:text-sm font-semibold text-text hover:bg-surface-raised hover:border-primary/30 transition-all shadow-xs"
+            >
+              <FolderHeart size={16} className="text-primary" />
+              <span>Minhas Cartas</span>
+            </Link>
+
+            {(hasPageId || status === 'published') ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => setIsShareModalOpen(true)}
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs sm:text-sm font-bold text-primary hover:bg-primary/20 transition-all shadow-xs cursor-pointer"
+              >
+                <Share2 size={16} />
+                <span>Compartilhar</span>
+              </motion.button>
+            ) : null}
+          </div>
         </div>
 
         <div className="mb-4">
@@ -751,13 +836,15 @@ export function Editor() {
           hasPageId={hasPageId}
           selectedThemeId={theme}
           showPublishCta={showPublishCta}
+          status={status}
+          onShareClick={() => setIsShareModalOpen(true)}
           onPublishCtaClick={async () => {
             if (isPublishingRef.current) return
             isPublishingRef.current = true
             isNavigatingToPaymentRef.current = true
             try {
               setSaveState('saving')
-              setFeedback('Salvando página e redirecionando para pagamento...')
+              setFeedback('Salvando página e preparando publicação...')
               const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
               const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
 
@@ -779,6 +866,8 @@ export function Editor() {
                 resultPageId = result.page.id
                 paymentStatus = result.page.paymentStatus || ''
                 setDraftContext(result.page.id, result.page.updatedAt)
+                setStatus(result.page.status)
+                setPageVersion(result.page.version)
               } catch (saveErr) {
                 if (isAxiosError(saveErr) && saveErr.response?.status === 409 && currentPageId) {
                   const latest = await pageService.loadPage(currentPageId)
@@ -792,6 +881,8 @@ export function Editor() {
                   resultPageId = retry.page.id
                   paymentStatus = retry.page.paymentStatus || ''
                   setDraftContext(retry.page.id, retry.page.updatedAt)
+                  setStatus(retry.page.status)
+                  setPageVersion(retry.page.version)
                 } else {
                   throw saveErr
                 }
@@ -801,10 +892,21 @@ export function Editor() {
                 throw new Error('Não foi possível identificar a página salva.')
               }
 
-              const destination = (userSubscribed || paymentStatus === 'paid')
-                ? `/card/page/${resultPageId}`
-                : `/payment/page/${resultPageId}`
+              if (userSubscribed || paymentStatus === 'paid' || targetStatus === 'published') {
+                setStatus('published')
+                setSaveState('saved')
+                setFeedback('Carta salva e publicada com sucesso!')
+                setCurrentPageId(resultPageId)
+                setIsShareModalOpen(true)
+                isPublishingRef.current = false
+                isNavigatingToPaymentRef.current = false
+                if (!currentPageId) {
+                  navigate(`/editor/${resultPageId}`, { replace: true })
+                }
+                return
+              }
 
+              const destination = `/payment/page/${resultPageId}`
               window.location.assign(destination)
             } catch (error) {
               isPublishingRef.current = false
@@ -985,6 +1087,14 @@ export function Editor() {
           </div>
         </div>
       </Modal>
+
+      <ShareLetterModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        pageId={currentPageId || ''}
+        pageTitle={letterTitle}
+        recipientName={recipientName}
+      />
     </div>
   )
 }
