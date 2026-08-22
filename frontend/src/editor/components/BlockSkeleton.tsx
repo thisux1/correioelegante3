@@ -7,7 +7,6 @@ import {
   Play,
   Quote,
   Sparkles,
-  Volume2,
 } from 'lucide-react'
 import type {
   Block,
@@ -347,40 +346,28 @@ function TimerSkeleton() {
 
 function MusicSkeleton() {
   return (
-    <div className="relative mx-auto w-full max-w-lg select-none px-2 py-4">
-      <div className="rounded-2xl border border-primary/20 bg-white/90 p-4 sm:p-5 shadow-md space-y-4">
-        {/* Top: Capa do Álbum + Título / Artista */}
-        <div className="flex items-center gap-4">
-          <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-tr from-rose-200/60 to-primary/15 flex items-center justify-center text-primary/40 animate-pulse">
-            <Music2 size={24} />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer pointer-events-none" />
-          </div>
+    <div className="relative mx-auto w-full max-w-lg select-none px-1 py-2">
+      <div className="rounded-2xl border border-primary/20 bg-white/90 p-3 shadow-sm flex items-center gap-3">
+        {/* Capa Compacta */}
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-tr from-rose-200/60 to-primary/15 flex items-center justify-center text-primary/40 animate-pulse">
+          <Music2 size={18} />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer pointer-events-none" />
+        </div>
 
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-4 w-44 rounded-md bg-primary/25 animate-pulse" />
-            <div className="h-3 w-28 rounded-md bg-primary/15 animate-pulse" />
+        {/* Título, Artista e Barra de Progresso Integrada */}
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="h-3.5 w-32 rounded-md bg-primary/25 animate-pulse" />
+            <div className="h-2.5 w-14 rounded bg-primary/15 animate-pulse" />
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-primary/10 overflow-hidden">
+            <div className="h-full w-1/3 rounded-full bg-primary/30 animate-pulse" />
           </div>
         </div>
 
-        {/* Barra de Progresso / Waveform */}
-        <div className="h-2.5 w-full rounded-full bg-primary/10 overflow-hidden">
-          <div className="h-full w-1/3 rounded-full bg-primary/30 animate-pulse" />
-        </div>
-
-        {/* Controles de Reprodução */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="h-8 w-8 rounded-full bg-primary/10 animate-pulse" />
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/10 animate-pulse" />
-            <div className="h-12 w-12 rounded-full bg-primary/25 shadow-md flex items-center justify-center text-primary/50 animate-pulse">
-              <Play size={20} fill="currentColor" />
-            </div>
-            <div className="h-8 w-8 rounded-full bg-primary/10 animate-pulse" />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Volume2 size={16} className="text-primary/30" />
-            <div className="h-2 w-14 rounded-full bg-primary/10" />
-          </div>
+        {/* Botão Play Compacto */}
+        <div className="h-9 w-9 shrink-0 rounded-full bg-primary/25 shadow-xs flex items-center justify-center text-primary/50 animate-pulse">
+          <Play size={16} fill="currentColor" />
         </div>
       </div>
     </div>
