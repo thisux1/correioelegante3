@@ -20,7 +20,6 @@ interface ExampleLetter {
   id: string
   tabLabel: string
   icon: typeof Music2
-  tag: string
   title: string
   subtitle: string
   recipient: string
@@ -36,21 +35,19 @@ const examples: ExampleLetter[] = [
     id: 'vinil',
     tabLabel: 'Carta com Trilha Sonora',
     icon: Music2,
-    tag: 'Vinil & Música Sincronizada',
     title: 'Para o amor da minha vida',
-    subtitle: 'Nossa Canção Especial • 03:45',
+    subtitle: 'Nossa Canção Especial',
     recipient: 'Beatriz',
     message:
       'Desde a primeira vez em que ouvimos essa música juntos, soube que você seria meu lar. Obrigado por cada riso e por colorir os meus dias com tanta luz.',
     extraType: 'music',
-    audioTitle: 'Aliança & Poesia',
-    audioArtist: 'Nossa Trilha Sonora',
+    audioTitle: 'Aliança e Poesia',
+    audioArtist: 'Trilha Sonora do Casal',
   },
   {
     id: 'timeline',
-    tabLabel: 'Linha do Tempo & Fotos',
+    tabLabel: 'Linha do Tempo e Fotos',
     icon: CalendarHeart,
-    tag: 'Linha do Tempo & Memórias',
     title: '3 Anos da Nossa História',
     subtitle: 'Nossos Melhores Capítulos',
     recipient: 'Matheus',
@@ -62,14 +59,13 @@ const examples: ExampleLetter[] = [
     id: 'scratch',
     tabLabel: 'Raspadinha de Segredo',
     icon: Sparkles,
-    tag: 'Segredo Interativo & Surpresa',
     title: 'Um Recado Misterioso',
     subtitle: 'Raspe para Revelar',
     recipient: 'Juliana',
     message:
       'Nem todas as surpresas cabem em palavras simples. Raspe a placa abaixo para descobrir o nosso próximo destino...',
     extraType: 'scratch',
-    scratchSecret: 'Passagens compradas: Vamos viajar para Paris!',
+    scratchSecret: 'Passagens reservadas: Nossa viagem dos sonhos!',
   },
 ]
 
@@ -83,12 +79,9 @@ export function ProductPreviewSection() {
   return (
     <ScrollSection id="product-preview" className="section-spacing">
       <Container size="default">
-        {/* Cabeçalho da Seção */}
+        {/* Cabeçalho da Seção sem badges */}
         <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
           <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-pink-100 text-[#be123c] font-bold text-xs uppercase tracking-wider mb-4 border border-pink-300/80 shadow-xs">
-              Exemplos Reais
-            </span>
             <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-4 tracking-tight">
               Veja o que você pode <span className="text-[#e11d48]">criar</span>
             </h2>
@@ -128,7 +121,7 @@ export function ProductPreviewSection() {
           </div>
         </SectionReveal>
 
-        {/* Grade de Apresentação: Preview Interativo + Benefícios */}
+        {/* Grade de Apresentação: Preview Interativo + Recursos */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Card Interativo de Preview (7 colunas) */}
           <div className="lg:col-span-7">
@@ -149,18 +142,14 @@ export function ProductPreviewSection() {
                         <Heart size={16} className="fill-white" />
                       </div>
                       <div>
-                        <span className="block text-xs font-bold uppercase tracking-wider text-[#e11d48]">
-                          {currentExample.tag}
+                        <span className="block font-bold text-sm text-[#4c0519]">
+                          {currentExample.subtitle}
                         </span>
                         <span className="text-xs text-[#701a35]">
-                          Para: {currentExample.recipient}
+                          Destinatário: {currentExample.recipient}
                         </span>
                       </div>
                     </div>
-
-                    <span className="rounded-full bg-pink-100 px-3 py-1 text-[11px] font-bold text-[#be123c] border border-pink-200">
-                      Preview Real
-                    </span>
                   </div>
 
                   {/* Título & Mensagem */}
@@ -175,14 +164,14 @@ export function ProductPreviewSection() {
                   {currentExample.extraType === 'music' && (
                     <div className="rounded-2xl border-2 border-pink-200 bg-pink-50/50 p-4 shadow-sm">
                       <div className="flex items-center gap-4">
-                        {/* Vinil Giratório com Centro Rosa */}
+                        {/* Vinil Giratório */}
                         <motion.div
                           animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
                           transition={{ repeat: Infinity, duration: 4, ease: 'linear' }}
                           className="relative h-14 w-14 shrink-0 rounded-full bg-[#881337] p-1 shadow-md flex items-center justify-center border-2 border-pink-300"
                         >
                           <div className="h-6 w-6 rounded-full bg-[#e11d48] flex items-center justify-center text-white text-[10px]">
-                            ♥
+                            <Heart size={10} className="fill-white" />
                           </div>
                         </motion.div>
 
@@ -242,7 +231,7 @@ export function ProductPreviewSection() {
                           2
                         </div>
                         <div className="flex-1">
-                          <span className="block text-xs font-bold text-[#4c0519]">Hoje & Sempre • Nosso Amor</span>
+                          <span className="block text-xs font-bold text-[#4c0519]">Hoje e Sempre • Nosso Amor</span>
                           <span className="text-[11px] text-[#701a35]">
                             A certeza de que escolher você foi a melhor decisão da minha vida.
                           </span>
@@ -263,7 +252,7 @@ export function ProductPreviewSection() {
                             whileTap={{ scale: 0.98 }}
                             className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-200 via-rose-200 to-pink-200 border-2 border-dashed border-[#e11d48]/40 text-[#4c0519] font-bold text-sm flex items-center justify-center gap-2 shadow-inner cursor-pointer"
                           >
-                            <Sparkles size={16} className="text-[#e11d48] animate-spin" />
+                            <Sparkles size={16} className="text-[#e11d48]" />
                             <span>Toque para raspar o segredo</span>
                           </motion.button>
                         ) : (
@@ -273,7 +262,7 @@ export function ProductPreviewSection() {
                             animate={{ opacity: 1, scale: 1 }}
                             className="py-3 px-4 rounded-xl bg-pink-100 border border-pink-300 text-[#be123c] font-bold text-sm"
                           >
-                            <p className="mb-1 text-base">🎉 Surpresa Revelada!</p>
+                            <p className="mb-1 text-base">Surpresa Revelada!</p>
                             <p className="text-xs font-bold text-[#4c0519]">
                               {currentExample.scratchSecret}
                             </p>
@@ -294,7 +283,7 @@ export function ProductPreviewSection() {
             </CardTilt3D>
           </div>
 
-          {/* Coluna de Benefícios & Recursos (5 colunas) */}
+          {/* Coluna de Recursos (5 colunas) */}
           <div className="lg:col-span-5 space-y-6">
             <div className="space-y-4">
               <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white border-2 border-pink-200 shadow-xs">
@@ -331,7 +320,7 @@ export function ProductPreviewSection() {
                 </div>
                 <div>
                   <h4 className="font-bold text-[#4c0519] text-sm sm:text-base mb-0.5">
-                    Acesso Eterno sem Instalar App
+                    Acesso Eterno sem Instalar Aplicativos
                   </h4>
                   <p className="text-xs sm:text-sm text-[#701a35] leading-relaxed">
                     Quem recebe abre direto no navegador do celular com animações fluidas e sem complicação.

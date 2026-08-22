@@ -565,7 +565,7 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
                     className="w-full text-xs text-text-muted hover:text-primary"
                   >
                     <Sparkles size={14} />
-                    {isSimulating ? 'Ativando...' : '⚡ Simular Aprovação Instantânea (Ambiente de Teste)'}
+                    {isSimulating ? 'Ativando...' : 'Simular Aprovação Instantânea (Ambiente de Teste)'}
                   </Button>
                 </div>
               ) : null}
@@ -626,7 +626,7 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
                     className="w-full text-xs text-text-muted hover:text-primary"
                   >
                     <Sparkles size={14} />
-                    {isSimulating ? 'Ativando...' : '⚡ Simular Pagamento Concluído (Dev)'}
+                    {isSimulating ? 'Ativando...' : 'Simular Pagamento Concluído (Dev)'}
                   </Button>
                 </div>
               ) : null}

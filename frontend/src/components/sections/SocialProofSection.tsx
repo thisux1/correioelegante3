@@ -8,8 +8,8 @@ import { motion } from 'framer-motion'
 
 const stats = [
   { value: '12.000+', label: 'Cartas Entregues' },
-  { value: '99.8%', label: 'Sorrisos & Emoção' },
-  { value: '4.9 ★', label: 'Avaliação Média' },
+  { value: '99.8%', label: 'Satisfação e Emoção' },
+  { value: '4.9 de 5', label: 'Avaliação Média' },
 ]
 
 const testimonials = [
@@ -17,19 +17,19 @@ const testimonials = [
     quote:
       'Minha noiva chorou de emoção quando escaneou o QR Code preso nas flores e começou a tocar a nossa música. Foi o presente mais marcante que já entreguei.',
     author: 'Lucas Mendes',
-    tag: 'Noivado & Pedido',
+    occasion: 'Noivado e Pedido',
   },
   {
     quote:
       'A ideia da raspadinha com a surpresa da nossa viagem foi genial. A página abre super rápida no celular, sem precisar baixar aplicativo nenhum.',
     author: 'Ana Paula Ferreira',
-    tag: 'Aniversário de Namoro',
+    occasion: 'Aniversário de Namoro',
   },
   {
     quote:
       'Muito além de uma mensagem comum de WhatsApp. O lacre de cera que quebra ao clicar e o toca-discos deram um ar elegante e memorável.',
     author: 'Rafael Santos',
-    tag: 'Declaração Especial',
+    occasion: 'Declaração Especial',
   },
 ]
 
@@ -53,12 +53,9 @@ export function SocialProofSection() {
           ))}
         </div>
 
-        {/* Título de Depoimentos */}
+        {/* Título de Depoimentos sem badges */}
         <SectionReveal scrollRange={[0.0, 0.1, 0.88, 1.0]}>
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-pink-100 text-[#be123c] font-bold text-xs uppercase tracking-wider mb-4 border border-pink-300/80 shadow-xs">
-              Histórias Reais
-            </span>
             <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-4 tracking-tight">
               Quem enviou, <span className="text-[#e11d48]">se apaixonou</span>
             </h2>
@@ -86,7 +83,7 @@ export function SocialProofSection() {
                       {/* Estrelas de Avaliação */}
                       <div className="flex items-center gap-1 mb-4 text-amber-400">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={16} className="fill-amber-400" />
+                          <Star key={i} size={16} className="fill-amber-400 text-amber-400" />
                         ))}
                       </div>
 
@@ -105,7 +102,7 @@ export function SocialProofSection() {
                             {t.author}
                           </span>
                           <span className="block text-[11px] font-medium text-[#701a35]">
-                            {t.tag}
+                            {t.occasion}
                           </span>
                         </div>
                       </div>
