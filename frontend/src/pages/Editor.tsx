@@ -10,7 +10,7 @@ import {
   RefreshCcw,
   Smartphone,
   Monitor,
-  FolderHeart,
+  MailOpen,
   Share2,
 } from 'lucide-react'
 
@@ -760,14 +760,14 @@ export function Editor() {
           {/* Ações Imediatas no Topo */}
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              to="/profile"
+              to="/profile?tab=messages"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs sm:text-sm font-semibold text-text hover:bg-surface-raised hover:border-primary/30 transition-all shadow-xs"
             >
-              <FolderHeart size={16} className="text-primary" />
+              <MailOpen size={16} className="text-primary" />
               <span>Minhas Cartas</span>
             </Link>
 
-            {(hasPageId || status === 'published') ? (
+            {status === 'published' ? (
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

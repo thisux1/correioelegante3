@@ -10,7 +10,7 @@ import {
   Heart,
   Sparkles,
   QrCode,
-  FolderHeart,
+  MailOpen,
   MessageCircle,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -86,7 +86,7 @@ export function ShareLetterModal({
 
   const handleNavigateToProfile = useCallback(() => {
     onClose()
-    navigate('/profile')
+    navigate('/profile?tab=messages')
   }, [navigate, onClose])
 
   const recipientViewHref = pageId ? `/card/page/${pageId}` : '/card'
@@ -95,40 +95,40 @@ export function ShareLetterModal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          {/* Backdrop com blur romântico */}
+          {/* Backdrop com blur suave */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           />
 
-          {/* Modal Container */}
+          {/* Modal Container — Identidade Rosa Claro / Blush Romântico */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            initial={{ opacity: 0, scale: 0.92, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+            exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ type: 'spring', damping: 28, stiffness: 340 }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="share-modal-title"
-            className="relative z-50 w-full max-w-lg overflow-hidden rounded-3xl bg-surface p-6 sm:p-8 shadow-2xl border border-primary/20 ring-1 ring-black/10 text-text max-h-[90vh] overflow-y-auto"
+            className="relative z-50 w-full max-w-lg overflow-hidden rounded-3xl bg-surface/98 backdrop-blur-xl p-6 sm:p-8 shadow-2xl border border-pink-200/70 dark:border-pink-900/40 text-text max-h-[90vh] overflow-y-auto"
           >
             {/* Botão fechar */}
             <button
               type="button"
               onClick={onClose}
               aria-label="Fechar modal de compartilhamento"
-              className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/5 text-text-light hover:bg-black/10 hover:text-text transition-colors"
+              className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-pink-100/50 dark:bg-zinc-800 text-text-light hover:bg-pink-100 hover:text-text transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
 
-            {/* Cabeçalho Celebratório com Selo de Cera 3D */}
+            {/* Cabeçalho Celebratório com Selo de Cera Delicado em Rosa Claro */}
             <div className="text-center mb-6">
               <motion.div
-                initial={{ scale: 0, rotate: -25 }}
+                initial={{ scale: 0, rotate: -20 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{
                   type: 'spring',
@@ -138,38 +138,37 @@ export function ShareLetterModal({
                 }}
                 className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center"
               >
-                {/* Brilho pulsante no fundo */}
+                {/* Aura suave em rosa claro / blush */}
                 <motion.div
                   animate={{
-                    scale: [1, 1.18, 1],
-                    opacity: [0.35, 0.65, 0.35],
+                    scale: [1, 1.15, 1],
+                    opacity: [0.35, 0.6, 0.35],
                   }}
                   transition={{
                     repeat: Infinity,
                     duration: 3,
                     ease: 'easeInOut',
                   }}
-                  className="absolute inset-0 rounded-full bg-gradient-to-tr from-rose-500/40 via-primary/30 to-amber-400/40 blur-lg"
+                  className="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-300/40 via-rose-200/30 to-amber-200/30 blur-lg"
                 />
 
-                {/* Selo de Cera 3D em Relevo Rubi Realista */}
+                {/* Selo de Cera Rosa Elegante */}
                 <div
-                  className="relative flex h-18 w-18 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 via-rose-700 to-rose-950 shadow-[0_10px_25px_-5px_rgba(225,29,72,0.6),inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-4px_6px_rgba(0,0,0,0.6)] border-2 border-rose-400/50 ring-4 ring-rose-500/20"
+                  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 via-rose-400 to-pink-500 shadow-[0_8px_20px_-4px_rgba(244,63,94,0.35),inset_0_2px_4px_rgba(255,255,255,0.45)] border-2 border-pink-300/60 ring-4 ring-pink-400/15"
                   aria-hidden="true"
                 >
-                  {/* Textura de anéis da cera */}
-                  <div className="absolute inset-1.5 rounded-full border border-dashed border-white/30" />
-                  <Heart className="h-9 w-9 fill-white text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" />
+                  <div className="absolute inset-1 rounded-full border border-dashed border-white/35" />
+                  <Heart className="h-8 w-8 fill-white text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]" />
                 </div>
 
-                {/* Efeito de faíscas mágicas */}
+                {/* Efeito de faíscas sutis */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.25 }}
                   className="absolute -top-1 -right-1 text-amber-400"
                 >
-                  <Sparkles size={20} className="fill-amber-400" />
+                  <Sparkles size={18} className="fill-amber-400" />
                 </motion.div>
               </motion.div>
 
@@ -195,7 +194,7 @@ export function ShareLetterModal({
                 Link da Carta
               </label>
 
-              <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-raised/70 p-1.5 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+              <div className="flex items-center gap-2 rounded-2xl border border-pink-200/60 dark:border-pink-900/30 bg-pink-50/40 dark:bg-zinc-900/40 p-1.5 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                 <input
                   id="share-letter-url"
                   type="text"
@@ -263,17 +262,17 @@ export function ShareLetterModal({
               </a>
             </div>
 
-            {/* Seção 3: Gerador de QR Code com Moldura Temática */}
-            <div className="mb-6 rounded-2xl border border-border/80 bg-surface-raised/50 p-4 sm:p-5 text-center">
-              <div className="flex items-center justify-center gap-1.5 mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">
-                <QrCode size={15} className="text-primary" />
+            {/* Seção 3: Gerador de QR Code com Moldura Rosa Pastel */}
+            <div className="mb-6 rounded-2xl border border-pink-200/60 dark:border-pink-900/30 bg-pink-50/30 dark:bg-zinc-900/40 p-4 sm:p-5 text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-3 text-xs font-bold uppercase tracking-wider text-primary">
+                <QrCode size={15} />
                 <span>QR Code para Presentes & Cartões Físicos</span>
               </div>
 
               {/* Moldura de Selo Postal com o QR Code */}
               <div
                 ref={qrCanvasRef}
-                className="relative mx-auto my-3 inline-block rounded-2xl border-2 border-dashed border-primary/30 bg-white p-3.5 shadow-md"
+                className="relative mx-auto my-3 inline-block rounded-2xl border-2 border-dashed border-pink-300/60 dark:border-pink-900/40 bg-white p-3.5 shadow-md"
               >
                 <QRCodeCanvas
                   value={letterUrl || 'https://correioelegante.studio'}
@@ -284,7 +283,7 @@ export function ShareLetterModal({
                   fgColor="#18181b"
                 />
                 <div
-                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-white shadow-xs"
+                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white shadow-xs"
                   title="Selo Postal"
                 >
                   <Heart size={12} className="fill-white" />
@@ -298,7 +297,7 @@ export function ShareLetterModal({
               <button
                 type="button"
                 onClick={handleDownloadQrCode}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2 text-xs font-semibold text-text hover:bg-surface-raised hover:border-primary/30 transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-pink-200/70 dark:border-pink-900/40 bg-white dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-text hover:bg-pink-50/60 dark:hover:bg-zinc-700 transition-colors shadow-xs cursor-pointer"
               >
                 {qrDownloaded ? (
                   <>
@@ -315,12 +314,12 @@ export function ShareLetterModal({
             </div>
 
             {/* Seção 4: Ações Secundárias (Ver como Destinatário e Minhas Cartas) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-border/70">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-pink-200/60 dark:border-pink-900/30">
               <a
                 href={recipientViewHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs sm:text-sm font-semibold text-text hover:bg-primary/5 hover:border-primary/30 transition-colors text-center"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-pink-200/70 dark:border-pink-900/40 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs sm:text-sm font-semibold text-text hover:bg-pink-50/60 dark:hover:bg-zinc-700 transition-colors text-center"
               >
                 <ExternalLink size={15} className="text-text-muted" />
                 <span>Ver como Destinatário</span>
@@ -331,7 +330,7 @@ export function ShareLetterModal({
                 onClick={handleNavigateToProfile}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 py-2.5 text-xs sm:text-sm font-semibold text-primary hover:bg-primary/20 transition-colors text-center cursor-pointer"
               >
-                <FolderHeart size={15} />
+                <MailOpen size={15} />
                 <span>Minhas Cartas</span>
               </button>
             </div>
