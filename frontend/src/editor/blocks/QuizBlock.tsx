@@ -122,43 +122,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const successMessage = props.successMessage || 'Eu sabia! Te amo muito. ❤️'
 
   return (
-    <div className="relative mx-auto w-full max-w-lg select-none px-2 py-4">
-      {/* Controles discretos no topo do modo de edição */}
-      {isEditMode && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
-          <label className="inline-flex cursor-pointer items-center gap-2 font-medium text-text-light hover:text-text">
-            <input
-              type="checkbox"
-              checked={isPlayful}
-              onChange={(e) => updateProp('isPlayfulNo', e.target.checked)}
-              className="h-4 w-4 rounded accent-primary"
-              aria-label="Ativar botão não fujão"
-            />
-            <span>Botão 'Não' fujão ✨</span>
-          </label>
-
-          <div className="flex items-center gap-2">
-            {hasAnsweredYes ? (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-white/90 px-3 py-1.5 font-bold text-primary shadow-xs backdrop-blur-xs transition-colors hover:bg-primary/10"
-              >
-                <RotateCcw size={13} /> Editar Pergunta
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleYes}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-white/90 px-3 py-1.5 font-bold text-primary shadow-xs backdrop-blur-xs transition-colors hover:bg-primary hover:text-white"
-              >
-                <Heart size={13} fill="currentColor" /> Ver Reação do 'SIM'
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
+    <div className="relative mx-auto w-full max-w-lg select-none px-2 py-3">
       {/* Card Interativo Principal */}
       <div
         ref={containerRef}
@@ -327,6 +291,42 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Controles do modo de edição posicionados ABAIXO do card para nunca colidir com BlockControls */}
+      {isEditMode && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
+          <label className="inline-flex cursor-pointer items-center gap-2 font-medium text-text-light hover:text-text select-none">
+            <input
+              type="checkbox"
+              checked={isPlayful}
+              onChange={(e) => updateProp('isPlayfulNo', e.target.checked)}
+              className="h-4 w-4 rounded accent-primary"
+              aria-label="Ativar botão não fujão"
+            />
+            <span>Botão 'Não' fujão ✨</span>
+          </label>
+
+          <div className="flex items-center gap-2">
+            {hasAnsweredYes ? (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-surface px-3 py-1.5 font-bold text-primary shadow-xs backdrop-blur-xs transition-colors hover:bg-primary/10 active:scale-95"
+              >
+                <RotateCcw size={13} /> Editar Pergunta
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleYes}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/25 bg-surface px-3.5 py-1.5 font-bold text-primary shadow-xs backdrop-blur-xs transition-all hover:bg-primary hover:text-white active:scale-95"
+              >
+                <Heart size={13} fill="currentColor" /> Ver Reação do 'SIM'
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
