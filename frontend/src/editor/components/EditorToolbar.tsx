@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import { Link } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Check,
@@ -22,9 +23,11 @@ import {
   Sun,
   Moon,
   Heart,
+  Share2,
+  FolderHeart,
 } from 'lucide-react'
 
-import { MAX_BLOCKS, type BlockType } from '@/editor/types'
+import { MAX_BLOCKS, type BlockType, type PageStatus } from '@/editor/types'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
 import { getThemeById, resolveThemeId, themeCatalog } from '@/editor/themes'
@@ -69,6 +72,7 @@ interface ToolbarControlsProps {
   saveState: 'idle' | 'saving' | 'saved' | 'error'
   hasPageId: boolean
   selectedThemeId: string
+  status?: PageStatus
   toggleMode: () => void
   toggleAddMenu: () => void
   toggleThemeMenu: () => void
@@ -77,6 +81,7 @@ interface ToolbarControlsProps {
   onSave?: () => void
   showPublishCta: boolean
   onPublishCtaClick: () => void
+  onShareClick?: () => void
 }
 
 
@@ -445,6 +450,7 @@ function ToolbarControls({
   saveState,
   hasPageId,
   selectedThemeId,
+  status = 'draft',
   toggleMode,
   toggleAddMenu,
   toggleThemeMenu,
@@ -452,13 +458,14 @@ function ToolbarControls({
   onSelectTheme,
   showPublishCta,
   onPublishCtaClick,
+  onShareClick,
 }: ToolbarControlsProps) {
   const useCompactButtons = isVerticalDock
   const normalizedSelectedThemeId = resolveThemeId(selectedThemeId)
   const selectedTheme = getThemeById(normalizedSelectedThemeId)
 
   const isSaving = saveState === 'saving'
-
+  const isPublished = status === 'published'
 
   const compactBtnBase = 'flex w-full min-h-11 items-center justify-center rounded-lg bg-transparent p-0 text-primary transition-colors hover:bg-surface/60 active:bg-surface/80 disabled:cursor-not-allowed disabled:opacity-40'
   const compactBtnAccent = 'flex w-full min-h-11 items-center justify-center rounded-lg bg-primary p-0 text-white shadow-[0_8px_20px_-10px_rgba(236,72,153,0.5)] transition-colors hover:bg-primary-dark'
@@ -475,7 +482,7 @@ function ToolbarControls({
           disabled={mode !== 'edit' || isAtBlockLimit}
           className={useCompactButtons
             ? compactBtnBase
-            : 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 p-0 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40'}
+            : 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 p-0 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer'}
           aria-label="Adicionar bloco"
           aria-expanded={isAddMenuOpen}
           aria-haspopup="menu"
@@ -504,7 +511,7 @@ function ToolbarControls({
           disabled={mode !== 'edit'}
           className={useCompactButtons
             ? compactBtnBase
-            : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-text transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40'}
+            : 'inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-text transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer'}
           aria-label="Selecionar tema"
           aria-expanded={isThemeMenuOpen}
           aria-haspopup="menu"
@@ -552,7 +559,7 @@ function ToolbarControls({
           layout="position"
           type="button"
           onClick={toggleMode}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/35 bg-primary px-4 text-sm font-semibold text-white shadow-[0_12px_28px_-16px_rgba(236,72,153,0.7)] transition-colors hover:bg-primary-dark"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/35 bg-primary px-4 text-sm font-semibold text-white shadow-[0_12px_28px_-16px_rgba(236,72,153,0.7)] transition-colors hover:bg-primary-dark cursor-pointer"
         >
           {mode === 'edit' ? <Eye size={16} /> : <Pencil size={16} />}
           {mode === 'edit' ? 'Preview' : 'Editar'}
@@ -568,8 +575,8 @@ function ToolbarControls({
             type="button"
             onClick={onPublishCtaClick}
             className={useCompactButtons
-              ? 'flex w-full min-h-11 items-center justify-center rounded-lg bg-primary p-0 text-white shadow-md transition-colors hover:bg-primary-dark active:scale-95'
-              : 'inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98]'}
+              ? 'flex w-full min-h-11 items-center justify-center rounded-lg bg-primary p-0 text-white shadow-md transition-colors hover:bg-primary-dark active:scale-95 cursor-pointer'
+              : 'inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] cursor-pointer'}
             aria-label="Pagar e publicar"
             title="Pagar e publicar"
           >
@@ -579,8 +586,88 @@ function ToolbarControls({
         </>
       ) : null}
 
+      {(hasPageId || isPublished) && onShareClick ? (
+        <>
+          {separator}
+          {useCompactButtons ? (
+            <motion.button
+              layoutId="toolbar-btn-share"
+              layout="position"
+              type="button"
+              onClick={onShareClick}
+              className={compactBtnBase}
+              title="Compartilhar carta"
+              aria-label="Compartilhar carta"
+            >
+              <Share2 size={16} />
+            </motion.button>
+          ) : (
+            <motion.button
+              layoutId="toolbar-btn-share"
+              layout="position"
+              type="button"
+              onClick={onShareClick}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-xs"
+              title="Compartilhar carta"
+              aria-label="Compartilhar carta"
+            >
+              <Share2 size={15} />
+              <span>Compartilhar</span>
+            </motion.button>
+          )}
+        </>
+      ) : null}
 
       {separator}
+
+      {/* Botão Minhas Cartas */}
+      {useCompactButtons ? (
+        <Link
+          to="/profile"
+          className={compactBtnBase}
+          title="Minhas Cartas"
+          aria-label="Minhas Cartas"
+        >
+          <FolderHeart size={16} />
+        </Link>
+      ) : (
+        <Link
+          to="/profile"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-text hover:bg-primary/10 hover:border-primary/30 transition-colors shadow-2xs"
+          title="Minhas Cartas"
+        >
+          <FolderHeart size={15} className="text-primary" />
+          <span>Minhas Cartas</span>
+        </Link>
+      )}
+
+      {separator}
+
+      {/* Indicador de Status Explícito */}
+      <motion.span
+        layoutId="toolbar-status-badge"
+        layout="position"
+        className={useCompactButtons
+          ? `w-full text-center rounded-lg px-2 py-1 text-[10px] font-bold ${
+            isPublished
+              ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+              : 'bg-amber-500/20 text-amber-800 dark:text-amber-300'
+          }`
+          : `inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold ${
+            isPublished
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+              : 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300'
+          }`}
+        role="status"
+        title={isPublished ? 'Publicada & Compartilhável' : 'Rascunho (Ainda não publicado)'}
+      >
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            isPublished ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+          }`}
+        />
+        {useCompactButtons ? (isPublished ? 'PUB' : 'RASC') : (isPublished ? 'Publicada' : 'Rascunho')}
+      </motion.span>
 
       <motion.span
         layoutId="toolbar-status-text"
@@ -620,13 +707,15 @@ function ToolbarControls({
   )
 }
 
-interface EditorToolbarProps {
+export interface EditorToolbarProps {
   onSave?: () => void
   saveState: 'idle' | 'saving' | 'saved' | 'error'
   hasPageId: boolean
   selectedThemeId: string
   showPublishCta: boolean
   onPublishCtaClick: () => void
+  status?: PageStatus
+  onShareClick?: () => void
 }
 
 
@@ -728,6 +817,8 @@ export function EditorToolbar({
   selectedThemeId,
   showPublishCta,
   onPublishCtaClick,
+  status,
+  onShareClick,
 }: EditorToolbarProps) {
   const shouldReduceMotion = useReducedMotion()
   const { blocksCount, mode, addBlock, setTheme, selectBlock, setMode } = useEditorStore(
@@ -857,6 +948,7 @@ export function EditorToolbar({
                   saveState={saveState}
                   hasPageId={hasPageId}
                   selectedThemeId={selectedThemeId}
+                  status={status}
                   toggleMode={toggleMode}
                   toggleAddMenu={toggleAddMenu}
                   toggleThemeMenu={toggleThemeMenu}
@@ -865,6 +957,7 @@ export function EditorToolbar({
                   onSave={onSave}
                   showPublishCta={showPublishCta}
                   onPublishCtaClick={onPublishCtaClick}
+                  onShareClick={onShareClick}
                 />
               </div>
             </motion.div>
@@ -980,6 +1073,7 @@ export function EditorToolbar({
                         saveState={saveState}
                         hasPageId={hasPageId}
                         selectedThemeId={selectedThemeId}
+                        status={status}
                         toggleMode={toggleMode}
                         toggleAddMenu={toggleAddMenu}
                         toggleThemeMenu={toggleThemeMenu}
@@ -988,6 +1082,7 @@ export function EditorToolbar({
                         onSave={onSave}
                         showPublishCta={showPublishCta}
                         onPublishCtaClick={onPublishCtaClick}
+                        onShareClick={onShareClick}
                       />
                     </div>
                   </motion.div>
