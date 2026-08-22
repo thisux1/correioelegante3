@@ -487,102 +487,70 @@ export function Profile() {
                   return (
                     <div
                       key={page.id}
-                      className={`group relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-md ${
+                      className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-md ${
                         isPublished
-                          ? 'bg-gradient-to-br from-surface to-background/80 border border-primary/20 shadow-xs'
-                          : 'bg-gradient-to-br from-amber-500/5 to-surface border border-dashed border-amber-500/30 shadow-xs'
+                          ? 'bg-surface border-primary/20 hover:border-primary/40'
+                          : 'bg-surface border-amber-500/30 hover:border-amber-500/50'
                       } p-4 sm:p-5`}
                     >
-                      {/* Silhueta da dobra do envelope fechado ou folha despontando no rascunho */}
+                      {/* Linha sutil de dobra do envelope no topo */}
                       {isPublished ? (
-                        <>
-                          {/* Dobra suave no topo do envelope selado */}
-                          <div
-                            className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-12 bg-primary/5 rounded-b-[100%] border-b border-primary/15 transition-all group-hover:bg-primary/10"
-                            aria-hidden="true"
-                          />
-                          <div
-                            className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary/25 to-transparent"
-                            aria-hidden="true"
-                          />
-                        </>
+                        <div
+                          className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary/10 via-primary/30 to-primary/10"
+                          aria-hidden="true"
+                        />
                       ) : (
-                        <>
-                          {/* Folha interna de carta despontando levemente do envelope entreaberto */}
-                          <div
-                            className="pointer-events-none absolute top-0 right-12 sm:right-16 -translate-y-1.5 w-24 sm:w-32 h-3.5 bg-amber-100/80 rounded-t-sm border-t border-x border-amber-300/60 shadow-xs rotate-1"
-                            aria-hidden="true"
-                          >
-                            <div className="w-full h-full border-b border-dashed border-amber-200/50" />
-                          </div>
-                          <div
-                            className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent"
-                            aria-hidden="true"
-                          />
-                        </>
+                        <div
+                          className="pointer-events-none absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500/10 via-amber-500/40 to-amber-500/10"
+                          aria-hidden="true"
+                        />
                       )}
 
                       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Seção esquerda: Selo de cera / Ícone + Título + Carimbos / Indicadores + Metadados */}
-                        <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+                        {/* Seção esquerda: Envelope Wax Seal / Pen Icon + Título + Metadados (SEM BADGES) */}
+                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
                           {isPublished ? (
-                            /* Selo de Cera (Wax Seal) em 3D rubi/dourado com monograma de coração */
+                            /* Selo de Cera (Wax Seal) em relevo 3D rubi com coração */
                             <div
-                              className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-md text-white flex items-center justify-center border border-white/40 ring-2 ring-primary/20 shrink-0 transition-transform group-hover:scale-105"
-                              title="Carta Selada com Lacre de Cera"
+                              className="w-11 h-11 rounded-full bg-gradient-to-br from-rose-600 via-rose-700 to-rose-950 text-white shadow-md ring-2 ring-primary/20 border border-white/25 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                              title="Carta Selada"
                             >
-                              <Heart className="w-4 h-4 fill-white/90 text-white drop-shadow-xs" />
+                              <Heart className="w-5 h-5 fill-white text-white drop-shadow-xs" />
                             </div>
                           ) : (
-                            /* Ícone caligráfico de rascunho / confecção */
+                            /* Ícone de Pena / Carta em Redação */
                             <div
-                              className="w-9 h-9 rounded-full bg-amber-500/10 text-amber-600 border border-dashed border-amber-400/50 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-                              title="Rascunho em confecção"
+                              className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                              title="Rascunho de Carta"
                             >
-                              <Pencil className="w-4 h-4 text-amber-600" />
+                              <Pencil className="w-5 h-5" />
                             </div>
                           )}
 
-                          <div className="min-w-0 flex-1 space-y-1.5">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-text text-sm sm:text-base break-words">
-                                {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
-                              </p>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <h4 className="font-display font-semibold text-text text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                              {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
+                            </h4>
 
-                              {isPublished ? (
-                                /* Carimbo postal discreto indicando 'Selada & Entregue' */
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-dashed border-primary/40 bg-primary/5 text-primary-dark text-[10px] font-mono tracking-wider uppercase -rotate-1 select-none">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-primary/70" />
-                                  <span>Selada & Entregue</span>
-                                </div>
-                              ) : (
-                                /* Indicador caligráfico de 'Em confecção / Não selada' */
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-dashed border-amber-500/40 bg-amber-500/10 text-amber-800 text-[10px] font-mono tracking-wider uppercase select-none">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                  <span>Em confecção / Não selada</span>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-text-muted">
+                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-text-muted">
                               <span>
                                 {isPublished && page.publishedAt
-                                  ? `Publicada em: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
-                                  : `Atualizada em: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
+                                  ? `Publicada em ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
+                                  : `Salvo em ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
                               </span>
                               <span>•</span>
                               <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
                               {page.theme ? (
                                 <>
                                   <span>•</span>
-                                  <span className="capitalize">{page.theme}</span>
+                                  <span className="capitalize">{page.theme.replace(/-/g, ' ')}</span>
                                 </>
                               ) : null}
                             </div>
                           </div>
                         </div>
 
-                        {/* Seção direita: Ações rápidas */}
+                        {/* Seção direita: Ações diretas e acessíveis */}
                         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0">
                           {isPublished && publicHref ? (
                             <>
@@ -633,7 +601,7 @@ export function Profile() {
                               variant={isPublished ? 'ghost' : 'outline'}
                               size="sm"
                               className={`w-full text-xs font-semibold ${
-                                !isPublished ? 'border-amber-300/70 text-amber-900 hover:bg-amber-50/60' : ''
+                                !isPublished ? 'border-amber-400/60 text-amber-900 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30' : ''
                               }`}
                             >
                               <Pencil className="w-3.5 h-3.5 mr-1" />
@@ -653,7 +621,7 @@ export function Profile() {
                           <button
                             type="button"
                             onClick={() => setPageToDelete(page)}
-                            className="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                             title="Excluir carta"
                             aria-label="Excluir carta"
                           >
