@@ -3,7 +3,7 @@ import { motion, useMotionTemplate, useSpring, useTransform, type MotionValue } 
 
 // ── Scroll Timeline (chapter-based cyclic) ──────────────────────
 // 0.00 → 0.35  Airplane enters, flies, and hands off to envelope
-// 0.35 → 0.65  Envelope materialises, letter emerges, and flap opens
+// 0.35 → 0.65  Envelope materialises, flap unfolds upwards, letter slides out
 // 0.65 → 0.85  Heart and sparkle particles emerge from the envelope
 // 0.85 → 1.00  Soft cloud veil transition
 
@@ -94,80 +94,122 @@ function WindTrail({ isMobile }: { isMobile: boolean }) {
     )
 }
 
-// ── Envelope SVG ────────────────────────────────────────────────
-function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
+// ── Letter Sheet (Layer 2) ──────────────────────────────────────
+function LetterSheet() {
+    return (
+        <svg viewBox="0 0 180 130" width="240" height="173" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="8" width="164" height="114" rx="8" fill="#ffffff" stroke="rgba(244,63,94,0.45)" strokeWidth="1.2" />
+            <line x1="26" y1="74" x2="154" y2="74" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="26" y1="88" x2="154" y2="88" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="26" y1="102" x2="120" y2="102" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <text x="26" y="52" fill="#be123c" fontSize="20" fontFamily="'Playfair Display', serif" fontStyle="italic" fontWeight="bold">
+                Para você
+            </text>
+        </svg>
+    )
+}
+
+// ── 3-Layer Stacked Physical Envelope ───────────────────────────
+interface StackedEnvelopeProps {
+    flapProgress: MotionValue<number>
+}
+
+function StackedEnvelope({ flapProgress }: StackedEnvelopeProps) {
     const springFlap = useSpring(flapProgress, { stiffness: 150, damping: 20, mass: 0.6 })
     const flapRotateX = useTransform(springFlap, [0, 1], [0, -180])
+    const waxSealOpacity = useTransform(springFlap, [0, 0.35], [1, 0])
+
+    // Letter starts inside pocket (y = 20) and rises up out of the envelope (y = -88)
+    const letterSlideY = useTransform(springFlap, [0, 0.20, 1], [24, 18, -88])
+    const letterScale = useTransform(springFlap, [0, 0.20, 1], [0.88, 0.90, 1.02])
+    const letterRotate = useTransform(springFlap, [0, 0.20, 1], [0, 1, -2])
 
     return (
-        <svg viewBox="0 0 180 130" width="300" height="217" fill="none" xmlns="http://www.w3.org/2000/svg" overflow="visible">
-            {/* Envelope Back Wall */}
-            <rect x="0" y="30" width="180" height="100" rx="6"
-                fill="#fff0f4"
-                stroke="rgba(244,63,94,0.3)"
-                strokeWidth="1.2"
-            />
-
-            {/* Left inner fold */}
-            <polygon
-                points="0,30 90,75 0,130"
-                fill="rgba(255,228,235,0.7)"
-                stroke="rgba(244,63,94,0.25)"
-                strokeWidth="0.8"
-            />
-            {/* Right inner fold */}
-            <polygon
-                points="180,30 90,75 180,130"
-                fill="rgba(255,220,230,0.7)"
-                stroke="rgba(244,63,94,0.25)"
-                strokeWidth="0.8"
-            />
-            {/* Bottom inner fold */}
-            <polygon
-                points="0,130 180,130 90,75"
-                fill="rgba(255,235,242,0.6)"
-            />
-
-            {/* Letter lines inside pocket */}
-            <line x1="30" y1="88" x2="150" y2="88" stroke="rgba(225,29,72,0.25)" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="30" y1="100" x2="150" y2="100" stroke="rgba(225,29,72,0.25)" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="30" y1="112" x2="110" y2="112" stroke="rgba(225,29,72,0.25)" strokeWidth="1.5" strokeLinecap="round" />
-
-            {/* Flap — realistically unfolds upwards around top crease (y=30) */}
-            <motion.g
-                style={{
-                    originX: '90px',
-                    originY: '30px',
-                    transformBox: 'view-box',
-                    transformStyle: 'preserve-3d',
-                    rotateX: flapRotateX,
-                }}
-            >
-                {/* Exterior Flap */}
-                <polygon
-                    points="0,30 180,30 90,75"
-                    fill="#ffffff"
-                    stroke="rgba(244,63,94,0.45)"
+        <div className="relative w-[300px] h-[217px] perspective-[800px] select-none">
+            {/* ── LAYER 1: BACK WALL & UNFOLDING FLAP ── */}
+            <svg viewBox="0 0 180 130" className="absolute inset-0 w-full h-full" fill="none" overflow="visible">
+                {/* Envelope Back Wall */}
+                <rect x="0" y="30" width="180" height="100" rx="6"
+                    fill="#ffe8ef"
+                    stroke="rgba(244,63,94,0.3)"
                     strokeWidth="1.2"
                 />
-                {/* Interior Lining (back side of flap) */}
-                <polygon
-                    points="0,30 180,30 90,75"
-                    fill="#ffe4ec"
-                    opacity="0.9"
-                    style={{ transform: 'rotateY(180deg)', transformOrigin: '90px 30px' }}
-                />
-                {/* Wax seal — breaks and fades as the flap opens */}
-                <motion.g style={{ opacity: useTransform(springFlap, [0, 0.35], [1, 0]) }}>
-                    <circle cx="90" cy="46" r="11" fill="#e11d48" />
-                    <circle cx="90" cy="46" r="9" fill="#be123c" />
-                    <path
-                        d="M90 49 C90 49 84 45 84 41.5 C84 39.5 85.5 38 87.5 38 C88.7 38 89.6 38.7 90 39.5 C90.4 38.7 91.3 38 92.5 38 C94.5 38 96 39.5 96 41.5 C96 45 90 49 90 49Z"
-                        fill="white"
+
+                {/* Top Flap — unfolds upwards around top crease (y=30) */}
+                <motion.g
+                    style={{
+                        originX: '90px',
+                        originY: '30px',
+                        transformBox: 'view-box',
+                        transformStyle: 'preserve-3d',
+                        rotateX: flapRotateX,
+                    }}
+                >
+                    {/* Exterior Flap */}
+                    <polygon
+                        points="0,30 180,30 90,75"
+                        fill="#ffffff"
+                        stroke="rgba(244,63,94,0.45)"
+                        strokeWidth="1.2"
                     />
+                    {/* Interior Lining (showing when rotated up) */}
+                    <polygon
+                        points="0,30 180,30 90,75"
+                        fill="#fecdd3"
+                        opacity="0.9"
+                        style={{ transform: 'rotateY(180deg)', transformOrigin: '90px 30px' }}
+                    />
+                    {/* Wax seal */}
+                    <motion.g style={{ opacity: waxSealOpacity }}>
+                        <circle cx="90" cy="46" r="11" fill="#e11d48" />
+                        <circle cx="90" cy="46" r="9" fill="#be123c" />
+                        <path
+                            d="M90 49 C90 49 84 45 84 41.5 C84 39.5 85.5 38 87.5 38 C88.7 38 89.6 38.7 90 39.5 C90.4 38.7 91.3 38 92.5 38 C94.5 38 96 39.5 96 41.5 C96 45 90 49 90 49Z"
+                            fill="white"
+                        />
+                    </motion.g>
                 </motion.g>
-            </motion.g>
-        </svg>
+            </svg>
+
+            {/* ── LAYER 2: THE LETTER (SANDWICHED IN MIDDLE, SLIDING OUT) ── */}
+            <motion.div
+                className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                style={{
+                    top: '28px',
+                    y: letterSlideY,
+                    scale: letterScale,
+                    rotate: letterRotate,
+                    filter: 'drop-shadow(0 10px 22px rgba(225,29,72,0.22)) drop-shadow(0 2px 6px rgba(0,0,0,0.06))',
+                }}
+            >
+                <LetterSheet />
+            </motion.div>
+
+            {/* ── LAYER 3: FRONT POCKET (IN FRONT OF THE LOWER PART OF THE LETTER) ── */}
+            <svg viewBox="0 0 180 130" className="absolute inset-0 w-full h-full pointer-events-none" fill="none" overflow="visible">
+                {/* Left fold */}
+                <polygon
+                    points="0,30 90,80 0,130"
+                    fill="#fff5f8"
+                    stroke="rgba(244,63,94,0.3)"
+                    strokeWidth="1.2"
+                />
+                {/* Right fold */}
+                <polygon
+                    points="180,30 90,80 180,130"
+                    fill="#ffe4ec"
+                    stroke="rgba(244,63,94,0.3)"
+                    strokeWidth="1.2"
+                />
+                {/* Bottom pocket fold */}
+                <polygon
+                    points="0,130 180,130 90,75"
+                    fill="#ffffff"
+                    stroke="rgba(244,63,94,0.4)"
+                    strokeWidth="1.4"
+                />
+            </svg>
+        </div>
     )
 }
 
@@ -186,20 +228,6 @@ function Heart() {
                 strokeLinecap="round"
                 fill="none"
             />
-        </svg>
-    )
-}
-
-function LetterSheet() {
-    return (
-        <svg viewBox="0 0 180 130" width="240" height="173" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="8" y="8" width="164" height="114" rx="8" fill="#ffffff" stroke="rgba(244,63,94,0.45)" strokeWidth="1.2" />
-            <line x1="26" y1="74" x2="154" y2="74" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
-            <line x1="26" y1="88" x2="154" y2="88" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
-            <line x1="26" y1="102" x2="120" y2="102" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
-            <text x="26" y="52" fill="#be123c" fontSize="20" fontFamily="'Playfair Display', serif" fontStyle="italic" fontWeight="bold">
-                Para você
-            </text>
         </svg>
     )
 }
@@ -391,28 +419,6 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
     const envGlowStrength = useTransform(flapProgress, [0.5, 1], [0, 0.25])
     const envGlow = useMotionTemplate`drop-shadow(0 6px 20px rgba(225,29,72,${envGlowStrength}))`
 
-    // ── Letter Emerging ──────────────────────────────────────────
-    const letterOpacity = useTransform(scrollProgress,
-        [0.48, 0.56, 0.80, 0.88, 1.00],
-        [0, 1, 1, 0, 0],
-        { clamp: true }
-    )
-    const letterY = useTransform(scrollProgress,
-        [0.26, 0.48, 0.64, 0.84, 1.00],
-        ['48%', '37%', '23%', '30%', '48%'],
-        { clamp: true }
-    )
-    const letterScale = useTransform(scrollProgress,
-        [0.48, 0.62, 0.84, 1.00],
-        [0.35, 1, 1, 0.35],
-        { clamp: true }
-    )
-    const letterRotate = useTransform(scrollProgress,
-        [0.48, 0.62, 0.84, 1.00],
-        [4, 0, 0, 4],
-        { clamp: true }
-    )
-
     // ── Heart & Burst Chapter ────────────────────────────────────
     const heartOpacity = useTransform(scrollProgress,
         [0.60, 0.70, 0.90, 0.98, 1.00],
@@ -516,7 +522,7 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                 <PaperAirplane />
             </motion.div>
 
-            {/* ── Envelope (Back wall, inner folds & top unfolding flap) ── */}
+            {/* ── 3-Layer Stacked Envelope & Emerging Letter ── */}
             <motion.div
                 className="absolute pointer-events-none"
                 style={{
@@ -526,29 +532,11 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                     scale: envScale,
                     rotate: envRotate,
                     filter: envGlow,
-                    perspective: 400,
                     translateX: '-50%',
                     translateY: '-50%',
                 }}
             >
-                <Envelope flapProgress={flapProgress} />
-            </motion.div>
-
-            {/* ── Letter Emerging (In Front of Envelope Back & Flap!) ── */}
-            <motion.div
-                className="absolute pointer-events-none z-10"
-                style={{
-                    opacity: letterOpacity,
-                    left: envX,
-                    top: letterY,
-                    scale: letterScale,
-                    rotate: letterRotate,
-                    translateX: '-50%',
-                    translateY: '-50%',
-                    filter: 'drop-shadow(0 12px 24px rgba(225,29,72,0.22)) drop-shadow(0 2px 6px rgba(0,0,0,0.06))',
-                }}
-            >
-                <LetterSheet />
+                <StackedEnvelope flapProgress={flapProgress} />
             </motion.div>
 
             {/* ── Emotional Burst Particles ──────────────────── */}
