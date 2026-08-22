@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart, Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight } from 'lucide-react'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { MagneticButton } from '@/components/animations/MagneticButton'
 import { ScrollSection } from '@/components/layout/ScrollSection'
@@ -18,10 +18,6 @@ export function FinalCTASection() {
             <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-pink-300/20 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 text-white" data-no-ink="true">
-              <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white/20 backdrop-blur-md mb-6 border border-white/30 shadow-md">
-                <Heart className="w-8 h-8 text-white fill-white/40 animate-pulse" />
-              </div>
-
               <h2 className="font-display text-3xl sm:text-5xl md:text-6xl font-extrabold mb-4 leading-tight drop-shadow-sm">
                 Pronto para surpreender quem você ama?
               </h2>

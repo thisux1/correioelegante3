@@ -42,7 +42,7 @@ export function ShareLetterModal({
   const letterUrl = formatLetterUrl(pageId, customUrl)
   const recipientDisplay = recipientName ? ` para ${recipientName}` : ''
 
-  const defaultWhatsappMessage = `💌 Olá! Preparei um Correio Elegante especial${recipientDisplay} com todo meu carinho. Abra sua carta aqui: ${letterUrl}`
+  const defaultWhatsappMessage = `Olá! Preparei um Correio Elegante especial${recipientDisplay} com todo meu carinho. Abra sua carta aqui: ${letterUrl}`
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
     defaultWhatsappMessage,
   )}`

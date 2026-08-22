@@ -11,13 +11,13 @@ const steps = [
   {
     number: '01',
     icon: Pencil,
-    title: 'Escreva & Personalize',
+    title: 'Escreva e Personalize',
     desc: 'Escolha um modelo romântico, adicione suas fotos, polaroids e escreva sua dedicatória.',
   },
   {
     number: '02',
     icon: Music,
-    title: 'Trilha & Segredos',
+    title: 'Trilha e Segredos',
     desc: 'Adicione a música do casal e crie raspadinhas interativas com surpresas e datas.',
   },
   {
@@ -29,7 +29,7 @@ const steps = [
   {
     number: '04',
     icon: Send,
-    title: 'Entregue & Emocione',
+    title: 'Entregue e Emocione',
     desc: 'Compartilhe por link no WhatsApp ou imprima o QR Code para anexar a flores e bombons.',
   },
 ]
@@ -38,11 +38,9 @@ export function HowItWorksSection() {
   return (
     <ScrollSection id="how-it-works" className="section-spacing">
       <Container size="default" className="relative z-10">
+        {/* Cabeçalho sem badges */}
         <SectionReveal scrollRange={[0.0, 0.1, 0.88, 1.0]}>
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-pink-100 text-[#be123c] font-bold text-xs uppercase tracking-wider mb-4 border border-pink-300/80 shadow-xs">
-              Passo a Passo
-            </span>
             <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-4 tracking-tight">
               Como funciona o <span className="text-[#e11d48]">Correio Elegante</span>
             </h2>
@@ -79,10 +77,6 @@ export function HowItWorksSection() {
                       <p className="text-sm text-[#701a35] leading-relaxed">
                         {step.desc}
                       </p>
-                    </div>
-
-                    <div className="mt-6 pt-3 border-t border-pink-100 flex items-center gap-1.5 text-[11px] font-bold text-[#be123c]">
-                      <span>Etapa {index + 1} de 4</span>
                     </div>
                   </motion.div>
                 </CardTilt3D>

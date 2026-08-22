@@ -4,11 +4,11 @@ import { Heart, RotateCcw, Check, Sparkles } from 'lucide-react'
 import type { BlockComponentProps, QuizBlockProps } from '@/editor/types'
 
 const PLAYFUL_REASONS = [
-  'Tem certeza? Pense com calma 😉',
+  'Tem certeza? Pense com calma.',
   'Ops, acho que você quis clicar no Sim!',
-  'Essa opção não vale! ❤️',
-  'Tente de novo com carinho ✨',
-  'O coração disse outra coisa... 🥰',
+  'Essa opção não vale!',
+  'Tente de novo com carinho.',
+  'O coração disse outra coisa...',
   'A resposta certa está logo ao lado!',
 ]
 
@@ -59,7 +59,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         question: 'Quer namorar comigo?',
         yesButtonText: 'Sim, com todo o coração',
         noButtonText: 'Não',
-        successMessage: 'Eu sabia! Te amo muito. ❤️',
+        successMessage: 'Eu sabia! Te amo muito.',
         isPlayfulNo: true,
       }
 
