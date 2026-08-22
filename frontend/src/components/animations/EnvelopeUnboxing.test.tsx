@@ -29,7 +29,7 @@ describe('EnvelopeUnboxing', () => {
       )
     })
 
-    expect(container.textContent).toContain('Uma mensagem especial para Mariana')
+    expect(container.textContent).toContain('Uma carta para Mariana')
     expect(container.textContent).toContain('Pular')
   })
 
@@ -60,7 +60,7 @@ describe('EnvelopeUnboxing', () => {
     expect(onOpenComplete).toHaveBeenCalledTimes(1)
   })
 
-  it('executa a sequência automática e conclui com fadeout', async () => {
+  it('permite tocar no lacre para abrir o envelope e puxar a carta', async () => {
     vi.useFakeTimers()
     const onOpenComplete = vi.fn()
     const root = ReactDOM.createRoot(container)
@@ -76,9 +76,38 @@ describe('EnvelopeUnboxing', () => {
       )
     })
 
-    // Avança timers da animação cinematográfica completa
+    // 1. Avião pousa e se desdobra no envelope
     await act(async () => {
-      vi.advanceTimersByTime(5800)
+      vi.advanceTimersByTime(1800)
+    })
+
+    // 2. Toca no botão de abrir o envelope
+    const openEnvelopeBtn = Array.from(container.querySelectorAll('button')).find(
+      (btn) => btn.textContent?.includes('Toque no lacre para abrir o envelope')
+    ) as HTMLButtonElement
+
+    expect(openEnvelopeBtn).toBeDefined()
+
+    await act(async () => {
+      openEnvelopeBtn.click()
+    })
+
+    // 3. Aguarda o lacre quebrar e a carta ficar pronta para ser puxada
+    await act(async () => {
+      vi.advanceTimersByTime(700)
+    })
+
+    // 4. Clica na carta para puxar e expandir
+    const letterSheet = container.querySelector('.cursor-grab') as HTMLElement
+    expect(letterSheet).not.toBeNull()
+
+    await act(async () => {
+      letterSheet.click()
+    })
+
+    // 5. Aguarda a expansão e o clarão branco
+    await act(async () => {
+      vi.advanceTimersByTime(1600)
     })
 
     expect(onOpenComplete).toHaveBeenCalledTimes(1)
