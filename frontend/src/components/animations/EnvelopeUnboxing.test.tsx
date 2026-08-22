@@ -15,7 +15,7 @@ describe('EnvelopeUnboxing', () => {
     document.body.removeChild(container)
   })
 
-  it('renderiza o ritual de abertura com nome do destinatário e botão de abrir', async () => {
+  it('renderiza o ritual cinematográfico com o aviãozinho e botão de pular', async () => {
     const onOpenComplete = vi.fn()
     const root = ReactDOM.createRoot(container)
 
@@ -29,9 +29,8 @@ describe('EnvelopeUnboxing', () => {
       )
     })
 
-    expect(container.textContent).toContain('Uma carta especial para Mariana')
-    expect(container.textContent).toContain('Toque no lacre para abrir')
-    expect(container.textContent).toContain('Pular abertura')
+    expect(container.textContent).toContain('Uma mensagem especial para Mariana')
+    expect(container.textContent).toContain('Pular')
   })
 
   it('permite pular a abertura imediatamente ao clicar no botão de pular', async () => {
@@ -49,7 +48,7 @@ describe('EnvelopeUnboxing', () => {
     })
 
     const skipButton = Array.from(container.querySelectorAll('button')).find(
-      (btn) => btn.textContent?.includes('Pular abertura')
+      (btn) => btn.textContent?.includes('Pular')
     ) as HTMLButtonElement
 
     expect(skipButton).toBeDefined()
@@ -61,7 +60,7 @@ describe('EnvelopeUnboxing', () => {
     expect(onOpenComplete).toHaveBeenCalledTimes(1)
   })
 
-  it('inicia a quebra do lacre e animação ao clicar no botão de abrir', async () => {
+  it('executa a sequência automática e conclui com fadeout', async () => {
     vi.useFakeTimers()
     const onOpenComplete = vi.fn()
     const root = ReactDOM.createRoot(container)
@@ -77,19 +76,9 @@ describe('EnvelopeUnboxing', () => {
       )
     })
 
-    const openButton = Array.from(container.querySelectorAll('button')).find(
-      (btn) => btn.textContent?.includes('Toque no lacre para abrir')
-    ) as HTMLButtonElement
-
-    expect(openButton).toBeDefined()
-
+    // Avança timers da animação cinematográfica completa
     await act(async () => {
-      openButton.click()
-    })
-
-    // Avança timers da animação
-    await act(async () => {
-      vi.advanceTimersByTime(2200)
+      vi.advanceTimersByTime(5800)
     })
 
     expect(onOpenComplete).toHaveBeenCalledTimes(1)
