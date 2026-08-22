@@ -18,11 +18,11 @@ type InteractiveStage =
   | 'opening-seal'      // Lacre quebrando e aba abrindo
   | 'ready-to-pull'     // Aba aberta, carta pronta para ser puxada
   | 'paper-unfold'      // A carta sai e se desdobra num papel vertical longo (3D tri-fold)
-  | 'botanical-reveal'  // Pétalas e flores orgânicas desabrocham revelando a carta digital
+  | 'ink-reveal'        // Efeito dramático de revelação por tinta luminosa
   | 'finished'
 
 /**
- * Síntese de áudio leve e cristalina (1 único oscilador limpo sem sobrecarga)
+ * Síntese de áudio leve e cristalina
  */
 function playChime(freq = 659.25) {
   try {
@@ -100,55 +100,6 @@ function SideViewAirplane({ color = '#e11d48' }: { color?: string }) {
   )
 }
 
-/**
- * Pétalas botânicas orgânicas caindo suavemente
- */
-function BotanicalPetals({ color }: { color: string }) {
-  const petals = [
-    { x: -120, y: -80, r: 25, delay: 0.1 },
-    { x: 130, y: -60, r: -35, delay: 0.25 },
-    { x: -90, y: 110, r: 45, delay: 0.2 },
-    { x: 110, y: 130, r: -20, delay: 0.35 },
-    { x: 0, y: -140, r: 15, delay: 0.15 },
-    { x: -40, y: 170, r: -50, delay: 0.3 },
-  ]
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-      {petals.map((p, i) => (
-        <motion.div
-          key={i}
-          initial={{ x: p.x * 0.4, y: p.y * 0.4 - 30, opacity: 0, scale: 0.5, rotate: p.r - 20 }}
-          animate={{
-            x: p.x,
-            y: p.y,
-            opacity: [0, 0.9, 0],
-            scale: [0.5, 1.1, 0.9],
-            rotate: [p.r - 20, p.r + 30],
-          }}
-          transition={{ duration: 1.4, delay: p.delay, ease: 'easeOut' }}
-          className="absolute"
-        >
-          {/* Pétala de rosa / flor de cerejeira em formato de gota orgânica */}
-          <svg viewBox="0 0 30 40" className="w-7 h-9 drop-shadow-md">
-            <path
-              d="M15,2 C24,10 30,22 25,32 C20,40 10,40 5,32 C0,22 6,10 15,2 Z"
-              fill={color}
-              fillOpacity="0.85"
-            />
-            <path
-              d="M15,5 C20,12 22,22 18,30"
-              fill="none"
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth="1"
-            />
-          </svg>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
 function EnvelopeUnboxingComponent({
   recipientName,
   senderName,
@@ -167,7 +118,7 @@ function EnvelopeUnboxingComponent({
   // Valor dinâmico do arrasto da carta
   const dragY = useMotionValue(0)
 
-  // 1. Avião voa em zigue-zague orgânico por 2.6s e pousa
+  // 1. Avião voa em zigue-zague orgânico e pousa no envelope
   useEffect(() => {
     const tFlight = setTimeout(() => {
       setStage('impact')
@@ -184,7 +135,7 @@ function EnvelopeUnboxingComponent({
     }
   }, [])
 
-  // Gesto 1: Tocar no lacre
+  // Gesto 1: Tocar no lacre para abrir
   const handleOpenSeal = useCallback(() => {
     if (stage !== 'unfolded') return
 
@@ -204,7 +155,7 @@ function EnvelopeUnboxingComponent({
     }, 550)
   }, [stage])
 
-  // Gesto 2: Puxar a carta para cima -> A carta se desdobra em formato vertical longo (3D)
+  // Gesto 2: Puxar a carta para cima -> A carta se desdobra e a tinta revela o conteúdo
   const handlePullLetter = useCallback(() => {
     if (stage !== 'ready-to-pull' && stage !== 'opening-seal') return
 
@@ -219,16 +170,16 @@ function EnvelopeUnboxingComponent({
     playChime(659.25)
     setStage('paper-unfold')
 
-    // Após o papel desdobrar, desabrocham as flores e revela a carta digital
+    // Após desdobrar em 3D, ativa a revelação luminosa da tinta que se integra com a página real
     setTimeout(() => {
-      setStage('botanical-reveal')
+      setStage('ink-reveal')
       playChime(880)
-    }, 1100)
+    }, 900)
 
     setTimeout(() => {
       setStage('finished')
       onOpenComplete?.()
-    }, 2000)
+    }, 1850)
   }, [stage, onOpenComplete])
 
   const handleSkip = useCallback(() => {
@@ -248,11 +199,11 @@ function EnvelopeUnboxingComponent({
   return (
     <AnimatePresence>
       <motion.div
-        key="unboxing-organic-modal"
+        key="unboxing-integrated-modal"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4 }}
         className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden select-none pb-8 sm:pb-12"
         style={{
           background: `radial-gradient(circle at center, ${primaryColor}22 0%, rgba(12, 8, 14, 0.96) 100%)`,
@@ -277,20 +228,23 @@ function EnvelopeUnboxingComponent({
           aria-hidden="true"
         />
 
-        {/* Cabeçalho superior */}
+        {/* Cabeçalho superior: Logo e Tipografia Elegante (Sem badges) */}
         <motion.div
           animate={
-            stage === 'paper-unfold' || stage === 'botanical-reveal'
+            stage === 'paper-unfold' || stage === 'ink-reveal'
               ? { opacity: 0, y: -20 }
               : { opacity: 1, y: 0 }
           }
           transition={{ duration: 0.4 }}
-          className="pt-10 sm:pt-14 text-center z-20 space-y-1 px-4"
+          className="pt-10 sm:pt-14 text-center z-20 space-y-1.5 px-4"
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 border border-white/15 text-xs font-medium tracking-wide uppercase">
-            <Sparkles size={13} className="text-amber-300" />
-            Correio Elegante
-          </span>
+          <div className="flex items-center justify-center gap-2 opacity-95">
+            <Heart className="w-4 h-4 text-primary fill-primary" />
+            <span className="font-display tracking-widest text-xs uppercase font-bold text-white">
+              Correio Elegante
+            </span>
+            <Heart className="w-4 h-4 text-primary fill-primary" />
+          </div>
           <h2 className="font-display text-xl sm:text-2xl font-bold text-white drop-shadow-md">
             {recipientName ? `Uma carta para ${recipientName}` : 'Você recebeu uma carta'}
           </h2>
@@ -509,97 +463,100 @@ function EnvelopeUnboxingComponent({
           </div>
         )}
 
-        {/* 4. FASE DO PAPEL SE DESDOBRANDO VERTICALMENTE EM FORMATO RETANGULAR LONGO (3D TRI-FOLD) */}
-        {(stage === 'paper-unfold' || stage === 'botanical-reveal') && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none" style={{ perspective: 1400 }}>
-            {/* Pétalas caindo suavemente */}
-            {stage === 'botanical-reveal' && <BotanicalPetals color={primaryColor} />}
-
-            {/* A Folha de Papel Longa em Formato Retangular Vertical */}
+        {/* 4. FASE DO DESDOBRAMENTO EM 3D & REVELAÇÃO DRAMÁTICA DE TINTA (TOTALMENTE INTEGRADA À PÁGINA) */}
+        {(stage === 'paper-unfold' || stage === 'ink-reveal') && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none" style={{ perspective: 1400 }}>
+            {/* A Exata Folha de Papel que Se Desdobra e se Torna a Carta Digital */}
             <motion.div
               initial={{
                 y: 80,
-                scale: 0.85,
-                height: 260,
-                opacity: 0.9,
+                scale: 0.88,
+                height: 280,
+                opacity: 0.95,
               }}
               animate={
-                stage === 'botanical-reveal'
+                stage === 'ink-reveal'
                   ? {
                       y: 0,
                       scale: 1,
-                      height: 'min(78vh, 620px)',
+                      height: 'min(82vh, 680px)',
                       opacity: [1, 1, 0.95, 0],
                     }
                   : {
                       y: 0,
                       scale: 1,
-                      height: 'min(78vh, 620px)',
+                      height: 'min(82vh, 680px)',
                       opacity: 1,
                     }
               }
               transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-[430px] rounded-3xl p-6 sm:p-8 shadow-[0_25px_70px_rgba(0,0,0,0.55)] border-2 border-amber-200/40 flex flex-col justify-between overflow-hidden"
+              className="relative w-full max-w-3xl rounded-3xl p-6 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.6)] border-2 border-border flex flex-col justify-between overflow-hidden"
               style={{
                 backgroundColor: surfaceColor,
                 color: textColor,
-                backgroundImage: `radial-gradient(${primaryColor}08 1px, transparent 0)`,
-                backgroundSize: '24px 24px',
               }}
             >
               {/* Painel Superior Desdobrando em 3D */}
               <motion.div
                 initial={{ rotateX: -90, opacity: 0 }}
                 animate={{ rotateX: 0, opacity: 1 }}
-                transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transformOrigin: 'top center', transformStyle: 'preserve-3d' }}
-                className="space-y-3 text-center border-b border-primary/15 pb-4"
+                className="space-y-3 text-center border-b border-border/40 pb-5"
               >
                 <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shadow-inner">
                   <Heart size={24} fill="currentColor" />
                 </div>
-                <h3 className="font-display font-bold text-2xl text-primary drop-shadow-sm">
-                  {recipientName ? `Querida(o) ${recipientName}` : 'Uma Carta Especial Para Você'}
+                <h3 className="font-display font-bold text-2xl sm:text-3xl text-primary">
+                  {recipientName ? `Para ${recipientName}` : 'Uma Carta Especial'}
                 </h3>
-                <div className="h-1 w-24 bg-primary/20 rounded-full mx-auto" />
+                <div className="h-1 w-28 bg-primary/20 rounded-full mx-auto" />
               </motion.div>
 
-              {/* Corpo da Carta com Ramos Botânicos e Caligrafia */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.35 }}
-                className="my-auto space-y-4 py-4 px-2"
-              >
-                {/* Linhas elegantes de caligrafia em textura de papel */}
-                <div className="space-y-3">
-                  <div className="h-2.5 w-full bg-text/15 rounded-full" />
-                  <div className="h-2.5 w-11/12 bg-text/15 rounded-full" />
-                  <div className="h-2.5 w-full bg-text/15 rounded-full" />
-                  <div className="h-2.5 w-4/5 bg-text/15 rounded-full" />
-                  <div className="h-2.5 w-9/12 bg-text/15 rounded-full" />
-                </div>
+              {/* Corpo da Carta com Efeito de Revelação de Tinta Luminosa (Ink-Bleed Wave) */}
+              <div className="relative my-auto py-6 px-2 sm:px-6">
+                {/* Feixe luminoso que varre o papel de cima a baixo revelando a mensagem */}
+                {stage === 'ink-reveal' && (
+                  <motion.div
+                    initial={{ y: '-100%', opacity: 0 }}
+                    animate={{ y: ['-100%', '150%'], opacity: [0, 0.9, 0] }}
+                    transition={{ duration: 1.1, ease: 'easeInOut' }}
+                    className="absolute inset-x-0 h-16 pointer-events-none z-30"
+                    style={{
+                      background: `linear-gradient(to bottom, transparent 0%, ${primaryColor}40 50%, rgba(251,191,36,0.8) 90%, transparent 100%)`,
+                      boxShadow: `0 0 35px ${primaryColor}`,
+                    }}
+                  />
+                )}
 
-                {/* Destaque sutil com aroma botânico */}
-                <div className="flex items-center justify-center gap-2 pt-2 text-primary/60 text-xs font-serif italic">
-                  <Sparkles size={13} className="text-amber-400" />
-                  <span>Escrito com carinho e guardado no coração</span>
-                  <Sparkles size={13} className="text-amber-400" />
-                </div>
-              </motion.div>
+                {/* Linhas de caligrafia que se iluminam e se fixam no papel */}
+                <motion.div
+                  initial={{ opacity: 0.4 }}
+                  animate={stage === 'ink-reveal' ? { opacity: 1 } : { opacity: 0.4 }}
+                  transition={{ duration: 0.8 }}
+                  className="space-y-4"
+                >
+                  <div className="h-3 w-full bg-primary/15 rounded-full" />
+                  <div className="h-3 w-11/12 bg-text/15 rounded-full" />
+                  <div className="h-3 w-full bg-text/15 rounded-full" />
+                  <div className="h-3 w-4/5 bg-text/15 rounded-full" />
+                  <div className="h-3 w-9/12 bg-text/15 rounded-full" />
+                </motion.div>
+              </div>
 
-              {/* Painel Inferior Desdobrando em 3D */}
+              {/* Painel Inferior Desdobrando em 3D com a Assinatura */}
               <motion.div
                 initial={{ rotateX: 90, opacity: 0 }}
                 animate={{ rotateX: 0, opacity: 1 }}
-                transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.65, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transformOrigin: 'bottom center', transformStyle: 'preserve-3d' }}
-                className="pt-4 border-t border-primary/15 flex items-center justify-between"
+                className="pt-5 border-t border-border/40 flex items-center justify-between"
               >
-                <div className="flex items-center gap-1 text-xs text-text-light font-medium">
+                <div className="flex items-center gap-1.5 text-xs text-text-light font-medium">
+                  <Sparkles size={13} className="text-amber-400" />
                   <span>Correio Elegante</span>
                 </div>
-                <p className="font-cursive text-lg text-primary font-bold">
+                <p className="font-cursive text-xl sm:text-2xl text-primary font-bold">
                   {senderName ? `Com amor, ${senderName}` : 'Com todo o meu amor ❤️'}
                 </p>
               </motion.div>
