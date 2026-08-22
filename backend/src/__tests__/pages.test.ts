@@ -464,6 +464,51 @@ describe('POST /api/pages', () => {
     ]);
   });
 
+  it('201 — preserva playerStyle e syncedLyrics em bloco de musica', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage());
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken()}`)
+      .send({
+        content: {
+          blocks: [
+            {
+              id: 'm-vinyl',
+              type: 'music',
+              version: 1,
+              props: {
+                src: 'https://cdn.example.com/audio.mp3',
+                title: 'Yellow',
+                artist: 'Coldplay',
+                playerStyle: 'vinyl',
+                syncedLyrics: '[00:10.00] Look at the stars',
+                showLyrics: true,
+                tracks: [{
+                  src: 'https://cdn.example.com/audio.mp3',
+                  title: 'Yellow',
+                  artist: 'Coldplay',
+                  syncedLyrics: '[00:10.00] Look at the stars',
+                }],
+              },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+          version: 1,
+        },
+      });
+
+    expect(res.status).toBe(201);
+    const createCall = vi.mocked(prisma.page.create).mock.calls.at(0);
+    const payload = (createCall?.[0] as { data?: { content?: unknown } })?.data?.content as {
+      blocks: Array<{ type: string; props: Record<string, unknown> }>;
+    };
+    const musicBlock = payload.blocks.find((item) => item.type === 'music');
+    expect(musicBlock?.props.playerStyle).toBe('vinyl');
+    expect(musicBlock?.props.syncedLyrics).toBe('[00:10.00] Look at the stars');
+    expect(musicBlock?.props.showLyrics).toBe(true);
+  });
+
   it('201 — status: published sem publishedAt auto-popula publishedAt', async () => {
     vi.mocked(prisma.page.create).mockResolvedValue(makePage({
       status: 'published',
