@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Music2, Sparkles } from 'lucide-react'
+import { Music2 } from 'lucide-react'
 
 interface VintagePlayerDeckProps {
   coverSrc?: string
@@ -67,66 +67,41 @@ export function VintagePlayerDeck({
       {/* ========================================================================= */}
       {/* 1. GABINETE DO TOCA-DISCOS (TURNTABLE PLINTH / CHASSIS) */}
       {/* ========================================================================= */}
-      <div className="relative w-full max-w-[360px] sm:max-w-[420px] aspect-[1.18/1] rounded-3xl p-3 sm:p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] border-2 border-border/80 bg-gradient-to-b from-zinc-800 via-zinc-900 to-black overflow-hidden transition-transform duration-300 group-hover:scale-[1.01]">
+      <div className="relative w-full max-w-[340px] sm:max-w-[390px] aspect-[1.18/1] rounded-3xl p-2.5 sm:p-3.5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7)] border-2 border-border/70 bg-gradient-to-b from-zinc-800 via-zinc-900 to-black overflow-hidden transition-transform duration-300 group-hover:scale-[1.01]">
         {/* Textura de Alumínio Escovado e Madeira Nobre */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-3xl opacity-30"
+          className="pointer-events-none absolute inset-0 rounded-3xl opacity-25"
           style={{
-            backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.15) 0%, transparent 70%)',
+            backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.12) 0%, transparent 70%)',
           }}
         />
 
-        {/* 4 Pés Amortecedores nos Cantos (Pés cromados de isolamento) */}
-        <div className="absolute top-2 left-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
-        <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
-        <div className="absolute bottom-2 left-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
-        <div className="absolute bottom-2 right-2 w-3.5 h-3.5 rounded-full border border-white/20 bg-zinc-950 shadow-inner" />
-
         {/* Placa metálica de acabamento interno */}
-        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-950 to-[#0c0d10] p-2 sm:p-3 flex flex-col justify-between shadow-inner">
+        <div className="relative w-full h-full rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-950 to-[#0c0d10] p-2 sm:p-2.5 flex flex-col justify-between shadow-inner">
 
-          {/* Top Bar do Toca-Discos: Marca Vintage, Luz Estroboscópica e Seletor RPM */}
-          <div className="flex items-center justify-between px-1.5 pt-0.5">
-            {/* Luz Estroboscópica / LED de Força */}
+          {/* Top Bar Minimalista: Apenas LED Indicador de Alimentação */}
+          <div className="flex items-center justify-between px-2 pt-1">
             <div className="flex items-center gap-1.5">
               <div className="relative flex items-center justify-center">
                 <span
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
                     isPlaying
-                      ? 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)] animate-pulse'
+                      ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.9)] animate-pulse'
                       : 'bg-zinc-700 shadow-none'
                   }`}
                 />
                 {isPlaying && (
-                  <span className="absolute -inset-1 rounded-full bg-rose-500/30 animate-ping" />
+                  <span className="absolute -inset-0.5 rounded-full bg-rose-500/30 animate-ping" />
                 )}
               </div>
-              <span className="font-mono text-[9px] sm:text-[10px] tracking-widest text-zinc-400 font-bold uppercase">
-                {isPlaying ? '33⅓ RPM • PLAY' : 'STANDBY'}
-              </span>
-            </div>
-
-            {/* Logo do Toca-Discos */}
-            <div className="flex items-center gap-1 text-primary/80">
-              <Sparkles size={11} />
-              <span className="font-display text-[10px] sm:text-[11px] font-bold tracking-wider text-zinc-300">
-                CORREIO HI-FI
-              </span>
-            </div>
-
-            {/* Seletor 33 / 45 RPM */}
-            <div className="flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded-md border border-white/10 text-[9px] font-mono text-zinc-400">
-              <span className={isPlaying ? 'text-primary font-bold' : 'text-zinc-500'}>33</span>
-              <span className="text-zinc-600">/</span>
-              <span className="text-zinc-600">45</span>
             </div>
           </div>
 
           {/* ===================================================================== */}
           {/* 2. ÁREA CENTRAL: PRATO DE VINIL + BRAÇO COM AGULHA MECÂNICA */}
           {/* ===================================================================== */}
-          <div className="relative flex-1 flex items-center justify-center my-1">
+          <div className="relative flex-1 flex items-center justify-center my-0.5">
 
             {/* 2.1 PRATO DE ALUMÍNIO E DISCO DE VINIL */}
             <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-full flex items-center justify-center shadow-[0_12px_36px_rgba(0,0,0,0.8)]">
@@ -362,43 +337,30 @@ export function VintagePlayerDeck({
                 <span>{isPlaying ? 'STOP' : 'START'}</span>
               </button>
 
-              {/* Pitch Fader Decorativo */}
-              <div className="hidden sm:flex items-center gap-1 text-[9px] font-mono text-zinc-500">
-                <span>PITCH</span>
-                <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
-                  <div className="w-1/2 h-full bg-primary/60" />
-                </div>
-              </div>
             </div>
 
-            {/* Medidores Analógicos Estéreo VU Meter (Ponteiros Oscilantes) */}
-            <div className="flex items-center gap-2 bg-black/60 px-2 py-1 rounded-xl border border-white/10">
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[8px] text-zinc-500 font-bold">VU</span>
+            {/* Medidores Analógicos Estéreo Minimalistas */}
+            <div className="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-xl border border-white/10">
+              {/* Canal 1 */}
+              <div className="relative w-7 h-3.5 rounded bg-amber-950/40 border border-amber-500/20 overflow-hidden flex items-end justify-center">
+                <div
+                  className="absolute bottom-0 w-0.5 bg-amber-400 origin-bottom transition-all duration-150"
+                  style={{
+                    height: '85%',
+                    transform: `rotate(${effectiveVuLeft - 45}deg)`,
+                  }}
+                />
+              </div>
 
-                {/* Canal Esquerdo (L) */}
-                <div className="relative w-8 h-4 rounded bg-amber-950/40 border border-amber-500/20 overflow-hidden flex items-end justify-center">
-                  <div
-                    className="absolute bottom-0 w-0.5 bg-amber-400 origin-bottom transition-all duration-150"
-                    style={{
-                      height: '85%',
-                      transform: `rotate(${effectiveVuLeft - 45}deg)`,
-                    }}
-                  />
-                  <span className="text-[6px] font-mono text-amber-500/60 leading-none pb-0.5">L</span>
-                </div>
-
-                {/* Canal Direito (R) */}
-                <div className="relative w-8 h-4 rounded bg-amber-950/40 border border-amber-500/20 overflow-hidden flex items-end justify-center">
-                  <div
-                    className="absolute bottom-0 w-0.5 bg-amber-400 origin-bottom transition-all duration-150"
-                    style={{
-                      height: '85%',
-                      transform: `rotate(${effectiveVuRight - 45}deg)`,
-                    }}
-                  />
-                  <span className="text-[6px] font-mono text-amber-500/60 leading-none pb-0.5">R</span>
-                </div>
+              {/* Canal 2 */}
+              <div className="relative w-7 h-3.5 rounded bg-amber-950/40 border border-amber-500/20 overflow-hidden flex items-end justify-center">
+                <div
+                  className="absolute bottom-0 w-0.5 bg-amber-400 origin-bottom transition-all duration-150"
+                  style={{
+                    height: '85%',
+                    transform: `rotate(${effectiveVuRight - 45}deg)`,
+                  }}
+                />
               </div>
             </div>
           </div>
