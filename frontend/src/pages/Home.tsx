@@ -15,7 +15,6 @@ import { ProblemSection } from '@/components/sections/ProblemSection'
 import { ProductPreviewSection } from '@/components/sections/ProductPreviewSection'
 import { OccasionsSection } from '@/components/sections/OccasionsSection'
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection'
-import { SocialProofSection } from '@/components/sections/SocialProofSection'
 import { FAQSection } from '@/components/sections/FAQSection'
 import { FinalCTASection } from '@/components/sections/FinalCTASection'
 
@@ -173,13 +172,10 @@ export function Home() {
       {/* 6. Passo a Passo Simples */}
       <HowItWorksSection />
 
-      {/* 7. Depoimentos Reais e Estatísticas */}
-      <SocialProofSection />
-
-      {/* 8. Perguntas Frequentes */}
+      {/* 7. Perguntas Frequentes */}
       <FAQSection />
 
-      {/* 9. Chamada Final */}
+      {/* 8. Chamada Final */}
       <FinalCTASection />
     </div>
   )

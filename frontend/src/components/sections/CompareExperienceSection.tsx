@@ -40,7 +40,7 @@ export function CompareExperienceSection() {
                 <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs mb-6 space-y-2">
                   <div className="flex items-end justify-end">
                     <div className="bg-[#dcf8c6] text-slate-800 text-sm p-3 rounded-2xl rounded-br-2xs max-w-[85%] shadow-2xs">
-                      <p>parabens amor! te amo muito ❤️</p>
+                      <p>parabens amor! te amo muito</p>
                       <span className="text-[10px] text-slate-400 block text-right mt-1">11:42</span>
                     </div>
                   </div>
