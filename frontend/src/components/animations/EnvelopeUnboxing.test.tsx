@@ -76,9 +76,9 @@ describe('EnvelopeUnboxing', () => {
       )
     })
 
-    // 1. Avião pousa e se desdobra no envelope
+    // 1. Avião voa, tem impacto no solo e desdobra no envelope
     await act(async () => {
-      vi.advanceTimersByTime(1800)
+      vi.advanceTimersByTime(2200)
     })
 
     // 2. Toca no botão de abrir o envelope
@@ -105,9 +105,9 @@ describe('EnvelopeUnboxing', () => {
       letterSheet.click()
     })
 
-    // 5. Aguarda a expansão e o clarão branco
+    // 5. Aguarda a expansão e o clarão branco seamless
     await act(async () => {
-      vi.advanceTimersByTime(1600)
+      vi.advanceTimersByTime(1500)
     })
 
     expect(onOpenComplete).toHaveBeenCalledTimes(1)
