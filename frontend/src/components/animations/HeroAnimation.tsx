@@ -192,12 +192,12 @@ function Heart() {
 
 function LetterSheet() {
     return (
-        <svg viewBox="0 0 180 130" width="220" height="159" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="160" height="110" rx="8" fill="#fffafc" stroke="rgba(244,63,94,0.4)" strokeWidth="1.2" />
-            <line x1="28" y1="72" x2="150" y2="72" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
-            <line x1="28" y1="86" x2="150" y2="86" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
-            <line x1="28" y1="100" x2="120" y2="100" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
-            <text x="26" y="54" fill="#be123c" fontSize="18" fontFamily="'Playfair Display', serif" fontStyle="italic" fontWeight="bold">
+        <svg viewBox="0 0 180 130" width="240" height="173" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="8" width="164" height="114" rx="8" fill="#ffffff" stroke="rgba(244,63,94,0.45)" strokeWidth="1.2" />
+            <line x1="26" y1="74" x2="154" y2="74" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="26" y1="88" x2="154" y2="88" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="26" y1="102" x2="120" y2="102" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <text x="26" y="52" fill="#be123c" fontSize="20" fontFamily="'Playfair Display', serif" fontStyle="italic" fontWeight="bold">
                 Para você
             </text>
         </svg>
@@ -516,24 +516,7 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                 <PaperAirplane />
             </motion.div>
 
-            {/* ── Letter Emerging ────────────────────────────── */}
-            <motion.div
-                className="absolute pointer-events-none"
-                style={{
-                    opacity: letterOpacity,
-                    left: envX,
-                    top: letterY,
-                    scale: letterScale,
-                    rotate: letterRotate,
-                    translateX: '-50%',
-                    translateY: '-50%',
-                    filter: 'drop-shadow(0 6px 14px rgba(225,29,72,0.2))',
-                }}
-            >
-                <LetterSheet />
-            </motion.div>
-
-            {/* ── Envelope ───────────────────────────────────── */}
+            {/* ── Envelope (Back wall, inner folds & top unfolding flap) ── */}
             <motion.div
                 className="absolute pointer-events-none"
                 style={{
@@ -549,6 +532,23 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                 }}
             >
                 <Envelope flapProgress={flapProgress} />
+            </motion.div>
+
+            {/* ── Letter Emerging (In Front of Envelope Back & Flap!) ── */}
+            <motion.div
+                className="absolute pointer-events-none z-10"
+                style={{
+                    opacity: letterOpacity,
+                    left: envX,
+                    top: letterY,
+                    scale: letterScale,
+                    rotate: letterRotate,
+                    translateX: '-50%',
+                    translateY: '-50%',
+                    filter: 'drop-shadow(0 12px 24px rgba(225,29,72,0.22)) drop-shadow(0 2px 6px rgba(0,0,0,0.06))',
+                }}
+            >
+                <LetterSheet />
             </motion.div>
 
             {/* ── Emotional Burst Particles ──────────────────── */}
