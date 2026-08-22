@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Sparkles, ArrowRight } from 'lucide-react'
+import { ArrowRight, Heart } from 'lucide-react'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { MagneticButton } from '@/components/animations/MagneticButton'
 import { ScrollSection } from '@/components/layout/ScrollSection'
@@ -11,7 +11,7 @@ export function FinalCTASection() {
   return (
     <ScrollSection id="cta-section" className="section-spacing">
       <Container size="narrow">
-        <SectionReveal scrollRange={[0.02, 0.16, 0.9, 0.98]}>
+        <SectionReveal noFadeOut={true} scrollRange={[0.02, 0.16, 1.0, 1.0]}>
           <Card className="relative overflow-hidden border-none shadow-2xl bg-gradient-to-br from-[#fb7185] via-[#e11d48] to-[#be123c] p-10 sm:p-16 md:p-20 text-center rounded-3xl" data-cursor-light="true">
             {/* Elementos decorativos de fundo */}
             <div className="absolute -top-12 -left-12 w-40 h-40 bg-white/20 rounded-full blur-2xl pointer-events-none" />
@@ -33,7 +33,7 @@ export function FinalCTASection() {
                     size="lg"
                     className="bg-white text-[#be123c] hover:bg-rose-50 shadow-2xl font-extrabold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 h-auto rounded-2xl border-none transition-all hover:scale-105"
                   >
-                    <Sparkles size={18} className="fill-[#e11d48] text-[#e11d48]" />
+                    <Heart size={18} className="fill-[#e11d48] text-[#e11d48]" />
                     <span>Escrever minha carta</span>
                     <ArrowRight size={18} />
                   </Button>
