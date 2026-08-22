@@ -96,8 +96,9 @@ function WindTrail({ isMobile }: { isMobile: boolean }) {
 
 // ── Envelope SVG ────────────────────────────────────────────────
 function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
-    const springFlap = useSpring(flapProgress, { stiffness: 180, damping: 22, mass: 0.6 })
-    const flapRotateX = useTransform(springFlap, [0, 1], [0, -175])
+    const springFlap = useSpring(flapProgress, { stiffness: 160, damping: 24, mass: 0.5 })
+    const flapY = useTransform(springFlap, [0, 1], [0, 52])
+    const flapOpacity = useTransform(springFlap, [0, 0.7, 1], [1, 0.75, 0])
 
     return (
         <svg viewBox="0 0 180 130" width="300" height="217" fill="none" xmlns="http://www.w3.org/2000/svg" overflow="visible">
@@ -132,13 +133,11 @@ function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
             <line x1="30" y1="100" x2="150" y2="100" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
             <line x1="30" y1="112" x2="110" y2="112" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
 
-            {/* Flap — rotates open around top edge (y=30) */}
+            {/* Flap — smoothly slides downwards to reveal the letter */}
             <motion.g
                 style={{
-                    originX: '90px',
-                    originY: '30px',
-                    transformStyle: 'preserve-3d',
-                    rotateX: flapRotateX,
+                    y: flapY,
+                    opacity: flapOpacity,
                 }}
             >
                 <polygon
