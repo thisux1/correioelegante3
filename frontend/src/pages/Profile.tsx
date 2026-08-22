@@ -265,18 +265,32 @@ export function Profile() {
   function resolveDisplayName(page: PageSummary, defaultPrefix = 'Carta') {
     let normalizedText: string | null = null
 
-    for (const block of page.blocks) {
-      if (block.type !== 'text') {
-        continue
-      }
+    if (Array.isArray(page.blocks)) {
+      for (const block of page.blocks) {
+        if (!block || typeof block !== 'object') continue
 
-      const trimmed = block.props.text.trim()
-      if (!trimmed) {
-        continue
-      }
+        if (block.type === 'envelope' && block.props) {
+          const envelopeProps = block.props as { recipientName?: string }
+          if (typeof envelopeProps.recipientName === 'string' && envelopeProps.recipientName.trim()) {
+            normalizedText = `Para ${envelopeProps.recipientName.trim()}`
+            break
+          }
+        }
 
-      normalizedText = trimmed.replace(/\s+/g, ' ')
-      break
+        if (block.type === 'text' && block.props) {
+          const textProps = block.props as { text?: string; html?: string }
+          const rawText = typeof textProps.text === 'string'
+            ? textProps.text
+            : typeof textProps.html === 'string'
+              ? textProps.html.replace(/<[^>]*>/g, '')
+              : ''
+          const trimmed = rawText.trim()
+          if (trimmed) {
+            normalizedText = trimmed.replace(/\s+/g, ' ')
+            break
+          }
+        }
+      }
     }
 
     if (normalizedText) {
