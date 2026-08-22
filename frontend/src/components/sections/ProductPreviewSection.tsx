@@ -146,18 +146,18 @@ export function ProductPreviewSection() {
                         <span className="block font-bold text-sm text-[#4c0519]">
                           {currentExample.subtitle}
                         </span>
-                        <span className="text-xs text-[#701a35]">
+                        <span className="text-xs font-semibold text-[#701a35]">
                           Destinatário: {currentExample.recipient}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Título & Mensagem */}
+                  {/* Título & Mensagem com Alta Legibilidade */}
                   <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#4c0519] mb-3">
                     {currentExample.title}
                   </h3>
-                  <p className="text-sm sm:text-base text-[#701a35] leading-relaxed italic mb-6 font-serif">
+                  <p className="text-base sm:text-lg text-[#4c0519] leading-relaxed mb-6 font-serif font-medium">
                     "{currentExample.message}"
                   </p>
 
@@ -177,10 +177,10 @@ export function ProductPreviewSection() {
                         </motion.div>
 
                         <div className="flex-1 min-w-0">
-                          <span className="block text-xs font-bold text-[#4c0519] truncate">
+                          <span className="block text-sm font-bold text-[#4c0519] truncate">
                             {currentExample.audioTitle}
                           </span>
-                          <span className="block text-[11px] text-[#701a35] truncate">
+                          <span className="block text-xs font-semibold text-[#701a35] truncate mt-0.5">
                             {currentExample.audioArtist}
                           </span>
 
