@@ -12,7 +12,7 @@ export interface EnvelopeUnboxingProps {
 }
 
 type InteractiveStage =
-  | 'airplane-flight'   // Avião lateral voando em curva
+  | 'airplane-flight'   // Avião lateral voando em zigue-zague orgânico
   | 'impact'            // Impacto com o chão (squash, poeira mágica e som)
   | 'unfolded'          // Avião se desdobrou no envelope fechado com lacre
   | 'opening-seal'      // Lacre quebrando e aba abrindo
@@ -81,7 +81,7 @@ function playLandingChime() {
 function SideViewAirplane({ color = '#e11d48' }: { color?: string }) {
   return (
     <svg viewBox="0 0 160 72" className="w-44 h-22 sm:w-52 sm:h-26 filter drop-shadow-2xl" fill="none">
-      {/* Asa distante (peeking above) */}
+      {/* Asa distante */}
       <polygon
         points="155,36 20,6 40,42"
         fill={color}
@@ -91,7 +91,7 @@ function SideViewAirplane({ color = '#e11d48' }: { color?: string }) {
         strokeLinejoin="round"
       />
 
-      {/* Asa próxima (branca / brilhante) */}
+      {/* Asa próxima */}
       <polygon
         points="155,36 6,12 40,42"
         fill="white"
@@ -135,29 +135,27 @@ function SideViewAirplane({ color = '#e11d48' }: { color?: string }) {
 function ImpactShockwave({ color }: { color: string }) {
   return (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-      {/* Anel de onda de choque expansiva */}
       <motion.div
         initial={{ scale: 0.2, opacity: 0.9 }}
-        animate={{ scale: 2.2, opacity: 0 }}
+        animate={{ scale: 2.4, opacity: 0 }}
         transition={{ duration: 0.65, ease: 'easeOut' }}
         style={{ borderColor: color }}
-        className="absolute w-32 h-16 rounded-[100%] border-2 border-amber-300 shadow-lg shadow-amber-300/40"
+        className="absolute w-36 h-18 rounded-[100%] border-2 border-amber-300 shadow-lg shadow-amber-300/40"
       />
 
-      {/* Partículas de impacto */}
-      {Array.from({ length: 12 }).map((_, i) => {
-        const angle = (i * (360 / 12) * Math.PI) / 180
+      {Array.from({ length: 14 }).map((_, i) => {
+        const angle = (i * (360 / 14) * Math.PI) / 180
         return (
           <motion.div
             key={i}
             initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
             animate={{
-              x: Math.cos(angle) * 60,
-              y: Math.sin(angle) * 30 + 10,
-              scale: [0, 1.2, 0],
+              x: Math.cos(angle) * 70,
+              y: Math.sin(angle) * 35 + 10,
+              scale: [0, 1.3, 0],
               opacity: [1, 1, 0],
             }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            transition={{ duration: 0.65, ease: 'easeOut' }}
             className="absolute h-2 w-2 rounded-full bg-amber-300 shadow-md shadow-amber-300"
           />
         )
@@ -226,11 +224,12 @@ function EnvelopeUnboxingComponent({
   const textColor = vars.text || '#1c1917'
   const surfaceColor = vars.surface || '#ffffff'
 
-  // Valor dinâmico do arrasto da carta
+  // Valor dinâmico do arrasto da carta:
+  // A escala só começa a crescer depois que a carta já deslizou -90px para fora do envelope!
   const dragY = useMotionValue(0)
-  const letterScale = useTransform(dragY, [0, -120, -250], [1, 1.3, 2.2])
+  const letterScale = useTransform(dragY, [0, -90, -220, -360], [1, 1, 1.45, 2.6])
 
-  // 1. Avião voa suavemente e atinge o chão com impacto
+  // 1. Avião voa em zigue-zague orgânico por 2.8s antes do impacto
   useEffect(() => {
     const tFlight = setTimeout(() => {
       setStage('impact')
@@ -243,12 +242,12 @@ function EnvelopeUnboxingComponent({
           // ignora
         }
       }
-    }, 1600)
+    }, 2850)
 
-    // 2. Após o impacto, desdobra no envelope
+    // 2. Após o impacto, desdobra no envelope na parte inferior da tela
     const tUnfold = setTimeout(() => {
       setStage('unfolded')
-    }, 2050)
+    }, 3350)
 
     return () => {
       clearTimeout(tFlight)
@@ -276,7 +275,7 @@ function EnvelopeUnboxingComponent({
     }, 600)
   }, [stage])
 
-  // Gesto 2: Usuário puxa a carta para cima (Seamless: envelope some instantaneamente e carta toma a tela)
+  // Gesto 2: Usuário puxa a carta para cima (Seamless sem cortes ao soltar o dedo)
   const handlePullLetter = useCallback(() => {
     if (stage !== 'ready-to-pull' && stage !== 'opening-seal') return
 
@@ -320,7 +319,7 @@ function EnvelopeUnboxingComponent({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.35 }}
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden select-none"
+        className="fixed inset-0 z-50 flex flex-col items-center justify-between overflow-hidden select-none pb-8 sm:pb-12"
         style={{
           background: `radial-gradient(circle at center, ${primaryColor}25 0%, rgba(10, 6, 12, 0.95) 100%)`,
         }}
@@ -339,15 +338,15 @@ function EnvelopeUnboxingComponent({
 
         {/* Aura de luz ambiente */}
         <div
-          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 h-[500px] w-[500px] rounded-full blur-[130px] opacity-35"
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 h-[520px] w-[520px] rounded-full blur-[130px] opacity-35"
           style={{ backgroundColor: primaryColor }}
           aria-hidden="true"
         />
 
-        {/* Cabeçalho informativo */}
+        {/* Cabeçalho informativo no topo */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-12 text-center z-20 space-y-1 px-4"
+          className="pt-10 sm:pt-14 text-center z-20 space-y-1 px-4"
         >
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white/90 border border-white/15 text-xs font-medium tracking-wide uppercase">
             <Sparkles size={13} className="text-amber-300" />
@@ -361,32 +360,41 @@ function EnvelopeUnboxingComponent({
           ) : null}
         </motion.div>
 
-        {/* 1. FASE DO VOO LATERAL DO AVIÃOZINHO */}
+        {/* 1. FASE DO VOO EM ZIGUE-ZAGUE ORGÂNICO (MAIS TEMPO DE TELA) */}
         {stage === 'airplane-flight' && (
-          <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
+          <div className="relative w-full h-full flex items-center justify-center pointer-events-none my-auto">
             <motion.div
               initial={{
                 x: '-85vw',
-                y: '-40vh',
-                scale: 0.6,
+                y: '-42vh',
+                scale: 0.55,
                 opacity: 0,
               }}
               animate={{
-                x: 0,
-                y: 0,
-                scale: 1,
-                opacity: 1,
+                x: ['-85vw', '-40vw', '15vw', '-10vw', '0vw'],
+                y: ['-42vh', '-20vh', '-4vh', '8vh', '15vh'],
+                scale: [0.55, 0.75, 0.95, 1.05, 1],
+                opacity: [0, 1, 1, 1, 1],
               }}
               transition={{
-                duration: 1.55,
-                ease: [0.16, 0.85, 0.28, 1], // Voo gracioso com desaceleração contínua
+                duration: 2.85,
+                ease: 'easeInOut',
+                times: [0, 0.3, 0.6, 0.85, 1.0],
               }}
               className="relative flex items-center justify-center"
             >
+              {/* O avião se inclina de forma natural acompanhando as curvas do zigue-zague */}
               <motion.div
-                initial={{ rotate: 18 }}
-                animate={{ rotate: [18, 10, -4, 0] }}
-                transition={{ duration: 1.55, ease: 'easeInOut' }}
+                initial={{ rotate: 22 }}
+                animate={{
+                  rotate: [22, 14, -8, 6, 0],
+                  rotateX: [16, 8, -6, 4, 0],
+                }}
+                transition={{
+                  duration: 2.85,
+                  ease: 'easeInOut',
+                  times: [0, 0.3, 0.6, 0.85, 1.0],
+                }}
               >
                 <SideViewAirplane color={primaryColor} />
               </motion.div>
@@ -396,7 +404,7 @@ function EnvelopeUnboxingComponent({
 
         {/* 2. FASE DE IMPACTO NO CHÃO (SQUASH & STRETCH + POEIRA MÁGICA) */}
         {stage === 'impact' && (
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex items-center justify-center my-auto translate-y-[15vh]">
             <ImpactShockwave color={primaryColor} />
 
             <motion.div
@@ -413,10 +421,10 @@ function EnvelopeUnboxingComponent({
           </div>
         )}
 
-        {/* 3. FASE DO ENVELOPE (VISÍVEL ENQUANTO O USUÁRIO INTERAGE) */}
+        {/* 3. FASE DO ENVELOPE (POSICIONADO MAIS BAIXO NA TELA PARA DAR ESPAÇO AO PUXAR) */}
         {(stage === 'unfolded' || stage === 'opening-seal' || stage === 'ready-to-pull') && (
           <div
-            className="relative w-full max-w-[430px] h-[280px] sm:h-[300px] flex items-center justify-center z-20 px-4"
+            className="relative w-full max-w-[430px] h-[270px] sm:h-[290px] flex items-center justify-center z-20 px-4 mt-auto mb-4"
             style={{ perspective: 1200 }}
           >
             {/* Corpo do Envelope */}
@@ -438,11 +446,11 @@ function EnvelopeUnboxingComponent({
                 }}
               />
 
-              {/* Carta interna pronta para ser puxada */}
+              {/* Carta física: escala só cresce após sair do envelope */}
               <motion.div
                 drag={stage === 'ready-to-pull' ? 'y' : false}
-                dragConstraints={{ top: -280, bottom: 0 }}
-                dragElastic={0.2}
+                dragConstraints={{ top: -320, bottom: 0 }}
+                dragElastic={0.25}
                 style={{
                   y: dragY,
                   scale: letterScale,
@@ -600,17 +608,17 @@ function EnvelopeUnboxingComponent({
           </div>
         )}
 
-        {/* 4. FASE DE EXPANSÃO SEAMLESS DA CARTA (SEM ENVELOPE POLUINDO O FUNDO) */}
+        {/* 4. FASE DE EXPANSÃO SEAMLESS DA CARTA (SEM CORTE AO SOLTAR O DEDO) */}
         {stage === 'expanding-letter' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
             <motion.div
-              initial={{ scale: 1, y: 0, opacity: 1 }}
+              initial={{ scale: 1.2, y: -60, opacity: 1 }}
               animate={{
-                scale: [1, 2.2, 4.5],
-                y: [0, -100, -280],
+                scale: [1.2, 2.4, 4.8],
+                y: [-60, -160, -320],
                 opacity: [1, 1, 0.2],
               }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-lg rounded-3xl p-8 shadow-2xl border border-primary/25"
               style={{
                 backgroundColor: surfaceColor,
@@ -634,7 +642,7 @@ function EnvelopeUnboxingComponent({
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-6 z-20 text-center"
+            className="z-20 text-center pb-2"
           >
             <button
               type="button"
