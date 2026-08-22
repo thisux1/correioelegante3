@@ -22,10 +22,10 @@ function resolveStateClasses(state: SectionState): string {
     return 'rounded-2xl border border-primary/30 bg-primary/5 p-3 sm:p-4'
   }
   if (state === 'error') {
-    return 'rounded-2xl border border-red-500/30 bg-red-500/10 text-red-500 dark:text-red-400 p-3 sm:p-4'
+    return 'rounded-2xl border border-red-500/30 bg-red-500/10 text-red-600 p-3 sm:p-4'
   }
   if (state === 'success') {
-    return 'rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-3 sm:p-4'
+    return 'rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 p-3 sm:p-4'
   }
   return ''
 }

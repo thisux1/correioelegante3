@@ -99,15 +99,15 @@ export function CardDeck() {
               damping: 24,
               delay: idx * 0.1,
             }}
-            className="absolute w-[290px] sm:w-[320px] cursor-pointer rounded-3xl p-6 shadow-xl backdrop-blur-xl border border-white/70 dark:border-pink-900/30 bg-gradient-to-b from-white/95 via-rose-50/90 to-white/95 dark:from-zinc-900/95 dark:via-zinc-900/90 dark:to-zinc-900/95 transition-shadow duration-300 hover:shadow-2xl hover:shadow-pink-500/20"
+            className="absolute w-[290px] sm:w-[320px] cursor-pointer rounded-3xl p-6 shadow-xl backdrop-blur-xl border border-pink-200/80 bg-gradient-to-b from-white/95 via-rose-50/90 to-white/95 transition-shadow duration-300 hover:shadow-2xl hover:shadow-pink-500/20"
             style={{
               transformOrigin: '50% 100%',
             }}
           >
             {/* Header da carta */}
             <div className="flex items-center justify-between mb-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-100/80 dark:bg-pink-950/50 px-3 py-1 text-[11px] font-bold text-primary border border-pink-200/60 dark:border-pink-900/40">
-                <Icon size={12} />
+              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <Icon size={13} />
                 {card.tag}
               </span>
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -124,14 +124,14 @@ export function CardDeck() {
             </p>
 
             {/* Trecho da mensagem */}
-            <div className="rounded-2xl bg-white/70 dark:bg-zinc-800/60 p-3.5 border border-pink-100/60 dark:border-pink-900/20 mb-4">
+            <div className="rounded-2xl bg-white/80 p-3.5 border border-pink-100/80 mb-4">
               <p className="text-xs text-text-light italic leading-relaxed line-clamp-3">
                 "{card.previewText}"
               </p>
             </div>
 
             {/* Rodapé interativo com selo de cera miniatura */}
-            <div className="flex items-center justify-between pt-2 border-t border-pink-100/60 dark:border-pink-900/20">
+            <div className="flex items-center justify-between pt-2 border-t border-pink-100/80">
               <span className="text-[10px] font-bold uppercase tracking-wider text-text-light/70 flex items-center gap-1">
                 <Sparkles size={11} className="text-primary" /> Toque para explorar
               </span>

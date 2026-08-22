@@ -503,8 +503,8 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                   <span>Buscar Letra e Metadados</span>
                 </div>
                 {hasLyrics && (
-                  <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Check size={11} />
+                  <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
+                    <Check size={13} />
                     <span>Letra Sincronizada</span>
                   </span>
                 )}

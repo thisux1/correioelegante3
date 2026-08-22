@@ -643,32 +643,6 @@ function ToolbarControls({
 
       {separator}
 
-      {/* Indicador de Status Explícito */}
-      <motion.span
-        layoutId="toolbar-status-badge"
-        layout="position"
-        className={useCompactButtons
-          ? `w-full text-center rounded-lg px-2 py-1 text-[10px] font-bold ${
-            isPublished
-              ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
-              : 'bg-amber-500/20 text-amber-800 dark:text-amber-300'
-          }`
-          : `inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold ${
-            isPublished
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-              : 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300'
-          }`}
-        role="status"
-        title={isPublished ? 'Publicada & Compartilhável' : 'Rascunho (Ainda não publicado)'}
-      >
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            isPublished ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-          }`}
-        />
-        {useCompactButtons ? (isPublished ? 'PUB' : 'RASC') : (isPublished ? 'Publicada' : 'Rascunho')}
-      </motion.span>
-
       <motion.span
         layoutId="toolbar-status-text"
         layout="position"
