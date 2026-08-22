@@ -52,7 +52,7 @@ export const InteractiveScratchCanvas = memo(function InteractiveScratchCanvas({
   coverText = 'Raspe com o mouse ou o dedo para revelar...',
   secretText,
   secretSubtitle = 'Surpresa Revelada',
-  minScratchThreshold = 40,
+  minScratchThreshold = 85,
   height = 145,
   onRevealed,
 }: InteractiveScratchCanvasProps) {
