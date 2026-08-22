@@ -310,40 +310,40 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
 
     // ── Airplane Transforms ─────────────────────────────────────
     const planeX = useTransform(scrollProgress,
-        [0.00, 0.08, 0.20, 0.35, 0.88, 1.00],
-        ['-20%', '12%', '36%', '50%', '50%', '-20%'],
+        [0.00, 0.05, 0.16, 0.32, 0.88, 1.00],
+        ['2%', '16%', '36%', '50%', '50%', '2%'],
         { clamp: true }
     )
     const planeY = useTransform(scrollProgress,
-        [0.00, 0.08, 0.20, 0.35, 0.88, 1.00],
-        ['44%', '32%', '26%', '48%', '48%', '44%'],
+        [0.00, 0.05, 0.16, 0.32, 0.88, 1.00],
+        ['40%', '30%', '25%', '48%', '48%', '40%'],
         { clamp: true }
     )
     const planeRotate = useTransform(scrollProgress,
-        [0.00, 0.08, 0.20, 0.35, 0.88, 1.00],
-        [-6, 10, -8, 28, 28, -6],
+        [0.00, 0.05, 0.16, 0.32, 0.88, 1.00],
+        [-4, 8, -6, 28, 28, -4],
         { clamp: true }
     )
     const planeOpacity = useTransform(scrollProgress,
-        [0.00, 0.04, 0.28, 0.38, 1.00],
+        [0.00, 0.015, 0.28, 0.38, 1.00],
         [0, 1, 1, 0, 0],
         { clamp: true }
     )
     const planeScale = useTransform(scrollProgress,
-        [0.00, 0.08, 0.22, 0.35, 0.40, 1.00],
-        [0.85, 1, 1.05, 0.4, 0.2, 0.85],
+        [0.00, 0.05, 0.18, 0.32, 0.40, 1.00],
+        [0.9, 1, 1.05, 0.4, 0.2, 0.9],
         { clamp: true }
     )
 
     // ── Wind trail ─────────────────────────────────────────────
     const trailOpacity = useTransform(scrollProgress,
-        [0.00, 0.04, 0.22, 0.32, 1.00],
-        [0, 0.85, 0.85, 0, 0],
+        [0.00, 0.015, 0.22, 0.32, 1.00],
+        [0, 0.9, 0.9, 0, 0],
         { clamp: true }
     )
-    const trailX = useTransform(scrollProgress, [0.00, 0.12, 0.28], ['-28%', '-5%', '24%'], { clamp: true })
-    const trailY = useTransform(scrollProgress, [0.00, 0.12, 0.24, 0.32], ['42%', '32%', '28%', '36%'], { clamp: true })
-    const trailRotate = useTransform(scrollProgress, [0.00, 0.12, 0.24, 0.32], [-6, 10, -8, 12], { clamp: true })
+    const trailX = useTransform(scrollProgress, [0.00, 0.08, 0.22], ['-12%', '4%', '24%'], { clamp: true })
+    const trailY = useTransform(scrollProgress, [0.00, 0.08, 0.18, 0.28], ['38%', '30%', '27%', '36%'], { clamp: true })
+    const trailRotate = useTransform(scrollProgress, [0.00, 0.08, 0.18, 0.28], [-4, 8, -6, 12], { clamp: true })
 
     // ── Envelope Chapter ─────────────────────────────────────────
     const envOpacity = useTransform(scrollProgress,
