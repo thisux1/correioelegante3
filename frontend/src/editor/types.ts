@@ -65,6 +65,8 @@ export interface GalleryBlockProps {
   transition?: 'fade' | 'slide'
 }
 
+export type MusicPlayerStyle = 'minimal' | 'vinyl'
+
 export interface MusicTrack {
   src: string
   assetId?: string
@@ -72,6 +74,8 @@ export interface MusicTrack {
   artist?: string
   coverSrc?: string
   coverAssetId?: string
+  syncedLyrics?: string
+  plainLyrics?: string
 }
 
 export interface MusicBlockProps {
@@ -82,6 +86,10 @@ export interface MusicBlockProps {
   tracks?: MusicTrack[]
   title?: string
   artist?: string
+  playerStyle?: MusicPlayerStyle
+  syncedLyrics?: string
+  plainLyrics?: string
+  showLyrics?: boolean
 }
 
 export interface VideoBlockProps {
