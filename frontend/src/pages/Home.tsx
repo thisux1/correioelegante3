@@ -27,11 +27,11 @@ function HeroSection() {
     offset: ['start start', 'end end'],
   })
 
-  // Smooth storytelling scroll mapping with clamp
-  const focusOpacity = useTransform(scrollYProgress, [0.00, 0.08, 0.90, 0.98], [1, 0, 0, 1], { clamp: true })
-  const textY = useTransform(scrollYProgress, [0.00, 0.08, 0.90, 0.98], [0, -35, 35, 0], { clamp: true })
-  const animationOpacity = useTransform(scrollYProgress, [0.01, 0.07, 0.90, 0.98], [0, 1, 1, 0], { clamp: true })
-  const heroProgress = useTransform(scrollYProgress, [0.02, 0.90], [0, 1], { clamp: true })
+  // Smooth storytelling scroll mapping with immediate entry
+  const focusOpacity = useTransform(scrollYProgress, [0.00, 0.05, 0.90, 0.98], [1, 0, 0, 1], { clamp: true })
+  const textY = useTransform(scrollYProgress, [0.00, 0.05, 0.90, 0.98], [0, -35, 35, 0], { clamp: true })
+  const animationOpacity = useTransform(scrollYProgress, [0.00, 0.02, 0.90, 0.98], [0, 1, 1, 0], { clamp: true })
+  const heroProgress = useTransform(scrollYProgress, [0.00, 0.90], [0, 1], { clamp: true })
 
   return (
     <section ref={sectionRef} className="relative" style={{ height: '280vh' }}>
