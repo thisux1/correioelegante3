@@ -7,14 +7,17 @@ import {
   Heart,
   Play,
   Pause,
-  RotateCcw,
-  QrCode,
-  Smartphone,
+  ArrowRight,
+  MapPin,
+  Calendar,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { ScrollSection } from '@/components/layout/ScrollSection'
 import { Container } from '@/components/layout/Container'
 import { SectionReveal } from '@/components/animations/SectionReveal'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
+import { InteractiveScratchCanvas } from '@/components/ui/InteractiveScratchCanvas'
+import { Button } from '@/components/ui/Button'
 
 interface ExampleLetter {
   id: string
@@ -65,14 +68,13 @@ const examples: ExampleLetter[] = [
     message:
       'Nem todas as surpresas cabem em palavras simples. Raspe a placa abaixo para descobrir o nosso próximo destino...',
     extraType: 'scratch',
-    scratchSecret: 'Passagens reservadas: Nossa viagem dos sonhos!',
+    scratchSecret: 'Passagens reservadas: Nossa viagem dos sonhos a Gramado!',
   },
 ]
 
 export function ProductPreviewSection() {
   const [activeTab, setActiveTab] = useState<string>('vinil')
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isScratched, setIsScratched] = useState(false)
 
   const currentExample = examples.find((e) => e.id === activeTab) || examples[0]
 
@@ -105,7 +107,6 @@ export function ProductPreviewSection() {
                   onClick={() => {
                     setActiveTab(ex.id)
                     setIsPlaying(false)
-                    setIsScratched(false)
                   }}
                   className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                     isActive
@@ -125,7 +126,7 @@ export function ProductPreviewSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Card Interativo de Preview (7 colunas) */}
           <div className="lg:col-span-7">
-            <CardTilt3D intensity={8}>
+            <CardTilt3D intensity={6}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentExample.id}
@@ -213,69 +214,85 @@ export function ProductPreviewSection() {
                     </div>
                   )}
 
+                  {/* Linha do Tempo Fiel ao Produto Real */}
                   {currentExample.extraType === 'timeline' && (
-                    <div className="rounded-2xl border-2 border-pink-200 bg-pink-50/50 p-4 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-7 w-7 rounded-full bg-pink-200 text-[#be123c] font-bold text-xs flex items-center justify-center">
-                          1
+                    <div className="relative rounded-2xl border-2 border-pink-200/90 bg-[#fff9fa] p-5 sm:p-6 shadow-sm overflow-hidden">
+                      {/* Linha vertical central luminosa */}
+                      <div className="absolute left-6 sm:left-8 top-6 bottom-6 w-0.5 bg-gradient-to-b from-[#e11d48] via-rose-300 to-[#e11d48]/40" />
+
+                      <div className="space-y-6 relative z-10">
+                        {/* Marco 1 */}
+                        <div className="flex items-start gap-4">
+                          <div className="relative flex items-center justify-center shrink-0">
+                            <div className="h-7 w-7 rounded-full bg-[#e11d48] text-white flex items-center justify-center shadow-md ring-4 ring-rose-300/40">
+                              <Heart size={13} className="fill-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 rounded-xl bg-white p-4 border border-pink-200/80 shadow-xs">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#be123c] bg-rose-50 px-2 py-0.5 rounded-md">
+                                <Calendar size={11} /> 14 de Fevereiro de 2023
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-sm text-[#4c0519]">O Primeiro Café</h4>
+                            <p className="text-xs text-[#701a35] mt-1 leading-relaxed">
+                              Aquele encontro despretensioso sob a chuva fina que durou quatro horas e mudou tudo para sempre.
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <span className="block text-xs font-bold text-[#4c0519]">14 de Fevereiro • Primeiro Encontro</span>
-                          <span className="text-[11px] text-[#701a35]">
-                            Aquele café que durou quatro horas sem sentirmos o tempo passar.
-                          </span>
+
+                        {/* Marco 2 */}
+                        <div className="flex items-start gap-4">
+                          <div className="relative flex items-center justify-center shrink-0">
+                            <div className="h-7 w-7 rounded-full bg-[#e11d48] text-white flex items-center justify-center shadow-md ring-4 ring-rose-300/40">
+                              <Heart size={13} className="fill-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 rounded-xl bg-white p-4 border border-pink-200/80 shadow-xs">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#be123c] bg-rose-50 px-2 py-0.5 rounded-md">
+                                <MapPin size={11} /> 12 de Junho de 2024
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-sm text-[#4c0519]">Nossa Viagem Inesquecível</h4>
+                            <p className="text-xs text-[#701a35] mt-1 leading-relaxed">
+                              Ver o pôr do sol na praia de mãos dadas e perceber que nenhum outro lugar no mundo se compara a estar com você.
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3 pt-2 border-t border-pink-200">
-                        <div className="h-7 w-7 rounded-full bg-[#e11d48] text-white font-bold text-xs flex items-center justify-center">
-                          2
-                        </div>
-                        <div className="flex-1">
-                          <span className="block text-xs font-bold text-[#4c0519]">Hoje e Sempre • Nosso Amor</span>
-                          <span className="text-[11px] text-[#701a35]">
-                            A certeza de que escolher você foi a melhor decisão da minha vida.
-                          </span>
+
+                        {/* Marco 3 */}
+                        <div className="flex items-start gap-4">
+                          <div className="relative flex items-center justify-center shrink-0">
+                            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-[#f43f5e] to-[#be123c] text-white flex items-center justify-center shadow-md ring-4 ring-rose-400/50 animate-pulse">
+                              <Sparkles size={13} />
+                            </div>
+                          </div>
+                          <div className="flex-1 rounded-xl bg-gradient-to-br from-[#fff0f4] to-white p-4 border border-rose-300 shadow-xs">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#e11d48] bg-rose-100 px-2 py-0.5 rounded-md">
+                                <Calendar size={11} /> Hoje e Sempre
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-sm text-[#4c0519]">Construindo Nossa Vida</h4>
+                            <p className="text-xs text-[#701a35] mt-1 leading-relaxed">
+                              A certeza diária de que escolher você foi a melhor e mais linda decisão da minha vida inteira.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
 
+                  {/* Raspadinha de Segredo Real com Canvas */}
                   {currentExample.extraType === 'scratch' && (
-                    <div className="rounded-2xl border-2 border-pink-200 bg-pink-50/50 p-4 text-center">
-                      <AnimatePresence mode="wait">
-                        {!isScratched ? (
-                          <motion.button
-                            key="cover"
-                            type="button"
-                            onClick={() => setIsScratched(true)}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-200 via-rose-200 to-pink-200 border-2 border-dashed border-[#e11d48]/40 text-[#4c0519] font-bold text-sm flex items-center justify-center gap-2 shadow-inner cursor-pointer"
-                          >
-                            <Sparkles size={16} className="text-[#e11d48]" />
-                            <span>Toque para raspar o segredo</span>
-                          </motion.button>
-                        ) : (
-                          <motion.div
-                            key="revealed"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="py-3 px-4 rounded-xl bg-pink-100 border border-pink-300 text-[#be123c] font-bold text-sm"
-                          >
-                            <p className="mb-1 text-base">Surpresa Revelada!</p>
-                            <p className="text-xs font-bold text-[#4c0519]">
-                              {currentExample.scratchSecret}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => setIsScratched(false)}
-                              className="mt-2 text-[11px] underline text-[#be123c] hover:text-[#e11d48] flex items-center justify-center gap-1 mx-auto"
-                            >
-                              <RotateCcw size={11} /> Raspar novamente
-                            </button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                    <div>
+                      <InteractiveScratchCanvas
+                        coverText={'Raspe suavemente com o dedo ou mouse\npara descobrir a surpresa...'}
+                        secretSubtitle="Destino Secreto"
+                        secretText={currentExample.scratchSecret || 'Passagens reservadas: Nossa viagem dos sonhos a Gramado!'}
+                        height={130}
+                      />
                     </div>
                   )}
                 </motion.div>
@@ -283,50 +300,45 @@ export function ProductPreviewSection() {
             </CardTilt3D>
           </div>
 
-          {/* Coluna de Recursos (5 colunas) */}
+          {/* Coluna de Explicações & Recursos (5 colunas) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white border-2 border-pink-200 shadow-xs">
-                <div className="p-2.5 rounded-xl bg-pink-100 text-[#e11d48] shrink-0 border border-pink-200">
-                  <Music2 size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#4c0519] text-sm sm:text-base mb-0.5">
-                    Trilha Sonora Personalizada
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#701a35] leading-relaxed">
-                    Escolha a música marcante do casal que começa a tocar assim que a carta é aberta.
-                  </p>
-                </div>
-              </div>
+            <div className="p-6 rounded-2xl bg-white border-2 border-pink-200/80 shadow-md">
+              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2">
+                <Music2 size={20} className="text-[#e11d48]" />
+                Cartas com Trilha Sonora
+              </h3>
+              <p className="text-sm text-[#701a35] leading-relaxed">
+                Adicione a música que marcou a história de vocês com vinil interativo e reprodução ao vivo.
+              </p>
+            </div>
 
-              <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white border-2 border-pink-200 shadow-xs">
-                <div className="p-2.5 rounded-xl bg-pink-100 text-[#e11d48] shrink-0 border border-pink-200">
-                  <QrCode size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#4c0519] text-sm sm:text-base mb-0.5">
-                    QR Code de Alta Resolução
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#701a35] leading-relaxed">
-                    Baixe em PNG para imprimir e colar no presente ou enviar por mensagem instantânea.
-                  </p>
-                </div>
-              </div>
+            <div className="p-6 rounded-2xl bg-white border-2 border-pink-200/80 shadow-md">
+              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2">
+                <CalendarHeart size={20} className="text-[#e11d48]" />
+                Linha do Tempo Visual
+              </h3>
+              <p className="text-sm text-[#701a35] leading-relaxed">
+                Reviva cada marco especial com datas, fotos estilo Polaroid e relatos inesquecíveis.
+              </p>
+            </div>
 
-              <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white border-2 border-pink-200 shadow-xs">
-                <div className="p-2.5 rounded-xl bg-pink-100 text-[#e11d48] shrink-0 border border-pink-200">
-                  <Smartphone size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#4c0519] text-sm sm:text-base mb-0.5">
-                    Acesso Eterno sem Instalar Aplicativos
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#701a35] leading-relaxed">
-                    Quem recebe abre direto no navegador do celular com animações fluidas e sem complicação.
-                  </p>
-                </div>
-              </div>
+            <div className="p-6 rounded-2xl bg-white border-2 border-pink-200/80 shadow-md">
+              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2">
+                <Sparkles size={20} className="text-[#e11d48]" />
+                Raspadinhas de Segredo
+              </h3>
+              <p className="text-sm text-[#701a35] leading-relaxed">
+                Surpreenda com declarações misteriosas ou presentes que só aparecem ao raspar o papel digital.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <Link to="/create">
+                <Button size="lg" className="w-full shadow-xl shadow-rose-500/30 bg-[#e11d48] hover:bg-[#be123c] text-white font-bold py-4 text-base rounded-2xl">
+                  <span>Criar minha carta agora</span>
+                  <ArrowRight size={18} />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
