@@ -14,7 +14,7 @@ export interface EnvelopeUnboxingProps {
 type CinematicStage = 'airplane' | 'unfold' | 'open' | 'expand' | 'whiteout' | 'finished'
 
 /**
- * Síntese suave de áudio mágico usando Web Audio API
+ * Síntese suave de áudio mágico usando Web Audio API nativa
  */
 function playMagicalChime() {
   try {
@@ -36,17 +36,17 @@ function playMagicalChime() {
       const gain = ctx.createGain()
 
       osc.type = 'sine'
-      osc.frequency.setValueAtTime(freq, now + index * 0.12)
+      osc.frequency.setValueAtTime(freq, now + index * 0.1)
 
-      gain.gain.setValueAtTime(0, now + index * 0.12)
-      gain.gain.linearRampToValueAtTime(0.16, now + index * 0.12 + 0.05)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.12 + 1.4)
+      gain.gain.setValueAtTime(0, now + index * 0.1)
+      gain.gain.linearRampToValueAtTime(0.14, now + index * 0.1 + 0.04)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.1 + 1.2)
 
       osc.connect(gain)
       gain.connect(ctx.destination)
 
-      osc.start(now + index * 0.12)
-      osc.stop(now + index * 0.12 + 1.5)
+      osc.start(now + index * 0.1)
+      osc.stop(now + index * 0.1 + 1.3)
     })
   } catch {
     // Ignora se bloqueado
@@ -54,31 +54,44 @@ function playMagicalChime() {
 }
 
 /**
- * Rastro de corações e poeira cintilante do aviãozinho
+ * Rastro contínuo e suave de poeira dourada emitido pela cauda do aviãozinho
  */
-function AirplaneTrail({ color }: { color: string }) {
+function AirplaneFlightTrail({ color }: { color: string }) {
   const dots = [
-    { x: -90, y: 40, delay: 0.1, size: 6 },
-    { x: -140, y: 70, delay: 0.25, size: 8 },
-    { x: -190, y: 90, delay: 0.4, size: 5 },
-    { x: -240, y: 100, delay: 0.55, size: 7 },
+    { x: -140, y: -70, size: 7, delay: 0.1 },
+    { x: -220, y: -120, size: 9, delay: 0.25 },
+    { x: -300, y: -170, size: 6, delay: 0.4 },
+    { x: -380, y: -220, size: 8, delay: 0.55 },
+    { x: -460, y: -270, size: 5, delay: 0.7 },
   ]
 
   return (
-    <div className="pointer-events-none absolute inset-0">
-      {dots.map((d, i) => (
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      {dots.map((dot, index) => (
         <motion.div
-          key={i}
+          key={index}
           initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: [0, 0.8, 0], scale: [0, 1.2, 0.4] }}
-          transition={{ duration: 1.2, delay: d.delay, repeat: Infinity }}
+          animate={{
+            opacity: [0, 0.75, 0],
+            scale: [0, 1.4, 0.2],
+          }}
+          transition={{
+            duration: 1.4,
+            delay: dot.delay,
+            repeat: Infinity,
+            ease: 'easeOut',
+          }}
           style={{
-            left: `calc(50% + ${d.x}px)`,
-            top: `calc(50% + ${d.y}px)`,
+            transform: `translate(${dot.x}px, ${dot.y}px)`,
             backgroundColor: color,
           }}
-          className="absolute rounded-full shadow-sm shadow-white/40"
-        />
+          className="absolute rounded-full shadow-md shadow-white/40"
+        >
+          <div
+            style={{ width: dot.size, height: dot.size }}
+            className="rounded-full bg-amber-300/80 blur-[0.5px]"
+          />
+        </motion.div>
       ))}
     </div>
   )
@@ -99,15 +112,15 @@ function EnvelopeUnboxingComponent({
   const textColor = vars.text || '#1c1917'
   const surfaceColor = vars.surface || '#ffffff'
 
-  // Sequência cinematográfica automatizada
+  // Sequência cinematográfica fluida e contínua
   useEffect(() => {
-    // 1. Avião voa e pousa no centro -> Inicia o desdobramento
+    // 1. Avião plana em curva suave contínua e pousa no centro (1.7s) -> Desdobra
     const t1 = setTimeout(() => {
       setStage('unfold')
       playMagicalChime()
-    }, 1800)
+    }, 1700)
 
-    // 2. O avião se desdobra em envelope com lacre -> O lacre e a aba se abrem
+    // 2. O avião se desdobra suavemente no envelope lacrado -> Abre a aba (3.0s)
     const t2 = setTimeout(() => {
       setStage('open')
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -117,23 +130,23 @@ function EnvelopeUnboxingComponent({
           // ignora
         }
       }
-    }, 3100)
+    }, 3000)
 
-    // 3. A carta emerge do envelope e começa a expandir em tela cheia
+    // 3. A carta sai de dentro do envelope e expande em direção à tela (4.1s)
     const t3 = setTimeout(() => {
       setStage('expand')
-    }, 4200)
+    }, 4100)
 
-    // 4. Fade out branco que revela o conteúdo da carta
+    // 4. Clarão / Fade out branco suave (4.9s)
     const t4 = setTimeout(() => {
       setStage('whiteout')
-    }, 5000)
+    }, 4900)
 
-    // 5. Finaliza
+    // 5. Finaliza e revela a carta (5.5s)
     const t5 = setTimeout(() => {
       setStage('finished')
       onOpenComplete?.()
-    }, 5600)
+    }, 5500)
 
     return () => {
       clearTimeout(t1)
@@ -163,7 +176,7 @@ function EnvelopeUnboxingComponent({
         transition={{ duration: 0.5 }}
         className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden select-none"
         style={{
-          background: `radial-gradient(circle at center, ${primaryColor}25 0%, rgba(12, 8, 14, 0.95) 100%)`,
+          background: `radial-gradient(circle at center, ${primaryColor}22 0%, rgba(12, 8, 14, 0.95) 100%)`,
         }}
       >
         {/* Botão de Pular no topo direito */}
@@ -178,14 +191,14 @@ function EnvelopeUnboxingComponent({
           </button>
         </div>
 
-        {/* Aura de luz ambiente */}
+        {/* Brilho radial ambiente */}
         <div
           className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 h-[500px] w-[500px] rounded-full blur-[130px] opacity-35"
           style={{ backgroundColor: primaryColor }}
           aria-hidden="true"
         />
 
-        {/* Mensagem sutil no topo durante o voo */}
+        {/* Cabeçalho sutil durante o voo */}
         <motion.div
           animate={
             stage === 'airplane'
@@ -207,47 +220,74 @@ function EnvelopeUnboxingComponent({
           ) : null}
         </motion.div>
 
-        {/* 1. FASE DO AVIÃOZINHO DE PAPEL */}
+        {/* 1. FASE DO VOO AERODINÂMICO DO AVIÃOZINHO */}
         {stage === 'airplane' && (
           <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
-            <AirplaneTrail color={primaryColor} />
-
+            {/* Movimento contínuo e aerodinâmico ao longo de uma trajetória suave */}
             <motion.div
               initial={{
-                x: '-75vw',
-                y: '-40vh',
-                rotate: 25,
-                scale: 0.45,
+                x: '-70vw',
+                y: '-45vh',
+                scale: 0.5,
                 opacity: 0,
               }}
               animate={{
-                x: ['-75vw', '-20vw', '25vw', '0vw'],
-                y: ['-40vh', '-10vh', '15vh', '0vh'],
-                rotate: [35, 15, -10, 0],
-                scale: [0.45, 0.85, 1.15, 1],
-                opacity: [0, 1, 1, 1],
+                x: 0,
+                y: 0,
+                scale: 1,
+                opacity: 1,
               }}
               transition={{
-                duration: 1.75,
-                ease: [0.25, 1, 0.5, 1],
-                times: [0, 0.4, 0.75, 1],
+                duration: 1.65,
+                ease: [0.18, 0.89, 0.32, 1], // Desaceleração física natural e fluida
               }}
               className="relative flex items-center justify-center"
             >
-              {/* Avião de Papel 3D */}
-              <svg
-                viewBox="0 0 120 120"
-                className="w-32 h-32 sm:w-40 sm:h-40 filter drop-shadow-2xl"
+              {/* Inclinação e atitude de voo suave da aeronave */}
+              <motion.div
+                initial={{ rotate: 28 }}
+                animate={{
+                  rotate: [28, 14, -6, 0],
+                  rotateX: [18, 10, 0],
+                }}
+                transition={{
+                  duration: 1.65,
+                  ease: 'easeInOut',
+                }}
+                className="relative"
               >
-                {/* Sombra da dobra central */}
-                <polygon points="60,15 18,95 60,78" fill={primaryColor} fillOpacity="0.88" />
-                <polygon points="60,15 102,95 60,78" fill={primaryColor} fillOpacity="1" />
-                {/* Linhas de vinco origami */}
-                <polygon points="60,15 54,82 60,78" fill="rgba(0,0,0,0.2)" />
-                <polygon points="60,15 66,82 60,78" fill="rgba(255,255,255,0.25)" />
-                {/* Coração sutil na asa */}
-                <circle cx="75" cy="72" r="4" fill="white" fillOpacity="0.7" />
-              </svg>
+                <AirplaneFlightTrail color={primaryColor} />
+
+                {/* Avião de Papel Geométrico Realista */}
+                <svg
+                  viewBox="0 0 140 140"
+                  className="w-36 h-36 sm:w-44 sm:h-44 filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.45)]"
+                >
+                  {/* Asa esquerda */}
+                  <polygon
+                    points="70,18 20,110 70,90"
+                    fill={primaryColor}
+                    fillOpacity="0.9"
+                  />
+                  {/* Asa direita */}
+                  <polygon
+                    points="70,18 120,110 70,90"
+                    fill={primaryColor}
+                    fillOpacity="1"
+                  />
+                  {/* Quilha central de vinco */}
+                  <polygon
+                    points="70,18 64,96 70,90"
+                    fill="rgba(0,0,0,0.22)"
+                  />
+                  <polygon
+                    points="70,18 76,96 70,90"
+                    fill="rgba(255,255,255,0.25)"
+                  />
+                  {/* Detalhe de coração suave na asa */}
+                  <circle cx="88" cy="85" r="4.5" fill="white" fillOpacity="0.75" />
+                </svg>
+              </motion.div>
             </motion.div>
           </div>
         )}
@@ -258,15 +298,15 @@ function EnvelopeUnboxingComponent({
             className="relative w-full max-w-[440px] aspect-[4/3] sm:aspect-[1.45/1] max-h-[300px] flex items-center justify-center z-20 px-4"
             style={{ perspective: 1200 }}
           >
-            {/* O Envelope que se desembrulha do avião */}
+            {/* O Envelope que se desdobra suavemente */}
             <motion.div
-              initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
+              initial={{ scale: 0.6, rotate: -8, opacity: 0.6 }}
               animate={
                 stage === 'expand'
                   ? { scale: 1.15, y: 120, opacity: [1, 0.8, 0] }
                   : { scale: 1, rotate: 0, opacity: 1, y: 0 }
               }
-              transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/20"
               style={{
                 backgroundColor: primaryColor,
