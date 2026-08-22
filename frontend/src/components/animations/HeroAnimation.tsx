@@ -1,200 +1,138 @@
-import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { memo } from 'react'
 import { motion, useMotionTemplate, useSpring, useTransform, type MotionValue } from 'framer-motion'
 
 // ── Scroll Timeline (chapter-based cyclic) ──────────────────────
-// 0.00 → 0.30  Airplane enters, flies, and hands off the scene
-// 0.30 → 0.65  Envelope materialises, letter emerges, and flap opens
-// 0.65 → 0.80  Heart emerges from the open envelope
-// 0.80 → 1.00  Cloud/light veil masks a scene reset to frame 0
-//
-// Start and end frames are identical, but the reset is a forward
-// transition chapter (not a mirrored rewind).
-//
-// NOTE — Motion v12 WAAPI bug: MotionValues whose initial value is 0
-// get stuck at 0 when placed in style.opacity.  Fix: keep opacity out of
-// the style/prop entirely; drive it imperatively via refs in useLayoutEffect.
+// 0.00 → 0.35  Airplane enters, flies, and hands off to envelope
+// 0.35 → 0.65  Envelope materialises, letter emerges, and flap opens
+// 0.65 → 0.85  Heart and sparkle particles emerge from the envelope
+// 0.85 → 1.00  Soft cloud veil transition
 
 // ── Paper Airplane SVG ──────────────────────────────────────────
 function PaperAirplane() {
     return (
         <svg viewBox="0 0 160 72" width="260" height="117" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* No drop shadow per user request */}
-
             {/* Far wing (peeking above) */}
             <polygon
                 points="155,36 20,6 40,42"
-                fill="#e8dce2"
-                stroke="rgba(180,130,150,0.2)"
-                strokeWidth="0.6"
+                fill="#fcd5e0"
+                stroke="rgba(225,29,72,0.3)"
+                strokeWidth="0.8"
                 strokeLinejoin="round"
             />
-
             {/* Near wing */}
             <polygon
                 points="155,36 6,12 40,42"
                 fill="white"
-                stroke="rgba(180,130,150,0.25)"
-                strokeWidth="0.8"
+                stroke="rgba(225,29,72,0.35)"
+                strokeWidth="1"
                 strokeLinejoin="round"
             />
-
-            {/* Near wing upper detail/gradient simulation */}
+            {/* Near wing detail */}
             <polygon
                 points="155,36 70,24 6,12"
-                fill="rgba(240,230,238,0.5)"
+                fill="rgba(255,240,245,0.7)"
             />
-
-            {/* Keel / Lower body */}
+            {/* Fuselage crease line */}
+            <line
+                x1="6" y1="12" x2="155" y2="36"
+                stroke="rgba(225,29,72,0.4)"
+                strokeWidth="0.8"
+            />
+            {/* Underbody shadow */}
             <polygon
-                points="155,36 40,42 24,52"
-                fill="#f4ebf0"
-                stroke="rgba(180,130,150,0.2)"
-                strokeWidth="0.6"
-                strokeLinejoin="round"
+                points="40,42 6,12 80,48"
+                fill="#fca5a5"
+                opacity="0.45"
             />
-
-            {/* Keel inner shadow detail (along the fold) */}
-            <polygon
-                points="155,36 40,42 32,47"
-                fill="rgba(225,210,228,0.6)"
+            {/* Small heart badge on airplane */}
+            <path
+                d="M95 28 C95 25 90 23 88 26 C86 23 81 25 81 28 C81 33 88 36 88 36 C88 36 95 33 95 28 Z"
+                fill="#e11d48"
             />
-
-            {/* Center crease line */}
-            <line x1="40" y1="42" x2="155" y2="36" stroke="rgba(160,100,130,0.3)" strokeWidth="1" strokeLinecap="round" />
         </svg>
     )
 }
 
-// ── Wind Trail SVG ──────────────────────────────────────────────
-const ALL_TRAIL_HEARTS = [
-    { x: 206, y: 30, size: 16, opacity: 0.95 },
-    { x: 176, y: 36, size: 14, opacity: 0.82 },
-    { x: 150, y: 27, size: 12, opacity: 0.72 },
-    { x: 122, y: 39, size: 11, opacity: 0.62 },
-    { x: 94, y: 31, size: 10, opacity: 0.52 },
-    { x: 68, y: 41, size: 9, opacity: 0.42 },
-    { x: 44, y: 34, size: 8, opacity: 0.35 },
-    { x: 22, y: 44, size: 7, opacity: 0.28 },
+// ── Wind Trail (Heart-shaped contrail behind airplane) ───────────
+const TRAIL_HEARTS = [
+    { x: -50,  y: -2,  size: 7,  opacity: 0.70, delay: 0.00 },
+    { x: -110, y: 5,   size: 10, opacity: 0.55, delay: 0.05 },
+    { x: -175, y: -4,  size: 13, opacity: 0.45, delay: 0.10 },
+    { x: -245, y: 7,   size: 16, opacity: 0.35, delay: 0.15 },
+    { x: -320, y: -2,  size: 19, opacity: 0.22, delay: 0.20 },
+    { x: -400, y: 4,   size: 22, opacity: 0.12, delay: 0.25 },
 ] as const
 
-function WindTrail({ isMobile }: { isMobile: boolean }) {
-    // On mobile: use every other heart (4 instead of 8) to reduce SVG work
-    const hearts = isMobile
-        ? ALL_TRAIL_HEARTS.filter((_, i) => i % 2 === 0)
-        : ALL_TRAIL_HEARTS
-
-    const content = (
-        <g>
-            {hearts.map((heart, i) => (
-                <g key={i} opacity={heart.opacity}>
-                    <circle cx={heart.x} cy={heart.y} r={heart.size * 0.65} fill="url(#trail-heart-glow)" />
-                    <text
-                        x={heart.x}
-                        y={heart.y + heart.size * 0.35}
-                        textAnchor="middle"
-                        fontSize={heart.size}
-                        fill="rgba(255,255,255,0.95)"
-                        fontFamily="serif"
-                    >
-                        ♥
-                    </text>
-                </g>
-            ))}
-        </g>
-    )
-
+const TrailHeartSVG = memo(function TrailHeartSVG({ size, color }: { size: number; color: string }) {
     return (
-        <svg viewBox="0 0 240 84" width="240" height="84" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <radialGradient id="trail-heart-glow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="rgba(255, 210, 230, 0.7)" />
-                    <stop offset="100%" stopColor="rgba(255, 210, 230, 0)" />
-                </radialGradient>
-            </defs>
-            {/* On mobile skip the continuous floating animation */}
-            {isMobile ? content : (
-                <motion.g
-                    animate={{ x: [0, -8, 0], y: [0, -3, 0] }}
-                    transition={{ duration: 2.4, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-                >
-                    {hearts.map((heart, i) => (
-                        <g key={i} opacity={heart.opacity}>
-                            <circle cx={heart.x} cy={heart.y} r={heart.size * 0.65} fill="url(#trail-heart-glow)" />
-                            <text
-                                x={heart.x}
-                                y={heart.y + heart.size * 0.35}
-                                textAnchor="middle"
-                                fontSize={heart.size}
-                                fill="rgba(255,255,255,0.95)"
-                                fontFamily="serif"
-                            >
-                                ♥
-                            </text>
-                        </g>
-                    ))}
-                </motion.g>
-            )}
+        <svg viewBox="0 0 20 18" width={size} height={size * 0.9} fill="none">
+            <path
+                d="M10 16.5 C10 16.5 1.5 11 1.5 5.5 C1.5 2.5 3.8 0.5 6.5 0.5 C8.2 0.5 9.4 1.5 10 2.5 C10.6 1.5 11.8 0.5 13.5 0.5 C16.2 0.5 18.5 2.5 18.5 5.5 C18.5 11 10 16.5 10 16.5Z"
+                fill={color}
+            />
         </svg>
     )
-}
+})
 
-interface PhaseVisibility {
-    showPlane: boolean
-    showTrail: boolean
-    showLetter: boolean
-    showBurst: boolean
-}
-
-function getPhaseVisibility(progress: number): PhaseVisibility {
-    return {
-        showPlane: progress >= 0.04 && progress <= 0.45,
-        showTrail: progress >= 0.04 && progress <= 0.36,
-        showLetter: progress >= 0.5 && progress <= 0.9,
-        showBurst: progress >= 0.64 && progress <= 0.92,
-    }
+function WindTrail({ isMobile }: { isMobile: boolean }) {
+    const hearts = isMobile ? TRAIL_HEARTS.filter((_, i) => i % 2 === 0) : TRAIL_HEARTS
+    return (
+        <div className="absolute pointer-events-none" style={{ left: 0, top: 0 }}>
+            {hearts.map((h, i) => (
+                <div
+                    key={i}
+                    className="absolute"
+                    style={{
+                        transform: `translate(${h.x}px, ${h.y}px)`,
+                        opacity: h.opacity,
+                    }}
+                >
+                    <TrailHeartSVG size={h.size} color="rgba(244,63,94,0.7)" />
+                </div>
+            ))}
+        </div>
+    )
 }
 
 // ── Envelope SVG ────────────────────────────────────────────────
 function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
-    // Flap pivot: rotates from closed (0°) to open (-175°) about the top edge
     const springFlap = useSpring(flapProgress, { stiffness: 180, damping: 22, mass: 0.6 })
     const flapRotateX = useTransform(springFlap, [0, 1], [0, -175])
 
     return (
         <svg viewBox="0 0 180 130" width="300" height="217" fill="none" xmlns="http://www.w3.org/2000/svg" overflow="visible">
             {/* Body */}
-            <rect x="0" y="30" width="180" height="100" rx="4"
+            <rect x="0" y="30" width="180" height="100" rx="6"
                 fill="white"
-                stroke="rgba(220,160,180,0.5)"
+                stroke="rgba(244,63,94,0.4)"
                 strokeWidth="1.5"
             />
-
             {/* Left inner fold */}
             <polygon
                 points="0,30 90,75 0,130"
-                fill="rgba(255,220,230,0.6)"
-                stroke="rgba(220,160,180,0.3)"
+                fill="rgba(255,228,235,0.7)"
+                stroke="rgba(244,63,94,0.25)"
                 strokeWidth="0.8"
             />
             {/* Right inner fold */}
             <polygon
                 points="180,30 90,75 180,130"
-                fill="rgba(255,215,228,0.6)"
-                stroke="rgba(220,160,180,0.3)"
+                fill="rgba(255,220,230,0.7)"
+                stroke="rgba(244,63,94,0.25)"
                 strokeWidth="0.8"
             />
             {/* Bottom inner fold */}
             <polygon
                 points="0,130 180,130 90,75"
-                fill="rgba(255,228,238,0.5)"
+                fill="rgba(255,235,242,0.6)"
             />
 
             {/* Letter lines inside envelope */}
-            <line x1="30" y1="88" x2="150" y2="88" stroke="rgba(200,150,170,0.4)" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="30" y1="100" x2="150" y2="100" stroke="rgba(200,150,170,0.4)" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="30" y1="112" x2="110" y2="112" stroke="rgba(200,150,170,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="30" y1="88" x2="150" y2="88" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="30" y1="100" x2="150" y2="100" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="30" y1="112" x2="110" y2="112" stroke="rgba(225,29,72,0.3)" strokeWidth="1.5" strokeLinecap="round" />
 
-            {/* Flap — rotates open around the top edge (y=30) */}
+            {/* Flap — rotates open around top edge (y=30) */}
             <motion.g
                 style={{
                     originX: '90px',
@@ -203,36 +141,35 @@ function Envelope({ flapProgress }: { flapProgress: MotionValue<number> }) {
                     rotateX: flapRotateX,
                 }}
             >
-                {/* Flap triangle (closed = pointing down) */}
                 <polygon
                     points="0,30 180,30 90,75"
-                    fill="#fce8f0"
-                    stroke="rgba(220,160,180,0.5)"
+                    fill="#fff1f5"
+                    stroke="rgba(244,63,94,0.45)"
                     strokeWidth="1.2"
                 />
-                {/* Oval wax seal */}
-                <circle cx="90" cy="46" r="10" fill="#e05878" opacity="0.9" />
-                <text x="90" y="50" textAnchor="middle" fontSize="12" fill="white" fontFamily="serif">♥</text>
+                {/* Wax seal */}
+                <circle cx="90" cy="46" r="11" fill="#e11d48" />
+                <circle cx="90" cy="46" r="9" fill="#be123c" />
+                <path
+                    d="M90 49 C90 49 84 45 84 41.5 C84 39.5 85.5 38 87.5 38 C88.7 38 89.6 38.7 90 39.5 C90.4 38.7 91.3 38 92.5 38 C94.5 38 96 39.5 96 41.5 C96 45 90 49 90 49Z"
+                    fill="white"
+                />
             </motion.g>
         </svg>
     )
 }
 
-// ── Heart SVG ───────────────────────────────────────────────────
 function Heart() {
     return (
         <svg viewBox="0 0 80 72" width="120" height="108" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Glow */}
-            <ellipse cx="40" cy="40" rx="36" ry="32" fill="rgba(224,88,120,0.15)" />
-            {/* Heart */}
+            <ellipse cx="40" cy="40" rx="36" ry="32" fill="rgba(225,29,72,0.18)" />
             <path
                 d="M40 62 C40 62 8 44 8 24 C8 14 16 8 24 8 C30 8 35 11 40 18 C45 11 50 8 56 8 C64 8 72 14 72 24 C72 44 40 62 40 62Z"
-                fill="#e05878"
+                fill="#e11d48"
             />
-            {/* Specular highlight */}
             <path
                 d="M26 16 C24 20 22 26 24 30"
-                stroke="rgba(255,255,255,0.5)"
+                stroke="rgba(255,255,255,0.6)"
                 strokeWidth="3"
                 strokeLinecap="round"
                 fill="none"
@@ -244,11 +181,11 @@ function Heart() {
 function LetterSheet() {
     return (
         <svg viewBox="0 0 180 130" width="220" height="159" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="160" height="110" rx="8" fill="#fffafc" stroke="rgba(214,150,174,0.5)" strokeWidth="1.2" />
-            <line x1="28" y1="72" x2="150" y2="72" stroke="rgba(210,150,172,0.35)" strokeWidth="1.4" strokeLinecap="round" />
-            <line x1="28" y1="86" x2="150" y2="86" stroke="rgba(210,150,172,0.35)" strokeWidth="1.4" strokeLinecap="round" />
-            <line x1="28" y1="100" x2="120" y2="100" stroke="rgba(210,150,172,0.35)" strokeWidth="1.4" strokeLinecap="round" />
-            <text x="26" y="54" fill="#bf4b6b" fontSize="18" fontFamily="'Dancing Script', cursive">
+            <rect x="10" y="10" width="160" height="110" rx="8" fill="#fffafc" stroke="rgba(244,63,94,0.4)" strokeWidth="1.2" />
+            <line x1="28" y1="72" x2="150" y2="72" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="28" y1="86" x2="150" y2="86" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="28" y1="100" x2="120" y2="100" stroke="rgba(225,29,72,0.25)" strokeWidth="1.4" strokeLinecap="round" />
+            <text x="26" y="54" fill="#be123c" fontSize="18" fontFamily="'Playfair Display', serif" fontStyle="italic" fontWeight="bold">
                 Para você
             </text>
         </svg>
@@ -281,7 +218,6 @@ const BurstParticle = memo(function BurstParticle({
     particle,
     burstProgress,
     centerY,
-    isMobile,
 }: {
     particle: BurstParticleConfig
     burstProgress: MotionValue<number>
@@ -306,15 +242,14 @@ const BurstParticle = memo(function BurstParticle({
                 rotate,
                 translateX: '-50%',
                 translateY: '-50%',
-                filter: isMobile ? undefined : 'drop-shadow(0 0 6px rgba(255, 196, 224, 0.55))',
             }}
         >
             {particle.kind === 'star' ? (
-                <svg width={particle.size} height={particle.size} viewBox="0 0 24 24" fill="rgba(255,255,255,0.92)">
+                <svg width={particle.size} height={particle.size} viewBox="0 0 24 24" fill="rgba(255,255,255,0.95)">
                     <path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z" />
                 </svg>
             ) : (
-                <svg width={particle.size} height={particle.size + 4} viewBox="0 0 24 28" fill="#f6a7c2">
+                <svg width={particle.size} height={particle.size + 4} viewBox="0 0 24 28" fill="#fda4af">
                     <path d="M12 2C8 2 5 5 5 9c0 5 4 9 7 13 3-4 7-8 7-13 0-4-3-7-7-7z" />
                 </svg>
             )}
@@ -322,7 +257,6 @@ const BurstParticle = memo(function BurstParticle({
     )
 })
 
-// ── Cloud variants (3 shapes with inner highlight) ───────────────
 const CLOUD_VARIANTS = [
     {
         viewBox: '0 0 320 120',
@@ -341,7 +275,6 @@ const CLOUD_VARIANTS = [
     },
 ] as const
 
-// ── Cloud shapes (matches SiteAtmosphere palette) ────────────────
 const Cloud = memo(function Cloud({ w = 320, cx = '0', cy = '0', opacity = 0.28, flip = false, variant = 0 as 0 | 1 | 2, blur = 0 }: {
     w?: number; cx?: number | string; cy?: number | string; opacity?: number; flip?: boolean; variant?: 0 | 1 | 2; blur?: number
 }) {
@@ -359,256 +292,239 @@ const Cloud = memo(function Cloud({ w = 320, cx = '0', cy = '0', opacity = 0.28,
         >
             <svg viewBox={viewBox} fill="currentColor" width={w} style={{ display: 'block', filter: blur > 0 ? `blur(${blur}px)` : undefined }}>
                 <path d={path} />
-                <path d={highlight} fill="rgba(255,255,255,0.35)" />
+                <path d={highlight} fill="rgba(255,255,255,0.4)" />
             </svg>
         </div>
     )
 })
 
-// ── Main Component ──────────────────────────────────────────────
 interface HeroAnimationProps {
     scrollProgress: MotionValue<number>
 }
 
 export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
-    // Use matchMedia for mobile detection — consistent with CSS breakpoints and
-    // reliable in Chrome DevTools emulation (unlike window.innerWidth which can
-    // report the outer window size before DevTools applies the emulated viewport)
     const isMobile = typeof window !== 'undefined'
         ? window.matchMedia('(max-width: 767px)').matches
         : false
-    // On mobile: use 5 particles (skip every other) to reduce concurrent animations
     const burstParticles = isMobile ? BURST_PARTICLES.filter((_, i) => i % 2 === 0) : BURST_PARTICLES
-    const [phaseVisibility, setPhaseVisibility] = useState<PhaseVisibility>(() => getPhaseVisibility(scrollProgress.get()))
 
-    useEffect(() => {
-        const unsubscribe = scrollProgress.on('change', (value) => {
-            const next = getPhaseVisibility(value)
-            setPhaseVisibility((prev) => (
-                prev.showTrail === next.showTrail
-                && prev.showLetter === next.showLetter
-                && prev.showBurst === next.showBurst
-            ) ? prev : next)
-        })
-
-        return () => unsubscribe()
-    }, [scrollProgress])
-    // ── Airplane ──────────────────────────────────────────────
+    // ── Airplane Transforms ─────────────────────────────────────
     const planeX = useTransform(scrollProgress,
-        [0.00, 0.10, 0.22, 0.34, 0.88, 0.98, 1.00],
-        ['-18%', '10%', '34%', '52%', '52%', '-18%', '-18%']
+        [0.00, 0.08, 0.20, 0.35, 0.88, 1.00],
+        ['-20%', '12%', '36%', '50%', '50%', '-20%'],
+        { clamp: true }
     )
     const planeY = useTransform(scrollProgress,
-        [0.00, 0.10, 0.22, 0.34, 0.88, 0.98, 1.00],
-        ['42%', '30%', '24%', '50%', '50%', '42%', '42%']
+        [0.00, 0.08, 0.20, 0.35, 0.88, 1.00],
+        ['44%', '32%', '26%', '48%', '48%', '44%'],
+        { clamp: true }
     )
     const planeRotate = useTransform(scrollProgress,
-        [0.00, 0.10, 0.22, 0.34, 0.88, 0.98, 1.00],
-        [-8, 8, -10, 34, 34, -8, -8]
+        [0.00, 0.08, 0.20, 0.35, 0.88, 1.00],
+        [-6, 10, -8, 28, 28, -6],
+        { clamp: true }
     )
-    const planeOpacity = useTransform(scrollProgress, [0.00, 0.03, 0.32, 0.40, 1.00], [0, 1, 1, 0, 0])
-    const planeScale = useTransform(scrollProgress, [0.00, 0.08, 0.24, 0.34, 0.40, 0.98, 1.00], [0.85, 1, 1.04, 0.35, 0.2, 0.85, 0.85])
+    const planeOpacity = useTransform(scrollProgress,
+        [0.00, 0.04, 0.28, 0.38, 1.00],
+        [0, 1, 1, 0, 0],
+        { clamp: true }
+    )
+    const planeScale = useTransform(scrollProgress,
+        [0.00, 0.08, 0.22, 0.35, 0.40, 1.00],
+        [0.85, 1, 1.05, 0.4, 0.2, 0.85],
+        { clamp: true }
+    )
 
     // ── Wind trail ─────────────────────────────────────────────
-    const trailOpacity = useTransform(scrollProgress, [0.00, 0.03, 0.24, 0.33, 1.00], [0, 0.8, 0.8, 0, 0])
-    const trailX = useTransform(scrollProgress, [0.00, 0.12, 0.28], ['-28%', '-5%', '24%'])
-    const trailY = useTransform(scrollProgress, [0.00, 0.12, 0.24, 0.32], ['40%', '30%', '26%', '36%'])
-    const trailRotate = useTransform(scrollProgress, [0.00, 0.12, 0.24, 0.32], [-8, 8, -10, 12])
+    const trailOpacity = useTransform(scrollProgress,
+        [0.00, 0.04, 0.22, 0.32, 1.00],
+        [0, 0.85, 0.85, 0, 0],
+        { clamp: true }
+    )
+    const trailX = useTransform(scrollProgress, [0.00, 0.12, 0.28], ['-28%', '-5%', '24%'], { clamp: true })
+    const trailY = useTransform(scrollProgress, [0.00, 0.12, 0.24, 0.32], ['42%', '32%', '28%', '36%'], { clamp: true })
+    const trailRotate = useTransform(scrollProgress, [0.00, 0.12, 0.24, 0.32], [-6, 10, -8, 12], { clamp: true })
 
-    // ── Envelope chapter (0.30→0.65), with plane→envelope morph handoff ─────────
-    const envOpacity = useTransform(scrollProgress, [0.30, 0.38, 0.78, 0.88, 1.00], [0, 1, 1, 0, 0])
+    // ── Envelope Chapter ─────────────────────────────────────────
+    const envOpacity = useTransform(scrollProgress,
+        [0.26, 0.34, 0.80, 0.88, 1.00],
+        [0, 1, 1, 0, 0],
+        { clamp: true }
+    )
     const envX = useTransform(scrollProgress,
-        [0.30, 0.36, 0.50, 0.88, 0.98, 1.00],
-        ['52%', '52%', '50%', '50%', '52%', '52%']
+        [0.26, 0.34, 0.50, 0.88, 1.00],
+        ['50%', '50%', '50%', '50%', '50%'],
+        { clamp: true }
     )
     const envY = useTransform(scrollProgress,
-        [0.30, 0.36, 0.50, 0.70, 0.88, 0.98, 1.00],
-        ['50%', '50%', '36%', '35%', '34%', '50%', '50%']
+        [0.26, 0.34, 0.50, 0.70, 0.88, 1.00],
+        ['48%', '48%', '36%', '35%', '34%', '48%'],
+        { clamp: true }
     )
-    const envScale = useTransform(scrollProgress, [0.30, 0.36, 0.48, 0.86, 0.96, 1.00], [0.35, 0.35, 1, 1, 0.35, 0.35])
-    const envRotate = useTransform(scrollProgress, [0.30, 0.36, 0.50, 0.86, 0.96, 1.00], [34, 34, 0, 0, 34, 34])
-    const flapProgress = useTransform(scrollProgress, [0.54, 0.70, 0.82, 0.92, 1.00], [0, 1, 1, 0, 0])
+    const envScale = useTransform(scrollProgress,
+        [0.26, 0.34, 0.48, 0.84, 0.94, 1.00],
+        [0.4, 0.5, 1, 1, 0.4, 0.4],
+        { clamp: true }
+    )
+    const envRotate = useTransform(scrollProgress,
+        [0.26, 0.34, 0.48, 0.84, 0.94, 1.00],
+        [28, 20, 0, 0, 28, 28],
+        { clamp: true }
+    )
+    const flapProgress = useTransform(scrollProgress,
+        [0.46, 0.64, 0.82, 0.92, 1.00],
+        [0, 1, 1, 0, 0],
+        { clamp: true }
+    )
     const envGlowStrength = useTransform(flapProgress, [0.5, 1], [0, 0.25])
-    const envGlow = useMotionTemplate`drop-shadow(0 4px 16px rgba(224,88,120,${envGlowStrength}))`
+    const envGlow = useMotionTemplate`drop-shadow(0 6px 20px rgba(225,29,72,${envGlowStrength}))`
 
-    // ── Letter chapter (emerges as flap opens) ────────────────────
-    // Keep letter riding with envelope first, then reveal once flap is opening.
-    const letterOpacity = useTransform(scrollProgress, [0.54, 0.60, 0.78, 0.88, 1.00], [0, 1, 1, 0, 0])
-    const letterY = useTransform(scrollProgress, [0.30, 0.50, 0.54, 0.70, 0.84, 1.00], ['51%', '37%', '37%', '23%', '30%', '51%'])
-    const letterScale = useTransform(scrollProgress, [0.54, 0.66, 0.84, 1.00], [0.32, 1, 1, 0.32])
-    const letterRotate = useTransform(scrollProgress, [0.54, 0.66, 0.84, 1.00], [4, 0, 0, 4])
-
-    // ── Heart chapter (0.65→0.80), then masked reset ─────────────
-    const heartOpacity = useTransform(scrollProgress, [0.66, 0.74, 0.90, 0.97, 1.00], [0, 1, 1, 0.35, 0])
-    const heartScale = useTransform(scrollProgress, [0.66, 0.78, 0.92, 0.98, 1.00], [0.2, 1, 1, 0.62, 0.35])
-    const heartY = useTransform(scrollProgress,
-        [0.66, 0.82, 0.90, 1.00],
-        ['44%', '29%', '36%', '44%']
+    // ── Letter Emerging ──────────────────────────────────────────
+    const letterOpacity = useTransform(scrollProgress,
+        [0.48, 0.56, 0.80, 0.88, 1.00],
+        [0, 1, 1, 0, 0],
+        { clamp: true }
     )
-    const burstOpacity = useTransform(scrollProgress, [0.66, 0.70, 0.80, 0.88, 1.00], [0, 1, 1, 0, 0])
-    const burstProgress = useTransform(scrollProgress, [0.66, 0.74, 0.84, 1.00], [0, 1, 1, 0])
+    const letterY = useTransform(scrollProgress,
+        [0.26, 0.48, 0.64, 0.84, 1.00],
+        ['48%', '37%', '23%', '30%', '48%'],
+        { clamp: true }
+    )
+    const letterScale = useTransform(scrollProgress,
+        [0.48, 0.62, 0.84, 1.00],
+        [0.35, 1, 1, 0.35],
+        { clamp: true }
+    )
+    const letterRotate = useTransform(scrollProgress,
+        [0.48, 0.62, 0.84, 1.00],
+        [4, 0, 0, 4],
+        { clamp: true }
+    )
 
-    // ── Cloud parallax (no return-to-zero — heroProgress stops at 0.93) ──
-    const c1Y = useTransform(scrollProgress, [0.00, 0.80], [0, -30])
-    const c2Y = useTransform(scrollProgress, [0.00, 0.80], [0, -90])
-    const c3Y = useTransform(scrollProgress, [0.00, 0.80], [0, -15])
+    // ── Heart & Burst Chapter ────────────────────────────────────
+    const heartOpacity = useTransform(scrollProgress,
+        [0.60, 0.70, 0.90, 0.98, 1.00],
+        [0, 1, 1, 0.35, 0],
+        { clamp: true }
+    )
+    const heartScale = useTransform(scrollProgress,
+        [0.60, 0.74, 0.92, 0.98, 1.00],
+        [0.2, 1, 1, 0.6, 0.35],
+        { clamp: true }
+    )
+    const heartY = useTransform(scrollProgress,
+        [0.60, 0.78, 0.90, 1.00],
+        ['44%', '28%', '36%', '44%'],
+        { clamp: true }
+    )
+    const burstOpacity = useTransform(scrollProgress,
+        [0.60, 0.68, 0.80, 0.88, 1.00],
+        [0, 1, 1, 0, 0],
+        { clamp: true }
+    )
+    const burstProgress = useTransform(scrollProgress,
+        [0.60, 0.72, 0.84, 1.00],
+        [0, 1, 1, 0],
+        { clamp: true }
+    )
 
-    // ── Chapter 4 veil (masks section exit) ──────────────────────
-    const exitOpacity = useTransform(scrollProgress, [0.80, 0.90, 0.93], [0, 0.85, 0.85])
-    const skyCenterX = useTransform(scrollProgress, [0.00, 0.75], [55, 61])
-    const skyBackground = useMotionTemplate`radial-gradient(ellipse 140% 90% at ${skyCenterX}% 45%, #fbc5cc 0%, #f4a8b4 25%, #e8909e 55%, #f2c5cb 82%, #fad8dc 100%)`
+    // ── Cloud parallax ───────────────────────────────────────────
+    const c1Y = useTransform(scrollProgress, [0.00, 0.80], [0, -30], { clamp: true })
+    const c2Y = useTransform(scrollProgress, [0.00, 0.80], [0, -90], { clamp: true })
+    const c3Y = useTransform(scrollProgress, [0.00, 0.80], [0, -15], { clamp: true })
 
-    // ── Imperative opacity refs (Motion v12 WAAPI workaround) ─────
-    // Opacity MotionValues that start at 0 are stuck if used in style/prop.
-    // Instead: start elements hidden via CSS class, update via .on('change').
-    const planeRef = useRef<HTMLDivElement>(null)
-    const trailRef = useRef<HTMLDivElement>(null)
-    const letterRef = useRef<HTMLDivElement>(null)
-    const envRef = useRef<HTMLDivElement>(null)
-    const burstRef = useRef<HTMLDivElement>(null)
-    const heartRef = useRef<HTMLDivElement>(null)
-    const exitRef = useRef<HTMLDivElement>(null)
-
-    useLayoutEffect(() => {
-        const pairs = [
-            [planeRef, planeOpacity],
-            [trailRef, trailOpacity],
-            [letterRef, letterOpacity],
-            [envRef, envOpacity],
-            [burstRef, burstOpacity],
-            [heartRef, heartOpacity],
-            [exitRef, exitOpacity],
-        ] as const
-        // Set initial values then subscribe to every change
-        const unsubs = pairs.map(([ref, mv]) => {
-            if (ref.current) ref.current.style.opacity = String(mv.get())
-            return mv.on('change', v => { if (ref.current) ref.current.style.opacity = String(v) })
-        })
-        return () => unsubs.forEach(u => u())
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-    useLayoutEffect(() => {
-        if (trailRef.current) trailRef.current.style.opacity = String(trailOpacity.get())
-        if (letterRef.current) letterRef.current.style.opacity = String(letterOpacity.get())
-        if (burstRef.current) burstRef.current.style.opacity = String(burstOpacity.get())
-    }, [burstOpacity, letterOpacity, phaseVisibility.showBurst, phaseVisibility.showLetter, phaseVisibility.showTrail, trailOpacity])
-
+    const skyCenterX = useTransform(scrollProgress, [0.00, 0.75], [55, 61], { clamp: true })
+    const skyBackground = useMotionTemplate`radial-gradient(ellipse 140% 90% at ${skyCenterX}% 45%, #fff1f5 0%, #ffe4ec 30%, #fecdd3 65%, #fda4af 100%)`
 
     return (
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {/* ── Sky background ─────────────────────────────── */}
             <motion.div
                 className="absolute inset-0"
-                style={{
-                    background: skyBackground,
-                }}
+                style={{ background: skyBackground }}
             />
 
-            {/* ── Far background clouds — desktop only (3 clouds) ──── */}
+            {/* ── Clouds ─────────────────────────────────────── */}
             {!isMobile && (
                 <motion.div className="absolute inset-0" style={{ y: c1Y }}>
-                    <Cloud w={500} cx={-60} cy={-20} opacity={0.18} variant={0} />
-                    <Cloud w={380} cx="65%" cy={-10} opacity={0.15} variant={1} flip />
-                    <Cloud w={280} cx="35%" cy={10} opacity={0.12} variant={2} />
+                    <Cloud w={500} cx={-60} cy={-20} opacity={0.22} variant={0} />
+                    <Cloud w={380} cx="65%" cy={-10} opacity={0.18} variant={1} flip />
+                    <Cloud w={280} cx="35%" cy={10} opacity={0.15} variant={2} />
                 </motion.div>
             )}
 
-            {/* ── Mid clouds — 1 on mobile, 3 on desktop ─────────── */}
             <motion.div className="absolute inset-0" style={{ y: c2Y }}>
-                <Cloud w={560} cx={-80} cy="55%" opacity={0.32} variant={1} />
+                <Cloud w={560} cx={-80} cy="55%" opacity={0.35} variant={1} />
                 {!isMobile && (
                     <>
-                        <Cloud w={480} cx="68%" cy="60%" opacity={0.28} variant={0} flip />
-                        <Cloud w={320} cx="28%" cy="52%" opacity={0.20} variant={2} blur={1} />
+                        <Cloud w={480} cx="68%" cy="60%" opacity={0.30} variant={0} flip />
+                        <Cloud w={320} cx="28%" cy="52%" opacity={0.25} variant={2} blur={1} />
                     </>
                 )}
             </motion.div>
 
-            {/* ── Foreground clouds — 2 on mobile, 3 on desktop ──── */}
             <motion.div className="absolute inset-0" style={{ y: c3Y }}>
-                <Cloud w={640} cx={-100} cy="80%" opacity={0.40} variant={0} />
-                <Cloud w={520} cx="62%" cy="82%" opacity={0.36} variant={1} flip />
+                <Cloud w={640} cx={-100} cy="80%" opacity={0.45} variant={0} />
+                <Cloud w={520} cx="62%" cy="82%" opacity={0.40} variant={1} flip />
                 {!isMobile && (
-                    <Cloud w={380} cx="25%" cy="86%" opacity={0.30} variant={2} />
+                    <Cloud w={380} cx="25%" cy="86%" opacity={0.35} variant={2} />
                 )}
             </motion.div>
 
-            {/* ── Transition cloud bank — 3 on mobile, 6 on desktop ─ */}
-            <div className="absolute inset-0">
-                <Cloud w={760} cx={-130} cy="76%" opacity={0.70} variant={0} />
-                <Cloud w={680} cx="52%" cy="80%" opacity={0.62} variant={1} flip />
-                {!isMobile && <Cloud w={700} cx={-60} cy="90%" opacity={0.75} variant={0} flip blur={1} />}
-                {!isMobile && (
-                    <>
-                        <Cloud w={580} cx="18%" cy="86%" opacity={0.58} variant={2} />
-                        <Cloud w={540} cx="65%" cy="88%" opacity={0.65} variant={1} />
-                        <Cloud w={480} cx="32%" cy="93%" opacity={0.60} variant={2} flip />
-                    </>
-                )}
-            </div>
+            {/* ── Heart Trail ────────────────────────────────── */}
+            <motion.div
+                className="absolute pointer-events-none"
+                style={{
+                    opacity: trailOpacity,
+                    left: trailX,
+                    top: trailY,
+                    rotate: trailRotate,
+                    translateX: '-50%',
+                    translateY: '-50%',
+                    originX: '100%',
+                }}
+            >
+                <WindTrail isMobile={isMobile} />
+            </motion.div>
 
+            {/* ── Paper Airplane ─────────────────────────────── */}
+            <motion.div
+                className="absolute pointer-events-none"
+                style={{
+                    opacity: planeOpacity,
+                    left: planeX,
+                    top: planeY,
+                    rotate: planeRotate,
+                    scale: planeScale,
+                    translateX: '-50%',
+                    translateY: '-50%',
+                }}
+            >
+                <PaperAirplane />
+            </motion.div>
 
-            {/* ── Heart trail ────────────────────────────────── */}
-            {phaseVisibility.showTrail && (
-                <motion.div
-                    ref={trailRef}
-                    className="absolute opacity-0"
-                    style={{
-                        left: trailX,
-                        top: trailY,
-                        rotate: trailRotate,
-                        translateX: '-50%',
-                        translateY: '-50%',
-                        originX: '100%',
-                    }}
-                >
-                    <WindTrail isMobile={isMobile} />
-                </motion.div>
-            )}
-
-            {/* ── Paper airplane ─────────────────────────────── */}
-            {phaseVisibility.showPlane && (
-                <motion.div
-                    ref={planeRef}
-                    className="absolute opacity-0"
-                    style={{
-                        left: planeX,
-                        top: planeY,
-                        rotate: planeRotate,
-                        scale: planeScale,
-                        translateX: '-50%',
-                        translateY: '-50%',
-                        willChange: 'transform, opacity',
-                    }}
-                >
-                    <PaperAirplane />
-                </motion.div>
-            )}
-
-            {/* ── Letter emerging from envelope ──────────────── */}
-            {phaseVisibility.showLetter && (
-                <motion.div
-                    ref={letterRef}
-                    className="absolute opacity-0 pointer-events-none"
-                    style={{
-                        left: envX,
-                        top: letterY,
-                        scale: letterScale,
-                        rotate: letterRotate,
-                        translateX: '-50%',
-                        translateY: '-50%',
-                        filter: 'drop-shadow(0 4px 10px rgba(194,109,138,0.24))',
-                    }}
-                >
-                    <LetterSheet />
-                </motion.div>
-            )}
+            {/* ── Letter Emerging ────────────────────────────── */}
+            <motion.div
+                className="absolute pointer-events-none"
+                style={{
+                    opacity: letterOpacity,
+                    left: envX,
+                    top: letterY,
+                    scale: letterScale,
+                    rotate: letterRotate,
+                    translateX: '-50%',
+                    translateY: '-50%',
+                    filter: 'drop-shadow(0 6px 14px rgba(225,29,72,0.2))',
+                }}
+            >
+                <LetterSheet />
+            </motion.div>
 
             {/* ── Envelope ───────────────────────────────────── */}
             <motion.div
-                ref={envRef}
-                className="absolute opacity-0"
+                className="absolute pointer-events-none"
                 style={{
+                    opacity: envOpacity,
                     left: envX,
                     top: envY,
                     scale: envScale,
@@ -617,59 +533,51 @@ export function HeroAnimation({ scrollProgress }: HeroAnimationProps) {
                     perspective: 400,
                     translateX: '-50%',
                     translateY: '-50%',
-                    willChange: 'transform, opacity',
                 }}
             >
                 <Envelope flapProgress={flapProgress} />
             </motion.div>
 
-            {/* ── Emotional burst particles (5 on mobile, 10 on desktop) ─ */}
-            {phaseVisibility.showBurst && (
-                <div ref={burstRef} className="absolute inset-0 pointer-events-none opacity-0">
-                    {burstParticles.map((particle) => (
-                        <BurstParticle
-                            key={particle.id}
-                            particle={particle}
-                            burstProgress={burstProgress}
-                            centerY={heartY}
-                            isMobile={isMobile}
-                        />
-                    ))}
-                </div>
-            )}
+            {/* ── Emotional Burst Particles ──────────────────── */}
+            <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{ opacity: burstOpacity }}
+            >
+                {burstParticles.map((particle) => (
+                    <BurstParticle
+                        key={particle.id}
+                        particle={particle}
+                        burstProgress={burstProgress}
+                        centerY={heartY}
+                        isMobile={isMobile}
+                    />
+                ))}
+            </motion.div>
 
             {/* ── Heart ──────────────────────────────────────── */}
             <motion.div
-                ref={heartRef}
-                className="absolute opacity-0"
+                className="absolute pointer-events-none"
                 style={{
+                    opacity: heartOpacity,
                     left: '50%',
                     top: heartY,
                     scale: heartScale,
                     translateX: '-50%',
                     translateY: '-50%',
-                    willChange: 'transform, opacity',
                 }}
             >
                 <motion.div
                     animate={{ scale: [1, 1.08, 1] }}
-                    transition={{ duration: 1.6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+                    transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                 >
                     <Heart />
                 </motion.div>
             </motion.div>
 
-            {/* ── Bottom gradient overlay ─────────────────────── */}
+            {/* ── Bottom Fade Overlay ─────────────────────────── */}
             <div
                 className="absolute inset-0 pointer-events-none"
-                style={{ background: 'linear-gradient(to bottom, transparent 0%, transparent 52%, rgba(253,242,248,0.25) 68%, rgba(253,242,248,0.75) 84%, rgba(253,242,248,1) 100%)' }}
-            />
-
-            {/* ── Chapter 4 veil — masks reset to frame 0 ────────── */}
-            <motion.div
-                ref={exitRef}
-                className="absolute inset-0 pointer-events-none opacity-0"
-                style={{ backgroundColor: 'hsl(var(--background))' }}
+                style={{ background: 'linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(255,245,247,0.3) 70%, rgba(255,245,247,1) 100%)' }}
             />
         </div>
     )

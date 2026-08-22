@@ -1,78 +1,24 @@
-import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { MagneticButton } from '@/components/animations/MagneticButton'
 import { HeroClouds } from '@/components/animations/HeroClouds'
+import { HeroAnimation } from '@/components/animations/HeroAnimation'
 import { SiteAtmosphere } from '@/components/animations/SiteAtmosphere'
 import { BackgroundField } from '@/components/animations/BackgroundField'
 import { Container } from '@/components/layout/Container'
 
-const LazyHeroAnimation = lazy(() =>
-  import('@/components/animations/HeroAnimation').then((m) => ({ default: m.HeroAnimation }))
-)
-
-function DeferredHeroAnimation({
-  scrollProgress,
-  animationOpacity,
-}: {
-  scrollProgress: MotionValue<number>
-  animationOpacity: MotionValue<number>
-}) {
-  const [shouldRender, setShouldRender] = useState(false)
-
-  useEffect(() => {
-    let timeoutId: number | ReturnType<typeof setTimeout>
-    if (typeof requestIdleCallback !== 'undefined') {
-      timeoutId = requestIdleCallback(() => setShouldRender(true), { timeout: 1200 })
-    } else {
-      timeoutId = setTimeout(() => setShouldRender(true), 200)
-    }
-
-    return () => {
-      if (typeof cancelIdleCallback !== 'undefined') {
-        cancelIdleCallback(timeoutId)
-      } else {
-        clearTimeout(timeoutId)
-      }
-    }
-  }, [])
-
-  if (!shouldRender) return null
-
-  return (
-    <Suspense fallback={null}>
-      <motion.div
-        style={{ opacity: animationOpacity }}
-        className="absolute inset-0 z-0 pointer-events-none"
-      >
-        <LazyHeroAnimation scrollProgress={scrollProgress} />
-      </motion.div>
-    </Suspense>
-  )
-}
-
-const ProblemSection = lazy(() =>
-  import('@/components/sections/ProblemSection').then((m) => ({ default: m.ProblemSection }))
-)
-const ProductPreviewSection = lazy(() =>
-  import('@/components/sections/ProductPreviewSection').then((m) => ({
-    default: m.ProductPreviewSection,
-  }))
-)
-const HowItWorksSection = lazy(() =>
-  import('@/components/sections/HowItWorksSection').then((m) => ({ default: m.HowItWorksSection }))
-)
-const SocialProofSection = lazy(() =>
-  import('@/components/sections/SocialProofSection').then((m) => ({ default: m.SocialProofSection }))
-)
-const FAQSection = lazy(() =>
-  import('@/components/sections/FAQSection').then((m) => ({ default: m.FAQSection }))
-)
-const FinalCTASection = lazy(() =>
-  import('@/components/sections/FinalCTASection').then((m) => ({ default: m.FinalCTASection }))
-)
+import { InteractiveEnvelopeDemo } from '@/components/sections/InteractiveEnvelopeDemo'
+import { CompareExperienceSection } from '@/components/sections/CompareExperienceSection'
+import { ProblemSection } from '@/components/sections/ProblemSection'
+import { ProductPreviewSection } from '@/components/sections/ProductPreviewSection'
+import { OccasionsSection } from '@/components/sections/OccasionsSection'
+import { HowItWorksSection } from '@/components/sections/HowItWorksSection'
+import { SocialProofSection } from '@/components/sections/SocialProofSection'
+import { FAQSection } from '@/components/sections/FAQSection'
+import { FinalCTASection } from '@/components/sections/FinalCTASection'
 
 function HeroSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
@@ -83,13 +29,13 @@ function HeroSection() {
   })
 
   // Smooth storytelling scroll mapping with clamp
-  const focusOpacity = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [1, 0, 0, 1], { clamp: true })
-  const textY = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [0, -45, 45, 0], { clamp: true })
-  const animationOpacity = useTransform(scrollYProgress, [0.06, 0.14, 0.86, 0.94], [0, 1, 1, 0], { clamp: true })
-  const heroProgress = useTransform(scrollYProgress, [0.14, 0.86], [0, 1], { clamp: true })
+  const focusOpacity = useTransform(scrollYProgress, [0.00, 0.16, 0.84, 0.98], [1, 0, 0, 1], { clamp: true })
+  const textY = useTransform(scrollYProgress, [0.00, 0.16, 0.84, 0.98], [0, -40, 40, 0], { clamp: true })
+  const animationOpacity = useTransform(scrollYProgress, [0.02, 0.14, 0.86, 0.98], [0, 1, 1, 0], { clamp: true })
+  const heroProgress = useTransform(scrollYProgress, [0.04, 0.90], [0, 1], { clamp: true })
 
   return (
-    <section ref={sectionRef} className="relative" style={{ height: '400vh' }}>
+    <section ref={sectionRef} className="relative" style={{ height: '280vh' }}>
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         {/* Fundo suave rosa claro & branco */}
         <motion.div
@@ -98,7 +44,12 @@ function HeroSection() {
         />
 
         {/* Camada do Avião de Papel e Envelope em SVG */}
-        <DeferredHeroAnimation scrollProgress={heroProgress} animationOpacity={animationOpacity} />
+        <motion.div
+          style={{ opacity: animationOpacity }}
+          className="absolute inset-0 z-0 pointer-events-none"
+        >
+          <HeroAnimation scrollProgress={heroProgress} />
+        </motion.div>
         <HeroClouds scrollProgress={scrollYProgress} />
 
         {/* Conteúdo Textual com Alto Contraste — 100% Tema Claro */}
@@ -156,15 +107,15 @@ function HeroSection() {
               </MagneticButton>
 
               <MagneticButton>
-                <Link to="/contact">
+                <a href="#interactive-demo">
                   <Button
                     variant="outline"
                     size="lg"
                     className="bg-white hover:bg-rose-50 text-[#4c0519] hover:text-[#e11d48] font-bold px-8 py-4 text-base rounded-2xl border-2 border-pink-300/80 shadow-md shadow-pink-500/10 transition-all duration-200"
                   >
-                    Como funciona?
+                    Ver demonstração
                   </Button>
-                </Link>
+                </a>
               </MagneticButton>
             </motion.div>
           </Container>
@@ -203,18 +154,35 @@ export function Home() {
         <SiteAtmosphere lowEndMode={lowEndMode} reducedMotionMode={prefersReducedMotion} />
       )}
 
-      {/* Storytelling Hero com Animação Original */}
+      {/* Storytelling Hero com Animação Fluida */}
       <HeroSection />
 
-      {/* Seções Principais Refatoradas */}
-      <Suspense fallback={<div className="min-h-[600px] w-full" />}>
-        <ProblemSection />
-        <ProductPreviewSection />
-        <HowItWorksSection />
-        <SocialProofSection />
-        <FAQSection />
-        <FinalCTASection />
-      </Suspense>
+      {/* 1. Demonstração Interativa de Lacre de Cera */}
+      <InteractiveEnvelopeDemo />
+
+      {/* 2. Comparativo: Mensagem Fria vs. Correio Elegante */}
+      <CompareExperienceSection />
+
+      {/* 3. O Valor da Lembrança Eterna */}
+      <ProblemSection />
+
+      {/* 4. Vitrine dos Formatos Interativos (Vinil, Timeline, Raspadinha) */}
+      <ProductPreviewSection />
+
+      {/* 5. Ocasiões Especiais (Pedidos, Aniversários, Distância, Presentes) */}
+      <OccasionsSection />
+
+      {/* 6. Passo a Passo Simples */}
+      <HowItWorksSection />
+
+      {/* 7. Depoimentos Reais e Estatísticas */}
+      <SocialProofSection />
+
+      {/* 8. Perguntas Frequentes */}
+      <FAQSection />
+
+      {/* 9. Chamada Final */}
+      <FinalCTASection />
     </div>
   )
 }
