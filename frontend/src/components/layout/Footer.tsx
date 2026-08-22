@@ -49,13 +49,9 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="relative z-10 mt-16 flex flex-col items-center justify-between gap-6 border-t border-black/5 pt-8 md:flex-row md:gap-4">
-            <p className="text-xs font-medium text-text-muted">
+          <div className="relative z-10 mt-16 flex flex-col items-center justify-between gap-6 border-t border-pink-100 pt-8 md:flex-row md:gap-4">
+            <p className="text-xs font-medium text-[#701a35]">
               © {new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.
-            </p>
-            
-            <p className="flex items-center gap-1.5 rounded-full border border-black/5 bg-black/[0.02] px-4 py-1.5 text-xs font-medium text-text-muted">
-              Um projeto escolar <Heart className="h-3.5 w-3.5 fill-primary text-primary" />
             </p>
           </div>
         </div>

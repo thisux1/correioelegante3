@@ -68,10 +68,6 @@ export function ProblemSection() {
                         </p>
                       </div>
 
-                      <div className="mt-8 pt-4 border-t border-pink-100 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[#e11d48]" />
-                        <span className="text-xs font-bold text-[#be123c]">Feito com afeto digital</span>
-                      </div>
                     </Card>
                   </motion.div>
                 </CardTilt3D>
