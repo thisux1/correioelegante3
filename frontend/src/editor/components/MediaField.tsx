@@ -371,7 +371,7 @@ export function MediaField({
         <button
           type="button"
           onClick={onRemove}
-          className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+          className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-red-500/30 px-3 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
           aria-label={`Remover item de ${label}`}
         >
           <Trash2 size={14} />
@@ -393,7 +393,7 @@ export function MediaField({
           initial={{ opacity: 0, y: 8, scale: 0.99 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.16, ease: [0.19, 1, 0.22, 1] }}
-          className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 transition-all duration-300"
+          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 transition-all duration-300"
           aria-label={`Upload confirmado para ${label}`}
         >
           <div className="flex items-center justify-between gap-3">
@@ -402,7 +402,7 @@ export function MediaField({
                 <img src={normalizedSrc} alt="Preview do arquivo enviado" className="h-14 w-14 rounded-lg object-cover" loading="lazy" />
               ) : (
                 <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10">
-                  <CheckCircle2 size={20} className="text-emerald-600" />
+                  <CheckCircle2 size={20} className="text-emerald-500" />
                 </div>
               )}
               <div className="min-w-0">
@@ -413,7 +413,7 @@ export function MediaField({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl border border-primary/30 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl border border-primary/30 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
               aria-label={`Trocar arquivo de ${label}`}
             >
               <Upload size={14} />
@@ -426,7 +426,7 @@ export function MediaField({
           initial={{ opacity: 0, y: 8, scale: 0.99 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.16, ease: [0.19, 1, 0.22, 1] }}
-          className={`space-y-2 rounded-xl border border-dashed p-3 transition-colors ${isDragActive ? 'border-primary/55 bg-primary/10' : 'border-primary/25 bg-white/85'}`}
+          className={`space-y-2 rounded-xl border border-dashed p-3 transition-colors ${isDragActive ? 'border-primary/55 bg-primary/10' : 'border-border bg-surface-raised/85'}`}
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -514,7 +514,7 @@ export function MediaField({
       </div>
 
       {kind === 'image' ? (
-        <div className="flex items-center gap-2 rounded-lg border border-primary/10 bg-white/70 p-2">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-raised/80 p-2">
           {isValidUrl(normalizedSrc) ? (
             <img src={normalizedSrc} alt="Preview da midia" className="h-12 w-12 rounded-lg object-cover" loading="lazy" />
           ) : (
@@ -536,7 +536,7 @@ export function MediaField({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.99 }}
             transition={{ duration: 0.16, ease: [0.19, 1, 0.22, 1] }}
-            className="rounded-lg border border-primary/20 bg-white/75 px-3 py-2 text-xs text-text-light"
+            className="rounded-lg border border-border bg-surface-raised/85 px-3 py-2 text-xs text-text-light"
           >
             {currentAsset ? (
               <p className="mt-1 inline-flex items-center gap-1">
@@ -548,7 +548,7 @@ export function MediaField({
                     onClick={() => {
                       void handleReprocessAsset()
                     }}
-                    className="ml-1 inline-flex min-h-11 items-center gap-1 rounded border border-amber-300 px-2 py-1 text-amber-700 hover:bg-amber-50"
+                    className="ml-1 inline-flex min-h-11 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-500 hover:bg-amber-500/20 cursor-pointer"
                   >
                     <RotateCcw size={10} />
                     Reprocessar

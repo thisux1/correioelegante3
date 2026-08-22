@@ -126,7 +126,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       {/* Card Interativo Principal */}
       <div
         ref={containerRef}
-        className="relative mx-auto min-h-[260px] w-full overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-b from-[#fff7f7] via-white to-[#fff0f2] p-7 text-center shadow-xl backdrop-blur-xs sm:p-9"
+        className="relative mx-auto min-h-[260px] w-full overflow-hidden rounded-3xl border border-border bg-surface-raised p-7 text-center shadow-xl backdrop-blur-xs sm:p-9 text-text"
       >
         <AnimatePresence>
           {hasAnsweredYes ? (
@@ -166,8 +166,8 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                       value={props.successMessage}
                       onChange={(e) => updateProp('successMessage', e.target.value)}
                       onClick={(e) => e.stopPropagation()}
-                      placeholder="Eu sabia! Te amo muito. ❤️"
-                      className="w-full resize-none rounded-2xl bg-transparent text-center font-cursive text-2xl sm:text-3xl font-bold leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:bg-white/40 focus:outline-none p-2 transition-colors"
+                      placeholder="Eu sabia! Te amo muito."
+                      className="w-full resize-none rounded-2xl bg-transparent text-center font-cursive text-2xl sm:text-3xl font-bold leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-primary/30 focus:border-primary focus:bg-surface/40 focus:outline-none p-2 transition-colors"
                       aria-label="Mensagem de sucesso"
                     />
                   ) : (
@@ -248,7 +248,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                 {/* Botão NÃO */}
                 <div className="relative">
                   {isEditMode ? (
-                    <div className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-primary/20 bg-white/85 px-5 py-2.5 shadow-xs backdrop-blur-xs hover:border-primary/40 transition-colors">
+                    <div className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface/85 px-5 py-2.5 shadow-xs backdrop-blur-xs hover:border-primary/40 transition-colors">
                       <input
                         type="text"
                         value={props.noButtonText}
@@ -267,7 +267,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                       onClick={moveNoButton}
                       animate={{ x: noPosition.x, y: noPosition.y }}
                       transition={{ type: 'spring', stiffness: 350, damping: 22 }}
-                      className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-primary/20 bg-white/85 px-6 py-3 text-sm font-semibold text-text-light shadow-xs backdrop-blur-xs transition-colors hover:bg-rose-50 hover:text-red-600"
+                      className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-border bg-surface/85 px-6 py-3 text-sm font-semibold text-text-light shadow-xs backdrop-blur-xs transition-colors hover:bg-red-500/10 hover:text-red-500"
                     >
                       {noText}
                     </motion.button>

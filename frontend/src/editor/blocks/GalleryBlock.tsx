@@ -146,7 +146,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             : null
 
     return (
-      <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
+      <div className="space-y-3 rounded-2xl border border-border bg-surface/90 p-4 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium text-text">Galeria</p>
           <span className="text-xs font-medium text-text-light">{totalSlotsUsed}/{MAX_GALLERY_IMAGES} itens</span>
@@ -186,7 +186,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           </button>}
         >
           <div
-            className={`rounded-xl border border-dashed p-3 transition-colors ${isQuickDropActive ? 'border-primary/55 bg-primary/10' : 'border-primary/25 bg-white/80'}`}
+            className={`rounded-xl border border-dashed p-3 transition-colors ${isQuickDropActive ? 'border-primary/55 bg-primary/10' : 'border-border bg-surface-raised/80'}`}
             onDragEnter={(event: DragEvent<HTMLDivElement>) => {
               event.preventDefault()
               event.stopPropagation()
@@ -259,7 +259,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         </EditorInputSection>
 
         {(batchMessage || batchLimitMessage || batchFailures.length > 0) ? (
-          <div className="space-y-2 rounded-xl border border-primary/20 bg-white/75 p-3 text-xs text-text-light" aria-live="polite">
+          <div className="space-y-2 rounded-xl border border-border bg-surface-raised p-3 text-xs text-text-light" aria-live="polite">
             {batchMessage ? (
               <p className="inline-flex items-center gap-1">
                 {resolvedBatchState === 'done_with_errors'
@@ -280,7 +280,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         ) : null}
 
         {visibleItems.length === 0 ? (
-          <div className="space-y-2 rounded-xl border border-dashed border-primary/30 bg-white/70 p-4 text-center">
+          <div className="space-y-2 rounded-xl border border-dashed border-border bg-surface-raised/60 p-4 text-center">
             <p className="text-sm text-text-light">Sua galeria esta vazia. Envie imagens ou adicione um item com URL.</p>
             <button
               type="button"
@@ -302,7 +302,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
                   transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.18, layout: { type: 'spring', stiffness: 420, damping: 34 } }}
-                  className="rounded-xl border border-primary/15 bg-white/80 p-2"
+                  className="rounded-xl border border-border/80 bg-surface-raised/70 p-2"
                 >
                   <MediaField
                     kind="image"
@@ -419,7 +419,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
                         const draftIndex = index - items.length
                         setDraftItems(draftItems.filter((_, currentIndex) => currentIndex !== draftIndex))
                       }}
-                      className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                      className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-red-500/30 px-3 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/10 cursor-pointer"
                       aria-label="Remover item"
                     >
                       <X size={14} />
@@ -437,7 +437,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-8 text-center text-sm text-text-light">
+      <div className="rounded-2xl border border-dashed border-border bg-surface/70 p-8 text-center text-sm text-text-light">
         Galeria vazia. Adicione imagens no modo de edicao.
       </div>
     )
@@ -446,7 +446,7 @@ function GalleryBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const resolvedActiveIndex = activeIndex % items.length
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-white/80">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/90 shadow-md">
       <div className="relative h-[280px] w-full sm:h-[360px]">
         {items.map((item, index) => {
           const isActive = index === resolvedActiveIndex

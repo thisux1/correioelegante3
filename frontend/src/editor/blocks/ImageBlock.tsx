@@ -27,10 +27,10 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           setFailedSource((current) => (current === source ? null : current))
         }}
         onError={() => setFailedSource(source)}
-        className="h-[320px] w-full rounded-xl border border-primary/15 bg-white object-cover"
+        className="h-[320px] w-full rounded-xl border border-border bg-surface object-cover shadow-sm"
       />
     ) : (
-      <div className={`flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border p-6 ${hasError ? 'border-red-200 bg-red-50 text-red-500' : 'border-dashed border-primary/30 bg-white/75 text-text-light'}`}>
+      <div className={`flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border p-6 ${hasError ? 'border-red-500/30 bg-red-500/10 text-red-500 dark:text-red-400' : 'border-dashed border-border bg-surface-raised/70 text-text-light'}`}>
         {hasError ? <ImageOff size={32} /> : <ImagePlus size={32} />}
         <p className="text-sm font-medium">
           {hasError ? 'Nao foi possivel carregar a imagem' : 'Adicione uma imagem'}
@@ -43,7 +43,7 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
+    <div className="space-y-3 rounded-2xl border border-border bg-surface/90 p-4 shadow-xs">
       {previewImage}
       <MediaField
         kind="image"

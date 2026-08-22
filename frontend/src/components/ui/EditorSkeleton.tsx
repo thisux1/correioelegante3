@@ -32,7 +32,7 @@ export function EditorSkeleton({
           </div>
 
           {/* Action buttons & Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-white/80 p-3 backdrop-blur-sm shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface/80 p-3 backdrop-blur-sm shadow-xs">
             {/* Left buttons: Add block, Theme picker, Mode switcher */}
             <div className="flex items-center gap-2">
               <Skeleton variant="rounded" className="h-11 w-11 rounded-xl" />
@@ -63,17 +63,17 @@ export function EditorSkeleton({
       <Container size="narrow" className="px-0">
         <div className="mx-auto max-w-2xl space-y-6">
           {/* Bloco 1: Envelope */}
-          <div className="rounded-3xl border border-border/60 bg-white/70 p-4 shadow-sm backdrop-blur-xs">
+          <div className="rounded-3xl border border-border bg-surface/70 p-4 shadow-sm backdrop-blur-xs">
             <BlockSkeleton type="envelope" />
           </div>
 
           {/* Bloco 2: Texto */}
-          <div className="rounded-3xl border border-border/60 bg-white/70 p-4 shadow-sm backdrop-blur-xs">
+          <div className="rounded-3xl border border-border bg-surface/70 p-4 shadow-sm backdrop-blur-xs">
             <BlockSkeleton type="text" category="body" />
           </div>
 
           {/* Bloco 3: Polaroid */}
-          <div className="rounded-3xl border border-border/60 bg-white/70 p-4 shadow-sm backdrop-blur-xs">
+          <div className="rounded-3xl border border-border bg-surface/70 p-4 shadow-sm backdrop-blur-xs">
             <BlockSkeleton type="polaroid" />
           </div>
         </div>

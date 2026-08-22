@@ -32,16 +32,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={`
               w-full px-4 py-3 rounded-xl
-              bg-white/85 border border-white/60
-              shadow-[0_2px_10px_rgba(0,0,0,0.02)]
+              bg-surface border border-border
+              shadow-xs
               backdrop-blur-md
               text-text placeholder:text-text-muted/70 text-sm md:text-base
               outline-none
               transition-all duration-200
-              focus:ring-2 focus:ring-primary/25 focus:border-primary/60 focus:bg-white
+              focus:ring-2 focus:ring-primary/25 focus:border-primary/60 focus:bg-surface
               ${leftIcon ? 'pl-11' : ''}
               ${rightElement ? 'pr-11' : ''}
-              ${error ? 'border-rose-400 focus:ring-rose-200 focus:border-rose-500 bg-rose-50/30' : ''}
+              ${error ? 'border-rose-500/40 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-500/10' : ''}
               ${className}
             `}
             {...props}

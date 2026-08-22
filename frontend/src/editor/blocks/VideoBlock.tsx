@@ -237,7 +237,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (mode === 'edit') {
     return (
-      <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/80 p-4">
+      <div className="space-y-3 rounded-2xl border border-border bg-surface/90 p-4 shadow-xs">
         <MediaField
           kind="video"
           label="Video principal"
@@ -276,7 +276,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
           ) : null}
         </EditorInputSection>
 
-        <div className="rounded-lg border border-primary/20 bg-white/70 px-3 py-2 text-xs text-text-light">
+        <div className="rounded-lg border border-border bg-surface-raised px-3 py-2 text-xs text-text-light">
           {effectiveSelectedAsset
             ? ` Status do asset: ${effectiveSelectedAsset.processingStatus}${effectiveSelectedAsset.errorMessage ? ` (${effectiveSelectedAsset.errorMessage})` : ''}`
             : ' Sem asset selecionado.'}
@@ -287,7 +287,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (!selectedAsset && !canPlay) {
     return (
-      <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-6 text-center text-sm text-text-light">
+      <div className="rounded-2xl border border-dashed border-border bg-surface-raised/70 p-6 text-center text-sm text-text-light">
         Video indisponivel. Ajuste o asset ou URL no modo de edicao.
       </div>
     )
@@ -299,9 +299,9 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.99 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.18, ease: [0.19, 1, 0.22, 1] }}
-        className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-white/80 p-6 text-text-light"
+        className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-surface/90 p-6 text-text-light shadow-xs"
       >
-        <LoaderCircle size={20} className="animate-spin" />
+        <LoaderCircle size={20} className="animate-spin text-primary" />
         <p className="text-sm">Estamos finalizando o video. Aguarde um instante.</p>
       </motion.div>
     )
@@ -309,7 +309,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (effectiveSelectedAsset?.processingStatus === 'failed') {
     return (
-      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-amber-700">
+      <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center text-amber-500 dark:text-amber-400">
         <TriangleAlert size={20} />
         <p className="text-sm font-medium">Falha no processamento do video</p>
         <p className="text-xs">{effectiveSelectedAsset.errorMessage ?? 'Tente substituir por outro arquivo.'}</p>
@@ -320,7 +320,7 @@ function VideoBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (!canPlay) {
     return (
-      <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-6 text-center text-sm text-text-light">
+      <div className="rounded-2xl border border-dashed border-border bg-surface-raised/70 p-6 text-center text-sm text-text-light">
         URL de video invalida. Ajuste no modo de edicao.
       </div>
     )

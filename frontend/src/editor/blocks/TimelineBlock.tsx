@@ -155,8 +155,8 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
           onClick={isEditMode ? handleAddItem : undefined}
           className={`flex min-h-[180px] flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
             isEditMode
-              ? 'cursor-pointer border-primary/30 bg-white/70 hover:border-primary/50 hover:bg-primary/5'
-              : 'border-primary/20 bg-white/40'
+              ? 'cursor-pointer border-border hover:border-primary/50 bg-surface-raised/60 hover:bg-primary/5'
+              : 'border-border bg-surface/40'
           }`}
         >
           <Sparkles className="text-primary" size={28} />
@@ -204,10 +204,10 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                   {/* Conteúdo do Card com Edição Direta WYSIWYG */}
                   <div className="ml-12 w-[calc(100%-3.5rem)] sm:ml-0 sm:w-1/2 sm:px-6">
                     <div
-                      className={`group relative rounded-2xl border bg-white/95 p-5 shadow-lg backdrop-blur-xs transition-all duration-300 ${
+                      className={`group relative rounded-2xl border bg-surface/95 text-text p-5 shadow-lg backdrop-blur-xs transition-all duration-300 ${
                         isEditMode
-                          ? 'border-primary/30 hover:border-primary/50 hover:shadow-xl'
-                          : 'border-primary/20 hover:shadow-xl'
+                          ? 'border-border hover:border-primary/50 hover:shadow-xl'
+                          : 'border-border/80 hover:shadow-xl'
                       } ${isEven ? 'sm:text-right' : 'sm:text-left'}`}
                     >
                       {/* Top Header do Card: Data + Barra de Ações Compacta */}
@@ -235,7 +235,7 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                         {/* Barra Compacta de Ações (Modo Edição com Progressive Disclosure) */}
                         {isEditMode && (
                           <div
-                            className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity bg-white/90 rounded-xl border border-primary/20 p-0.5 shadow-2xs"
+                            className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity bg-surface-raised/90 rounded-xl border border-border p-0.5 shadow-2xs"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
@@ -261,7 +261,7 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                             <button
                               type="button"
                               onClick={() => handleRemoveItem(index)}
-                              className="rounded-lg p-1 text-red-500 transition-colors hover:bg-red-50"
+                              className="rounded-lg p-1 text-red-500 transition-colors hover:bg-red-500/10 cursor-pointer"
                               aria-label="Remover marco"
                               title="Remover marco"
                             >
@@ -302,7 +302,7 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                               <button
                                 type="button"
                                 onClick={() => handleTriggerUpload(index)}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-white/95 px-3 py-1.5 text-xs font-bold text-text shadow-md hover:bg-white hover:text-primary transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-surface/95 px-3 py-1.5 text-xs font-bold text-text shadow-md hover:bg-surface-raised hover:text-primary transition-colors cursor-pointer"
                               >
                                 <Upload size={13} className="text-primary" />
                                 <span>Trocar Foto</span>
@@ -310,7 +310,7 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                               <button
                                 type="button"
                                 onClick={() => handleUpdateItem(index, 'image', '')}
-                                className="inline-flex items-center gap-1 rounded-xl bg-red-500/90 px-2.5 py-1.5 text-xs font-bold text-white shadow-md hover:bg-red-600 transition-colors"
+                                className="inline-flex items-center gap-1 rounded-xl bg-red-500/90 px-2.5 py-1.5 text-xs font-bold text-white shadow-md hover:bg-red-600 transition-colors cursor-pointer"
                                 title="Remover Foto"
                                 aria-label="Remover foto"
                               >
@@ -324,7 +324,7 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                           <button
                             type="button"
                             onClick={() => handleTriggerUpload(index)}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] py-2.5 px-3 text-xs font-semibold text-primary transition-all hover:border-primary/60 hover:bg-primary/10 hover:scale-[1.01] active:scale-[0.99]"
+                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] py-2.5 px-3 text-xs font-semibold text-primary transition-all hover:border-primary/60 hover:bg-primary/10 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                           >
                             {uploadingIndex === index ? (
                               <>
@@ -349,7 +349,7 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                           onChange={(e) => handleUpdateItem(index, 'description', e.target.value)}
                           placeholder="Conte o que tornou esse dia tão inesquecível..."
                           aria-label="Descrição do marco"
-                          className={`mt-2 w-full resize-none rounded-xl bg-transparent font-sans text-sm sm:text-base leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-primary/30 focus:border-primary/50 focus:bg-white/50 focus:outline-none p-1.5 transition-colors ${
+                          className={`mt-2 w-full resize-none rounded-xl bg-transparent font-sans text-sm sm:text-base leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-primary/30 focus:border-primary/50 focus:bg-surface/50 focus:outline-none p-1.5 transition-colors ${
                             isEven ? 'sm:text-right' : 'sm:text-left'
                           }`}
                         />
@@ -371,7 +371,7 @@ function TimelineBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="inline-flex items-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-white/90 px-6 py-3 text-sm font-bold text-primary shadow-xs backdrop-blur-xs transition-all hover:border-primary hover:bg-primary/5 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-surface/90 px-6 py-3 text-sm font-bold text-primary shadow-xs backdrop-blur-xs transition-all hover:border-primary hover:bg-primary/5 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 <Plus size={16} />
                 <span>Adicionar Momento</span>
