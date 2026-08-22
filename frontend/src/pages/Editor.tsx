@@ -710,11 +710,11 @@ export function Editor() {
 
   const feedbackClassName = useMemo(() => {
     if (saveState === 'error') {
-      return 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+      return 'border-red-500/30 bg-red-500/10 text-red-600'
     }
 
     if (saveState === 'saved') {
-      return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+      return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
     }
 
     return 'border-border bg-surface/90 text-text'
@@ -728,30 +728,7 @@ export function Editor() {
       <Container size="narrow">
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-3xl text-text md:text-4xl">Crie sua carta</h1>
-              {/* Indicador de Status Explícito */}
-              <div
-                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-bold ${
-                  status === 'published'
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shadow-xs'
-                    : 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300'
-                }`}
-                role="status"
-              >
-                {status === 'published' ? (
-                  <>
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Publicada & Compartilhável</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
-                    <span>Rascunho (Ainda não publicado)</span>
-                  </>
-                )}
-              </div>
-            </div>
+            <h1 className="font-display text-3xl text-text md:text-4xl">Crie sua carta</h1>
             <p className="mt-1 text-sm text-text-light">
               Escolha cores, escreva sua mensagem e veja tudo mudar em tempo real.
             </p>
@@ -784,11 +761,11 @@ export function Editor() {
 
         <div className="mb-4">
           <div className={`mb-2 inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium backdrop-blur-xs ${saveState === 'error'
-            ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+            ? 'border-red-500/30 bg-red-500/10 text-red-600'
             : saveState === 'saving'
               ? 'border-primary/30 bg-primary/10 text-primary'
               : saveState === 'saved'
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
                 : 'border-border bg-surface/85 text-text-light'}`}
             role="status"
             aria-live="polite"

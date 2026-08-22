@@ -181,7 +181,7 @@ function TimerBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   if (!parsedTarget) {
     return (
-      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-amber-500 dark:text-amber-400">
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-amber-800">
         Defina uma data valida para iniciar o contador.
       </div>
     )

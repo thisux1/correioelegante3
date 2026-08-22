@@ -95,37 +95,37 @@ export function ShareLetterModal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          {/* Backdrop com blur suave */}
+          {/* Backdrop em Vinho Blush Suave — 100% Tema Claro */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-[#4c0519]/30 backdrop-blur-xs z-40"
           />
 
-          {/* Modal Container — Identidade Rosa Claro / Blush Romântico */}
+          {/* Modal Container — Identidade Rosa Claro / Branco Puro */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 12 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ type: 'spring', damping: 28, stiffness: 340 }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="share-modal-title"
-            className="relative z-50 w-full max-w-lg overflow-hidden rounded-3xl bg-surface/98 backdrop-blur-xl p-6 sm:p-8 shadow-2xl border border-pink-200/70 dark:border-pink-900/40 text-text max-h-[90vh] overflow-y-auto"
+            className="relative z-50 w-full max-w-lg overflow-hidden rounded-3xl bg-white border-2 border-pink-200 shadow-2xl shadow-rose-500/15 p-6 sm:p-8 text-[#4c0519] max-h-[90vh] overflow-y-auto"
           >
             {/* Botão fechar */}
             <button
               type="button"
               onClick={onClose}
               aria-label="Fechar modal de compartilhamento"
-              className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-pink-100/50 dark:bg-zinc-800 text-text-light hover:bg-pink-100 hover:text-text transition-colors cursor-pointer"
+              className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-pink-50 text-[#701a35] hover:bg-pink-100 hover:text-[#e11d48] border border-pink-200/60 transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
 
-            {/* Cabeçalho Celebratório com Selo de Cera Delicado em Rosa Claro */}
+            {/* Cabeçalho Celebratório com Selo de Cera 3D */}
             <div className="text-center mb-6">
               <motion.div
                 initial={{ scale: 0, rotate: -20 }}
@@ -138,7 +138,7 @@ export function ShareLetterModal({
                 }}
                 className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center"
               >
-                {/* Aura suave em rosa claro / blush */}
+                {/* Aura suave em blush */}
                 <motion.div
                   animate={{
                     scale: [1, 1.15, 1],
@@ -149,19 +149,19 @@ export function ShareLetterModal({
                     duration: 3,
                     ease: 'easeInOut',
                   }}
-                  className="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-300/40 via-rose-200/30 to-amber-200/30 blur-lg"
+                  className="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-300/50 via-rose-200/40 to-amber-200/40 blur-lg"
                 />
 
-                {/* Selo de Cera Rosa Elegante */}
+                {/* Selo de Cera Rubi Delicado */}
                 <div
-                  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 via-rose-400 to-pink-500 shadow-[0_8px_20px_-4px_rgba(244,63,94,0.35),inset_0_2px_4px_rgba(255,255,255,0.45)] border-2 border-pink-300/60 ring-4 ring-pink-400/15"
+                  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#f43f5e] via-[#e11d48] to-[#be123c] shadow-lg border-2 border-white/50 ring-4 ring-rose-400/25 text-white"
                   aria-hidden="true"
                 >
-                  <div className="absolute inset-1 rounded-full border border-dashed border-white/35" />
-                  <Heart className="h-8 w-8 fill-white text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]" />
+                  <div className="absolute inset-1 rounded-full border border-dashed border-white/40" />
+                  <Heart className="h-8 w-8 fill-white text-white drop-shadow-sm" />
                 </div>
 
-                {/* Efeito de faíscas sutis */}
+                {/* Brilho decorativo */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -174,27 +174,27 @@ export function ShareLetterModal({
 
               <h2
                 id="share-modal-title"
-                className="font-display text-2xl sm:text-3xl font-bold text-text mb-1"
+                className="font-display text-2xl sm:text-3xl font-bold text-[#4c0519] mb-1"
               >
                 Carta Selada & Pronta para Envio!
               </h2>
-              <p className="text-xs sm:text-sm text-text-light max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-[#701a35] max-w-sm mx-auto">
                 {pageTitle
                   ? `"${pageTitle}" foi selada com sucesso.`
-                  : 'Sua mensagem especial foi guardada com todo carinho e está pronta para encantar.'}
+                  : 'Sua homenagem especial foi guardada e está pronta para encantar.'}
               </p>
             </div>
 
-            {/* Seção 1: Link Direto com Cópia com 1 Clique */}
+            {/* Seção 1: Link Direto com Cópia */}
             <div className="space-y-3 mb-5">
               <label
                 htmlFor="share-letter-url"
-                className="block text-xs font-bold uppercase tracking-wider text-text-muted text-left"
+                className="block text-xs font-bold uppercase tracking-wider text-[#701a35] text-left"
               >
                 Link da Carta
               </label>
 
-              <div className="flex items-center gap-2 rounded-2xl border border-pink-200/60 dark:border-pink-900/30 bg-pink-50/40 dark:bg-zinc-900/40 p-1.5 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+              <div className="flex items-center gap-2 rounded-2xl border-2 border-pink-200 bg-[#fff5f8] p-1.5 focus-within:border-[#e11d48] focus-within:ring-2 focus-within:ring-rose-400/20 transition-all">
                 <input
                   id="share-letter-url"
                   type="text"
@@ -202,7 +202,7 @@ export function ShareLetterModal({
                   value={letterUrl}
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   aria-label="URL da carta"
-                  className="flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm font-medium text-text outline-none truncate"
+                  className="flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm font-medium text-[#4c0519] outline-none truncate"
                 />
 
                 <motion.button
@@ -213,7 +213,7 @@ export function ShareLetterModal({
                   className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all shrink-0 cursor-pointer ${
                     copied
                       ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                      : 'bg-primary text-white shadow-md shadow-primary/25 hover:bg-primary-dark'
+                      : 'bg-[#e11d48] hover:bg-[#be123c] text-white shadow-md shadow-rose-500/25'
                   }`}
                   aria-label={copied ? 'Link copiado' : 'Copiar link'}
                 >
@@ -238,7 +238,7 @@ export function ShareLetterModal({
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 px-1"
+                    className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 px-1"
                     role="status"
                     aria-live="polite"
                   >
@@ -263,8 +263,8 @@ export function ShareLetterModal({
             </div>
 
             {/* Seção 3: Gerador de QR Code com Moldura Rosa Pastel */}
-            <div className="mb-6 rounded-2xl border border-pink-200/60 dark:border-pink-900/30 bg-pink-50/30 dark:bg-zinc-900/40 p-4 sm:p-5 text-center">
-              <div className="flex items-center justify-center gap-1.5 mb-3 text-xs font-bold uppercase tracking-wider text-primary">
+            <div className="mb-6 rounded-2xl border-2 border-pink-200/80 bg-[#fff9fa] p-4 sm:p-5 text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-3 text-xs font-bold uppercase tracking-wider text-[#e11d48]">
                 <QrCode size={15} />
                 <span>QR Code para Presentes & Cartões Físicos</span>
               </div>
@@ -272,7 +272,7 @@ export function ShareLetterModal({
               {/* Moldura de Selo Postal com o QR Code */}
               <div
                 ref={qrCanvasRef}
-                className="relative mx-auto my-3 inline-block rounded-2xl border-2 border-dashed border-pink-300/60 dark:border-pink-900/40 bg-white p-3.5 shadow-md"
+                className="relative mx-auto my-3 inline-block rounded-2xl border-2 border-dashed border-pink-300 bg-white p-3.5 shadow-md"
               >
                 <QRCodeCanvas
                   value={letterUrl || 'https://correioelegante.studio'}
@@ -280,33 +280,33 @@ export function ShareLetterModal({
                   level="H"
                   marginSize={1}
                   bgColor="#FFFFFF"
-                  fgColor="#18181b"
+                  fgColor="#4c0519"
                 />
                 <div
-                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white shadow-xs"
+                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#e11d48] text-white shadow-xs"
                   title="Selo Postal"
                 >
                   <Heart size={12} className="fill-white" />
                 </div>
               </div>
 
-              <p className="text-[11px] text-text-light mb-3">
+              <p className="text-[11px] text-[#701a35] font-medium mb-3">
                 Imprima ou anexe junto a uma caixa de bombons, flores ou presente físico.
               </p>
 
               <button
                 type="button"
                 onClick={handleDownloadQrCode}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-pink-200/70 dark:border-pink-900/40 bg-white dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-text hover:bg-pink-50/60 dark:hover:bg-zinc-700 transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl border-2 border-pink-200 bg-white px-4 py-2 text-xs font-bold text-[#4c0519] hover:bg-rose-50 hover:text-[#e11d48] hover:border-pink-300 transition-colors shadow-xs cursor-pointer"
               >
                 {qrDownloaded ? (
                   <>
                     <Check size={14} className="text-emerald-600" />
-                    <span className="text-emerald-600">QR Code Baixado!</span>
+                    <span className="text-emerald-700">QR Code Baixado!</span>
                   </>
                 ) : (
                   <>
-                    <Download size={14} className="text-primary" />
+                    <Download size={14} className="text-[#e11d48]" />
                     <span>Baixar QR Code (PNG)</span>
                   </>
                 )}
@@ -314,21 +314,21 @@ export function ShareLetterModal({
             </div>
 
             {/* Seção 4: Ações Secundárias (Ver como Destinatário e Minhas Cartas) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-pink-200/60 dark:border-pink-900/30">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-4 border-t border-pink-100">
               <a
                 href={recipientViewHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-pink-200/70 dark:border-pink-900/40 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs sm:text-sm font-semibold text-text hover:bg-pink-50/60 dark:hover:bg-zinc-700 transition-colors text-center"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-pink-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-[#4c0519] hover:bg-rose-50 hover:text-[#e11d48] hover:border-pink-300 transition-colors text-center"
               >
-                <ExternalLink size={15} className="text-text-muted" />
+                <ExternalLink size={15} className="text-[#701a35]" />
                 <span>Ver como Destinatário</span>
               </a>
 
               <button
                 type="button"
                 onClick={handleNavigateToProfile}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 py-2.5 text-xs sm:text-sm font-semibold text-primary hover:bg-primary/20 transition-colors text-center cursor-pointer"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-pink-200/80 bg-pink-50 px-4 py-2.5 text-xs sm:text-sm font-bold text-[#e11d48] hover:bg-pink-100/80 transition-colors text-center cursor-pointer"
               >
                 <MailOpen size={15} />
                 <span>Minhas Cartas</span>

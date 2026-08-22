@@ -30,7 +30,7 @@ function ImageBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         className="h-[320px] w-full rounded-xl border border-border bg-surface object-cover shadow-sm"
       />
     ) : (
-      <div className={`flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border p-6 ${hasError ? 'border-red-500/30 bg-red-500/10 text-red-500 dark:text-red-400' : 'border-dashed border-border bg-surface-raised/70 text-text-light'}`}>
+      <div className={`flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border p-6 ${hasError ? 'border-red-500/30 bg-red-500/10 text-red-600' : 'border-dashed border-border bg-surface-raised/70 text-text-light'}`}>
         {hasError ? <ImageOff size={32} /> : <ImagePlus size={32} />}
         <p className="text-sm font-medium">
           {hasError ? 'Nao foi possivel carregar a imagem' : 'Adicione uma imagem'}

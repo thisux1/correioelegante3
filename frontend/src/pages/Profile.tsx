@@ -528,7 +528,7 @@ export function Profile() {
                         <>
                           {/* Dobras clássicas do envelope fechado em baixa opacidade */}
                           <svg
-                            className="pointer-events-none absolute inset-0 h-full w-full opacity-20 dark:opacity-10 text-primary"
+                            className="pointer-events-none absolute inset-0 h-full w-full opacity-20 text-primary"
                             xmlns="http://www.w3.org/2000/svg"
                             preserveAspectRatio="none"
                             viewBox="0 0 100 100"
@@ -563,17 +563,12 @@ export function Profile() {
 
                           {/* Marca d'água sutil de carimbo postal vintage no fundo direito */}
                           <div
-                            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none opacity-[0.06] dark:opacity-[0.08]"
+                            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none opacity-[0.06]"
                             aria-hidden="true"
                           >
                             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary rotate-12">
                               <div className="w-14 h-14 rounded-full border-2 border-dashed border-primary flex items-center justify-center text-[9px] text-center font-bold leading-tight">
                                 CORREIO<br />ELEGANTE
-                              </div>
-                              <div className="space-y-1">
-                                <div className="w-12 h-0.5 bg-primary" />
-                                <div className="w-16 h-0.5 bg-primary" />
-                                <div className="w-10 h-0.5 bg-primary" />
                               </div>
                             </div>
                           </div>
@@ -582,7 +577,7 @@ export function Profile() {
                         <>
                           {/* Textura de papel de carta pautado em baixa opacidade para rascunho */}
                           <div
-                            className="pointer-events-none absolute inset-0 opacity-15 dark:opacity-10"
+                            className="pointer-events-none absolute inset-0 opacity-15"
                             style={{
                               backgroundImage:
                                 'repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(217, 119, 6, 0.4) 20px)',
@@ -592,7 +587,7 @@ export function Profile() {
 
                           {/* Aba aberta do envelope despontando no topo em baixa opacidade */}
                           <svg
-                            className="pointer-events-none absolute top-0 inset-x-0 w-full h-4 opacity-25 dark:opacity-15 text-amber-600"
+                            className="pointer-events-none absolute top-0 inset-x-0 w-full h-4 opacity-25 text-amber-600"
                             xmlns="http://www.w3.org/2000/svg"
                             preserveAspectRatio="none"
                             viewBox="0 0 100 20"
@@ -624,7 +619,7 @@ export function Profile() {
                           ) : (
                             /* Ícone de Pena / Carta em Redação */
                             <div
-                              className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                              className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-700 border border-amber-500/30 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
                               title="Rascunho de Carta"
                             >
                               <Pencil className="w-5 h-5" />
@@ -705,7 +700,7 @@ export function Profile() {
                               variant={isPublished ? 'ghost' : 'outline'}
                               size="sm"
                               className={`w-full text-xs font-semibold ${
-                                !isPublished ? 'border-amber-400/60 text-amber-900 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30' : ''
+                                !isPublished ? 'border-amber-400/60 text-amber-900 hover:bg-amber-50' : ''
                               }`}
                             >
                               <Pencil className="w-3.5 h-3.5 mr-1" />
@@ -725,7 +720,7 @@ export function Profile() {
                           <button
                             type="button"
                             onClick={() => setPageToDelete(page)}
-                            className="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                            className="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
                             title="Excluir carta"
                             aria-label="Excluir carta"
                           >
