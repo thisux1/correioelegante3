@@ -76,9 +76,9 @@ describe('EnvelopeUnboxing', () => {
       )
     })
 
-    // 1. Avião voa em zigue-zague, tem impacto no solo e desdobra no envelope
+    // 1. Avião voa e pousa no envelope
     await act(async () => {
-      vi.advanceTimersByTime(3500)
+      vi.advanceTimersByTime(3200)
     })
 
     // 2. Toca no botão de abrir o envelope
@@ -94,10 +94,10 @@ describe('EnvelopeUnboxing', () => {
 
     // 3. Aguarda o lacre quebrar e a carta ficar pronta para ser puxada
     await act(async () => {
-      vi.advanceTimersByTime(700)
+      vi.advanceTimersByTime(600)
     })
 
-    // 4. Clica na carta para puxar e expandir
+    // 4. Clica na carta para puxar e desdobrar
     const letterSheet = container.querySelector('.cursor-grab') as HTMLElement
     expect(letterSheet).not.toBeNull()
 
@@ -105,9 +105,9 @@ describe('EnvelopeUnboxing', () => {
       letterSheet.click()
     })
 
-    // 5. Aguarda a expansão e o clarão branco seamless
+    // 5. Aguarda o desdobramento do papel longo e a revelação botânica
     await act(async () => {
-      vi.advanceTimersByTime(1500)
+      vi.advanceTimersByTime(2200)
     })
 
     expect(onOpenComplete).toHaveBeenCalledTimes(1)
