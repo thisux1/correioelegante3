@@ -6,7 +6,6 @@ import { Container } from '@/components/layout/Container'
 import { ScrollSection } from '@/components/layout/ScrollSection'
 import { Button } from '@/components/ui/Button'
 import { CardTilt3D } from '@/components/animations/CardTilt3D'
-import { InteractiveScratchCanvas } from '@/components/ui/InteractiveScratchCanvas'
 
 export function InteractiveEnvelopeDemo() {
   const [isOpen, setIsOpen] = useState(false)
@@ -130,18 +129,23 @@ export function InteractiveEnvelopeDemo() {
                       </button>
                     </div>
 
-                    {/* Texto da Carta */}
-                    <div className="bg-[#fff9fa] p-6 rounded-2xl border border-pink-200/80 shadow-xs">
-                      <p className="font-serif italic text-base sm:text-lg text-[#4c0519] leading-relaxed mb-4">
+                    {/* Texto da Carta — Alta Legibilidade e Tipografia Refinada */}
+                    <div className="bg-[#fff9fa] p-6 sm:p-8 rounded-2xl border border-pink-200/80 shadow-xs space-y-4">
+                      <p className="font-serif text-base sm:text-xl text-[#4c0519] leading-relaxed font-medium">
                         "Beatriz, desde aquele primeiro café sob a chuva até os nossos planos de construir uma vida inteira juntos, você é o meu lugar favorito no mundo. Obrigado por ser minha melhor amiga e meu grande amor."
                       </p>
-                      <p className="font-display font-bold text-right text-[#be123c] text-sm">
-                        Com todo o meu amor, Lucas
-                      </p>
+                      <div className="pt-2 flex items-center justify-between border-t border-pink-100">
+                        <span className="text-xs font-semibold text-[#701a35]">
+                          Escrito com carinho
+                        </span>
+                        <p className="font-display font-bold text-[#be123c] text-base sm:text-lg">
+                          Com todo o meu amor, Lucas
+                        </p>
+                      </div>
                     </div>
 
                     {/* Player de Trilha Sonora em Vinil */}
-                    <div className="rounded-2xl border-2 border-pink-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-2xl border-2 border-pink-200 bg-white p-5 shadow-sm">
                       <div className="flex items-center gap-4">
                         <motion.div
                           animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
@@ -154,14 +158,14 @@ export function InteractiveEnvelopeDemo() {
                         </motion.div>
 
                         <div className="flex-1 min-w-0">
-                          <span className="block text-xs font-bold text-[#4c0519] truncate">
+                          <span className="block text-sm font-bold text-[#4c0519] truncate">
                             Nossa Música Especial
                           </span>
-                          <span className="block text-[11px] text-[#701a35] truncate">
+                          <span className="block text-xs font-medium text-[#701a35] truncate mt-0.5">
                             Trilha Sonora Sincronizada
                           </span>
 
-                          <div className="flex items-center gap-1 mt-2">
+                          <div className="flex items-center gap-1.5 mt-2.5">
                             {[0.4, 0.9, 0.5, 1, 0.7, 0.3, 0.8, 0.6].map((h, i) => (
                               <motion.div
                                 key={i}
@@ -176,22 +180,12 @@ export function InteractiveEnvelopeDemo() {
                         <button
                           type="button"
                           onClick={() => setIsPlaying(!isPlaying)}
-                          className="h-10 w-10 rounded-full bg-[#e11d48] hover:bg-[#be123c] text-white flex items-center justify-center shadow-md transition-all cursor-pointer shrink-0"
+                          className="h-11 w-11 rounded-full bg-[#e11d48] hover:bg-[#be123c] text-white flex items-center justify-center shadow-md transition-all cursor-pointer shrink-0"
                           aria-label={isPlaying ? 'Pausar música' : 'Tocar música'}
                         >
-                          {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                          {isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
                         </button>
                       </div>
-                    </div>
-
-                    {/* Raspadinha Interativa Real com Canvas e Confetes */}
-                    <div>
-                      <InteractiveScratchCanvas
-                        coverText={'Raspe suavemente com o dedo ou mouse\npara revelar a surpresa...'}
-                        secretSubtitle="Surpresa da Carta"
-                        secretText="Passagens reservadas para a nossa viagem a Paris!"
-                        height={120}
-                      />
                     </div>
 
                     {/* Botão de Criação */}
