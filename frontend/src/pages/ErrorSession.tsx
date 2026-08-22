@@ -1,21 +1,23 @@
-import { Mail, Clock } from 'lucide-react'
+import { UserCheck } from 'lucide-react'
 import { ErrorLayout } from '@/components/layout/ErrorLayout'
 
 export function ErrorSession() {
-    const customIcon = (
-        <div className="relative">
-            <Clock className="w-16 h-16 text-primary absolute -top-4 -left-4 -rotate-12" strokeWidth={2} />
-            <Mail className="w-24 h-24 text-text/50" strokeWidth={1.5} />
-        </div>
-    )
+  const customIcon = (
+    <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-pink-100/70 border-2 border-pink-200 text-[#e11d48] shadow-inner">
+      <UserCheck className="w-12 h-12 text-[#e11d48]" strokeWidth={1.75} />
+    </div>
+  )
 
-    return (
-        <ErrorLayout
-            icon={customIcon}
-            title="Sessão Expirada"
-            description="Sua sessão expirou. Faça login novamente para continuar escrevendo sua mensagem."
-            buttonLabel="Fazer login novamente"
-            to="/auth"
-        />
-    )
+  return (
+    <ErrorLayout
+      icon={customIcon}
+      badge="Sessão"
+      title="Sessão Finalizada"
+      description="Sua sessão expirou por segurança. Faça login novamente para continuar gerenciando e criando suas cartas com tranquilidade."
+      buttonLabel="Entrar na Minha Conta"
+      to="/auth"
+      secondaryButtonLabel="Voltar para o Início"
+      secondaryTo="/"
+    />
+  )
 }

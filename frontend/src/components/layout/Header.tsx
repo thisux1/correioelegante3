@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
-import { Heart, Menu, X, MailOpen } from 'lucide-react'
+import { Menu, X, MailOpen } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
-import { MagneticButton } from '@/components/animations/MagneticButton'
 import { Container } from '@/components/layout/Container'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 
 const navLinks = [
   { path: '/', label: 'Início' },
@@ -90,15 +90,10 @@ export function Header() {
         <Container className="mt-4">
           <div className="relative overflow-hidden rounded-2xl border border-white/55 bg-white/92 shadow-[0_20px_45px_-26px_rgba(0,0,0,0.24)] supports-[backdrop-filter:blur(0px)]:bg-white/70 supports-[backdrop-filter:blur(0px)]:backdrop-blur-md">
 
-            <div className="py-4 px-8 md:px-12 flex items-center justify-between relative z-10">
+            <div className="py-3.5 px-8 md:px-10 flex items-center justify-between relative z-10">
             {isEditorRoute ? (
               <a href="/" className="flex items-center gap-2 group">
-                <MagneticButton>
-                  <Heart className="w-6 h-6 text-primary fill-primary group-hover:scale-110 transition-transform" />
-                </MagneticButton>
-                <span className="font-display text-xl font-bold text-text">
-                  Correio <span className="text-gradient">Elegante</span>
-                </span>
+                <BrandLogo size="md" />
                 <motion.span
                   style={{ opacity: progressOpacity, scale: progressScale }}
                   className="inline-flex h-5 w-5 items-center justify-center"
@@ -125,12 +120,7 @@ export function Header() {
               </a>
             ) : (
               <Link to="/" className="flex items-center gap-2 group">
-                <MagneticButton>
-                  <Heart className="w-6 h-6 text-primary fill-primary group-hover:scale-110 transition-transform" />
-                </MagneticButton>
-                <span className="font-display text-xl font-bold text-text">
-                  Correio <span className="text-gradient">Elegante</span>
-                </span>
+                <BrandLogo size="md" />
                 <motion.span
                   style={{ opacity: progressOpacity, scale: progressScale }}
                   className="inline-flex h-5 w-5 items-center justify-center"
@@ -212,9 +202,8 @@ export function Header() {
         <div className={`relative mx-auto w-full max-w-7xl overflow-hidden rounded-2xl ${mobileSurfaceClass}`}>
           <div className="px-8 py-3 flex items-center justify-between">
             {isEditorRoute ? (
-              <a href="/" className="flex items-center gap-2.5 group">
-                <Heart className="h-5 w-5 text-primary fill-primary transition-transform group-active:scale-95" />
-                <span className="font-display text-base font-bold text-text">Correio Elegante</span>
+              <a href="/" className="flex items-center gap-2 group">
+                <BrandLogo size="sm" withMotion={false} />
                 <motion.span
                   style={{ opacity: progressOpacity, scale: progressScale }}
                   className="inline-flex h-4.5 w-4.5 items-center justify-center"
@@ -240,9 +229,8 @@ export function Header() {
                 </motion.span>
               </a>
             ) : (
-              <Link to="/" className="flex items-center gap-2.5 group">
-                <Heart className="h-5 w-5 text-primary fill-primary transition-transform group-active:scale-95" />
-                <span className="font-display text-base font-bold text-text">Correio Elegante</span>
+              <Link to="/" className="flex items-center gap-2 group">
+                <BrandLogo size="sm" withMotion={false} />
                 <motion.span
                   style={{ opacity: progressOpacity, scale: progressScale }}
                   className="inline-flex h-4.5 w-4.5 items-center justify-center"

@@ -74,6 +74,41 @@ if (import.meta.hot) {
   import.meta.hot.dispose(faviconCleanup)
 }
 
+function setupChunkLoadRecovery() {
+  const triggerReload = () => {
+    const storageKey = 'last_chunk_reload_ts'
+    const lastReload = sessionStorage.getItem(storageKey)
+    const now = Date.now()
+
+    if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+      sessionStorage.setItem(storageKey, String(now))
+      window.location.reload()
+    }
+  }
+
+  // Vite native event for dynamic import preload failures
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault()
+    triggerReload()
+  })
+
+  // Global unhandled promise rejection handler for chunk/network eviction
+  window.addEventListener('unhandledrejection', (event) => {
+    const error = event.reason
+    const msg = error?.message || String(error || '')
+    if (
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('Loading chunk') ||
+      msg.includes('error loading dynamically imported module') ||
+      msg.includes('Failed to load module script')
+    ) {
+      event.preventDefault()
+      triggerReload()
+    }
+  })
+}
+
 function setupSpeedInsights() {
   if (!import.meta.env.PROD) return
 
@@ -98,6 +133,8 @@ function setupSpeedInsights() {
 
   globalThis.setTimeout(inject, 1200)
 }
+
+setupChunkLoadRecovery()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
