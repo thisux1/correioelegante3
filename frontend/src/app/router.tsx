@@ -63,6 +63,8 @@ const SubscriptionSuccess = safeLazy(() => import('@/pages/SubscriptionSuccess')
 const Card = safeLazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
 const PageCard = safeLazy(() => import('@/pages/PageCard').then(m => ({ default: m.PageCard })))
 const AdminTickets = safeLazy(() => import('@/pages/AdminTickets').then(m => ({ default: m.AdminTickets })))
+const AdminDashboard = safeLazy(() => import('@/pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
+const VerifyEmail = safeLazy(() => import('@/pages/VerifyEmail').then(m => ({ default: m.VerifyEmail })))
 const Error404 = safeLazy(() => import('@/pages/Error404').then(m => ({ default: m.Error404 })))
 const Error500 = safeLazy(() => import('@/pages/Error500').then(m => ({ default: m.Error500 })))
 const ErrorSession = safeLazy(() => import('@/pages/ErrorSession').then(m => ({ default: m.ErrorSession })))
@@ -108,6 +110,24 @@ export function PageLoader() {
 
   if (path.startsWith('/auth')) {
     return <AuthPageSkeleton />
+  }
+
+  if (path.startsWith('/admin')) {
+    return (
+      <div className="min-h-screen pt-28 pb-16 px-4">
+        <Container size="default">
+          <div className="mb-8 space-y-2">
+            <div className="h-10 w-56 rounded-xl bg-primary/20 animate-pulse" />
+            <div className="h-4 w-72 rounded-md bg-primary/10 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" role="status" aria-label="Carregando analytics...">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <div key={index} className="h-28 rounded-2xl bg-primary/10 animate-pulse" />
+            ))}
+          </div>
+        </Container>
+      </div>
+    )
   }
 
   if (path.startsWith('/profile')) {
@@ -179,7 +199,7 @@ function AdminRoute({ children }: { children: ReactNode }) {
   if (isLoading) return <PageLoader />
   if (!isAuthenticated) return <Navigate to="/auth" replace />
 
-  const isAdmin = Boolean(user?.isAdmin || user?.email?.toLowerCase().endsWith('@correioelegante.studio'))
+  const isAdmin = Boolean(user?.isAdmin)
   if (!isAdmin) return <Navigate to="/" replace />
 
   return <>{children}</>
@@ -222,6 +242,7 @@ export function AppRouter() {
               <Route path="/planos/sucesso" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
               <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
               <Route path="/auth/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/verify-email" element={<VerifyEmail />} />
               <Route path="/contact" element={<Contact />} />
 
               <Route path="/legal/terms" element={<LegalTerms />} />
@@ -237,6 +258,7 @@ export function AppRouter() {
               <Route path="/configuracoes" element={<Navigate to="/settings" replace />} />
               <Route path="/chamados" element={<AdminRoute><AdminTickets /></AdminRoute>} />
               <Route path="/admin/tickets" element={<Navigate to="/chamados" replace />} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/payment/page/:pageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
               <Route path="/payment/page/:pageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
               <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
