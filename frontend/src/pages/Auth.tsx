@@ -36,7 +36,7 @@ const forgotSchema = z.object({
 
 const registerSchema = z.object({
   email: z.string().email('Digite um e-mail válido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
   confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
   ageConfirmed: z.boolean().refine((value) => value === true, {
     message: 'Você precisa confirmar ter 13 anos ou mais',
@@ -60,19 +60,14 @@ interface ApiErrorResponse {
 }
 
 type AuthApiErrorCode =
-  | 'AUTH_EMAIL_NOT_FOUND'
-  | 'AUTH_INVALID_PASSWORD'
+  | 'AUTH_INVALID_CREDENTIALS'
   | 'AUTH_EMAIL_ALREADY_REGISTERED'
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
   if (isAxiosError<ApiErrorResponse>(err)) {
     const code = err.response?.data?.code
-    if (code === 'AUTH_EMAIL_NOT_FOUND') {
-      return 'Não encontramos uma conta com este e-mail. Verifique o endereço ou crie sua conta.'
-    }
-
-    if (code === 'AUTH_INVALID_PASSWORD') {
-      return 'Senha incorreta. Verifique e tente novamente.'
+    if (code === 'AUTH_INVALID_CREDENTIALS') {
+      return 'Email ou senha incorretos. Verifique e tente novamente.'
     }
 
     if (code === 'AUTH_EMAIL_ALREADY_REGISTERED') {
@@ -91,8 +86,7 @@ function getApiErrorCode(err: unknown): AuthApiErrorCode | undefined {
 
   const code = err.response?.data?.code
   if (
-    code === 'AUTH_EMAIL_NOT_FOUND'
-    || code === 'AUTH_INVALID_PASSWORD'
+    code === 'AUTH_INVALID_CREDENTIALS'
     || code === 'AUTH_EMAIL_ALREADY_REGISTERED'
   ) {
     return code
@@ -206,21 +200,12 @@ export function Auth({ isLoading = false }: AuthProps = {}) {
     } catch (err: unknown) {
       const code = getApiErrorCode(err)
 
-      if (code === 'AUTH_EMAIL_NOT_FOUND') {
-        loginForm.setError('email', {
-          type: 'server',
-          message: 'Este e-mail não está cadastrado.',
-        })
-        setError('Não encontramos este e-mail. Confira o endereço ou crie sua conta.')
-        return
-      }
-
-      if (code === 'AUTH_INVALID_PASSWORD') {
+      if (code === 'AUTH_INVALID_CREDENTIALS') {
         loginForm.setError('password', {
           type: 'server',
-          message: 'Senha incorreta para este e-mail.',
+          message: 'Email ou senha incorretos.',
         })
-        setError('Senha incorreta. Verifique e tente novamente.')
+        setError('Email ou senha incorretos. Verifique e tente novamente.')
         return
       }
 

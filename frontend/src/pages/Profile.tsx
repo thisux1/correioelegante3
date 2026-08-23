@@ -12,6 +12,8 @@ import {
   Eye,
   Pencil,
   FileText,
+  MailWarning,
+  Send,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -20,6 +22,7 @@ import { Modal } from '@/components/ui/Modal'
 import { InlineAlert } from '@/components/ui/InlineAlert'
 import { ProfileCardSkeleton } from '@/components/ui/ProfileCardSkeleton'
 import { useAuthStore } from '@/store/authStore'
+import { authService } from '@/services/authService'
 import { pageService, type PageSummary } from '@/services/pageService'
 import { paymentService, type SubscriptionStatusResponse } from '@/services/paymentService'
 import { Container } from '@/components/layout/Container'
@@ -43,6 +46,11 @@ export function Profile() {
   const [copiedPageId, setCopiedPageId] = useState<string | null>(null)
 
   const [subscription, setSubscription] = useState<SubscriptionStatusResponse | null>(null)
+
+  // Email verification state
+  const [isResendingVerification, setIsResendingVerification] = useState(false)
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [verificationError, setVerificationError] = useState('')
 
   // Delete Page State
   const [pageToDelete, setPageToDelete] = useState<PageSummary | null>(null)
@@ -92,6 +100,23 @@ export function Profile() {
     fetchSubscription()
     return () => abortController.abort()
   }, [isAuthenticated, navigate])
+
+  async function handleResendVerification() {
+    setIsResendingVerification(true)
+    setVerificationError('')
+    try {
+      await authService.resendVerificationEmail()
+      setVerificationSent(true)
+      setTimeout(() => setVerificationSent(false), 5000)
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } }
+      setVerificationError(
+        axiosErr.response?.data?.error || 'Erro ao reenviar o e-mail de verificação. Tente novamente.'
+      )
+    } finally {
+      setIsResendingVerification(false)
+    }
+  }
 
   async function handleDeletePage() {
     if (!pageToDelete) return
@@ -269,6 +294,45 @@ export function Profile() {
               </Link>
             </div>
           </div>
+
+          {/* Banner de Verificação de E-mail */}
+          {user && !user.emailVerified ? (
+            <div className="rounded-2xl border border-amber-300/60 bg-amber-50/50 p-4 shadow-xs sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                    <MailWarning size={18} aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-text">Verifique seu e-mail</p>
+                    <p className="mt-0.5 text-xs text-text-light">
+                      Confirme o endereço <strong className="font-semibold">{user.email}</strong> para garantir que você receba nossas notificações.
+                    </p>
+                    {verificationSent ? (
+                      <InlineAlert tone="success" className="mt-2">
+                        E-mail de verificação reenviado. Confira sua caixa de entrada.
+                      </InlineAlert>
+                    ) : null}
+                    {verificationError ? (
+                      <InlineAlert tone="danger" className="mt-2">
+                        {verificationError}
+                      </InlineAlert>
+                    ) : null}
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={isResendingVerification}
+                  className="w-full shrink-0 border-amber-300 font-semibold text-xs text-amber-800 hover:bg-amber-100 sm:w-auto"
+                >
+                  <Send size={13} />
+                  {isResendingVerification ? 'Enviando...' : 'Reenviar'}
+                </Button>
+              </div>
+            </div>
+          ) : null}
 
           {/* Banner de Assinatura */}
           {(subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active') ? (

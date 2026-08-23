@@ -81,6 +81,28 @@ const SAFE_CSS_PROPERTIES = new Set([
   'border-radius',
 ])
 
+// Remove control chars/tabs/newlines que navegadores ignoram ao interpretar o
+// esquema de uma URL (ex: "jav\tascript:"), evitando bypass do filtro de scheme.
+function stripUrlControlChars(value: string): string {
+  let result = ''
+  for (const char of value) {
+    const code = char.charCodeAt(0)
+    if (code > 32 && code !== 127) {
+      result += char
+    }
+  }
+  return result
+}
+
+function isDangerousUrlScheme(rawUrl: string): boolean {
+  const normalized = stripUrlControlChars(rawUrl).toLowerCase()
+  return (
+    normalized.startsWith('javascript:')
+    || normalized.startsWith('vbscript:')
+    || normalized.startsWith('data:')
+  )
+}
+
 function sanitizeCssValue(value: string): boolean {
   const normalized = value.toLowerCase()
   if (
@@ -135,6 +157,15 @@ export function sanitizeHtml(html: string): string {
           return ''
         }
         const cleanedAttrs = attrs.replace(/\bon\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
+        if (lowerTag === 'a') {
+          const hrefMatch = cleanedAttrs.match(/\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i)
+          if (hrefMatch) {
+            const rawHref = (hrefMatch[1] ?? hrefMatch[2] ?? hrefMatch[3] ?? '')
+            if (isDangerousUrlScheme(rawHref)) {
+              return `<${lowerTag}${cleanedAttrs.replace(/\shref\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/i, '')}>`
+            }
+          }
+        }
         return `<${lowerTag}${cleanedAttrs}>`
       })
   }
@@ -182,8 +213,7 @@ export function sanitizeHtml(html: string): string {
               element.removeAttribute('style')
             }
           } else if (tagName === 'a' && name === 'href') {
-            const val = attr.value.trim().toLowerCase()
-            if (val.startsWith('javascript:') || val.startsWith('vbscript:') || val.startsWith('data:')) {
+            if (isDangerousUrlScheme(attr.value)) {
               element.removeAttribute('href')
             } else {
               element.setAttribute('target', '_blank')

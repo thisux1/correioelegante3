@@ -21,6 +21,7 @@ export interface ChangePasswordData {
 interface User {
   id: string
   email: string
+  emailVerified?: boolean
 }
 
 interface AuthResponse {
@@ -42,4 +43,6 @@ export const authService = {
   me: () => api.get<MeResponse>('/auth/me'),
   changePassword: (data: ChangePasswordData) => api.put<{ message: string }>('/auth/password', data),
   deleteAccount: () => api.delete<{ message: string }>('/auth/account'),
+  verifyEmail: (token: string) => api.post<{ message: string }>('/auth/verify-email', { token }),
+  resendVerificationEmail: () => api.post<{ message: string }>('/auth/resend-verification'),
 }

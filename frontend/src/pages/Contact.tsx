@@ -155,7 +155,7 @@ export function Contact({ isLoading }: ContactProps = {}) {
         </ScrollReveal>
 
         {/* Banner de Acesso Rápido para Administradores */}
-        {(user?.isAdmin || user?.email?.toLowerCase().endsWith('@correioelegante.studio')) ? (
+        {user?.isAdmin ? (
           <ScrollReveal direction="up" delay={0.03} animateOnMount>
             <div className="mb-8 rounded-3xl border-2 border-[#e11d48]/30 bg-gradient-to-r from-rose-100/60 via-rose-50 to-white p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3 text-left">

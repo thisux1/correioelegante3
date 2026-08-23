@@ -19,7 +19,7 @@ export function Header() {
   const menuButtonRef = useRef<HTMLButtonElement | null>(null)
   const location = useLocation()
   const { isAuthenticated, user } = useAuthStore()
-  const isAdmin = Boolean(user?.isAdmin || user?.email?.toLowerCase().endsWith('@correioelegante.studio'))
+  const isAdmin = Boolean(user?.isAdmin)
   const isEditorRoute = location.pathname.startsWith('/editor')
   const useMobileLiteGlass = isEditorRoute
   const { scrollYProgress } = useScroll()
