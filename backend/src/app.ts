@@ -11,6 +11,7 @@ import { uploadRouter } from './routes/upload.routes';
 import { pageRouter } from './routes/page.routes';
 import { assetRouter } from './routes/asset.routes';
 import { contactRouter } from './routes/contact.routes';
+import { adminAnalyticsRouter } from './routes/admin.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { prisma } from './utils/prisma';
 
@@ -24,7 +25,10 @@ const allowedOrigins = [
   'https://www.correioelegante.studio',
 ].filter(Boolean) as string[];
 
-const vercelRegex = /^https:\/\/[a-zA-Z0-9-_]+\.vercel\.app$/;
+const vercelPreviewOrigins = (process.env.CORS_EXTRA_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 const localhostRegex = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 // Security
@@ -106,7 +110,7 @@ app.use(
       }
       if (
         allowedOrigins.includes(origin) ||
-        vercelRegex.test(origin) ||
+        vercelPreviewOrigins.includes(origin) ||
         localhostRegex.test(origin)
       ) {
         return callback(null, true);
@@ -141,11 +145,11 @@ app.use(cookieParser());
 app.use('/api/auth', authRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/payments', paymentRouter);
-app.use('/api/payment', paymentRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/pages', pageRouter);
 app.use('/api/assets', assetRouter);
 app.use('/api/contact', contactRouter);
+app.use('/api/admin', adminAnalyticsRouter);
 
 // Health check — includes DB connectivity test (safe, read-only)
 app.get('/api/health', async (_req, res) => {
@@ -154,7 +158,8 @@ app.get('/api/health', async (_req, res) => {
     res.json({ status: 'ok', db: 'connected', timestamp: new Date().toISOString() });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    res.status(503).json({ status: 'error', db: 'disconnected', error: msg, timestamp: new Date().toISOString() });
+    console.error('[HEALTH] DB check failed:', msg);
+    res.status(503).json({ status: 'error', db: 'disconnected', timestamp: new Date().toISOString() });
   }
 });
 
