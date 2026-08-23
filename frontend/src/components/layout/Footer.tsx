@@ -11,7 +11,7 @@ export function Footer() {
           {/* Subtle light layer to enhance the glass */}
           <div className="absolute inset-0 bg-gradient-to-tr from-white/40 via-white/10 to-transparent opacity-100 pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col justify-between gap-12 lg:flex-row lg:gap-16">
+          <div className="relative z-10 flex flex-col justify-between gap-12 lg:flex-row lg:gap-20">
             
             {/* Brand Column */}
             <div className="flex max-w-sm flex-col gap-5">
@@ -33,29 +33,17 @@ export function Footer() {
             </div>
 
             {/* Links Columns */}
-            <div className="flex flex-col gap-10 sm:flex-row sm:gap-14 lg:gap-16">
+            <div className="flex flex-col gap-10 sm:flex-row sm:gap-16 lg:gap-20">
               <div className="flex flex-col gap-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-text/60 font-mono">Navegação</h3>
                 <nav className="flex flex-col gap-3">
                   <Link to="/" className="text-sm font-medium text-text-light hover:text-text transition-colors">Início</Link>
                   <Link to="/planos" className="text-sm font-medium text-text-light hover:text-text transition-colors">Planos</Link>
-                  <Link to="/create" className="text-sm font-medium text-text-light hover:text-text transition-colors">Escrever Carta</Link>
-                  <Link to="/contact" className="text-sm font-medium text-text-light hover:text-text transition-colors">Central de Ajuda</Link>
+                  <Link to="/create" className="text-sm font-medium text-text-light hover:text-text transition-colors">Escrever</Link>
+                  <Link to="/contact" className="text-sm font-medium text-text-light hover:text-text transition-colors">Contato</Link>
                 </nav>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-text/60 font-mono">Atendimento</h3>
-                <div className="flex flex-col gap-2.5 text-xs text-text-light leading-relaxed">
-                  <span className="font-semibold text-text">Suporte ao Cliente:</span>
-                  <a href="mailto:contato@correioelegante.studio" className="text-primary hover:underline font-mono">
-                    contato@correioelegante.studio
-                  </a>
-                  <span>Segunda a Sábado, 08h às 20h</span>
-                  <span className="text-emerald-700 font-medium">Resposta em até 2h úteis</span>
-                </div>
-              </div>
-              
               <div className="flex flex-col gap-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-text/60 font-mono">Legal</h3>
                 <nav className="flex flex-col gap-3">
@@ -70,9 +58,6 @@ export function Footer() {
           <div className="relative z-10 mt-14 flex flex-col items-center justify-between gap-6 border-t border-pink-100 pt-8 md:flex-row md:gap-4">
             <p className="text-xs font-medium text-[#701a35]">
               © {new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.
-            </p>
-            <p className="text-xs text-text-light">
-              Plataforma 100% segura para criação e compartilhamento de cartas digitais.
             </p>
           </div>
         </div>
