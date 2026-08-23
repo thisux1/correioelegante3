@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
 import { sendNewTicketNotificationToAdmin } from './email.service';
 
@@ -68,7 +67,7 @@ export async function sendCriticalAlert(alert: CriticalAlert): Promise<void> {
     }
     recentAlertKeys.set(dedupeKey, now);
 
-    const protocol = `ALERT-${crypto.randomInt(100000, 999999)}`;
+    const protocol = `ALERT-${Math.floor(100000 + Math.random() * 900000)}`;
     const messageParts = [
       `Contexto: ${alert.context}`,
       `Evento: ${alert.title}`,
