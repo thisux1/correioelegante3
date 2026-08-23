@@ -507,7 +507,7 @@ export function Profile() {
                 </Link>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {displayedPages.map((page) => {
                   const isPublished = page.status === 'published'
                   const publicHref = resolvePublicPageHref(page)
@@ -516,94 +516,94 @@ export function Profile() {
                   return (
                     <div
                       key={page.id}
-                      className={`group relative overflow-hidden rounded-3xl border-2 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 ${
+                      className={`group relative overflow-hidden rounded-3xl border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
                         isPublished
-                          ? 'bg-white border-pink-300/90 shadow-md shadow-rose-950/5'
-                          : 'bg-[#fffdfa] border-dashed border-amber-400/90 shadow-md shadow-amber-950/5'
-                      } p-5 sm:p-6`}
+                          ? 'bg-white border-rose-300 shadow-lg shadow-rose-950/5'
+                          : 'bg-[#fffdfa] border-dashed border-amber-400 shadow-md shadow-amber-950/5'
+                      }`}
                     >
-                      {/* Linha superior de acabamento postal */}
-                      <div
-                        className={`absolute top-0 inset-x-0 h-1.5 ${
-                          isPublished
-                            ? 'bg-gradient-to-r from-[#e11d48] via-rose-300 to-[#e11d48]'
-                            : 'bg-gradient-to-r from-amber-400 via-amber-200 to-amber-400'
-                        }`}
-                        aria-hidden="true"
-                      />
+                      {/* Aba Superior do Envelope com Dobra Triangular */}
+                      <div className="relative w-full bg-gradient-to-b from-[#fff0f4] to-[#ffe4ec]/60 border-b border-rose-200/70 px-5 py-3 sm:px-7 flex items-center justify-between">
+                        {/* Carimbo Postal de Registro / Linha Aérea */}
+                        <div className="flex items-center gap-2">
+                          <div className={`h-2.5 w-2.5 rounded-full ${isPublished ? 'bg-[#e11d48]' : 'bg-amber-500'}`} />
+                          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#701a35]/80">
+                            {isPublished ? 'CORREIO REGISTRADO' : 'RASCUNHO EM ANDAMENTO'}
+                          </span>
+                        </div>
 
-                      {/* Selo Postal no Canto Superior Direito */}
-                      <div
-                        className={`absolute top-4 right-4 hidden sm:flex items-center gap-1.5 rounded-lg border border-dashed px-2.5 py-1 select-none ${
-                          isPublished
-                            ? 'border-rose-300 bg-rose-50/90 text-[#e11d48]'
-                            : 'border-amber-300 bg-amber-50/90 text-amber-800'
-                        }`}
-                        aria-hidden="true"
-                      >
-                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider">
-                          {isPublished ? 'SELADA • PRONTA' : 'EM REDAÇÃO'}
-                        </span>
-                      </div>
+                        {/* Selo Postal no Canto Superior Direito (Sempre Visível) */}
+                        <div
+                          className={`flex items-center gap-1.5 rounded-md border-2 border-dashed px-2.5 py-1 shadow-xs select-none ${
+                            isPublished
+                              ? 'border-rose-400 bg-white text-[#e11d48]'
+                              : 'border-amber-400 bg-white text-amber-800'
+                          }`}
+                          title="Selo Postal"
+                        >
+                          <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider">
+                            {isPublished ? 'SELO POSTAL' : 'NÃO SELADO'}
+                          </span>
+                          <span className="text-[10px] opacity-60 font-serif">≈≈</span>
+                        </div>
 
-                      <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-1">
-                        {/* Seção esquerda: Ícone de Carta + Destinatário/Título + Metadados */}
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                        {/* Lacre de Cera / Wax Seal Centralizado sobre a Dobra */}
+                        <div className="absolute left-1/2 -bottom-4.5 -translate-x-1/2 z-20 pointer-events-none">
                           {isPublished ? (
-                            /* Ícone minimalista de Carta Publicada */
                             <div
-                              className="w-12 h-12 rounded-2xl bg-rose-50 border-2 border-rose-200/90 text-[#e11d48] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105"
-                              title="Carta Publicada"
+                              className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-500 via-[#e11d48] to-[#9f1239] text-white shadow-md border-2 border-white ring-2 ring-rose-400/30 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                              title="Lacre de Cera Fechado"
                             >
-                              <Mail className="w-6 h-6 text-[#e11d48]" strokeWidth={1.75} />
+                              <Heart className="w-4 h-4 fill-white text-white drop-shadow-xs" />
                             </div>
                           ) : (
-                            /* Ícone minimalista de Rascunho */
                             <div
-                              className="w-12 h-12 rounded-2xl bg-amber-50 border-2 border-amber-200/90 text-amber-700 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105"
-                              title="Rascunho de Carta"
+                              className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 border-2 border-amber-400 shadow-sm flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                              title="Rascunho Aberto"
                             >
-                              <FileText className="w-6 h-6 text-amber-700" strokeWidth={1.75} />
+                              <Pencil className="w-4 h-4 text-amber-700" />
                             </div>
                           )}
+                        </div>
+                      </div>
 
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#701a35]/60 font-mono">
-                                {isPublished ? 'Destinatário' : 'Rascunho'}
-                              </span>
-                            </div>
+                      {/* Corpo do Envelope / Conteúdo da Carta */}
+                      <div className="p-5 sm:p-7 pt-6 sm:pt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                        {/* Seção esquerda: Informações de Endereçamento */}
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#701a35]/60 font-mono">
+                            <span>{isPublished ? 'Para:' : 'Título:'}</span>
+                          </div>
 
-                            <h4 className="font-display font-bold text-[#4c0519] text-base sm:text-xl truncate group-hover:text-[#e11d48] transition-colors">
-                              {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
-                            </h4>
+                          <h4 className="font-display font-extrabold text-[#4c0519] text-lg sm:text-2xl truncate group-hover:text-[#e11d48] transition-colors">
+                            {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
+                          </h4>
 
-                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-[#701a35]/80 font-medium">
-                              <span>
-                                {isPublished && page.publishedAt
-                                  ? `Expedição: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
-                                  : `Salvo: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
-                              </span>
-                              <span>•</span>
-                              <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
-                              {page.theme ? (
-                                <>
-                                  <span>•</span>
-                                  <span className="capitalize">{page.theme.replace(/-/g, ' ')}</span>
-                                </>
-                              ) : null}
-                            </div>
+                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#701a35]/80 font-medium pt-1">
+                            <span className="font-mono">
+                              {isPublished && page.publishedAt
+                                ? `Expedição: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
+                                : `Salvo em: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
+                            </span>
+                            <span>•</span>
+                            <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
+                            {page.theme ? (
+                              <>
+                                <span>•</span>
+                                <span className="capitalize">{page.theme.replace(/-/g, ' ')}</span>
+                              </>
+                            ) : null}
                           </div>
                         </div>
 
-                        {/* Seção direita: Ações diretas e acessíveis */}
-                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0 sm:pt-4">
+                        {/* Seção direita: Ações da Carta */}
+                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0">
                           {isPublished && publicHref ? (
                             <>
                               <button
                                 type="button"
                                 onClick={() => handleCopyLink(page)}
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-text hover:bg-surface-raised transition-colors flex-1 sm:flex-initial"
+                                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border-2 border-rose-200/80 bg-white text-xs font-bold text-[#4c0519] hover:bg-rose-50 hover:border-rose-300 transition-colors flex-1 sm:flex-initial shadow-2xs cursor-pointer"
                                 title="Copiar link da carta"
                               >
                                 {isCopied ? (
@@ -613,7 +613,7 @@ export function Profile() {
                                   </>
                                 ) : (
                                   <>
-                                    <Copy className="w-3.5 h-3.5 text-text-muted" />
+                                    <Copy className="w-3.5 h-3.5 text-[#701a35]" />
                                     <span>Copiar Link</span>
                                   </>
                                 )}
@@ -626,14 +626,14 @@ export function Profile() {
                                   rel="noreferrer"
                                   className="flex-1 sm:flex-initial"
                                 >
-                                  <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
+                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-2 border-rose-200/80">
                                     <Eye className="w-3.5 h-3.5 mr-1" />
                                     Ver
                                   </Button>
                                 </a>
                               ) : (
                                 <Link to={publicHref} className="flex-1 sm:flex-initial">
-                                  <Button variant="outline" size="sm" className="w-full text-xs font-semibold">
+                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-2 border-rose-200/80">
                                     <Eye className="w-3.5 h-3.5 mr-1" />
                                     Ver
                                   </Button>
@@ -646,8 +646,8 @@ export function Profile() {
                             <Button
                               variant={isPublished ? 'ghost' : 'outline'}
                               size="sm"
-                              className={`w-full text-xs font-semibold ${
-                                !isPublished ? 'border-amber-400/60 text-amber-900 hover:bg-amber-50' : ''
+                              className={`w-full text-xs font-bold ${
+                                !isPublished ? 'border-2 border-amber-400/80 bg-white text-amber-900 hover:bg-amber-50' : 'border border-transparent'
                               }`}
                             >
                               <Pencil className="w-3.5 h-3.5 mr-1" />
@@ -657,7 +657,7 @@ export function Profile() {
 
                           {shouldShowPayNow(page) ? (
                             <Link to={`/payment/page/${page.id}`} className="flex-1 sm:flex-initial">
-                              <Button size="sm" className="w-full text-xs font-semibold shadow-xs">
+                              <Button size="sm" className="w-full text-xs font-bold shadow-xs">
                                 <Zap className="w-3.5 h-3.5 mr-1" />
                                 Pagar e Publicar
                               </Button>
@@ -667,7 +667,7 @@ export function Profile() {
                           <button
                             type="button"
                             onClick={() => setPageToDelete(page)}
-                            className="p-2 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-2.5 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                             title="Excluir carta"
                             aria-label="Excluir carta"
                           >
