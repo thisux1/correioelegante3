@@ -51,6 +51,7 @@ const Editor = safeLazy(() => import('@/pages/Editor').then(m => ({ default: m.E
 const Auth = safeLazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
 const ResetPassword = safeLazy(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })))
 const Profile = safeLazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
+const Settings = safeLazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })))
 const Contact = safeLazy(() => import('@/pages/Contact').then(m => ({ default: m.Contact })))
 const LegalTerms = safeLazy(() => import('@/pages/LegalTerms').then(m => ({ default: m.LegalTerms })))
 const LegalPrivacy = safeLazy(() => import('@/pages/LegalPrivacy').then(m => ({ default: m.LegalPrivacy })))
@@ -219,6 +220,8 @@ export function AppRouter() {
               <Route path="/editor" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/editor/:pageId" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/configuracoes" element={<Navigate to="/settings" replace />} />
               <Route path="/payment/page/:pageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
               <Route path="/payment/page/:pageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
               <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />

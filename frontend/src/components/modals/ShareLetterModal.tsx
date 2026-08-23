@@ -85,7 +85,7 @@ export function ShareLetterModal({
 
   const handleNavigateToProfile = useCallback(() => {
     onClose()
-    navigate('/profile?tab=messages')
+    navigate('/profile')
   }, [navigate, onClose])
 
   const recipientViewHref = pageId ? `/card/page/${pageId}` : '/card'
