@@ -28,13 +28,20 @@ export function ProfileCardSkeleton({
                 : 'border-pink-300/80 bg-white'
             }`}
           >
-            {/* Header da Aba do Envelope */}
-            <div className="relative w-full bg-gradient-to-b from-[#fff0f4] to-[#ffe4ec]/60 border-b border-rose-200/70 px-5 py-3 sm:px-7 flex items-center justify-between">
-              <Skeleton variant="text" className="h-3 w-32 rounded-md opacity-60" />
-              <Skeleton variant="rounded" className="h-5 w-20 rounded-md opacity-70" />
-              {/* Seal placeholder */}
-              <div className="absolute left-1/2 -bottom-4.5 -translate-x-1/2 z-20">
-                <Skeleton variant="circle" className="w-9 h-9 border-2 border-white ring-2 ring-rose-300/40" />
+            {/* Header da Aba do Envelope com Chanfro em V */}
+            <div className="relative w-full overflow-visible">
+              <div
+                className="relative w-full pt-3 px-5 sm:px-7 pb-6 bg-gradient-to-b from-[#fff0f4] via-[#ffe4ec] to-[#fecdd3]/70 flex items-center justify-between"
+                style={{
+                  clipPath: 'polygon(0% 0%, 100% 0%, 100% calc(100% - 16px), 50% 100%, 0% calc(100% - 16px))',
+                }}
+              >
+                <Skeleton variant="text" className="h-3 w-32 rounded-md opacity-60" />
+                <Skeleton variant="rounded" className="h-5 w-20 rounded-md opacity-70" />
+              </div>
+              {/* Seal placeholder na ponta do V */}
+              <div className="absolute left-1/2 -bottom-5 -translate-x-1/2 z-20">
+                <Skeleton variant="circle" className="w-10 h-10 border-2 border-white ring-2 ring-rose-300/40" />
               </div>
             </div>
 

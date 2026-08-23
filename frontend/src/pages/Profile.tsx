@@ -522,46 +522,75 @@ export function Profile() {
                           : 'bg-[#fffdfa] border-dashed border-amber-400 shadow-md shadow-amber-950/5'
                       }`}
                     >
-                      {/* Aba Superior do Envelope com Dobra Triangular */}
-                      <div className="relative w-full bg-gradient-to-b from-[#fff0f4] to-[#ffe4ec]/60 border-b border-rose-200/70 px-5 py-3 sm:px-7 flex items-center justify-between">
-                        {/* Carimbo Postal de Registro / Linha Aérea */}
-                        <div className="flex items-center gap-2">
-                          <div className={`h-2.5 w-2.5 rounded-full ${isPublished ? 'bg-[#e11d48]' : 'bg-amber-500'}`} />
-                          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#701a35]/80">
-                            {isPublished ? 'CORREIO REGISTRADO' : 'RASCUNHO EM ANDAMENTO'}
-                          </span>
-                        </div>
-
-                        {/* Selo Postal no Canto Superior Direito (Sempre Visível) */}
+                      {/* Aba Superior do Envelope com Chanfro em Formato de V */}
+                      <div className="relative w-full overflow-visible">
+                        {/* Fundo da aba com o chanfro em V */}
                         <div
-                          className={`flex items-center gap-1.5 rounded-md border-2 border-dashed px-2.5 py-1 shadow-xs select-none ${
+                          className={`relative w-full pt-3 px-5 sm:px-7 pb-6 ${
                             isPublished
-                              ? 'border-rose-400 bg-white text-[#e11d48]'
-                              : 'border-amber-400 bg-white text-amber-800'
+                              ? 'bg-gradient-to-b from-[#fff0f4] via-[#ffe4ec] to-[#fecdd3]/70'
+                              : 'bg-gradient-to-b from-[#fff9ec] via-[#fef3c7] to-[#fde68a]/60'
                           }`}
-                          title="Selo Postal"
+                          style={{
+                            clipPath: 'polygon(0% 0%, 100% 0%, 100% calc(100% - 16px), 50% 100%, 0% calc(100% - 16px))',
+                          }}
                         >
-                          <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider">
-                            {isPublished ? 'SELO POSTAL' : 'NÃO SELADO'}
-                          </span>
-                          <span className="text-[10px] opacity-60 font-serif">≈≈</span>
+                          <div className="flex items-center justify-between pb-2">
+                            {/* Carimbo Postal de Registro / Linha Aérea */}
+                            <div className="flex items-center gap-2">
+                              <div className={`h-2.5 w-2.5 rounded-full ${isPublished ? 'bg-[#e11d48]' : 'bg-amber-500'}`} />
+                              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#701a35]/80">
+                                {isPublished ? 'CORREIO REGISTRADO' : 'RASCUNHO EM ANDAMENTO'}
+                              </span>
+                            </div>
+
+                            {/* Selo Postal no Canto Superior Direito (Sempre Visível) */}
+                            <div
+                              className={`flex items-center gap-1.5 rounded-md border-2 border-dashed px-2.5 py-1 shadow-xs select-none ${
+                                isPublished
+                                  ? 'border-rose-400 bg-white text-[#e11d48]'
+                                  : 'border-amber-400 bg-white text-amber-800'
+                              }`}
+                              title="Selo Postal"
+                            >
+                              <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider">
+                                {isPublished ? 'SELO POSTAL' : 'NÃO SELADO'}
+                              </span>
+                              <span className="text-[10px] opacity-60 font-serif">≈≈</span>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Lacre de Cera / Wax Seal Centralizado sobre a Dobra */}
-                        <div className="absolute left-1/2 -bottom-4.5 -translate-x-1/2 z-20 pointer-events-none">
+                        {/* Linha de borda do chanfro em V */}
+                        <svg
+                          className="pointer-events-none absolute bottom-0 inset-x-0 w-full h-4"
+                          viewBox="0 0 100 16"
+                          preserveAspectRatio="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M0,0 L50,16 L100,0"
+                            fill="none"
+                            stroke={isPublished ? '#fda4af' : '#fbbf24'}
+                            strokeWidth="1.5"
+                          />
+                        </svg>
+
+                        {/* Lacre de Cera / Wax Seal Exatamente na Ponta do V */}
+                        <div className="absolute left-1/2 -bottom-5 -translate-x-1/2 z-20 pointer-events-none">
                           {isPublished ? (
                             <div
-                              className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-500 via-[#e11d48] to-[#9f1239] text-white shadow-md border-2 border-white ring-2 ring-rose-400/30 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                              className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 via-[#e11d48] to-[#9f1239] text-white shadow-lg border-2 border-white ring-2 ring-rose-400/40 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
                               title="Lacre de Cera Fechado"
                             >
-                              <Heart className="w-4 h-4 fill-white text-white drop-shadow-xs" />
+                              <Heart className="w-4.5 h-4.5 fill-white text-white drop-shadow-xs" />
                             </div>
                           ) : (
                             <div
-                              className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 border-2 border-amber-400 shadow-sm flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                              className="w-10 h-10 rounded-full bg-amber-100 text-amber-800 border-2 border-amber-400 shadow-md flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
                               title="Rascunho Aberto"
                             >
-                              <Pencil className="w-4 h-4 text-amber-700" />
+                              <Pencil className="w-4.5 h-4.5 text-amber-700" />
                             </div>
                           )}
                         </div>
