@@ -246,19 +246,19 @@ export function Settings() {
             >
               <SectionCard
                 title="Atendimento & Chamados"
-                description="Gerencie solicitações de suporte e envie respostas formatadas por e-mail via Resend."
+                description="Painel de suporte para gestão de chamados e respostas por e-mail via Resend."
                 className="border border-primary/10"
               >
                 <SettingRow
                   icon={<LifeBuoy size={18} className="text-primary" />}
                   label="Central de Chamados"
-                  value="Consulte mensagens dos clientes e envie respostas oficiais com layout formatado."
+                  value="Consulte mensagens dos clientes e envie retornos oficiais com protocolo."
                   className="flex-col items-start border-primary/10 bg-white/55 sm:flex-row sm:items-center"
                   action={(
                     <Button
                       variant="outline"
                       onClick={() => setIsTicketsModalOpen(true)}
-                      className="w-full font-semibold sm:w-auto"
+                      className="w-full font-semibold sm:w-auto mt-2 sm:mt-0"
                     >
                       <LifeBuoy size={15} className="mr-2" />
                       Abrir Chamados

@@ -6,7 +6,7 @@ import {
   Send,
   CheckCircle2,
   Clock,
-  ChevronRight,
+  ArrowLeft,
   RefreshCw,
   MessageSquare,
 } from 'lucide-react'
@@ -85,7 +85,7 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
       )
       setReplySuccess(
         res.emailSent
-          ? `Resposta enviada com sucesso para ${selectedTicket.email}!`
+          ? `Resposta enviada via Resend para ${selectedTicket.email}!`
           : 'Resposta salva no chamado com sucesso!'
       )
       setReplyText('')
@@ -119,27 +119,27 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
     switch (status) {
       case 'resolved':
         return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
-            <CheckCircle2 size={12} />
+          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-emerald-800 shrink-0">
+            <CheckCircle2 size={11} />
             Resolvido
           </span>
         )
       case 'in_progress':
         return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-800">
-            <Clock size={12} />
+          <span className="inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-sky-800 shrink-0">
+            <Clock size={11} />
             Em Atendimento
           </span>
         )
       case 'closed':
         return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-700">
+          <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-gray-700 shrink-0">
             Fechado
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">
+          <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-amber-800 shrink-0">
             Aberto
           </span>
         )
@@ -151,32 +151,56 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Central de Chamados & Atendimento"
-      className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden"
+      className="max-w-4xl w-full p-0 overflow-hidden rounded-3xl"
     >
-      <div className="flex flex-col h-[75vh]">
-        {/* Barra superior de controle */}
-        <div className="p-4 sm:p-5 border-b border-rose-100 bg-rose-50/30 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <LifeBuoy size={18} />
+      <div className="flex flex-col h-[85vh] sm:h-[80vh] w-full bg-white overflow-hidden">
+        {/* Barra superior de cabeçalho */}
+        <div className="p-3.5 sm:p-4 border-b border-rose-100 bg-rose-50/40 flex flex-col gap-2.5 shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
+                <LifeBuoy size={16} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-display font-bold text-[#4c0519] text-sm sm:text-base truncate">
+                  Central de Atendimento
+                </h3>
+                <p className="text-[10px] sm:text-xs text-[#701a35]/70 truncate">
+                  Respostas oficiais por e-mail via Resend
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-display font-bold text-[#4c0519] text-base sm:text-lg">
-                Chamados de Suporte
-              </h3>
-              <p className="text-[11px] text-[#701a35]/70">
-                Gerencie mensagens e responda diretamente aos clientes via Resend.
-              </p>
-            </div>
+
+            <button
+              type="button"
+              onClick={fetchTickets}
+              className="p-1.5 sm:p-2 rounded-xl border border-rose-200 bg-white text-text-light hover:text-primary transition-colors cursor-pointer shrink-0"
+              title="Atualizar chamados"
+            >
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 p-0.5 bg-white rounded-xl border border-rose-200 text-xs">
+          {/* Filtros e Busca */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="relative flex-1">
+              <Search size={13} className="absolute left-3 top-2.5 text-text-muted" />
+              <input
+                type="text"
+                placeholder="Buscar protocolo, email, nome..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && fetchTickets()}
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-rose-200 bg-white text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div className="flex items-center gap-1 p-0.5 bg-rose-100/50 rounded-xl border border-rose-200/60 self-start sm:self-auto overflow-x-auto max-w-full">
               <button
                 type="button"
                 onClick={() => setFilterStatus('all')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
-                  filterStatus === 'all' ? 'bg-primary text-white' : 'text-text-light hover:text-text'
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  filterStatus === 'all' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
                 }`}
               >
                 Todos
@@ -184,8 +208,8 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
               <button
                 type="button"
                 onClick={() => setFilterStatus('open')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
-                  filterStatus === 'open' ? 'bg-primary text-white' : 'text-text-light hover:text-text'
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  filterStatus === 'open' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
                 }`}
               >
                 Abertos
@@ -193,52 +217,27 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
               <button
                 type="button"
                 onClick={() => setFilterStatus('resolved')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
-                  filterStatus === 'resolved' ? 'bg-primary text-white' : 'text-text-light hover:text-text'
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  filterStatus === 'resolved' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
                 }`}
               >
                 Resolvidos
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={fetchTickets}
-              className="p-2 rounded-xl border border-rose-200 bg-white text-text-light hover:text-primary transition-colors cursor-pointer"
-              title="Atualizar chamados"
-            >
-              <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
-            </button>
           </div>
         </div>
 
-        {/* Conteúdo: Lista à esquerda e Detalhes/Resposta à direita */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 overflow-hidden">
+        {/* Conteúdo principal responsivo */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 overflow-hidden relative">
           {/* Coluna da Lista de Chamados */}
           <div
             className={`md:col-span-5 border-r border-rose-100 flex flex-col h-full overflow-hidden ${
               selectedTicket ? 'hidden md:flex' : 'flex'
             }`}
           >
-            {/* Input de busca */}
-            <div className="p-3 border-b border-rose-100 bg-white">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-3 text-text-muted" />
-                <input
-                  type="text"
-                  placeholder="Buscar protocolo, nome, email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && fetchTickets()}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-rose-200 bg-rose-50/20 text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-            </div>
-
-            {/* Lista com scroll */}
-            <div className="flex-1 overflow-y-auto divide-y divide-rose-50 p-2 space-y-1">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
               {isLoading && tickets.length === 0 ? (
-                <div className="p-6 text-center text-xs text-text-light">
+                <div className="p-8 text-center text-xs text-text-light">
                   Carregando chamados...
                 </div>
               ) : error ? (
@@ -246,8 +245,9 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                   <InlineAlert tone="danger">{error}</InlineAlert>
                 </div>
               ) : tickets.length === 0 ? (
-                <div className="p-8 text-center text-xs text-text-light">
-                  Nenhum chamado encontrado.
+                <div className="p-8 text-center text-xs text-text-light space-y-1">
+                  <p className="font-semibold text-text">Nenhum chamado encontrado.</p>
+                  <p className="text-[11px]">Novas solicitações aparecerão aqui automaticamente.</p>
                 </div>
               ) : (
                 tickets.map((t) => {
@@ -259,11 +259,11 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                       onClick={() => setSelectedTicket(t)}
                       className={`w-full text-left p-3 rounded-2xl transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-rose-100/60 border border-rose-300/80 shadow-xs'
-                          : 'hover:bg-rose-50/50 border border-transparent'
+                          ? 'bg-rose-100/70 border border-rose-300 shadow-xs'
+                          : 'hover:bg-rose-50/60 border border-rose-100/40 bg-white'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-1 mb-1">
+                      <div className="flex items-center justify-between gap-1.5 mb-1">
                         <span className="font-mono text-xs font-bold text-primary">
                           {t.protocol}
                         </span>
@@ -275,14 +275,16 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                       <p className="text-[11px] text-[#701a35]/80 truncate mt-0.5">
                         {t.name} ({t.email})
                       </p>
-                      <div className="flex items-center justify-between text-[10px] text-text-muted mt-2">
+                      <div className="flex items-center justify-between text-[10px] text-text-muted mt-2 pt-1 border-t border-rose-100/40">
                         <span>{new Date(t.createdAt).toLocaleDateString('pt-BR')}</span>
                         {t.replies && t.replies.length > 0 ? (
                           <span className="flex items-center gap-1 font-semibold text-emerald-700">
                             <MessageSquare size={10} />
                             {t.replies.length} {t.replies.length === 1 ? 'resposta' : 'respostas'}
                           </span>
-                        ) : null}
+                        ) : (
+                          <span className="text-amber-700 font-medium">Aguardando resposta</span>
+                        )}
                       </div>
                     </button>
                   )
@@ -300,34 +302,35 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
             {selectedTicket ? (
               <div className="flex flex-col h-full overflow-hidden">
                 {/* Header do Chamado Selecionado */}
-                <div className="p-4 border-b border-rose-100 bg-rose-50/20 flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                <div className="p-3.5 sm:p-4 border-b border-rose-100 bg-rose-50/20 flex items-start justify-between gap-2.5 shrink-0">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         onClick={() => setSelectedTicket(null)}
-                        className="md:hidden p-1 rounded-lg hover:bg-rose-100 text-text-light cursor-pointer"
+                        className="md:hidden inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-rose-200 text-xs font-semibold text-text hover:bg-rose-50 cursor-pointer"
                       >
-                        <ChevronRight size={16} className="rotate-180" />
+                        <ArrowLeft size={13} />
+                        <span>Voltar</span>
                       </button>
-                      <span className="font-mono text-xs sm:text-sm font-extrabold text-primary bg-rose-100/80 px-2 py-0.5 rounded-md">
+                      <span className="font-mono text-xs font-extrabold text-primary bg-rose-100 px-2 py-0.5 rounded-md">
                         {selectedTicket.protocol}
                       </span>
                       {getStatusBadge(selectedTicket.status)}
                     </div>
-                    <h3 className="font-display text-base font-bold text-[#4c0519]">
+                    <h3 className="font-display text-sm sm:text-base font-bold text-[#4c0519] break-words">
                       {selectedTicket.subject}
                     </h3>
-                    <p className="text-xs text-[#701a35]/80">
+                    <p className="text-[11px] sm:text-xs text-[#701a35]/80 break-words">
                       De: <strong>{selectedTicket.name}</strong> &lt;{selectedTicket.email}&gt;
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="shrink-0">
                     <select
                       value={selectedTicket.status}
                       onChange={(e) => handleStatusChange(e.target.value)}
-                      className="text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-rose-200 bg-white text-[#4c0519] cursor-pointer"
+                      className="text-xs font-semibold px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-rose-200 bg-white text-[#4c0519] cursor-pointer"
                     >
                       <option value="open">Aberto</option>
                       <option value="in_progress">Em Atendimento</option>
@@ -337,21 +340,21 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                   </div>
                 </div>
 
-                {/* Conteúdo com scroll: Mensagem Original e Respostas */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+                {/* Conteúdo com scroll: Mensagem e Histórico de Respostas */}
+                <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-4">
                   {/* Mensagem do Usuário */}
-                  <div className="rounded-2xl border-2 border-rose-200/80 bg-rose-50/30 p-4 space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#701a35]/70 font-semibold">
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50/30 p-3.5 sm:p-4 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-[#701a35]/70 font-semibold">
                       <span>Mensagem do Solicitante</span>
-                      <span className="font-mono text-[11px]">
+                      <span className="font-mono">
                         {new Date(selectedTicket.createdAt).toLocaleString('pt-BR')}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-[#4c0519] leading-relaxed whitespace-pre-wrap">
+                    <p className="text-xs sm:text-sm text-[#4c0519] leading-relaxed whitespace-pre-wrap break-words">
                       {selectedTicket.message}
                     </p>
                     {selectedTicket.orderRef ? (
-                      <div className="pt-2 border-t border-rose-100 text-xs font-mono text-primary font-semibold">
+                      <div className="pt-2 border-t border-rose-100 text-xs font-mono text-primary font-semibold break-words">
                         Ref / ID da carta: {selectedTicket.orderRef}
                       </div>
                     ) : null}
@@ -359,25 +362,25 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
 
                   {/* Histórico de Respostas */}
                   {selectedTicket.replies && selectedTicket.replies.length > 0 ? (
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#701a35]/70">
+                    <div className="space-y-2.5">
+                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#701a35]/70">
                         Histórico de Respostas Enviadas:
                       </h4>
                       {selectedTicket.replies.map((reply) => (
                         <div
                           key={reply.id}
-                          className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-1.5"
+                          className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3 sm:p-4 space-y-1"
                         >
-                          <div className="flex items-center justify-between text-xs text-emerald-800 font-bold">
+                          <div className="flex items-center justify-between text-[11px] text-emerald-800 font-bold">
                             <span className="flex items-center gap-1.5">
-                              <Mail size={13} />
+                              <Mail size={12} />
                               Resposta enviada por e-mail (Resend)
                             </span>
                             <span className="font-mono text-[10px]">
                               {new Date(reply.createdAt).toLocaleString('pt-BR')}
                             </span>
                           </div>
-                          <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed whitespace-pre-wrap break-words">
                             {reply.message}
                           </p>
                         </div>
@@ -393,44 +396,44 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                   ) : null}
                 </div>
 
-                {/* Caixa de Resposta */}
-                <div className="p-4 border-t border-rose-100 bg-white space-y-3">
-                  <label className="text-xs font-bold text-[#4c0519] flex items-center justify-between">
-                    <span>Escrever Resposta Oficial (será enviada via Resend para {selectedTicket.email}):</span>
+                {/* Caixa de Resposta (Fixa na base) */}
+                <div className="p-3 sm:p-4 border-t border-rose-100 bg-white space-y-2.5 shrink-0">
+                  <label className="text-[11px] sm:text-xs font-bold text-[#4c0519] block break-words">
+                    Responder para <strong>{selectedTicket.email}</strong>:
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Digite a resposta que o cliente receberá em seu e-mail formatado..."
+                    placeholder="Digite sua resposta oficial aqui. O cliente receberá um e-mail formatado via Resend..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    className="w-full p-3 text-xs sm:text-sm rounded-xl border border-rose-200 bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                    className="w-full p-2.5 sm:p-3 text-xs sm:text-sm rounded-xl border border-rose-200 bg-surface text-text focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                   />
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-text-muted">
-                      O chamado será marcado como <strong>Resolvido</strong> ao responder.
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                    <span className="text-[10px] text-text-muted">
+                      O chamado será marcado como <strong>Resolvido</strong>.
                     </span>
                     <Button
                       size="sm"
                       onClick={handleSendReply}
                       disabled={isSendingReply || !replyText.trim()}
-                      className="font-bold shadow-xs"
+                      className="font-bold shadow-xs w-full sm:w-auto"
                     >
-                      <Send size={14} className="mr-1.5" />
+                      <Send size={13} className="mr-1.5" />
                       {isSendingReply ? 'Enviando e-mail...' : 'Responder por E-mail'}
                     </Button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center p-8 text-center text-text-light">
+              <div className="h-full flex flex-col items-center justify-center p-6 sm:p-8 text-center text-text-light">
                 <div className="w-12 h-12 rounded-2xl bg-rose-50 text-primary flex items-center justify-center mb-3">
                   <Mail size={22} />
                 </div>
-                <h4 className="font-display text-base font-bold text-[#4c0519] mb-1">
+                <h4 className="font-display text-sm sm:text-base font-bold text-[#4c0519] mb-1">
                   Nenhum chamado selecionado
                 </h4>
                 <p className="text-xs text-[#701a35]/70 max-w-xs">
-                  Selecione um chamado na lista ao lado para ler os detalhes e enviar a resposta oficial por e-mail.
+                  Selecione um chamado na lista ao lado para ler os detalhes e responder por e-mail.
                 </p>
               </div>
             )}
