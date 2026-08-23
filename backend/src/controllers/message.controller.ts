@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import * as messageService from '../services/message.service';
+import * as analyticsService from '../services/analytics.service';
 
 export async function createMessage(req: AuthRequest, res: Response): Promise<void> {
   const { message, recipient, theme, status, visibility, publishedAt } = req.body;
@@ -27,6 +28,8 @@ export async function getMessage(req: AuthRequest, res: Response): Promise<void>
 
 export async function getPublicCard(req: AuthRequest, res: Response): Promise<void> {
   const message = await messageService.getPublicCard(req.params.id as string, req.userId);
+  // Fire-and-forget: tracking de views (pseudonimizado, LGPD) nunca bloqueia a resposta.
+  void analyticsService.recordResourceView(message.id, req).catch(() => {});
   res.json({ message });
 }
 
