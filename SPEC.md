@@ -117,6 +117,8 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
 - `POST /change-password`: Changes password with current password verification.
 - `POST /export`: Returns GDPR/LGPD archive of user messages, pages, and assets.
 - `DELETE /account`: Purges user account and cascading entities.
+- `POST /verify-email`: Confirms e-mail ownership. Body: `{ token }`. Returns `{ message, emailVerified: true }`. Errors: `400 AUTH_INVALID_VERIFICATION_TOKEN`.
+- `POST /resend-verification`: Re-sends the verification e-mail (authenticated, rate-limited). Returns `{ message }`. No-op success if already verified.
 
 ### 4.2 Messages (`/api/messages`)
 - `GET /`: Lists all messages owned by authenticated user.
@@ -159,6 +161,26 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
 - `GET /:id`: Returns detailed asset status and processed URLs.
 - `POST /reprocess`: Re-queues processing jobs for failed or updated assets.
 - `DELETE /:id`: Deletes asset from CDN storage and database.
+
+### 4.6 Admin Analytics (`/api/admin/analytics`)
+All endpoints require authentication + admin (`requireAdmin`). Responses are aggregated server-side; no raw PII is exposed.
+
+- `GET /overview`: KPI snapshot. Returns:
+  ```json
+  { "users": { "total": 0, "last7d": 0, "last30d": 0, "verified": 0 },
+    "subscriptions": { "active": 0, "newLast30d": 0 },
+    "content": { "messages": 0, "pages": 0, "paidResources": 0, "views30d": 0 },
+    "support": { "open": 0 } }
+  ```
+- `GET /timeseries?days=30` (7|30|90): Daily series arrays `{ date: "YYYY-MM-DD", count }` for `signups`, `lettersCreated`, `paymentsCompleted`, `views`.
+- `GET /content`: Editor insights. Returns block-type distribution `[{ type, count }]`, theme popularity `[{ theme, count }]`, avg blocks per page.
+- `GET /funnel`: Conversion counts `{ registered, createdContent, paidOnce, subscribed }`.
+- `GET /revenue?days=30`: `{ subscriptionRevenue, subscriptionCount, oneOffEstimate, refundRequests, mrrEstimate }`. One-off revenue is an estimate (`paidResources x current price`) - no historical payment ledger exists.
+
+### 4.7 View Tracking
+- Server-side counting on public card/page access (`GET /messages/card/:id`).
+- Deduplicated per `(resourceId, viewerHash)` within a 60-minute window.
+- `viewerHash` = SHA-256(ip + userAgent + UTC date) - pseudonymized per LGPD; raw IP is never stored.
 
 ---
 
