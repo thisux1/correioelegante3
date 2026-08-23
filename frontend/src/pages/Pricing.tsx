@@ -42,7 +42,7 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingMethod, setLoadingMethod] = useState<'pix' | 'credit_card' | 'mercadopago_checkout' | null>(null)
+  const [loadingMethod, setLoadingMethod] = useState<'pix' | 'credit_card' | null>(null)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const turnstileRef = useRef<TurnstileRef>(null)
   const [error, setError] = useState<string | null>(null)
@@ -135,29 +135,6 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
       setLoadingMethod(null)
     }
   }
-
-  const handleStartMercadoPago = async () => {
-    setIsLoading(true)
-    setLoadingMethod('mercadopago_checkout')
-    setError(null)
-    try {
-      const { data } = await paymentService.createSubscriptionMercadoPagoCheckout(turnstileToken || undefined)
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl
-      } else {
-        setError('Não foi possível abrir o Checkout do Mercado Pago.')
-      }
-    } catch (err: unknown) {
-      turnstileRef.current?.reset()
-      const axiosErr = err as { response?: { data?: { error?: string } } }
-      setError(axiosErr.response?.data?.error || 'Erro ao iniciar Checkout do Mercado Pago.')
-    } finally {
-      setIsLoading(false)
-      setLoadingMethod(null)
-    }
-  }
-
-
 
   const handleCopyPix = async () => {
     if (!pixData?.pixQrCode) return
@@ -524,28 +501,6 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
                   </div>
                   {loadingMethod === 'credit_card' ? (
                     <Loader2 size={20} className="animate-spin shrink-0 aspect-square text-violet-600" />
-                  ) : (
-                    <ArrowRight size={18} className="text-text-muted transition-transform group-hover:translate-x-1" />
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleStartMercadoPago}
-                  disabled={isLoading}
-                  className="flex items-center justify-between rounded-2xl border-2 border-sky-200/80 bg-sky-50/40 p-4 text-left transition-all hover:border-sky-500 hover:bg-sky-50 hover:shadow-md disabled:opacity-50 group"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500 text-white shadow-sm shadow-sky-500/20">
-                      <Zap size={22} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-text">Mercado Pago</p>
-                      <p className="text-xs text-text-light">Boleto, saldo MP ou cartão</p>
-                    </div>
-                  </div>
-                  {loadingMethod === 'mercadopago_checkout' ? (
-                    <Loader2 size={20} className="animate-spin shrink-0 aspect-square text-sky-600" />
                   ) : (
                     <ArrowRight size={18} className="text-text-muted transition-transform group-hover:translate-x-1" />
                   )}
