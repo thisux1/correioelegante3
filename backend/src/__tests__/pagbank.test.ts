@@ -172,22 +172,31 @@ describe('PagBank Service (API V3 Checkout Transparente)', () => {
   });
 
   describe('handleWebhook', () => {
-    it('processa webhook de pedido pago e atualiza página', async () => {
+    it('processa webhook de pedido pago e atualiza página (confirmação server-side)', async () => {
       const updateManySpy = vi.spyOn(prisma.page, 'updateMany').mockResolvedValue({ count: 1 } as any);
 
-      const webhookPayload = {
-        id: 'ORDE_WEBHOOK_123',
-        reference_id: `page:${PAGE_ID}`,
-        charges: [
-          {
-            id: 'CHAR_123',
-            status: 'PAID',
-          },
-        ],
-      };
+      // O corpo do webhook não é confiável: apenas o id é usado e o status real
+      // é confirmado via GET /orders/{id} com o token da API.
+      const mockGet = vi.fn().mockResolvedValue({
+        data: {
+          id: 'ORDE_WEBHOOK_123',
+          reference_id: `page:${PAGE_ID}`,
+          charges: [
+            {
+              id: 'CHAR_123',
+              status: 'PAID',
+            },
+          ],
+        },
+      });
 
-      const result = await pagbankService.handleWebhook(webhookPayload);
+      vi.mocked(axios.create).mockReturnValue({
+        get: mockGet,
+      } as any);
 
+      const result = await pagbankService.handleWebhook({ id: 'ORDE_WEBHOOK_123' });
+
+      expect(mockGet).toHaveBeenCalledWith('/orders/ORDE_WEBHOOK_123');
       expect(result.received).toBe(true);
       expect(result.type).toBe('page');
       expect(updateManySpy).toHaveBeenCalledWith(
@@ -207,20 +216,56 @@ describe('PagBank Service (API V3 Checkout Transparente)', () => {
       vi.spyOn(prisma.subscription, 'findFirst').mockResolvedValue(null);
       vi.spyOn(prisma, '$transaction').mockResolvedValue([] as any);
 
-      const webhookPayload = {
-        id: 'ORDE_SUB_123',
-        reference_id: `subscription:${USER_ID}`,
-        charges: [
-          {
-            id: 'CHAR_SUB',
-            status: 'PAID',
-          },
-        ],
-      };
+      const mockGet = vi.fn().mockResolvedValue({
+        data: {
+          id: 'ORDE_SUB_123',
+          reference_id: `subscription:${USER_ID}`,
+          charges: [
+            {
+              id: 'CHAR_SUB',
+              status: 'PAID',
+            },
+          ],
+        },
+      });
 
-      const result = await pagbankService.handleWebhook(webhookPayload);
+      vi.mocked(axios.create).mockReturnValue({
+        get: mockGet,
+      } as any);
+
+      const result = await pagbankService.handleWebhook({ id: 'ORDE_SUB_123' });
       expect(result.received).toBe(true);
       expect(result.type).toBe('subscription');
+    });
+
+    it('ignora payload forjado sem pedido correspondente na API (anti-forjamento)', async () => {
+      const updateManySpy = vi.spyOn(prisma.page, 'updateMany');
+
+      // Atacante envia charges PAID forjados no corpo — mas a consulta à API
+      // falha/não encontra o pedido, então nada é marcado como pago.
+      vi.mocked(axios.create).mockReturnValue({
+        get: vi.fn().mockRejectedValue(new Error('order not found')),
+      } as any);
+
+      const result = await pagbankService.handleWebhook({
+        id: 'ORDE_FORJADO',
+        reference_id: `page:${PAGE_ID}`,
+        charges: [{ id: 'CHAR_FAKE', status: 'PAID' }],
+      });
+
+      expect(result.received).toBe(true);
+      expect(result.status).toBe('ignored_order_lookup_failed');
+      expect(updateManySpy).not.toHaveBeenCalled();
+    });
+
+    it('ignora payload sem order id', async () => {
+      const result = await pagbankService.handleWebhook({
+        reference_id: `page:${PAGE_ID}`,
+        charges: [{ id: 'CHAR_FAKE', status: 'PAID' }],
+      });
+
+      expect(result.received).toBe(true);
+      expect(result.status).toBe('ignored_no_order_id');
     });
   });
 });

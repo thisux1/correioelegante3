@@ -572,12 +572,37 @@ export async function syncPagBankPaymentStatus(target: PaymentTarget, orderId: s
   }
 }
 
-export async function handleWebhook(payload: Record<string, unknown>) {
-  const referenceId = (payload.reference_id || payload.referenceId) as string | undefined;
-  const orderId = (payload.id || payload.order_id) as string | undefined;
-  const charges = (payload.charges as Array<{ status: string; id: string }> | undefined) || [];
+export interface PagBankWebhookResult {
+  received: boolean;
+  status?: 'ignored_no_order_id' | 'ignored_order_lookup_failed' | 'ignored_unpaid';
+  type?: string;
+  resourceId?: string;
+}
 
-  const isPaid = charges.some((c) => c.status === 'PAID' || c.status === 'AUTHORIZED') || payload.status === 'PAID';
+export async function handleWebhook(payload: Record<string, unknown>): Promise<PagBankWebhookResult> {
+  // Segurança: NUNCA confiar no corpo do webhook (forjável).
+  // Extrair apenas o ID do pedido e confirmar o status real via API autenticada.
+  const orderId = (payload.id || payload.order_id) as string | undefined;
+
+  if (!orderId || typeof orderId !== 'string') {
+    return { received: true, status: 'ignored_no_order_id' };
+  }
+
+  let order: PagBankOrderResponse;
+  try {
+    const client = getPagBankClient();
+    const response = await client.get<PagBankOrderResponse>(`/orders/${orderId}`);
+    order = response.data;
+  } catch (err) {
+    console.warn('[PAGBANK] Webhook: falha ao consultar pedido na API:', err);
+    return { received: true, status: 'ignored_order_lookup_failed' };
+  }
+
+  // reference_id confiável vem da resposta da API, não do payload recebido
+  const referenceId = order.reference_id;
+  const charges = order.charges || [];
+
+  const isPaid = charges.some((c) => c.status === 'PAID' || c.status === 'AUTHORIZED');
 
   if (!isPaid) {
     return { received: true, status: 'ignored_unpaid' };
@@ -590,7 +615,7 @@ export async function handleWebhook(payload: Record<string, unknown>) {
       await activateUserSubscription({
         userId,
         provider: 'pagbank' as unknown as 'mercadopago', // provider salvo como pagbank
-        providerPaymentId: orderId || `pagbank_${Date.now()}`,
+        providerPaymentId: order.id || `pagbank_${Date.now()}`,
         paymentMethod: 'pix',
       });
     }
