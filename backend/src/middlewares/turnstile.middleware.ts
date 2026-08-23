@@ -5,8 +5,17 @@ import { AppError } from '../utils/AppError';
 export async function validateTurnstile(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const secret = process.env.TURNSTILE_SECRET;
 
-  // Em ambiente de teste ou quando a chave não estiver configurada, permite prosseguir
+  // Fail-closed em produção: sem secret configurado, a proteção contra bots
+  // ficaria indisponível — a requisição é rejeitada (pode desativar
+  // explicitamente com TURNSTILE_DISABLED=true em casos excepcionais).
   if (!secret) {
+    if (process.env.NODE_ENV === 'production' && process.env.TURNSTILE_DISABLED !== 'true') {
+      throw new AppError(
+        'Serviço de verificação de segurança indisponível. Tente novamente mais tarde.',
+        503,
+        'TURNSTILE_NOT_CONFIGURED'
+      );
+    }
     return next();
   }
 
