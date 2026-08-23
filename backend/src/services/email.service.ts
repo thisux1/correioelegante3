@@ -21,7 +21,7 @@ export interface SendPasswordResetEmailParams {
 
 export async function sendPasswordResetEmail(params: SendPasswordResetEmailParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const client = getResendClient();
-  const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -103,7 +103,7 @@ export interface SendTicketConfirmationParams {
 
 export async function sendTicketConfirmationEmail(params: SendTicketConfirmationParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const client = getResendClient();
-  const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -189,7 +189,7 @@ export interface SendNewTicketAdminNotificationParams {
 
 export async function sendNewTicketNotificationToAdmin(params: SendNewTicketAdminNotificationParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const client = getResendClient();
-  const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
 
   // Destinatários dos alertas para administradores
   const rawAdmins = process.env.ADMIN_EMAILS || 'thicosta1432@gmail.com,contato@correioelegante.studio';
@@ -278,7 +278,7 @@ export interface SendTicketReplyParams {
 
 export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const client = getResendClient();
-  const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
 
   const htmlContent = `
 <!DOCTYPE html>
