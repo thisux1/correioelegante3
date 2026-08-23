@@ -3,7 +3,7 @@ import express from 'express';
 import {
   createPayment,
   stripeWebhookHandler,
-  mercadopagoWebhookHandler,
+  // mercadopagoWebhookHandler, // Mercado Pago desativado (ver controller)
   pagbankWebhookHandler,
   getPaymentStatus,
   getPaymentStatusByResource,
@@ -26,17 +26,23 @@ router.post('/webhook/pagbank', express.json(), pagbankWebhookHandler);
 // Webhook Stripe — precisa do rawBody (Buffer) para validar assinatura
 router.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
-// Webhook Mercado Pago — recebe JSON normal (preservado como legado)
-router.post('/webhook/mercadopago', express.json(), mercadopagoWebhookHandler);
+// Webhook Mercado Pago — DESATIVADO: provedor fora de uso.
+// router.post('/webhook/mercadopago', express.json(), mercadopagoWebhookHandler);
 
 
 router.post('/create', authenticate, validateTurnstile, validate(createPaymentSchema), createPayment);
 router.post('/refund', authenticate, validate(createRefundRequestSchema), requestRefund);
-router.post('/simulate-approval', authenticate, simulatePaymentApproval);
+
+// Endpoints de simulação — registrados APENAS fora de produção (defesa em
+// profundidade: o controller também bloqueia, mas aqui nem existem em prod).
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/simulate-approval', authenticate, simulatePaymentApproval);
+  router.post('/simulate-subscription', authenticate, simulateSubscriptionApproval);
+}
+
 router.post('/subscription/checkout', authenticate, validateTurnstile, validate(createSubscriptionPaymentSchema), createSubscriptionPayment);
 
 router.get('/subscription/status', authenticate, getSubscriptionStatus);
-router.post('/simulate-subscription', authenticate, simulateSubscriptionApproval);
 router.get('/status/:messageId', authenticate, validateObjectId('messageId'), getPaymentStatus);
 router.get(
   '/status/:resourceType/:resourceId',
