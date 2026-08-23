@@ -28,3 +28,22 @@ export const createSupportTicketSchema = z.object({
 });
 
 export type CreateSupportTicketInput = z.infer<typeof createSupportTicketSchema>;
+
+export const replySupportTicketSchema = z.object({
+  replyMessage: z
+    .string({ required_error: 'Mensagem de resposta é obrigatória' })
+    .trim()
+    .min(5, 'A resposta deve ter no mínimo 5 caracteres')
+    .max(5000, 'A resposta deve ter no máximo 5000 caracteres'),
+  status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
+});
+
+export type ReplySupportTicketInput = z.infer<typeof replySupportTicketSchema>;
+
+export const updateTicketStatusSchema = z.object({
+  status: z.enum(['open', 'in_progress', 'resolved', 'closed'], {
+    required_error: 'Status é obrigatório',
+  }),
+});
+
+export type UpdateTicketStatusInput = z.infer<typeof updateTicketStatusSchema>;

@@ -12,6 +12,7 @@ import {
   Trash2,
   MailOpen,
   ArrowLeft,
+  LifeBuoy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -20,6 +21,7 @@ import { Modal } from '@/components/ui/Modal'
 import { InlineAlert } from '@/components/ui/InlineAlert'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { SettingRow } from '@/components/ui/SettingRow'
+import { TicketsInboxModal } from '@/components/support/TicketsInboxModal'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
 import { paymentService, type SubscriptionStatusResponse } from '@/services/paymentService'
@@ -39,6 +41,9 @@ export function Settings() {
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+
+  // Support Tickets State
+  const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false)
 
   // Delete Account State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -232,6 +237,36 @@ export function Settings() {
             </SectionCard>
           </motion.div>
 
+          {/* Sessão de Atendimento & Chamados */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, delay: 0.03, ease: [0.19, 1, 0.22, 1] }}
+          >
+            <SectionCard
+              title="Atendimento & Chamados"
+              description="Gerencie solicitações de suporte e envie respostas formatadas por e-mail via Resend."
+              className="border border-primary/10"
+            >
+              <SettingRow
+                icon={<LifeBuoy size={18} className="text-primary" />}
+                label="Central de Chamados"
+                value="Consulte mensagens dos clientes e envie respostas oficiais com layout formatado."
+                className="flex-col items-start border-primary/10 bg-white/55 sm:flex-row sm:items-center"
+                action={(
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsTicketsModalOpen(true)}
+                    className="w-full font-semibold sm:w-auto"
+                  >
+                    <LifeBuoy size={15} className="mr-2" />
+                    Abrir Chamados
+                  </Button>
+                )}
+              />
+            </SectionCard>
+          </motion.div>
+
           {/* Formulário de Alteração de Senha */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -393,6 +428,12 @@ export function Settings() {
               </div>
             </div>
           </Modal>
+
+          {/* Modal de Gestão de Chamados & Respostas por E-mail via Resend */}
+          <TicketsInboxModal
+            isOpen={isTicketsModalOpen}
+            onClose={() => setIsTicketsModalOpen(false)}
+          />
         </section>
       </Container>
     </div>

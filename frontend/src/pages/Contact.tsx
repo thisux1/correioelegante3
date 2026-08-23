@@ -206,10 +206,6 @@ export function Contact({ isLoading }: ContactProps = {}) {
                   </button>
                 </div>
 
-                <div className="text-xs text-emerald-800/80 max-w-sm mx-auto">
-                  Responderemos no e-mail: <strong>{createdTicket.email}</strong>
-                </div>
-
                 <div className="pt-2">
                   <Button
                     variant="outline"
