@@ -1,7 +1,11 @@
 import { prisma } from '../utils/prisma';
 import { CreateSupportTicketInput } from '../contracts/contact.contract';
 import { AppError } from '../utils/AppError';
-import { sendTicketConfirmationEmail, sendTicketReplyEmail } from './email.service';
+import {
+  sendTicketConfirmationEmail,
+  sendNewTicketNotificationToAdmin,
+  sendTicketReplyEmail,
+} from './email.service';
 
 function generateProtocol(): string {
   const randomNum = Math.floor(100000 + Math.random() * 900000);
@@ -34,7 +38,7 @@ export async function createTicket(data: CreateSupportTicketInput, userId?: stri
     },
   });
 
-  // Dispara e-mail de confirmação em background (não bloqueia resposta ao cliente)
+  // 1. Dispara confirmação para o cliente (em background)
   sendTicketConfirmationEmail({
     to: ticket.email,
     recipientName: ticket.name,
@@ -42,7 +46,19 @@ export async function createTicket(data: CreateSupportTicketInput, userId?: stri
     subject: ticket.subject,
     message: ticket.message,
   }).catch((err) => {
-    console.error('[ContactService] Erro ao enviar confirmação de chamado:', err);
+    console.error('[ContactService] Erro ao enviar confirmação de chamado ao cliente:', err);
+  });
+
+  // 2. Dispara notificação com os dados do chamado para os administradores (em background)
+  sendNewTicketNotificationToAdmin({
+    protocol: ticket.protocol,
+    name: ticket.name,
+    email: ticket.email,
+    subject: ticket.subject,
+    message: ticket.message,
+    orderRef: ticket.orderRef,
+  }).catch((err) => {
+    console.error('[ContactService] Erro ao enviar alerta de chamado para admin:', err);
   });
 
   return {
@@ -122,7 +138,7 @@ export async function getTicketById(id: string) {
 
 export interface ReplyTicketInput {
   replyMessage: string;
-  status?: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status?: 'open' | 'in_progress' | 'resolved' | 'closed' | 'keep';
   sentBy?: string;
 }
 
@@ -140,9 +156,9 @@ export async function replyToTicket(ticketId: string, input: ReplyTicketInput) {
     throw new AppError('A resposta deve ter no mínimo 5 caracteres.', 400, 'INVALID_REPLY');
   }
 
-  const nextStatus = input.status || 'resolved';
+  const nextStatus = input.status && input.status !== 'keep' ? input.status : ticket.status;
 
-  // Grava resposta e atualiza status atomicamente
+  // Grava resposta e atualiza status
   const [reply, updatedTicket] = await prisma.$transaction([
     prisma.supportTicketReply.create({
       data: {
@@ -178,6 +194,7 @@ export async function replyToTicket(ticketId: string, input: ReplyTicketInput) {
     ticket: updatedTicket,
     reply,
     emailSent: emailResult.success,
+    emailError: emailResult.error,
   };
 }
 
