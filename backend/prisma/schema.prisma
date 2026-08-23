@@ -176,19 +176,31 @@ model RefundRequest {
 }
 
 model SupportTicket {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  protocol    String   @unique
+  id          String               @id @default(auto()) @map("_id") @db.ObjectId
+  protocol    String               @unique
   name        String
   email       String
   subject     String
   orderRef    String?
   message     String
-  status      String   @default("open")
-  userId      String?  @db.ObjectId
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      String               @default("open")
+  replies     SupportTicketReply[]
+  userId      String?              @db.ObjectId
+  user        User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 
   @@index([email])
   @@index([status, createdAt])
+}
+
+model SupportTicketReply {
+  id         String        @id @default(auto()) @map("_id") @db.ObjectId
+  ticketId   String        @db.ObjectId
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message    String
+  sentBy     String        @default("support")
+  createdAt  DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
 }

@@ -31,15 +31,15 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Redefinição de Senha - Correio Elegante</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fdf2f8; margin: 0; padding: 24px; color: #1e1b4b; }
-    .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fbcfe8; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
+    .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fecdd3; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
     .logo { text-align: center; margin-bottom: 24px; }
     .logo-text { font-size: 22px; font-weight: 800; color: #e11d48; letter-spacing: -0.5px; margin: 0; }
-    h1 { font-size: 20px; font-weight: 700; color: #0f172a; text-align: center; margin-top: 0; margin-bottom: 16px; }
-    p { font-size: 15px; line-height: 1.6; color: #475569; margin: 12px 0; }
+    h1 { font-size: 20px; font-weight: 700; color: #4c0519; text-align: center; margin-top: 0; margin-bottom: 16px; }
+    p { font-size: 15px; line-height: 1.6; color: #701a35; margin: 12px 0; }
     .btn-container { text-align: center; margin: 32px 0; }
-    .btn { display: inline-block; background: linear-gradient(135deg, #e11d48, #be123c); color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3); }
-    .footer { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+    .btn { display: inline-block; background: #e11d48; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px; }
+    .footer { text-align: center; font-size: 12px; color: #881337; margin-top: 32px; border-top: 1px solid #ffe4ec; padding-top: 20px; }
     .link-fallback { word-break: break-all; font-size: 12px; color: #e11d48; }
   </style>
 </head>
@@ -55,16 +55,16 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
     <div class="btn-container">
       <a href="${params.resetUrl}" class="btn" target="_blank">Redefinir Minha Senha</a>
     </div>
-    <p style="font-size: 13px; color: #64748b;">
+    <p style="font-size: 13px; color: #701a35;">
       Este link é seguro e expira automaticamente em <strong>60 minutos</strong>.
     </p>
-    <p style="font-size: 13px; color: #64748b;">
+    <p style="font-size: 13px; color: #701a35;">
       Se você não solicitou a redefinição de senha, nenhuma ação é necessária. Sua conta continua segura.
     </p>
     <div class="footer">
       <p>Caso o botão não funcione, copie e cole este link no seu navegador:</p>
       <p class="link-fallback">${params.resetUrl}</p>
-      <p style="margin-top: 16px;">© ${new Date().getFullYear()} Correio Elegante Studio. Todos os direitos reservados.</p>
+      <p style="margin-top: 16px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
     </div>
   </div>
 </body>
@@ -86,6 +86,185 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
 
     if (error) {
       console.error('[EmailService] Erro ao enviar e-mail via Resend:', error);
+      return { success: false };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err) {
+    console.error('[EmailService] Falha de conexão com Resend:', err);
+    return { success: false };
+  }
+}
+
+export interface SendTicketConfirmationParams {
+  to: string;
+  recipientName: string;
+  protocol: string;
+  subject: string;
+  message: string;
+}
+
+export async function sendTicketConfirmationEmail(params: SendTicketConfirmationParams): Promise<{ success: boolean; id?: string }> {
+  const client = getResendClient();
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chamado Recebido #${params.protocol} - Correio Elegante</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
+    .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fecdd3; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
+    .logo { text-align: center; margin-bottom: 24px; }
+    .logo-text { font-size: 22px; font-weight: 800; color: #e11d48; letter-spacing: -0.5px; margin: 0; }
+    .badge { display: inline-block; background: #ffe4ec; color: #e11d48; padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; font-family: monospace; letter-spacing: 0.5px; margin-bottom: 12px; }
+    h1 { font-size: 22px; font-weight: 700; color: #4c0519; margin-top: 0; margin-bottom: 16px; }
+    p { font-size: 15px; line-height: 1.6; color: #701a35; margin: 12px 0; }
+    .card { background: #fffafb; border: 1px solid #ffe4ec; border-radius: 14px; padding: 20px; margin: 20px 0; }
+    .card-title { font-size: 12px; text-transform: uppercase; font-weight: 700; color: #881337; margin-bottom: 6px; }
+    .card-content { font-size: 14px; color: #4c0519; white-space: pre-wrap; }
+    .footer { text-align: center; font-size: 12px; color: #881337; margin-top: 32px; border-top: 1px solid #ffe4ec; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h2 class="logo-text">Correio Elegante</h2>
+    </div>
+    <div style="text-align: center;">
+      <span class="badge">PROTOCOLO: ${params.protocol}</span>
+      <h1>Chamado Registrado com Sucesso</h1>
+    </div>
+    <p>Olá, <strong>${params.recipientName}</strong>!</p>
+    <p>Recebemos sua mensagem sobre <strong>${params.subject}</strong> e ela já foi registrada em nossa central de atendimento.</p>
+    
+    <div class="card">
+      <div class="card-title">Resumo da sua solicitação:</div>
+      <div class="card-content">${params.message}</div>
+    </div>
+
+    <p>Nossa equipe já está analisando o seu caso e retornará diretamente com você.</p>
+    
+    <div class="footer">
+      <p>Você pode entrar em contato conosco diretamente por este e-mail.</p>
+      <p style="margin-top: 12px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (!client) {
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail de confirmação simulado para: ${params.to} com Protocolo: ${params.protocol}`);
+    return { success: true, id: 'simulated_no_key' };
+  }
+
+  try {
+    const { data, error } = await client.emails.send({
+      from,
+      to: params.to,
+      subject: `Chamado Recebido [${params.protocol}] - ${params.subject}`,
+      html: htmlContent,
+    });
+
+    if (error) {
+      console.error('[EmailService] Erro ao enviar confirmação de ticket via Resend:', error);
+      return { success: false };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err) {
+    console.error('[EmailService] Falha de conexão com Resend:', err);
+    return { success: false };
+  }
+}
+
+export interface SendTicketReplyParams {
+  to: string;
+  recipientName: string;
+  protocol: string;
+  subject: string;
+  originalMessage: string;
+  replyMessage: string;
+}
+
+export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promise<{ success: boolean; id?: string }> {
+  const client = getResendClient();
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resposta ao Chamado #${params.protocol} - Correio Elegante</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fecdd3; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
+    .logo { text-align: center; margin-bottom: 24px; }
+    .logo-text { font-size: 22px; font-weight: 800; color: #e11d48; letter-spacing: -0.5px; margin: 0; }
+    .badge { display: inline-block; background: #ffe4ec; color: #e11d48; padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; font-family: monospace; letter-spacing: 0.5px; margin-bottom: 12px; }
+    h1 { font-size: 22px; font-weight: 700; color: #4c0519; margin-top: 0; margin-bottom: 16px; }
+    p { font-size: 15px; line-height: 1.6; color: #701a35; margin: 12px 0; }
+    .reply-card { background: #fff0f4; border-left: 4px solid #e11d48; border-radius: 0 14px 14px 0; padding: 20px 24px; margin: 24px 0; }
+    .reply-title { font-size: 12px; text-transform: uppercase; font-weight: 800; color: #e11d48; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .reply-body { font-size: 15px; color: #4c0519; line-height: 1.7; white-space: pre-wrap; }
+    .original-quote { background: #fafafa; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-top: 24px; }
+    .quote-title { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #94a3b8; margin-bottom: 6px; }
+    .quote-body { font-size: 13px; color: #64748b; font-style: italic; white-space: pre-wrap; }
+    .footer { text-align: center; font-size: 12px; color: #881337; margin-top: 36px; border-top: 1px solid #ffe4ec; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h2 class="logo-text">Correio Elegante</h2>
+    </div>
+    <div style="text-align: center;">
+      <span class="badge">PROTOCOLO: ${params.protocol}</span>
+      <h1>Resposta ao seu Chamado</h1>
+    </div>
+    <p>Olá, <strong>${params.recipientName}</strong>!</p>
+    <p>Nossa equipe revisou sua solicitação referente a <strong>${params.subject}</strong> e preparou o seguinte retorno para você:</p>
+    
+    <div class="reply-card">
+      <div class="reply-title">Mensagem da Equipe:</div>
+      <div class="reply-body">${params.replyMessage}</div>
+    </div>
+
+    <div class="original-quote">
+      <div class="quote-title">Sua mensagem original:</div>
+      <div class="quote-body">${params.originalMessage}</div>
+    </div>
+
+    <div class="footer">
+      <p>Caso precise de novos esclarecimentos, basta responder diretamente a este e-mail.</p>
+      <p style="margin-top: 12px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (!client) {
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail de resposta simulado para: ${params.to} com Protocolo: ${params.protocol}`);
+    return { success: true, id: 'simulated_no_key' };
+  }
+
+  try {
+    const { data, error } = await client.emails.send({
+      from,
+      to: params.to,
+      subject: `Re: [${params.protocol}] ${params.subject}`,
+      html: htmlContent,
+    });
+
+    if (error) {
+      console.error('[EmailService] Erro ao enviar resposta de ticket via Resend:', error);
       return { success: false };
     }
 
