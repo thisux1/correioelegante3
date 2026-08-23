@@ -6,6 +6,7 @@ process.env.JWT_SECRET = 'test-jwt-secret-32chars-minimum!!';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-32chars-min!!';
 process.env.STRIPE_SECRET_KEY = 'sk_test_fake_key_for_testing_only';
 process.env.STRIPE_WEBHOOK_SECRET = 'whsec_fake_webhook_secret_for_tests';
+process.env.ADMIN_EMAILS = 'admin@example.com,test@example.com';
 process.env.NODE_ENV = 'test';
 
 // ── Mock global do Prisma ────────────────────────────────────────────────────
