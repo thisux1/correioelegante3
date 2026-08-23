@@ -19,7 +19,7 @@ export interface SendPasswordResetEmailParams {
   userName?: string;
 }
 
-export async function sendPasswordResetEmail(params: SendPasswordResetEmailParams): Promise<{ success: boolean; id?: string }> {
+export async function sendPasswordResetEmail(params: SendPasswordResetEmailParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const client = getResendClient();
   const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
 
@@ -58,9 +58,6 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
     <p style="font-size: 13px; color: #701a35;">
       Este link é seguro e expira automaticamente em <strong>60 minutos</strong>.
     </p>
-    <p style="font-size: 13px; color: #701a35;">
-      Se você não solicitou a redefinição de senha, nenhuma ação é necessária. Sua conta continua segura.
-    </p>
     <div class="footer">
       <p>Caso o botão não funcione, copie e cole este link no seu navegador:</p>
       <p class="link-fallback">${params.resetUrl}</p>
@@ -72,7 +69,7 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
   `;
 
   if (!client) {
-    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail simulado para: ${params.to} com URL: ${params.resetUrl}`);
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail simulado para: ${params.to}`);
     return { success: true, id: 'simulated_no_key' };
   }
 
@@ -86,13 +83,13 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
 
     if (error) {
       console.error('[EmailService] Erro ao enviar e-mail via Resend:', error);
-      return { success: false };
+      return { success: false, error: (error as any).message || JSON.stringify(error) };
     }
 
     return { success: true, id: data?.id };
-  } catch (err) {
+  } catch (err: any) {
     console.error('[EmailService] Falha de conexão com Resend:', err);
-    return { success: false };
+    return { success: false, error: err?.message || 'Falha de conexão com Resend' };
   }
 }
 
@@ -104,7 +101,7 @@ export interface SendTicketConfirmationParams {
   message: string;
 }
 
-export async function sendTicketConfirmationEmail(params: SendTicketConfirmationParams): Promise<{ success: boolean; id?: string }> {
+export async function sendTicketConfirmationEmail(params: SendTicketConfirmationParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const client = getResendClient();
   const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
 
@@ -146,10 +143,9 @@ export async function sendTicketConfirmationEmail(params: SendTicketConfirmation
       <div class="card-content">${params.message}</div>
     </div>
 
-    <p>Nossa equipe já está analisando o seu caso e retornará diretamente com você.</p>
+    <p>Nossa equipe já está analisando o seu caso e retornará em breve.</p>
     
     <div class="footer">
-      <p>Você pode entrar em contato conosco diretamente por este e-mail.</p>
       <p style="margin-top: 12px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
     </div>
   </div>
@@ -158,7 +154,7 @@ export async function sendTicketConfirmationEmail(params: SendTicketConfirmation
   `;
 
   if (!client) {
-    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail de confirmação simulado para: ${params.to} com Protocolo: ${params.protocol}`);
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail de confirmação simulado para: ${params.to}`);
     return { success: true, id: 'simulated_no_key' };
   }
 
@@ -172,13 +168,102 @@ export async function sendTicketConfirmationEmail(params: SendTicketConfirmation
 
     if (error) {
       console.error('[EmailService] Erro ao enviar confirmação de ticket via Resend:', error);
-      return { success: false };
+      return { success: false, error: (error as any).message || JSON.stringify(error) };
     }
 
     return { success: true, id: data?.id };
-  } catch (err) {
+  } catch (err: any) {
     console.error('[EmailService] Falha de conexão com Resend:', err);
-    return { success: false };
+    return { success: false, error: err?.message || 'Falha de conexão com Resend' };
+  }
+}
+
+export interface SendNewTicketAdminNotificationParams {
+  protocol: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  orderRef?: string | null;
+}
+
+export async function sendNewTicketNotificationToAdmin(params: SendNewTicketAdminNotificationParams): Promise<{ success: boolean; id?: string; error?: string }> {
+  const client = getResendClient();
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
+
+  // Destinatários dos alertas para administradores
+  const rawAdmins = process.env.ADMIN_EMAILS || 'thicosta1432@gmail.com,contato@correioelegante.studio';
+  const adminRecipients = rawAdmins
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean);
+
+  const targetEmail = adminRecipients[0] || 'thicosta1432@gmail.com';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Chamado de Suporte [${params.protocol}]</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 36px 28px; border: 1px solid #fecdd3; }
+    .header { border-bottom: 2px solid #ffe4ec; padding-bottom: 16px; margin-bottom: 20px; }
+    .badge { display: inline-block; background: #e11d48; color: #ffffff; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; font-family: monospace; }
+    h1 { font-size: 20px; font-weight: 800; color: #4c0519; margin: 12px 0 4px 0; }
+    .meta-row { font-size: 13px; color: #701a35; margin: 6px 0; }
+    .msg-box { background: #fff5f7; border-left: 4px solid #e11d48; border-radius: 0 12px 12px 0; padding: 18px; margin: 20px 0; }
+    .msg-title { font-size: 11px; text-transform: uppercase; font-weight: 800; color: #e11d48; margin-bottom: 6px; }
+    .msg-body { font-size: 14px; color: #4c0519; white-space: pre-wrap; line-height: 1.6; }
+    .footer { font-size: 12px; color: #881337; margin-top: 24px; border-top: 1px solid #ffe4ec; padding-top: 16px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">NOVO CHAMADO ${params.protocol}</span>
+      <h1>${params.subject}</h1>
+      <div class="meta-row"><strong>Cliente:</strong> ${params.name} &lt;${params.email}&gt;</div>
+      ${params.orderRef ? `<div class="meta-row"><strong>Ref / Carta:</strong> ${params.orderRef}</div>` : ''}
+    </div>
+
+    <div class="msg-box">
+      <div class="msg-title">Mensagem enviada:</div>
+      <div class="msg-body">${params.message}</div>
+    </div>
+
+    <div class="footer">
+      Acesse o painel em <strong>Configurações &gt; Central de Chamados</strong> ou na página <strong>/contato</strong> para responder.
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (!client) {
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. Alerta de admin simulado para: ${targetEmail}`);
+    return { success: true, id: 'simulated_no_key' };
+  }
+
+  try {
+    const { data, error } = await client.emails.send({
+      from,
+      to: targetEmail,
+      subject: `[Novo Chamado ${params.protocol}] ${params.subject} - ${params.name}`,
+      html: htmlContent,
+    });
+
+    if (error) {
+      console.error('[EmailService] Erro ao enviar notificação de admin via Resend:', error);
+      return { success: false, error: (error as any).message || JSON.stringify(error) };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err: any) {
+    console.error('[EmailService] Falha de conexão com Resend para admin:', err);
+    return { success: false, error: err?.message || 'Falha de conexão com Resend' };
   }
 }
 
@@ -191,7 +276,7 @@ export interface SendTicketReplyParams {
   replyMessage: string;
 }
 
-export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promise<{ success: boolean; id?: string }> {
+export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promise<{ success: boolean; id?: string; error?: string }> {
   const client = getResendClient();
   const from = process.env.EMAIL_FROM || 'Correio Elegante <onboarding@resend.dev>';
 
@@ -242,7 +327,7 @@ export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promi
     </div>
 
     <div class="footer">
-      <p>Caso precise de novos esclarecimentos, basta responder diretamente a este e-mail.</p>
+      <p>Caso precise de novos esclarecimentos, basta nos contatar com o protocolo #${params.protocol}.</p>
       <p style="margin-top: 12px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
     </div>
   </div>
@@ -251,7 +336,7 @@ export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promi
   `;
 
   if (!client) {
-    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail de resposta simulado para: ${params.to} com Protocolo: ${params.protocol}`);
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail de resposta simulado para: ${params.to}`);
     return { success: true, id: 'simulated_no_key' };
   }
 
@@ -265,12 +350,12 @@ export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promi
 
     if (error) {
       console.error('[EmailService] Erro ao enviar resposta de ticket via Resend:', error);
-      return { success: false };
+      return { success: false, error: (error as any).message || JSON.stringify(error) };
     }
 
     return { success: true, id: data?.id };
-  } catch (err) {
+  } catch (err: any) {
     console.error('[EmailService] Falha de conexão com Resend:', err);
-    return { success: false };
+    return { success: false, error: err?.message || 'Falha de conexão com Resend' };
   }
 }

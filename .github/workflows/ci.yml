@@ -1,10 +1,8 @@
 name: CI
 
+# CI/CD desativado para execuções automáticas (ativado apenas via disparo manual)
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
