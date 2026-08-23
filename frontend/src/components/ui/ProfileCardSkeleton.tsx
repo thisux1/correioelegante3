@@ -40,13 +40,13 @@ export function ProfileCardSkeleton({
 
             {/* Left section: Wax seal / stamp skeleton + title silhouette + metadata */}
             <div className="flex items-center gap-3.5 min-w-0 flex-1">
-              {/* Wax seal / stamp placeholder */}
+              {/* Icon placeholder */}
               <Skeleton
-                variant={isDraftVariant ? 'rounded' : 'circle'}
-                className={`h-11 w-11 shrink-0 ${
+                variant="rounded"
+                className={`h-11 w-11 shrink-0 rounded-2xl ${
                   isDraftVariant
-                    ? 'rounded-2xl border border-amber-500/30'
-                    : 'ring-2 ring-primary/20'
+                    ? 'border border-amber-500/30'
+                    : 'border border-primary/20'
                 }`}
               />
 
