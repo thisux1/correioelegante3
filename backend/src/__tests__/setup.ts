@@ -68,6 +68,13 @@ vi.mock('../utils/prisma', () => ({
             findFirst: vi.fn(),
             create: vi.fn(),
         },
+        supportTicket: {
+            findUnique: vi.fn(),
+            findMany: vi.fn(),
+            findFirst: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
+        },
         $transaction: vi.fn(async (arg: unknown) => {
             if (Array.isArray(arg)) {
                 return Promise.all(arg);
