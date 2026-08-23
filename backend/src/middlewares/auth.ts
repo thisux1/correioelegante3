@@ -61,3 +61,27 @@ export function optionalAuthenticate(
     throw new AppError('Token inválido', 401, 'TOKEN_INVALID');
   }
 }
+
+import { prisma } from '../utils/prisma';
+import { isEmailAdmin } from '../utils/admin';
+
+export async function requireAdmin(
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  if (!req.userId) {
+    throw new AppError('Acesso não autenticado', 401, 'UNAUTHORIZED');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId },
+    select: { email: true },
+  });
+
+  if (!user || !isEmailAdmin(user.email)) {
+    throw new AppError('Acesso restrito a administradores', 403, 'FORBIDDEN_ADMIN_ONLY');
+  }
+
+  next();
+}

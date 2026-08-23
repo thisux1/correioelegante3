@@ -6,6 +6,7 @@ import { AppError } from '../utils/AppError';
 import { LEGAL_DOCUMENT_VERSIONS, type LegalDocumentType } from '../constants/legalDocuments';
 import { CloudinaryMediaProvider } from './cloudinaryMediaProvider';
 import { sendPasswordResetEmail } from './email.service';
+import { isEmailAdmin } from '../utils/admin';
 
 
 const mediaProvider = new CloudinaryMediaProvider();
@@ -56,6 +57,7 @@ export async function registerUser(email: string, password: string, age?: number
         user: {
             id: user.id,
             email: user.email,
+            isAdmin: isEmailAdmin(user.email),
             isSubscribed,
             subscriptionStatus: 'none',
             subscriptionPlan: null,
@@ -90,6 +92,7 @@ export async function loginUser(email: string, password: string) {
         user: {
             id: user.id,
             email: user.email,
+            isAdmin: isEmailAdmin(user.email),
             isSubscribed,
             subscriptionStatus: user.subscriptionStatus,
             subscriptionPlan: user.subscriptionPlan,
@@ -139,6 +142,7 @@ export async function getMe(userId: string) {
 
     return {
         ...user,
+        isAdmin: isEmailAdmin(user.email),
         isSubscribed,
     };
 }
