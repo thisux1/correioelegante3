@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { CreateSupportTicketInput } from '../contracts/contact.contract';
 import { AppError } from '../utils/AppError';
+import { sendTicketConfirmationEmail, sendTicketReplyEmail } from './email.service';
 
 function generateProtocol(): string {
   const randomNum = Math.floor(100000 + Math.random() * 900000);
@@ -33,6 +34,17 @@ export async function createTicket(data: CreateSupportTicketInput, userId?: stri
     },
   });
 
+  // Dispara e-mail de confirmação em background (não bloqueia resposta ao cliente)
+  sendTicketConfirmationEmail({
+    to: ticket.email,
+    recipientName: ticket.name,
+    protocol: ticket.protocol,
+    subject: ticket.subject,
+    message: ticket.message,
+  }).catch((err) => {
+    console.error('[ContactService] Erro ao enviar confirmação de chamado:', err);
+  });
+
   return {
     id: ticket.id,
     protocol: ticket.protocol,
@@ -42,4 +54,148 @@ export async function createTicket(data: CreateSupportTicketInput, userId?: stri
     status: ticket.status,
     createdAt: ticket.createdAt,
   };
+}
+
+export interface ListTicketsFilters {
+  status?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function listTickets(filters: ListTicketsFilters = {}) {
+  const { status, search, limit = 50, offset = 0 } = filters;
+
+  const where: any = {};
+
+  if (status && status !== 'all') {
+    where.status = status;
+  }
+
+  if (search && search.trim()) {
+    const q = search.trim();
+    where.OR = [
+      { protocol: { contains: q, mode: 'insensitive' } },
+      { email: { contains: q, mode: 'insensitive' } },
+      { name: { contains: q, mode: 'insensitive' } },
+      { subject: { contains: q, mode: 'insensitive' } },
+    ];
+  }
+
+  const [total, tickets] = await Promise.all([
+    prisma.supportTicket.count({ where }),
+    prisma.supportTicket.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(limit, 100),
+      skip: offset,
+      include: {
+        replies: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    total,
+    tickets,
+  };
+}
+
+export async function getTicketById(id: string) {
+  const ticket = await prisma.supportTicket.findUnique({
+    where: { id },
+    include: {
+      replies: {
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  });
+
+  if (!ticket) {
+    throw new AppError('Chamado de suporte não encontrado.', 404, 'TICKET_NOT_FOUND');
+  }
+
+  return ticket;
+}
+
+export interface ReplyTicketInput {
+  replyMessage: string;
+  status?: 'open' | 'in_progress' | 'resolved' | 'closed';
+  sentBy?: string;
+}
+
+export async function replyToTicket(ticketId: string, input: ReplyTicketInput) {
+  const ticket = await prisma.supportTicket.findUnique({
+    where: { id: ticketId },
+  });
+
+  if (!ticket) {
+    throw new AppError('Chamado de suporte não encontrado.', 404, 'TICKET_NOT_FOUND');
+  }
+
+  const sanitizedReply = input.replyMessage.replace(/<[^>]*>/g, '').trim();
+  if (!sanitizedReply || sanitizedReply.length < 5) {
+    throw new AppError('A resposta deve ter no mínimo 5 caracteres.', 400, 'INVALID_REPLY');
+  }
+
+  const nextStatus = input.status || 'resolved';
+
+  // Grava resposta e atualiza status atomicamente
+  const [reply, updatedTicket] = await prisma.$transaction([
+    prisma.supportTicketReply.create({
+      data: {
+        ticketId: ticket.id,
+        message: sanitizedReply,
+        sentBy: input.sentBy || 'support',
+      },
+    }),
+    prisma.supportTicket.update({
+      where: { id: ticket.id },
+      data: {
+        status: nextStatus,
+      },
+      include: {
+        replies: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    }),
+  ]);
+
+  // Envia e-mail formatado via Resend
+  const emailResult = await sendTicketReplyEmail({
+    to: ticket.email,
+    recipientName: ticket.name,
+    protocol: ticket.protocol,
+    subject: ticket.subject,
+    originalMessage: ticket.message,
+    replyMessage: sanitizedReply,
+  });
+
+  return {
+    ticket: updatedTicket,
+    reply,
+    emailSent: emailResult.success,
+  };
+}
+
+export async function updateTicketStatus(ticketId: string, status: string) {
+  const validStatuses = ['open', 'in_progress', 'resolved', 'closed'];
+  if (!validStatuses.includes(status)) {
+    throw new AppError('Status de chamado inválido.', 400, 'INVALID_STATUS');
+  }
+
+  const ticket = await prisma.supportTicket.update({
+    where: { id: ticketId },
+    data: { status },
+    include: {
+      replies: {
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  });
+
+  return ticket;
 }
