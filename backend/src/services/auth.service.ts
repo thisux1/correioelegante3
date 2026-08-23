@@ -5,7 +5,7 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '.
 import { AppError } from '../utils/AppError';
 import { LEGAL_DOCUMENT_VERSIONS, type LegalDocumentType } from '../constants/legalDocuments';
 import { CloudinaryMediaProvider } from './cloudinaryMediaProvider';
-import { sendPasswordResetEmail } from './email.service';
+import { sendPasswordResetEmail, sendEmailVerificationEmail } from './email.service';
 import { isEmailAdmin } from '../utils/admin';
 
 
@@ -20,7 +20,7 @@ function getConsentPayload() {
     );
 }
 
-export async function registerUser(email: string, password: string, age?: number, legalAccepted?: boolean) {
+export async function registerUser(email: string, password: string, age?: number, legalAccepted?: boolean, origin?: string) {
     if (age !== undefined && age < 13) {
         throw new AppError('Idade mínima é 13 anos', 400, 'AUTH_UNDERAGE');
     }
@@ -49,8 +49,34 @@ export async function registerUser(email: string, password: string, age?: number
         },
     });
 
-    const accessToken = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    const accessToken = generateAccessToken(user.id, 0);
+    const refreshToken = generateRefreshToken(user.id, 0);
+
+    // E-mail de verificação: token opaco em texto plano no link, SHA-256 no banco (mesmo padrão do reset)
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            emailVerificationToken: verificationTokenHash,
+            emailVerificationExpires: verificationExpiresAt,
+        },
+    });
+
+    const baseUrl = origin || process.env.FRONTEND_URL || 'https://www.correioelegante.studio';
+    const verifyUrl = `${baseUrl}/auth/verify-email?token=${verificationToken}`;
+
+    // Falha no envio não deve quebrar o cadastro
+    try {
+        await sendEmailVerificationEmail({
+            to: user.email,
+            verifyUrl,
+        });
+    } catch (err) {
+        console.error('[AuthService] Falha ao enviar e-mail de verificação:', err);
+    }
 
     const isSubscribed = false;
     return {
@@ -58,6 +84,7 @@ export async function registerUser(email: string, password: string, age?: number
             id: user.id,
             email: user.email,
             isAdmin: isEmailAdmin(user.email),
+            emailVerified: false,
             isSubscribed,
             subscriptionStatus: 'none',
             subscriptionPlan: null,
@@ -71,16 +98,17 @@ export async function registerUser(email: string, password: string, age?: number
 export async function loginUser(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-        throw new AppError('Email nao encontrado. Verifique o endereco ou crie uma conta.', 401, 'AUTH_EMAIL_NOT_FOUND');
+        // Mensagem genérica para evitar enumeração de contas
+        throw new AppError('Email ou senha incorretos.', 401, 'AUTH_INVALID_CREDENTIALS');
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-        throw new AppError('Senha incorreta. Tente novamente.', 401, 'AUTH_INVALID_PASSWORD');
+        throw new AppError('Email ou senha incorretos.', 401, 'AUTH_INVALID_CREDENTIALS');
     }
 
-    const accessToken = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    const accessToken = generateAccessToken(user.id, user.tokenVersion ?? 0);
+    const refreshToken = generateRefreshToken(user.id, user.tokenVersion ?? 0);
 
     const isSubscribed = Boolean(
         user.subscriptionStatus === 'active' &&
@@ -93,6 +121,7 @@ export async function loginUser(email: string, password: string) {
             id: user.id,
             email: user.email,
             isAdmin: isEmailAdmin(user.email),
+            emailVerified: user.emailVerified,
             isSubscribed,
             subscriptionStatus: user.subscriptionStatus,
             subscriptionPlan: user.subscriptionPlan,
@@ -111,8 +140,14 @@ export async function refreshTokens(token: string) {
         throw new AppError('Usuário não encontrado', 401);
     }
 
-    const accessToken = generateAccessToken(user.id);
-    const newRefreshToken = generateRefreshToken(user.id);
+    // Revogação: tokens emitidos antes de uma troca de senha são rejeitados
+    const currentTokenVersion = user.tokenVersion ?? 0;
+    if (payload.tv !== currentTokenVersion) {
+        throw new AppError('Sessão expirada. Faça login novamente.', 401, 'TOKEN_REVOKED');
+    }
+
+    const accessToken = generateAccessToken(user.id, currentTokenVersion);
+    const newRefreshToken = generateRefreshToken(user.id, currentTokenVersion);
 
     return { accessToken, refreshToken: newRefreshToken };
 }
@@ -124,6 +159,7 @@ export async function getMe(userId: string) {
             id: true,
             email: true,
             createdAt: true,
+            emailVerified: true,
             subscriptionStatus: true,
             subscriptionPlan: true,
             subscriptionExpiresAt: true,
@@ -163,9 +199,13 @@ export async function changePassword(userId: string, oldPassword: string, newPas
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
+    // Incrementa tokenVersion para revogar refresh tokens emitidos antes da troca
     await prisma.user.update({
         where: { id: userId },
-        data: { password: hashedPassword },
+        data: {
+            password: hashedPassword,
+            tokenVersion: (user.tokenVersion ?? 0) + 1,
+        },
     });
 }
 
@@ -290,6 +330,7 @@ export async function resetPassword(token: string, newPassword: string) {
 
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
+    const nextTokenVersion = (user.tokenVersion ?? 0) + 1;
 
     await prisma.user.update({
         where: { id: user.id },
@@ -297,11 +338,12 @@ export async function resetPassword(token: string, newPassword: string) {
             password: hashedPassword,
             resetPasswordToken: null,
             resetPasswordExpires: null,
+            tokenVersion: nextTokenVersion,
         },
     });
 
-    const accessToken = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    const accessToken = generateAccessToken(user.id, nextTokenVersion);
+    const refreshToken = generateRefreshToken(user.id, nextTokenVersion);
 
     const isSubscribed = Boolean(
         user.subscriptionStatus === 'active' &&
@@ -321,5 +363,80 @@ export async function resetPassword(token: string, newPassword: string) {
         accessToken,
         refreshToken,
     };
+}
+
+export async function verifyEmail(token: string) {
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+    const user = await prisma.user.findFirst({
+        where: {
+            emailVerificationToken: tokenHash,
+        },
+    });
+
+    // Idempotente: se o e-mail já foi verificado, retorna sucesso sem alterações
+    if (user?.emailVerified) {
+        return {
+            message: 'Este e-mail já foi verificado anteriormente.',
+            emailVerified: true,
+        };
+    }
+
+    if (!user || !user.emailVerificationExpires || new Date(user.emailVerificationExpires).getTime() < Date.now()) {
+        throw new AppError('Link de verificação inválido ou expirado. Solicite um novo e-mail de verificação.', 400, 'AUTH_INVALID_VERIFICATION_TOKEN');
+    }
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            emailVerified: true,
+            emailVerificationToken: null,
+            emailVerificationExpires: null,
+        },
+    });
+
+    return {
+        message: 'E-mail verificado com sucesso.',
+        emailVerified: true,
+    };
+}
+
+export async function resendVerificationEmail(userId: string, origin?: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+        throw new AppError('Usuário não encontrado', 404);
+    }
+
+    if (user.emailVerified) {
+        return { message: 'Seu e-mail já foi verificado. Não é necessário verificar novamente.' };
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            emailVerificationToken: verificationTokenHash,
+            emailVerificationExpires: verificationExpiresAt,
+        },
+    });
+
+    const baseUrl = origin || process.env.FRONTEND_URL || 'https://www.correioelegante.studio';
+    const verifyUrl = `${baseUrl}/auth/verify-email?token=${verificationToken}`;
+
+    // Falha no envio não deve propagar erro de servidor para o usuário
+    try {
+        await sendEmailVerificationEmail({
+            to: user.email,
+            verifyUrl,
+        });
+    } catch (err) {
+        console.error('[AuthService] Falha ao reenviar e-mail de verificação:', err);
+    }
+
+    return { message: 'Se este e-mail estiver cadastrado, você receberá um novo link de verificação.' };
 }
 

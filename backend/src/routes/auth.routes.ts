@@ -11,6 +11,8 @@ import {
   exportAccountData,
   forgotPassword,
   resetPassword,
+  verifyEmail,
+  resendVerification,
 } from '../controllers/auth.controller';
 import { validate } from '../middlewares/validate';
 import { authenticate } from '../middlewares/auth';
@@ -20,6 +22,7 @@ import {
   changePasswordSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } from '../utils/validation';
 
 const router = Router();
@@ -60,10 +63,30 @@ const resetPasswordLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
+const verifyEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Muitas tentativas de verificação de e-mail. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+const resendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { error: 'Muitas solicitações de reenvio de verificação. Tente novamente em 1 hora.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
 router.post('/register', registerLimiter, validate(registerSchema), register);
 router.post('/login', loginLimiter, validate(loginSchema), login);
 router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), forgotPassword);
 router.post('/reset-password', resetPasswordLimiter, validate(resetPasswordSchema), resetPassword);
+router.post('/verify-email', verifyEmailLimiter, validate(verifyEmailSchema), verifyEmail);
+router.post('/resend-verification', authenticate, resendVerificationLimiter, resendVerification);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', authenticate, me);

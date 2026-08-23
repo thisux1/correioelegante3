@@ -26,6 +26,10 @@ model User {
   supportTickets        SupportTicket[]
   resetPasswordToken    String?
   resetPasswordExpires  DateTime?
+  tokenVersion          Int?            // Incrementada para revogar refresh tokens emitidos antes de uma troca de senha
+  emailVerified         Boolean         @default(false)
+  emailVerificationToken String?        // SHA-256 do token enviado por e-mail
+  emailVerificationExpires DateTime?
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 }
@@ -203,4 +207,14 @@ model SupportTicketReply {
   createdAt  DateTime      @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+model PageView {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  resourceId String   // ID da mensagem ou página visualizada
+  viewerHash String   // SHA-256(ip+ua+dia) — pseudonimizado conforme LGPD
+  createdAt  DateTime @default(now())
+
+  @@index([resourceId, createdAt])
+  @@index([createdAt])
 }
