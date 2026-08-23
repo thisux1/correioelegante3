@@ -19,7 +19,6 @@ import {
   Eye,
   Pencil,
   FileText,
-  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -502,7 +501,7 @@ export function Profile() {
                 </p>
                 <Link to="/create">
                   <Button size="sm" className="font-semibold shadow-xs">
-                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    <Heart className="w-4 h-4 mr-1.5 fill-white" />
                     Criar minha primeira carta
                   </Button>
                 </Link>
@@ -606,23 +605,23 @@ export function Profile() {
                       )}
 
                       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Seção esquerda: Envelope Wax Seal / Pen Icon + Título + Metadados */}
+                        {/* Seção esquerda: Ícone da Carta / Rascunho + Título + Metadados */}
                         <div className="flex items-center gap-3.5 min-w-0 flex-1">
                           {isPublished ? (
-                            /* Selo de Cera (Wax Seal) em relevo 3D rubi com coração */
+                            /* Ícone minimalista de Carta Publicada */
                             <div
-                              className="w-11 h-11 rounded-full bg-gradient-to-br from-rose-600 via-rose-700 to-rose-950 text-white shadow-md ring-2 ring-primary/20 border border-white/25 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-                              title="Carta Selada"
+                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-rose-50 border border-rose-200/80 text-[#e11d48] flex items-center justify-center shrink-0 transition-all duration-200 group-hover:bg-rose-100 group-hover:scale-105 shadow-xs"
+                              title="Carta Publicada"
                             >
-                              <Heart className="w-5 h-5 fill-white text-white drop-shadow-xs" />
+                              <Mail className="w-5 h-5 text-[#e11d48]" strokeWidth={1.75} />
                             </div>
                           ) : (
-                            /* Ícone de Pena / Carta em Redação */
+                            /* Ícone minimalista de Rascunho */
                             <div
-                              className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-700 border border-amber-500/30 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0 transition-all duration-200 group-hover:bg-amber-100 group-hover:scale-105 shadow-xs"
                               title="Rascunho de Carta"
                             >
-                              <Pencil className="w-5 h-5" />
+                              <FileText className="w-5 h-5 text-amber-700" strokeWidth={1.75} />
                             </div>
                           )}
 
