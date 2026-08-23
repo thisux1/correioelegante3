@@ -507,7 +507,7 @@ export function Profile() {
                 </Link>
               </Card>
             ) : (
-              <div className="space-y-3.5">
+              <div className="space-y-4">
                 {displayedPages.map((page) => {
                   const isPublished = page.status === 'published'
                   const publicHref = resolvePublicPageHref(page)
@@ -516,125 +516,73 @@ export function Profile() {
                   return (
                     <div
                       key={page.id}
-                      className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-md ${
+                      className={`group relative overflow-hidden rounded-3xl border-2 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 ${
                         isPublished
-                          ? 'bg-surface border-primary/20 hover:border-primary/40'
-                          : 'bg-surface border-amber-500/30 hover:border-amber-500/50'
-                      } p-4 sm:p-5`}
+                          ? 'bg-white border-pink-300/90 shadow-md shadow-rose-950/5'
+                          : 'bg-[#fffdfa] border-dashed border-amber-400/90 shadow-md shadow-amber-950/5'
+                      } p-5 sm:p-6`}
                     >
-                      {/* Geometria de envelope/carta física em baixa opacidade */}
-                      {isPublished ? (
-                        <>
-                          {/* Dobras clássicas do envelope fechado em baixa opacidade */}
-                          <svg
-                            className="pointer-events-none absolute inset-0 h-full w-full opacity-20 text-primary"
-                            xmlns="http://www.w3.org/2000/svg"
-                            preserveAspectRatio="none"
-                            viewBox="0 0 100 100"
-                            aria-hidden="true"
-                          >
-                            {/* Aba triangular superior fechando no centro */}
-                            <path
-                              d="M0,0 L50,55 L100,0"
-                              fill="currentColor"
-                              fillOpacity="0.12"
-                              stroke="currentColor"
-                              strokeWidth="0.8"
-                              strokeDasharray="none"
-                            />
-                            {/* Dobras inferiores do envelope */}
-                            <path
-                              d="M0,100 L50,55 L100,100"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="0.5"
-                              strokeOpacity="0.6"
-                            />
-                            {/* Linha divisória lateral */}
-                            <path
-                              d="M0,0 L0,100 M100,0 L100,100"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="0.5"
-                              strokeOpacity="0.4"
-                            />
-                          </svg>
+                      {/* Linha superior de acabamento postal */}
+                      <div
+                        className={`absolute top-0 inset-x-0 h-1.5 ${
+                          isPublished
+                            ? 'bg-gradient-to-r from-[#e11d48] via-rose-300 to-[#e11d48]'
+                            : 'bg-gradient-to-r from-amber-400 via-amber-200 to-amber-400'
+                        }`}
+                        aria-hidden="true"
+                      />
 
-                          {/* Marca d'água sutil de carimbo postal vintage no fundo direito */}
-                          <div
-                            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none opacity-[0.06]"
-                            aria-hidden="true"
-                          >
-                            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary rotate-12">
-                              <div className="w-14 h-14 rounded-full border-2 border-dashed border-primary flex items-center justify-center text-[9px] text-center font-bold leading-tight">
-                                CORREIO<br />ELEGANTE
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          {/* Textura de papel de carta pautado em baixa opacidade para rascunho */}
-                          <div
-                            className="pointer-events-none absolute inset-0 opacity-15"
-                            style={{
-                              backgroundImage:
-                                'repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(217, 119, 6, 0.4) 20px)',
-                            }}
-                            aria-hidden="true"
-                          />
+                      {/* Selo Postal no Canto Superior Direito */}
+                      <div
+                        className={`absolute top-4 right-4 hidden sm:flex items-center gap-1.5 rounded-lg border border-dashed px-2.5 py-1 select-none ${
+                          isPublished
+                            ? 'border-rose-300 bg-rose-50/90 text-[#e11d48]'
+                            : 'border-amber-300 bg-amber-50/90 text-amber-800'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-wider">
+                          {isPublished ? 'SELADA • PRONTA' : 'EM REDAÇÃO'}
+                        </span>
+                      </div>
 
-                          {/* Aba aberta do envelope despontando no topo em baixa opacidade */}
-                          <svg
-                            className="pointer-events-none absolute top-0 inset-x-0 w-full h-4 opacity-25 text-amber-600"
-                            xmlns="http://www.w3.org/2000/svg"
-                            preserveAspectRatio="none"
-                            viewBox="0 0 100 20"
-                            aria-hidden="true"
-                          >
-                            <path
-                              d="M0,20 L50,2 L100,20"
-                              fill="currentColor"
-                              fillOpacity="0.1"
-                              stroke="currentColor"
-                              strokeWidth="0.8"
-                              strokeDasharray="2,2"
-                            />
-                          </svg>
-                        </>
-                      )}
-
-                      <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Seção esquerda: Ícone da Carta / Rascunho + Título + Metadados */}
-                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-1">
+                        {/* Seção esquerda: Ícone de Carta + Destinatário/Título + Metadados */}
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
                           {isPublished ? (
                             /* Ícone minimalista de Carta Publicada */
                             <div
-                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-rose-50 border border-rose-200/80 text-[#e11d48] flex items-center justify-center shrink-0 transition-all duration-200 group-hover:bg-rose-100 group-hover:scale-105 shadow-xs"
+                              className="w-12 h-12 rounded-2xl bg-rose-50 border-2 border-rose-200/90 text-[#e11d48] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105"
                               title="Carta Publicada"
                             >
-                              <Mail className="w-5 h-5 text-[#e11d48]" strokeWidth={1.75} />
+                              <Mail className="w-6 h-6 text-[#e11d48]" strokeWidth={1.75} />
                             </div>
                           ) : (
                             /* Ícone minimalista de Rascunho */
                             <div
-                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center shrink-0 transition-all duration-200 group-hover:bg-amber-100 group-hover:scale-105 shadow-xs"
+                              className="w-12 h-12 rounded-2xl bg-amber-50 border-2 border-amber-200/90 text-amber-700 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105"
                               title="Rascunho de Carta"
                             >
-                              <FileText className="w-5 h-5 text-amber-700" strokeWidth={1.75} />
+                              <FileText className="w-6 h-6 text-amber-700" strokeWidth={1.75} />
                             </div>
                           )}
 
                           <div className="min-w-0 flex-1 space-y-1">
-                            <h4 className="font-display font-semibold text-text text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#701a35]/60 font-mono">
+                                {isPublished ? 'Destinatário' : 'Rascunho'}
+                              </span>
+                            </div>
+
+                            <h4 className="font-display font-bold text-[#4c0519] text-base sm:text-xl truncate group-hover:text-[#e11d48] transition-colors">
                               {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
                             </h4>
 
-                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-text-muted">
+                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-[#701a35]/80 font-medium">
                               <span>
                                 {isPublished && page.publishedAt
-                                  ? `Publicada em ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
-                                  : `Salvo em ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
+                                  ? `Expedição: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
+                                  : `Salvo: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
                               </span>
                               <span>•</span>
                               <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
@@ -649,7 +597,7 @@ export function Profile() {
                         </div>
 
                         {/* Seção direita: Ações diretas e acessíveis */}
-                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0">
+                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0 sm:pt-4">
                           {isPublished && publicHref ? (
                             <>
                               <button
