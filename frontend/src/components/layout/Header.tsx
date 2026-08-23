@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
-import { Menu, X, MailOpen } from 'lucide-react'
+import { Menu, X, MailOpen, Settings as SettingsIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { Container } from '@/components/layout/Container'
 import { BrandLogo } from '@/components/ui/BrandLogo'
@@ -166,12 +166,16 @@ export function Header() {
               }))}
             </nav>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {isAuthenticated ? (
                 <>
                   {renderNavLink({
                     to: '/profile',
-                    className: 'flex items-center gap-1.5 px-4 py-2 rounded-xl border border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-xs sm:text-sm font-semibold shadow-2xs',
+                    className: `flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors text-xs sm:text-sm font-semibold ${
+                      location.pathname === '/profile'
+                        ? 'bg-primary text-white shadow-md shadow-primary/25'
+                        : 'border border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 shadow-2xs'
+                    }`,
                     children: (
                       <>
                         <MailOpen size={16} />
@@ -181,6 +185,21 @@ export function Header() {
                             PRO
                           </span>
                         ) : null}
+                      </>
+                    ),
+                  })}
+
+                  {renderNavLink({
+                    to: '/settings',
+                    className: `flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors text-xs sm:text-sm font-semibold ${
+                      location.pathname === '/settings'
+                        ? 'bg-primary text-white shadow-md shadow-primary/25'
+                        : 'border border-border bg-white text-text-light hover:text-text hover:bg-surface-raised shadow-2xs'
+                    }`,
+                    children: (
+                      <>
+                        <SettingsIcon size={16} />
+                        Configurações
                       </>
                     ),
                   })}
@@ -298,30 +317,53 @@ export function Header() {
                       }`,
                   children: link.label,
                 }))}
-                {isAuthenticated && (
+                {isAuthenticated ? (
+                  <>
+                    {renderNavLink({
+                      to: '/profile',
+                      onClick: () => setIsMenuOpen(false),
+                      className: `block w-full rounded-2xl px-4 py-3 text-center text-base font-bold transition-colors ${
+                        location.pathname === '/profile'
+                          ? 'bg-primary text-white shadow-md'
+                          : 'border border-primary/25 bg-primary/10 text-primary hover:bg-primary/20'
+                      }`,
+                      children: (
+                        <span className="flex items-center justify-center gap-2">
+                          <MailOpen size={18} />
+                          Minhas Cartas
+                          {(user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
+                            <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">
+                              PRO
+                            </span>
+                          ) : null}
+                        </span>
+                      ),
+                    })}
+
+                    {renderNavLink({
+                      to: '/settings',
+                      onClick: () => setIsMenuOpen(false),
+                      className: `block w-full rounded-2xl px-4 py-3 text-center text-base font-bold transition-colors ${
+                        location.pathname === '/settings'
+                          ? 'bg-primary text-white shadow-md'
+                          : 'border border-border bg-white text-text hover:bg-surface-raised'
+                      }`,
+                      children: (
+                        <span className="flex items-center justify-center gap-2">
+                          <SettingsIcon size={18} />
+                          Configurações da Conta
+                        </span>
+                      ),
+                    })}
+                  </>
+                ) : (
                   renderNavLink({
-                    to: '/profile',
+                    to: '/auth',
                     onClick: () => setIsMenuOpen(false),
-                    className: 'block w-full rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-center text-base font-bold text-primary transition-colors hover:bg-primary/20',
-                    children: (
-                      <span className="flex items-center justify-center gap-2">
-                        <MailOpen size={18} />
-                        Minhas Cartas
-                        {(user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
-                          <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-xs">
-                            PRO
-                          </span>
-                        ) : null}
-                      </span>
-                    ),
+                    className: 'mt-2 block w-full rounded-2xl px-4 py-3.5 text-center text-base font-semibold bg-primary text-white',
+                    children: 'Entrar',
                   })
                 )}
-                {renderNavLink({
-                  to: isAuthenticated ? '/profile' : '/auth',
-                  onClick: () => setIsMenuOpen(false),
-                  className: 'mt-2 block w-full rounded-2xl px-4 py-3.5 text-center text-base font-semibold bg-primary text-white',
-                  children: isAuthenticated ? 'Perfil' : 'Entrar',
-                })}
               </nav>
             </div>
           </motion.div>

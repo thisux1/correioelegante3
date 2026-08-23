@@ -227,7 +227,7 @@ describe('ShareLetterModal', () => {
     })
 
     expect(onClose).toHaveBeenCalledTimes(1)
-    expect(mockNavigate).toHaveBeenCalledWith('/profile?tab=messages')
+    expect(mockNavigate).toHaveBeenCalledWith('/profile')
   })
 
   it('fecha o modal ao clicar no botão de fechar', async () => {

@@ -832,7 +832,7 @@ export function Editor() {
           {/* Ações Imediatas no Topo */}
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              to="/profile?tab=messages"
+              to="/profile"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs sm:text-sm font-semibold text-text hover:bg-surface-raised hover:border-primary/30 transition-all shadow-xs"
             >
               <MailOpen size={16} className="text-primary" />

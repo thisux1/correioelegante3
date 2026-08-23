@@ -1,17 +1,10 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Heart,
-  Mail,
   Trash2,
-  LogOut,
-
-  Settings,
-  MessageCircle,
-  AlertTriangle,
-  Key,
-  ChevronDown,
+  Settings as SettingsIcon,
   Zap,
   Infinity as InfinityIcon,
   Copy,
@@ -23,39 +16,26 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { InlineAlert } from '@/components/ui/InlineAlert'
-import { SectionCard } from '@/components/ui/SectionCard'
-import { SettingRow } from '@/components/ui/SettingRow'
 import { ProfileCardSkeleton } from '@/components/ui/ProfileCardSkeleton'
 import { useAuthStore } from '@/store/authStore'
-import { authService } from '@/services/authService'
 import { pageService, type PageSummary } from '@/services/pageService'
 import { paymentService, type SubscriptionStatusResponse } from '@/services/paymentService'
 import { Container } from '@/components/layout/Container'
 
 export function Profile() {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const { user, isAuthenticated, clearAuth } = useAuthStore()
+  const [searchParams] = useSearchParams()
+  const { user, isAuthenticated } = useAuthStore()
 
-  const tabFromQuery = searchParams.get('tab')
-  const [activeTab, setActiveTab] = useState<'messages' | 'settings'>(
-    tabFromQuery === 'settings' ? 'settings' : 'messages'
-  )
-
+  // Se vier com ?tab=settings, redireciona para a página dedicada de configurações
   useEffect(() => {
-    const tab = searchParams.get('tab')
-    if (tab === 'settings' || tab === 'messages') {
-      setActiveTab(tab)
+    if (searchParams.get('tab') === 'settings') {
+      navigate('/settings', { replace: true })
     }
-  }, [searchParams])
+  }, [searchParams, navigate])
 
-  const handleTabChange = (tab: 'messages' | 'settings') => {
-    setActiveTab(tab)
-    setSearchParams({ tab }, { replace: true })
-  }
   const [messageFilter, setMessageFilter] = useState<'all' | 'published' | 'drafts'>('all')
   const [editorPages, setEditorPages] = useState<PageSummary[]>([])
   const [isLoadingEditorPages, setIsLoadingEditorPages] = useState(false)
@@ -64,24 +44,10 @@ export function Profile() {
 
   const [subscription, setSubscription] = useState<SubscriptionStatusResponse | null>(null)
 
-  // Password Change State
-  const [isPasswordFormOpen, setIsPasswordFormOpen] = useState(false)
-  const [oldPassword, setOldPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordError, setPasswordError] = useState('')
-  const [passwordSuccess, setPasswordSuccess] = useState('')
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
-
   // Delete Page State
   const [pageToDelete, setPageToDelete] = useState<PageSummary | null>(null)
   const [isDeletingPage, setIsDeletingPage] = useState(false)
   const [deletePageError, setDeletePageError] = useState('')
-
-  // Delete Account State
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
-  const [deleteAccountError, setDeleteAccountError] = useState('')
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -127,44 +93,6 @@ export function Profile() {
     return () => abortController.abort()
   }, [isAuthenticated, navigate])
 
-  async function handleLogout() {
-    try {
-      await authService.logout()
-    } catch { /* ignore */ }
-    clearAuth()
-    navigate('/')
-  }
-
-  async function handleChangePassword(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setPasswordError('')
-    setPasswordSuccess('')
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError('As senhas não coincidem.')
-      return
-    }
-
-    if (newPassword.length < 6) {
-      setPasswordError('A nova senha deve ter no mínimo 6 caracteres.')
-      return
-    }
-
-    setIsChangingPassword(true)
-    try {
-      await authService.changePassword({ oldPassword, newPassword })
-      setPasswordSuccess('Senha alterada com sucesso!')
-      setOldPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: string } } }
-      setPasswordError(axiosErr.response?.data?.error || 'Erro ao alterar senha. Verifique sua senha atual.')
-    } finally {
-      setIsChangingPassword(false)
-    }
-  }
-
   async function handleDeletePage() {
     if (!pageToDelete) return
     setIsDeletingPage(true)
@@ -178,20 +106,6 @@ export function Profile() {
       setDeletePageError(axiosErr.response?.data?.error || 'Erro ao excluir carta. Tente novamente.')
     } finally {
       setIsDeletingPage(false)
-    }
-  }
-
-  async function handleDeleteAccount() {
-    setIsDeletingAccount(true)
-    setDeleteAccountError('')
-    try {
-      await authService.deleteAccount()
-      clearAuth()
-      navigate('/')
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: string } } }
-      setDeleteAccountError(axiosErr.response?.data?.error || 'Erro ao excluir conta. Tente novamente mais tarde.')
-      setIsDeletingAccount(false)
     }
   }
 
@@ -211,7 +125,6 @@ export function Profile() {
     })
   }
 
-  const tabButtonBase = 'flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30'
   const editorDraftPages = editorPages.filter((page) => page.status !== 'published')
   const editorPublishedPages = editorPages.filter((page) => page.status === 'published')
 
@@ -330,14 +243,32 @@ export function Profile() {
           transition={{ duration: 0.45, ease: [0.19, 1, 0.22, 1] }}
           className="mb-8 space-y-6 sm:mb-10"
         >
-          <header className="space-y-2">
-            <h1 className="font-display text-4xl font-bold text-text sm:text-5xl">
-              Meu Perfil
-            </h1>
-            <p className="max-w-2xl text-sm leading-relaxed text-text-light sm:text-base">
-              Crie, envie e gerencie a magia dos seus correios elegantes.
-            </p>
-          </header>
+          {/* Header Superior com Título e Ações Rápidas */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <header className="space-y-1.5">
+              <h1 className="font-display text-4xl font-bold text-text sm:text-5xl">
+                Minhas Cartas
+              </h1>
+              <p className="max-w-2xl text-sm leading-relaxed text-text-light sm:text-base">
+                Crie, envie e gerencie a magia dos seus correios elegantes.
+              </p>
+            </header>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              <Link to="/settings">
+                <Button variant="outline" size="sm" className="font-semibold text-xs sm:text-sm">
+                  <SettingsIcon size={16} className="mr-1.5 text-text-light" />
+                  Configurações
+                </Button>
+              </Link>
+              <Link to="/create">
+                <Button size="sm" className="font-semibold text-xs sm:text-sm shadow-xs">
+                  <Heart size={15} className="mr-1.5 fill-white" />
+                  Nova Carta
+                </Button>
+              </Link>
+            </div>
+          </div>
 
           {/* Banner de Assinatura */}
           {(subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
@@ -391,605 +322,322 @@ export function Profile() {
               </div>
             </div>
           )}
-
-          <div className="glass rounded-2xl p-2">
-            <nav className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="Seções do perfil">
-              <button
-                type="button"
-                onClick={() => handleTabChange('messages')}
-                className={`${tabButtonBase} ${activeTab === 'messages'
-                  ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                  : 'text-text-light hover:bg-white/60 hover:text-text'
-                  }`}
-                aria-current={activeTab === 'messages' ? 'page' : undefined}
-              >
-                <MessageCircle size={18} />
-                Minhas Cartas ({editorPages.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange('settings')}
-                className={`${tabButtonBase} ${activeTab === 'settings'
-                  ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                  : 'text-text-light hover:bg-white/60 hover:text-text'
-                  }`}
-                aria-current={activeTab === 'settings' ? 'page' : undefined}
-              >
-                <Settings size={18} />
-                Configurações da Conta
-              </button>
-            </nav>
-          </div>
         </motion.div>
 
-        {activeTab === 'messages' ? (
-          <section className="space-y-6" aria-label="Mensagens">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="font-display text-2xl font-semibold text-text sm:text-3xl">
-                  Cartas Criadas
-                </h2>
-                <p className="text-xs sm:text-sm text-text-light mt-0.5">
-                  Gerencie seus correios elegantes publicados e rascunhos em andamento.
-                </p>
+        <section className="space-y-6" aria-label="Minhas Cartas">
+          {/* Segmented Filter Control */}
+          <div className="flex items-center gap-1.5 p-1 bg-surface-raised/80 rounded-xl border border-border/80 w-fit">
+            <button
+              type="button"
+              onClick={() => setMessageFilter('all')}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                messageFilter === 'all'
+                  ? 'bg-white text-[#4c0519] shadow-xs'
+                  : 'text-text-light hover:text-text'
+              }`}
+            >
+              Todas ({editorPages.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMessageFilter('published')}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                messageFilter === 'published'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-text-light hover:text-text'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              Publicadas ({editorPublishedPages.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMessageFilter('drafts')}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                messageFilter === 'drafts'
+                  ? 'bg-white text-amber-700 shadow-xs'
+                  : 'text-text-light hover:text-text'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              Rascunhos ({editorDraftPages.length})
+            </button>
+          </div>
+
+          {isLoadingEditorPages ? (
+            <ProfileCardSkeleton count={3} />
+          ) : editorPagesError ? (
+            <InlineAlert tone="danger">{editorPagesError}</InlineAlert>
+          ) : displayedPages.length === 0 ? (
+            <Card glass className="py-12 text-center sm:py-16">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-7 h-7" />
               </div>
-              <Link to="/create" className="w-full sm:w-auto">
-                <Button size="sm" className="w-full sm:w-auto font-semibold">
-                  <Heart size={14} />
-                  Criar Nova Carta
+              <h3 className="font-display text-lg font-bold text-text mb-1">
+                {messageFilter === 'published'
+                  ? 'Nenhuma carta publicada ainda'
+                  : messageFilter === 'drafts'
+                    ? 'Nenhum rascunho em andamento'
+                    : 'Você ainda não criou nenhuma carta'}
+              </h3>
+              <p className="text-xs sm:text-sm text-text-light max-w-sm mx-auto mb-5">
+                Surpreenda quem você ama com um correio elegante digital emocionante e personalizado.
+              </p>
+              <Link to="/create">
+                <Button size="sm" className="font-semibold shadow-xs">
+                  <Heart className="w-4 h-4 mr-1.5 fill-white" />
+                  Criar minha primeira carta
                 </Button>
               </Link>
-            </div>
+            </Card>
+          ) : (
+            <div className="space-y-5">
+              {displayedPages.map((page) => {
+                const isPublished = page.status === 'published'
+                const publicHref = resolvePublicPageHref(page)
+                const isCopied = copiedPageId === page.id
 
-            {/* Segmented Filter Pills */}
-            <div className="flex items-center gap-1.5 p-1 bg-surface-raised/80 rounded-xl border border-border/80 w-fit">
-              <button
-                type="button"
-                onClick={() => setMessageFilter('all')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                  messageFilter === 'all'
-                    ? 'bg-white text-text shadow-xs'
-                    : 'text-text-light hover:text-text'
-                }`}
-              >
-                Todas ({editorPages.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setMessageFilter('published')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
-                  messageFilter === 'published'
-                    ? 'bg-white text-emerald-700 shadow-xs'
-                    : 'text-text-light hover:text-text'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                Publicadas ({editorPublishedPages.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setMessageFilter('drafts')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
-                  messageFilter === 'drafts'
-                    ? 'bg-white text-amber-700 shadow-xs'
-                    : 'text-text-light hover:text-text'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
-                Rascunhos ({editorDraftPages.length})
-              </button>
-            </div>
-
-            {isLoadingEditorPages ? (
-              <ProfileCardSkeleton count={3} />
-            ) : editorPagesError ? (
-              <InlineAlert tone="danger">{editorPagesError}</InlineAlert>
-            ) : displayedPages.length === 0 ? (
-              <Card glass className="py-12 text-center sm:py-16">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
-                  <FileText className="w-7 h-7" />
-                </div>
-                <h3 className="font-display text-lg font-bold text-text mb-1">
-                  {messageFilter === 'published'
-                    ? 'Nenhuma carta publicada ainda'
-                    : messageFilter === 'drafts'
-                      ? 'Nenhum rascunho em andamento'
-                      : 'Você ainda não criou nenhuma carta'}
-                </h3>
-                <p className="text-xs sm:text-sm text-text-light max-w-sm mx-auto mb-5">
-                  Surpreenda quem você ama com um correio elegante digital emocionante e personalizado.
-                </p>
-                <Link to="/create">
-                  <Button size="sm" className="font-semibold shadow-xs">
-                    <Heart className="w-4 h-4 mr-1.5 fill-white" />
-                    Criar minha primeira carta
-                  </Button>
-                </Link>
-              </Card>
-            ) : (
-              <div className="space-y-5">
-                {displayedPages.map((page) => {
-                  const isPublished = page.status === 'published'
-                  const publicHref = resolvePublicPageHref(page)
-                  const isCopied = copiedPageId === page.id
-
-                  return (
-                    <div
-                      key={page.id}
-                      className={`group relative overflow-hidden rounded-3xl border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
-                        isPublished
-                          ? 'bg-white border-rose-300 shadow-lg shadow-rose-950/5'
-                          : 'bg-[#fffdfa] border-dashed border-amber-400 shadow-md shadow-amber-950/5'
-                      }`}
-                    >
-                      {/* Aba Superior do Envelope com Chanfro em Formato de V */}
-                      <div className="relative w-full overflow-visible">
-                        {/* Fundo da aba com o chanfro em V */}
-                        <div
-                          className={`relative w-full pt-3 px-5 sm:px-7 pb-6 ${
-                            isPublished
-                              ? 'bg-gradient-to-b from-[#fff0f4] via-[#ffe4ec] to-[#fecdd3]/70'
-                              : 'bg-gradient-to-b from-[#fff9ec] via-[#fef3c7] to-[#fde68a]/60'
-                          }`}
-                          style={{
-                            clipPath: 'polygon(0% 0%, 100% 0%, 100% calc(100% - 16px), 50% 100%, 0% calc(100% - 16px))',
-                          }}
-                        >
-                          <div className="flex items-center justify-between pb-2">
-                            {/* Carimbo Postal de Registro / Linha Aérea */}
-                            <div className="flex items-center gap-2">
-                              <div className={`h-2.5 w-2.5 rounded-full ${isPublished ? 'bg-[#e11d48]' : 'bg-amber-500'}`} />
-                              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#701a35]/80">
-                                {isPublished ? 'CORREIO REGISTRADO' : 'RASCUNHO EM ANDAMENTO'}
-                              </span>
-                            </div>
-
-                            {/* Selo Postal no Canto Superior Direito (Sempre Visível) */}
-                            <div
-                              className={`flex items-center gap-1.5 rounded-md border-2 border-dashed px-2.5 py-1 shadow-xs select-none ${
-                                isPublished
-                                  ? 'border-rose-400 bg-white text-[#e11d48]'
-                                  : 'border-amber-400 bg-white text-amber-800'
-                              }`}
-                              title="Selo Postal"
-                            >
-                              <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider">
-                                {isPublished ? 'SELO POSTAL' : 'NÃO SELADO'}
-                              </span>
-                              <span className="text-[10px] opacity-60 font-serif">≈≈</span>
-                            </div>
+                return (
+                  <div
+                    key={page.id}
+                    className={`group relative overflow-hidden rounded-3xl border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+                      isPublished
+                        ? 'bg-white border-rose-300 shadow-lg shadow-rose-950/5'
+                        : 'bg-[#fffdfa] border-dashed border-amber-400 shadow-md shadow-amber-950/5'
+                    }`}
+                  >
+                    {/* Aba Superior do Envelope com Chanfro em Formato de V */}
+                    <div className="relative w-full overflow-visible">
+                      {/* Fundo da aba com o chanfro em V */}
+                      <div
+                        className={`relative w-full pt-3 px-5 sm:px-7 pb-6 ${
+                          isPublished
+                            ? 'bg-gradient-to-b from-[#fff0f4] via-[#ffe4ec] to-[#fecdd3]/70'
+                            : 'bg-gradient-to-b from-[#fff9ec] via-[#fef3c7] to-[#fde68a]/60'
+                        }`}
+                        style={{
+                          clipPath: 'polygon(0% 0%, 100% 0%, 100% calc(100% - 16px), 50% 100%, 0% calc(100% - 16px))',
+                        }}
+                      >
+                        <div className="flex items-center justify-between pb-2">
+                          {/* Carimbo Postal de Registro / Linha Aérea */}
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2.5 w-2.5 rounded-full ${isPublished ? 'bg-[#e11d48]' : 'bg-amber-500'}`} />
+                            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#701a35]/80">
+                              {isPublished ? 'CORREIO REGISTRADO' : 'RASCUNHO EM ANDAMENTO'}
+                            </span>
                           </div>
-                        </div>
 
-                        {/* Linha de borda do chanfro em V */}
-                        <svg
-                          className="pointer-events-none absolute bottom-0 inset-x-0 w-full h-4"
-                          viewBox="0 0 100 16"
-                          preserveAspectRatio="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M0,0 L50,16 L100,0"
-                            fill="none"
-                            stroke={isPublished ? '#fda4af' : '#fbbf24'}
-                            strokeWidth="1.5"
-                          />
-                        </svg>
-
-                        {/* Lacre de Cera / Wax Seal Exatamente na Ponta do V */}
-                        <div className="absolute left-1/2 -bottom-5 -translate-x-1/2 z-20 pointer-events-none">
-                          {isPublished ? (
-                            <div
-                              className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 via-[#e11d48] to-[#9f1239] text-white shadow-lg border-2 border-white ring-2 ring-rose-400/40 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
-                              title="Lacre de Cera Fechado"
-                            >
-                              <Heart className="w-4.5 h-4.5 fill-white text-white drop-shadow-xs" />
-                            </div>
-                          ) : (
-                            <div
-                              className="w-10 h-10 rounded-full bg-amber-100 text-amber-800 border-2 border-amber-400 shadow-md flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
-                              title="Rascunho Aberto"
-                            >
-                              <Pencil className="w-4.5 h-4.5 text-amber-700" />
-                            </div>
-                          )}
+                          {/* Selo Postal no Canto Superior Direito (Sempre Visível) */}
+                          <div
+                            className={`flex items-center gap-1.5 rounded-md border-2 border-dashed px-2.5 py-1 shadow-xs select-none ${
+                              isPublished
+                                ? 'border-rose-400 bg-white text-[#e11d48]'
+                                : 'border-amber-400 bg-white text-amber-800'
+                            }`}
+                            title="Selo Postal"
+                          >
+                            <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider">
+                              {isPublished ? 'SELO POSTAL' : 'NÃO SELADO'}
+                            </span>
+                            <span className="text-[10px] opacity-60 font-serif">≈≈</span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Corpo do Envelope / Conteúdo da Carta */}
-                      <div className="p-5 sm:p-7 pt-6 sm:pt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Seção esquerda: Informações de Endereçamento */}
-                        <div className="min-w-0 flex-1 space-y-1.5">
-                          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#701a35]/60 font-mono">
-                            <span>{isPublished ? 'Para:' : 'Título:'}</span>
-                          </div>
+                      {/* Linha de borda do chanfro em V */}
+                      <svg
+                        className="pointer-events-none absolute bottom-0 inset-x-0 w-full h-4"
+                        viewBox="0 0 100 16"
+                        preserveAspectRatio="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M0,0 L50,16 L100,0"
+                          fill="none"
+                          stroke={isPublished ? '#fda4af' : '#fbbf24'}
+                          strokeWidth="1.5"
+                        />
+                      </svg>
 
-                          <h4 className="font-display font-extrabold text-[#4c0519] text-lg sm:text-2xl truncate group-hover:text-[#e11d48] transition-colors">
-                            {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
-                          </h4>
-
-                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#701a35]/80 font-medium pt-1">
-                            <span className="font-mono">
-                              {isPublished && page.publishedAt
-                                ? `Expedição: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
-                                : `Salvo em: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
-                            </span>
-                            <span>•</span>
-                            <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
-                            {page.theme ? (
-                              <>
-                                <span>•</span>
-                                <span className="capitalize">{page.theme.replace(/-/g, ' ')}</span>
-                              </>
-                            ) : null}
+                      {/* Lacre de Cera / Wax Seal Exatamente na Ponta do V */}
+                      <div className="absolute left-1/2 -bottom-5 -translate-x-1/2 z-20 pointer-events-none">
+                        {isPublished ? (
+                          <div
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 via-[#e11d48] to-[#9f1239] text-white shadow-lg border-2 border-white ring-2 ring-rose-400/40 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                            title="Lacre de Cera Fechado"
+                          >
+                            <Heart className="w-4.5 h-4.5 fill-white text-white drop-shadow-xs" />
                           </div>
+                        ) : (
+                          <div
+                            className="w-10 h-10 rounded-full bg-amber-100 text-amber-800 border-2 border-amber-400 shadow-md flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                            title="Rascunho Aberto"
+                          >
+                            <Pencil className="w-4.5 h-4.5 text-amber-700" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Corpo do Envelope / Conteúdo da Carta */}
+                    <div className="p-5 sm:p-7 pt-6 sm:pt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                      {/* Seção esquerda: Informações de Endereçamento */}
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#701a35]/60 font-mono">
+                          <span>{isPublished ? 'Para:' : 'Título:'}</span>
                         </div>
 
-                        {/* Seção direita: Ações da Carta */}
-                        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0">
-                          {isPublished && publicHref ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => handleCopyLink(page)}
-                                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border-2 border-rose-200/80 bg-white text-xs font-bold text-[#4c0519] hover:bg-rose-50 hover:border-rose-300 transition-colors flex-1 sm:flex-initial shadow-2xs cursor-pointer"
-                                title="Copiar link da carta"
-                              >
-                                {isCopied ? (
-                                  <>
-                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span className="text-emerald-600">Copiado!</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="w-3.5 h-3.5 text-[#701a35]" />
-                                    <span>Copiar Link</span>
-                                  </>
-                                )}
-                              </button>
+                        <h4 className="font-display font-extrabold text-[#4c0519] text-lg sm:text-2xl truncate group-hover:text-[#e11d48] transition-colors">
+                          {resolveDisplayName(page, isPublished ? 'Carta Publicada' : 'Rascunho')}
+                        </h4>
 
-                              {isAbsoluteUrl(publicHref) ? (
-                                <a
-                                  href={publicHref}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex-1 sm:flex-initial"
-                                >
-                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-2 border-rose-200/80">
-                                    <Eye className="w-3.5 h-3.5 mr-1" />
-                                    Ver
-                                  </Button>
-                                </a>
-                              ) : (
-                                <Link to={publicHref} className="flex-1 sm:flex-initial">
-                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-2 border-rose-200/80">
-                                    <Eye className="w-3.5 h-3.5 mr-1" />
-                                    Ver
-                                  </Button>
-                                </Link>
-                              )}
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#701a35]/80 font-medium pt-1">
+                          <span className="font-mono">
+                            {isPublished && page.publishedAt
+                              ? `Expedição: ${new Date(page.publishedAt).toLocaleDateString('pt-BR')}`
+                              : `Salvo em: ${new Date(page.updatedAt).toLocaleDateString('pt-BR')}`}
+                          </span>
+                          <span>•</span>
+                          <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
+                          {page.theme ? (
+                            <>
+                              <span>•</span>
+                              <span className="capitalize">{page.theme.replace(/-/g, ' ')}</span>
                             </>
                           ) : null}
-
-                          <Link to={`/editor/${page.id}`} className="flex-1 sm:flex-initial">
-                            <Button
-                              variant={isPublished ? 'ghost' : 'outline'}
-                              size="sm"
-                              className={`w-full text-xs font-bold ${
-                                !isPublished ? 'border-2 border-amber-400/80 bg-white text-amber-900 hover:bg-amber-50' : 'border border-transparent'
-                              }`}
-                            >
-                              <Pencil className="w-3.5 h-3.5 mr-1" />
-                              Editar
-                            </Button>
-                          </Link>
-
-                          {shouldShowPayNow(page) ? (
-                            <Link to={`/payment/page/${page.id}`} className="flex-1 sm:flex-initial">
-                              <Button size="sm" className="w-full text-xs font-bold shadow-xs">
-                                <Zap className="w-3.5 h-3.5 mr-1" />
-                                Pagar e Publicar
-                              </Button>
-                            </Link>
-                          ) : null}
-
-                          <button
-                            type="button"
-                            onClick={() => setPageToDelete(page)}
-                            className="p-2.5 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                            title="Excluir carta"
-                            aria-label="Excluir carta"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
 
-            {/* Modal de confirmação de exclusão de carta */}
-            <Modal
-              isOpen={Boolean(pageToDelete)}
-              onClose={() => setPageToDelete(null)}
-              title="Excluir Carta"
-            >
-              <div className="space-y-5 text-center">
-                <div className="w-14 h-14 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-center mx-auto text-rose-600">
-                  <Trash2 className="w-7 h-7" />
-                </div>
-                <div>
-                  <h3 className="font-display text-lg font-bold text-text">
-                    Tem certeza que deseja excluir esta carta?
-                  </h3>
-                  <p className="text-xs text-text-light mt-1">
-                    Esta ação é permanente e o link deixará de funcionar.
-                  </p>
-                </div>
+                      {/* Seção direita: Ações da Carta */}
+                      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0">
+                        {isPublished && publicHref ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyLink(page)}
+                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border-2 border-rose-200/80 bg-white text-xs font-bold text-[#4c0519] hover:bg-rose-50 hover:border-rose-300 transition-colors flex-1 sm:flex-initial shadow-2xs cursor-pointer"
+                              title="Copiar link da carta"
+                            >
+                              {isCopied ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span className="text-emerald-600">Copiado!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5 text-[#701a35]" />
+                                  <span>Copiar Link</span>
+                                </>
+                              )}
+                            </button>
 
-                {deletePageError ? (
-                  <InlineAlert tone="danger">{deletePageError}</InlineAlert>
-                ) : null}
+                            {isAbsoluteUrl(publicHref) ? (
+                              <a
+                                href={publicHref}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex-1 sm:flex-initial"
+                              >
+                                <Button variant="outline" size="sm" className="w-full text-xs font-bold border-2 border-rose-200/80">
+                                  <Eye className="w-3.5 h-3.5 mr-1" />
+                                  Ver
+                                </Button>
+                              </a>
+                            ) : (
+                              <Link to={publicHref} className="flex-1 sm:flex-initial">
+                                <Button variant="outline" size="sm" className="w-full text-xs font-bold border-2 border-rose-200/80">
+                                  <Eye className="w-3.5 h-3.5 mr-1" />
+                                  Ver
+                                </Button>
+                              </Link>
+                            )}
+                          </>
+                        ) : null}
 
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    className="w-full border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold"
-                    onClick={handleDeletePage}
-                    disabled={isDeletingPage}
-                  >
-                    {isDeletingPage ? 'Excluindo...' : 'Sim, excluir carta'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => setPageToDelete(null)}
-                    disabled={isDeletingPage}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            </Modal>
-          </section>
-        ) : (
-          <section className="space-y-6" aria-label="Configurações">
-            <div className="space-y-2">
-              <h2 className="font-display text-2xl font-semibold text-text sm:text-3xl">
-                Configurações da Conta
-              </h2>
-              <p className="max-w-2xl text-sm leading-relaxed text-text-light sm:text-base">
-                Ajuste segurança, sessão e dados da sua conta.
-              </p>
-            </div>
+                        <Link to={`/editor/${page.id}`} className="flex-1 sm:flex-initial">
+                          <Button
+                            variant={isPublished ? 'ghost' : 'outline'}
+                            size="sm"
+                            className={`w-full text-xs font-bold ${
+                              !isPublished ? 'border-2 border-amber-400/80 bg-white text-amber-900 hover:bg-amber-50' : 'border border-transparent'
+                            }`}
+                          >
+                            <Pencil className="w-3.5 h-3.5 mr-1" />
+                            Editar
+                          </Button>
+                        </Link>
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.32, ease: [0.19, 1, 0.22, 1] }}
-            >
-              <SectionCard
-                title="Sua Assinatura"
-                description="Consulte o status do seu plano e benefícios disponíveis."
-                className="border border-primary/10"
-              >
-                <SettingRow
-                  icon={<Zap size={18} className="text-primary" />}
-                  label="Plano atual"
-                  value={
-                    (subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active')
-                      ? 'Ilimitado Mensal (PRO)'
-                      : 'Avulso (Gratuito)'
-                  }
-                  className="flex-col items-start border-primary/10 bg-white/55 sm:flex-row sm:items-center"
-                  action={
-                    (subscription?.isSubscribed || user?.isSubscribed || user?.subscriptionStatus === 'active') ? (
-                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl">
-                        Ativo {subscription?.daysRemaining ? `(${subscription.daysRemaining} dias restantes)` : ''}
-                      </span>
-                    ) : (
-                      <Link to="/planos">
-                        <Button size="sm" className="bg-primary text-white font-medium">
-                          Fazer Upgrade (R$ 15/mês)
-                        </Button>
-                      </Link>
-                    )
-                  }
-                />
-              </SectionCard>
-            </motion.div>
+                        {shouldShowPayNow(page) ? (
+                          <Link to={`/payment/page/${page.id}`} className="flex-1 sm:flex-initial">
+                            <Button size="sm" className="w-full text-xs font-bold shadow-xs">
+                              <Zap className="w-3.5 h-3.5 mr-1" />
+                              Pagar e Publicar
+                            </Button>
+                          </Link>
+                        ) : null}
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.32, delay: 0.02, ease: [0.19, 1, 0.22, 1] }}
-            >
-              <SectionCard
-                title="Sua Conta"
-                description="Gerencie seus dados e sessões com uma interface consistente."
-                className="border border-primary/10"
-              >
-                <SettingRow
-                  icon={<Mail size={18} />}
-                  label="E-mail cadastrado"
-                  value={user?.email}
-                  className="flex-col items-start border-primary/10 bg-white/55 sm:flex-row sm:items-center"
-                  action={(
-                    <Button
-                      variant="outline"
-                      onClick={handleLogout}
-                      className="w-full text-text-light hover:bg-white/60 hover:text-text sm:w-auto"
-                    >
-                      <LogOut size={16} className="mr-2" />
-                      Sair da conta
-                    </Button>
-                  )}
-                />
-              </SectionCard>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.34, delay: 0.04, ease: [0.19, 1, 0.22, 1] }}
-            >
-              <Card glass className="overflow-hidden border border-primary/10 p-0">
-                <button
-                  type="button"
-                  onClick={() => setIsPasswordFormOpen(!isPasswordFormOpen)}
-                  className="group flex w-full items-start justify-between gap-4 p-5 text-left transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:items-center sm:p-6"
-                  aria-expanded={isPasswordFormOpen}
-                >
-                  <div className="flex min-w-0 items-start gap-4 sm:items-center">
-                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-dark">
-                      <Key size={20} />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-xl font-semibold text-text">
-                        Alterar Senha
-                      </h2>
-                      <p className="mt-0.5 text-sm leading-relaxed text-text-light">
-                        Atualize sua senha para manter sua conta mágica segura.
-                      </p>
+                        <button
+                          type="button"
+                          onClick={() => setPageToDelete(page)}
+                          className="p-2.5 rounded-xl text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Excluir carta"
+                          aria-label="Excluir carta"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <motion.div
-                    animate={{ rotate: isPasswordFormOpen ? 180 : 0 }}
-                    transition={{ duration: 0.28, ease: [0.19, 1, 0.22, 1] }}
-                  >
-                    <ChevronDown size={20} className="text-text-muted" />
-                  </motion.div>
-                </button>
+                )
+              })}
+            </div>
+          )}
 
-                <AnimatePresence initial={false}>
-                  {isPasswordFormOpen ? (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.28, ease: [0.19, 1, 0.22, 1] }}
-                    >
-                      <div className="border-t border-white/30 p-5 pt-4 sm:p-6 sm:pt-4">
-                        <form onSubmit={handleChangePassword} className="mx-auto w-full max-w-md space-y-4">
-                          <Input
-                            label="Senha atual"
-                            type="password"
-                            placeholder="Sua senha atual"
-                            value={oldPassword}
-                            onChange={(event) => setOldPassword(event.target.value)}
-                            disabled={isChangingPassword}
-                            required
-                          />
-                          <Input
-                            label="Nova senha"
-                            type="password"
-                            placeholder="Mínimo de 6 caracteres"
-                            value={newPassword}
-                            onChange={(event) => setNewPassword(event.target.value)}
-                            disabled={isChangingPassword}
-                            required
-                          />
-                          <Input
-                            label="Confirmar nova senha"
-                            type="password"
-                            placeholder="Repita a nova senha"
-                            value={confirmPassword}
-                            onChange={(event) => setConfirmPassword(event.target.value)}
-                            disabled={isChangingPassword}
-                            required
-                          />
-
-                          {passwordError ? <InlineAlert tone="danger">{passwordError}</InlineAlert> : null}
-                          {passwordSuccess ? <InlineAlert tone="success">{passwordSuccess}</InlineAlert> : null}
-
-                          <div className="pt-2">
-                            <Button
-                              type="submit"
-                              className="w-full sm:w-auto"
-                              disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword}
-                            >
-                              {isChangingPassword ? 'Salvando...' : 'Salvar nova senha'}
-                            </Button>
-                          </div>
-                        </form>
-                      </div>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.34, delay: 0.08, ease: [0.19, 1, 0.22, 1] }}
-            >
-              <SectionCard title="Zona de Perigo" className="border border-red-200/60 bg-red-50/35">
-                <div className="mb-2 flex items-center gap-2 text-red-600">
-                  <AlertTriangle size={20} />
-                  <p className="text-sm font-medium">Atenção</p>
-                </div>
-                <p className="mb-4 text-sm leading-relaxed text-text-light">
-                  A exclusão da conta é permanente e não pode ser desfeita.
-                  Todos os seus correios elegantes serão apagados.
+          {/* Modal de confirmação de exclusão de carta */}
+          <Modal
+            isOpen={Boolean(pageToDelete)}
+            onClose={() => setPageToDelete(null)}
+            title="Excluir Carta"
+          >
+            <div className="space-y-5 text-center">
+              <div className="w-14 h-14 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-center mx-auto text-rose-600">
+                <Trash2 className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-bold text-text">
+                  Tem certeza que deseja excluir esta carta?
+                </h3>
+                <p className="text-xs text-text-light mt-1">
+                  Esta ação é permanente e o link deixará de funcionar.
                 </p>
+              </div>
+
+              {deletePageError ? (
+                <InlineAlert tone="danger">{deletePageError}</InlineAlert>
+              ) : null}
+
+              <div className="flex flex-col gap-2 pt-2">
                 <Button
                   variant="outline"
-                  className="w-full border-red-500/30 text-red-500 hover:border-red-500/50 hover:bg-red-500/10 sm:w-auto"
-                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="w-full border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold"
+                  onClick={handleDeletePage}
+                  disabled={isDeletingPage}
                 >
-                  Excluir minha conta
+                  {isDeletingPage ? 'Excluindo...' : 'Sim, excluir carta'}
                 </Button>
-              </SectionCard>
-            </motion.div>
-
-            <Modal
-              isOpen={isDeleteModalOpen}
-              onClose={() => setIsDeleteModalOpen(false)}
-              title="Excluir Conta"
-            >
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 text-red-500">
-                    <Trash2 className="h-8 w-8 text-red-500" />
-                  </div>
-                  <p className="mb-4 text-sm leading-relaxed text-text-light sm:text-base">
-                    Tem certeza que deseja excluir sua conta? Esta ação é{' '}
-                    <strong className="text-red-500">irreversível</strong>.
-                    <br />
-                    Todas as suas cartas e dados serão apagados permanentemente.
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {deleteAccountError ? (
-                    <InlineAlert tone="danger" className="text-center">
-                      {deleteAccountError}
-                    </InlineAlert>
-                  ) : null}
-                  <Button
-                    variant="outline"
-                    className="w-full border-red-500/30 text-red-500 hover:border-red-500/50 hover:bg-red-500/10 font-semibold"
-                    onClick={handleDeleteAccount}
-                    disabled={isDeletingAccount}
-                  >
-                    {isDeletingAccount ? 'Apagando conta...' : 'Sim, excluir para sempre'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => setIsDeleteModalOpen(false)}
-                    disabled={isDeletingAccount}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setPageToDelete(null)}
+                  disabled={isDeletingPage}
+                >
+                  Cancelar
+                </Button>
               </div>
-            </Modal>
-          </section>
-        )}
+            </div>
+          </Modal>
+        </section>
       </Container>
     </div>
   )
