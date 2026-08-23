@@ -10,6 +10,7 @@ import { paymentRouter } from './routes/payment.routes';
 import { uploadRouter } from './routes/upload.routes';
 import { pageRouter } from './routes/page.routes';
 import { assetRouter } from './routes/asset.routes';
+import { contactRouter } from './routes/contact.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { prisma } from './utils/prisma';
 
@@ -144,6 +145,7 @@ app.use('/api/payment', paymentRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/pages', pageRouter);
 app.use('/api/assets', assetRouter);
+app.use('/api/contact', contactRouter);
 
 // Health check — includes DB connectivity test (safe, read-only)
 app.get('/api/health', async (_req, res) => {
