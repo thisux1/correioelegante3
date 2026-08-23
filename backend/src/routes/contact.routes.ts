@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { contactController } from '../controllers/contact.controller';
 import { validate, validateObjectId } from '../middlewares/validate';
-import { authenticate, optionalAuthenticate } from '../middlewares/auth';
+import { authenticate, optionalAuthenticate, requireAdmin } from '../middlewares/auth';
 import {
   createSupportTicketSchema,
   replySupportTicketSchema,
@@ -28,16 +28,18 @@ contactRouter.post(
   contactController.create
 );
 
-// Endpoints autenticados para gestão e resposta aos chamados via Resend
+// Endpoints autenticados para gestão e resposta aos chamados via Resend (Restrito a Admin)
 contactRouter.get(
   '/tickets',
   authenticate,
+  requireAdmin,
   contactController.list
 );
 
 contactRouter.get(
   '/tickets/:id',
   authenticate,
+  requireAdmin,
   validateObjectId('id'),
   contactController.getById
 );
@@ -45,6 +47,7 @@ contactRouter.get(
 contactRouter.post(
   '/tickets/:id/reply',
   authenticate,
+  requireAdmin,
   validateObjectId('id'),
   validate(replySupportTicketSchema),
   contactController.reply
@@ -53,6 +56,7 @@ contactRouter.post(
 contactRouter.patch(
   '/tickets/:id/status',
   authenticate,
+  requireAdmin,
   validateObjectId('id'),
   validate(updateTicketStatusSchema),
   contactController.updateStatus

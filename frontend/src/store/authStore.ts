@@ -24,6 +24,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 export interface User {
   id: string
   email: string
+  isAdmin?: boolean
   isSubscribed?: boolean
   subscriptionStatus?: string | null
   subscriptionPlan?: string | null

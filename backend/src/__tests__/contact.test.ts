@@ -64,8 +64,8 @@ describe('Contact & Support Ticket Routes', () => {
     });
   });
 
-  describe('GET /api/contact/tickets', () => {
-    it('deve listar os chamados para usuário autenticado', async () => {
+  describe('GET /api/contact/tickets (Admin Only)', () => {
+    it('deve listar os chamados para usuário administrador', async () => {
       const token = makeToken();
       const mockTickets = [
         {
@@ -81,6 +81,10 @@ describe('Contact & Support Ticket Routes', () => {
         },
       ];
 
+      vi.spyOn(prisma.user, 'findUnique').mockResolvedValueOnce({
+        id: '507f1f77bcf86cd799439000',
+        email: 'admin@example.com',
+      } as any);
       vi.spyOn(prisma.supportTicket, 'count').mockResolvedValueOnce(1);
       vi.spyOn(prisma.supportTicket, 'findMany').mockResolvedValueOnce(mockTickets as any);
 
@@ -94,14 +98,30 @@ describe('Contact & Support Ticket Routes', () => {
       expect(res.body.total).toBe(1);
     });
 
+    it('deve retornar 403 Forbidden para usuário comum não administrador', async () => {
+      const token = makeToken();
+
+      vi.spyOn(prisma.user, 'findUnique').mockResolvedValueOnce({
+        id: '507f1f77bcf86cd799439000',
+        email: 'usuario_comum@gmail.com',
+      } as any);
+
+      const res = await request(app)
+        .get('/api/contact/tickets')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toContain('Acesso restrito a administradores');
+    });
+
     it('deve retornar 401 se não estiver autenticado', async () => {
       const res = await request(app).get('/api/contact/tickets');
       expect(res.status).toBe(401);
     });
   });
 
-  describe('POST /api/contact/tickets/:id/reply', () => {
-    it('deve registrar resposta ao chamado e enviar e-mail', async () => {
+  describe('POST /api/contact/tickets/:id/reply (Admin Only)', () => {
+    it('deve registrar resposta ao chamado e enviar e-mail para administrador', async () => {
       const token = makeToken();
       const ticketId = '507f1f77bcf86cd799439123';
 
@@ -129,6 +149,10 @@ describe('Contact & Support Ticket Routes', () => {
         replies: [mockReply],
       };
 
+      vi.spyOn(prisma.user, 'findUnique').mockResolvedValueOnce({
+        id: '507f1f77bcf86cd799439000',
+        email: 'admin@example.com',
+      } as any);
       vi.spyOn(prisma.supportTicket, 'findUnique').mockResolvedValueOnce(mockTicket as any);
       vi.spyOn(prisma, '$transaction').mockResolvedValueOnce([mockReply, mockUpdatedTicket] as any);
 
