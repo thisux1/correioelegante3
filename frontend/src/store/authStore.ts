@@ -25,6 +25,7 @@ export interface User {
   id: string
   email: string
   isAdmin?: boolean
+  emailVerified?: boolean
   isSubscribed?: boolean
   subscriptionStatus?: string | null
   subscriptionPlan?: string | null

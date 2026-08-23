@@ -15,7 +15,7 @@ import { authService } from '@/services/authService'
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(6, 'A nova senha deve ter pelo menos 6 caracteres'),
+    password: z.string().min(8, 'A nova senha deve ter pelo menos 8 caracteres'),
     confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
   })
   .refine((data) => data.password === data.confirmPassword, {
