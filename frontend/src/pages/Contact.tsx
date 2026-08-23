@@ -1,22 +1,19 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import {
   Mail,
-  Clock,
   HelpCircle,
-  CheckCircle2,
-  Send,
   ChevronDown,
+  Copy,
+  Check,
+  ExternalLink,
   Github,
   Linkedin,
-  ShieldCheck,
   FileQuestion,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Container } from '@/components/layout/Container'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { InlineAlert } from '@/components/ui/InlineAlert'
 import { LegalPageSkeleton } from '@/components/ui/LegalPageSkeleton'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 
@@ -28,22 +25,22 @@ const faqs = [
   {
     question: 'Como envio a carta para o meu destinatário?',
     answer:
-      'Após criar e publicar sua carta, você receberá um link exclusivo e um QR Code em alta definição. Você pode enviar diretamente pelo WhatsApp, Instagram, redes sociais ou até imprimir o QR Code em um cartão físico.',
+      'Após criar e publicar sua carta, você recebe um link exclusivo e um QR Code pronto para compartilhar no WhatsApp, redes sociais ou até imprimir em um cartão físico.',
   },
   {
     question: 'Paguei pelo PIX ou Cartão, quando a carta é liberada?',
     answer:
-      'A confirmação dos pagamentos via PIX (Mercado Pago) e Cartão de Crédito (Stripe) é processada em tempo real por webhooks seguros. Em poucos segundos após o pagamento, a carta é liberada e seu link fica pronto para envio.',
+      'A confirmação dos pagamentos via PIX e Cartão de Crédito é processada automaticamente em tempo real. Em poucos segundos após o pagamento, a carta é liberada e seu link fica pronto para envio.',
   },
   {
     question: 'Posso editar a carta depois de já ter publicado?',
     answer:
-      'Sim! Basta acessar "Minhas Cartas" no topo do site e clicar em "Editar". Qualquer alteração em textos, fotos, músicas ou vídeos é sincronizada instantaneamente no mesmo link, sem necessidade de pagar novamente.',
+      'Sim! Basta acessar "Minhas Cartas" no menu superior e clicar em "Editar". Qualquer alteração em textos, fotos ou músicas é sincronizada instantaneamente no mesmo link.',
   },
   {
     question: 'Por quanto tempo a carta permanece online?',
     answer:
-      'As cartas publicadas permanecem ativas por tempo indeterminado nos nossos servidores seguros em nuvem, garantindo que suas memórias e recados fiquem guardados para sempre.',
+      'As cartas publicadas permanecem ativas por tempo indeterminado nos servidores em nuvem, para que suas memórias fiquem guardadas com segurança.',
   },
   {
     question: 'Como funciona a assinatura do Plano Ilimitado?',
@@ -53,15 +50,7 @@ const faqs = [
 ]
 
 export function Contact({ isLoading }: ContactProps = {}) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [subject, setSubject] = useState('duvida_geral')
-  const [orderRef, setOrderRef] = useState('')
-  const [message, setMessage] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [error, setError] = useState('')
-
+  const [copiedEmail, setCopiedEmail] = useState(false)
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
   const [isDevInfoOpen, setIsDevInfoOpen] = useState(false)
 
@@ -69,242 +58,91 @@ export function Contact({ isLoading }: ContactProps = {}) {
     return <LegalPageSkeleton />
   }
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-
-    if (!name.trim() || !email.trim() || !message.trim()) {
-      setError('Por favor, preencha todos os campos obrigatórios.')
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      // Simulação de envio com fallback para mailto
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      setIsSuccess(true)
-      setName('')
-      setEmail('')
-      setOrderRef('')
-      setMessage('')
-    } catch {
-      setError('Ocorreu um erro ao enviar sua mensagem. Tente novamente ou envie diretamente para contato@correioelegante.studio.')
-    } finally {
-      setIsSubmitting(false)
-    }
+  function handleCopyEmail() {
+    navigator.clipboard.writeText('contato@correioelegante.studio').then(() => {
+      setCopiedEmail(true)
+      setTimeout(() => setCopiedEmail(false), 2500)
+    })
   }
 
   return (
     <div className="min-h-screen pt-28 pb-16 relative overflow-hidden">
       <Container size="narrow">
-        {/* Cabeçalho Principal */}
+        {/* Cabeçalho */}
         <ScrollReveal animateOnMount>
-          <header className="text-center mb-12 sm:mb-16 space-y-4">
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#4c0519] tracking-tight">
-              Central de Ajuda & Atendimento
+          <header className="text-center mb-10 sm:mb-14 space-y-3">
+            <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] tracking-tight">
+              Contato & Dúvidas
             </h1>
-            <p className="text-[#701a35]/80 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              Precisa de ajuda com sua carta, pagamento ou tem alguma dúvida? Nossa equipe está pronta para resolver seu chamado com rapidez e carinho.
+            <p className="text-[#701a35]/80 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+              Tem alguma dúvida sobre suas cartas, pagamentos ou quer enviar uma sugestão? Fale diretamente conosco.
             </p>
           </header>
         </ScrollReveal>
 
-        {/* 3 Cartões de Canais de Suporte Rápido */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12 sm:mb-16">
-          <ScrollReveal direction="up" delay={0.05} animateOnMount>
-            <Card className="h-full bg-white border-2 border-rose-200/80 p-6 rounded-3xl shadow-md shadow-rose-950/5 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-[#e11d48] flex items-center justify-center">
-                  <Mail className="w-6 h-6" />
-                </div>
-                <h3 className="font-display text-lg font-bold text-[#4c0519]">
-                  E-mail de Suporte
-                </h3>
-                <p className="text-xs sm:text-sm text-[#701a35]/80 leading-relaxed">
-                  Envie sua dúvida ou comprovante diretamente para nosso time.
-                </p>
-              </div>
-              <div className="pt-4 mt-auto border-t border-rose-100">
-                <a
-                  href="mailto:contato@correioelegante.studio"
-                  className="font-mono text-xs font-bold text-[#e11d48] hover:underline break-all"
-                >
-                  contato@correioelegante.studio
-                </a>
-              </div>
-            </Card>
-          </ScrollReveal>
-
-          <ScrollReveal direction="up" delay={0.1} animateOnMount>
-            <Card className="h-full bg-white border-2 border-rose-200/80 p-6 rounded-3xl shadow-md shadow-rose-950/5 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <h3 className="font-display text-lg font-bold text-[#4c0519]">
-                  Tempo de Resposta
-                </h3>
-                <p className="text-xs sm:text-sm text-[#701a35]/80 leading-relaxed">
-                  Atendimento ágil em até <strong>2 horas úteis</strong> para problemas com envio de cartas.
-                </p>
-              </div>
-              <div className="pt-4 mt-auto border-t border-rose-100">
-                <span className="text-xs font-semibold text-[#701a35]/70">
-                  Seg a Sáb: 08h às 20h
-                </span>
-              </div>
-            </Card>
-          </ScrollReveal>
-
-          <ScrollReveal direction="up" delay={0.15} animateOnMount>
-            <Card className="h-full bg-white border-2 border-rose-200/80 p-6 rounded-3xl shadow-md shadow-rose-950/5 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <h3 className="font-display text-lg font-bold text-[#4c0519]">
-                  Garantia de Entrega
-                </h3>
-                <p className="text-xs sm:text-sm text-[#701a35]/80 leading-relaxed">
-                  Suporte total para recuperação de links, troca de fotos e liberação imediata de QR Codes.
-                </p>
-              </div>
-              <div className="pt-4 mt-auto border-t border-rose-100">
-                <span className="text-xs font-semibold text-emerald-700">
-                  100% dos chamados atendidos
-                </span>
-              </div>
-            </Card>
-          </ScrollReveal>
-        </div>
-
-        {/* Formulário de Abertura de Chamado */}
-        <ScrollReveal direction="up" delay={0.2} animateOnMount>
-          <div className="bg-white rounded-3xl border-2 border-rose-200/80 p-6 sm:p-10 shadow-lg shadow-rose-950/5 mb-14 sm:mb-18">
-            <div className="mb-6 space-y-1.5">
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#4c0519]">
-                Abrir Chamado de Suporte
-              </h2>
-              <p className="text-xs sm:text-sm text-[#701a35]/80">
-                Preencha os dados abaixo e entraremos em contato com você o mais rápido possível.
-              </p>
+        {/* Card Principal de Contato por E-mail (Direto e Minimalista) */}
+        <ScrollReveal direction="up" delay={0.08} animateOnMount>
+          <Card className="bg-white border-2 border-rose-200/80 p-6 sm:p-8 rounded-3xl shadow-lg shadow-rose-950/5 text-center mb-12 sm:mb-16">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-[#e11d48] flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-7 h-7" />
             </div>
 
-            {isSuccess ? (
-              <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/70 p-6 sm:p-8 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-sm">
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-                <h3 className="font-display text-xl font-bold text-emerald-900">
-                  Mensagem enviada com sucesso!
-                </h3>
-                <p className="text-xs sm:text-sm text-emerald-800 max-w-md mx-auto leading-relaxed">
-                  Recebemos seu chamado. Nossa equipe responderá diretamente no seu e-mail cadastrado em breve.
-                </p>
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 font-semibold"
-                    onClick={() => setIsSuccess(false)}
-                  >
-                    Enviar outra mensagem
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label="Seu Nome *"
-                    type="text"
-                    placeholder="Ex: Maria da Silva"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                  <Input
-                    label="Seu E-mail de Contato *"
-                    type="email"
-                    placeholder="Ex: maria@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-[#4c0519] mb-2">
+              Envie um E-mail Direto
+            </h2>
+            <p className="text-xs sm:text-sm text-[#701a35]/80 max-w-md mx-auto mb-6 leading-relaxed">
+              Para dúvidas sobre pagamentos, suporte com cartas ou sugestões, mande uma mensagem para nosso e-mail oficial:
+            </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-text">
-                      Motivo do Contato *
-                    </label>
-                    <select
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
-                      className="w-full h-11 px-3.5 rounded-xl border border-border bg-surface text-text text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                      <option value="duvida_geral">Dúvida sobre criação de carta</option>
-                      <option value="pagamento_pix">Problema com Pagamento / PIX</option>
-                      <option value="link_qrcode">Dúvida sobre Link ou QR Code</option>
-                      <option value="plano_ilimitado">Assinatura / Plano Ilimitado</option>
-                      <option value="sugestao">Sugestão de melhoria ou feedback</option>
-                      <option value="outro">Outro assunto</option>
-                    </select>
-                  </div>
+            <div className="inline-flex flex-col sm:flex-row items-center gap-3 p-2 bg-rose-50/50 rounded-2xl border border-rose-200/60 mb-6">
+              <span className="font-mono text-sm sm:text-base font-bold text-[#e11d48] px-3">
+                contato@correioelegante.studio
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyEmail}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-xs font-semibold text-[#4c0519] hover:bg-rose-50 transition-colors shadow-2xs cursor-pointer"
+              >
+                {copiedEmail ? (
+                  <>
+                    <Check size={14} className="text-emerald-600" />
+                    <span className="text-emerald-600">Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} />
+                    <span>Copiar</span>
+                  </>
+                )}
+              </button>
+            </div>
 
-                  <Input
-                    label="ID da Carta ou Transação (Opcional)"
-                    type="text"
-                    placeholder="Ex: link da carta ou código do PIX"
-                    value={orderRef}
-                    onChange={(e) => setOrderRef(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-text">
-                    Descreva sua dúvida ou problema *
-                  </label>
-                  <textarea
-                    rows={4}
-                    placeholder="Explique com detalhes o que você precisa para que possamos te ajudar da melhor forma..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="w-full p-3.5 rounded-2xl border border-border bg-surface text-text text-sm font-medium placeholder:text-text-light/50 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y min-h-[100px]"
-                    required
-                  />
-                </div>
-
-                {error ? <InlineAlert tone="danger">{error}</InlineAlert> : null}
-
-                <div className="pt-2">
-                  <Button
-                    type="submit"
-                    className="w-full sm:w-auto font-bold shadow-md shadow-rose-500/20"
-                    disabled={isSubmitting}
-                  >
-                    <Send size={16} className="mr-2" />
-                    {isSubmitting ? 'Enviando chamado...' : 'Enviar Mensagem de Suporte'}
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
+            <div>
+              <a
+                href="mailto:contato@correioelegante.studio?subject=Contato%20-%20Correio%20Elegante"
+                className="inline-flex items-center justify-center gap-2"
+              >
+                <Button size="sm" className="font-semibold shadow-xs">
+                  <Mail size={15} />
+                  Abrir no meu aplicativo de e-mail
+                </Button>
+              </a>
+            </div>
+          </Card>
         </ScrollReveal>
 
-        {/* Seção de Autoatendimento & Dúvidas Frequentes (FAQ) */}
-        <ScrollReveal direction="up" delay={0.25} animateOnMount>
+        {/* Dúvidas Frequentes (FAQ) */}
+        <ScrollReveal direction="up" delay={0.16} animateOnMount>
           <section className="mb-14 sm:mb-18 space-y-6">
-            <div className="space-y-1.5 text-center sm:text-left">
+            <div className="space-y-1 text-center sm:text-left">
               <div className="flex items-center justify-center sm:justify-start gap-2">
                 <FileQuestion className="w-5 h-5 text-primary" />
                 <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#4c0519]">
-                  Resolução Rápida (FAQ)
+                  Dúvidas Frequentes
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-[#701a35]/80">
-                Respostas diretas para as dúvidas mais comuns de quem utiliza o Correio Elegante.
+                Respostas rápidas para as principais perguntas sobre o funcionamento das cartas.
               </p>
             </div>
 
@@ -356,7 +194,7 @@ export function Contact({ isLoading }: ContactProps = {}) {
           </section>
         </ScrollReveal>
 
-        {/* Informações Técnicas & Criação (Separado, discreto, fora de foco no rodapé) */}
+        {/* Informações Técnicas & Criação (Discreto, separado no rodapé) */}
         <div className="border-t border-rose-200/60 pt-8 mt-12">
           <div className="rounded-2xl border border-border/80 bg-surface/60 p-4 sm:p-5">
             <button
@@ -365,7 +203,7 @@ export function Contact({ isLoading }: ContactProps = {}) {
               className="flex w-full items-center justify-between text-xs font-semibold text-text-light hover:text-text cursor-pointer"
               aria-expanded={isDevInfoOpen}
             >
-              <span>Informações de Desenvolvimento & Créditos do Projeto</span>
+              <span>Créditos & Conexões do Desenvolvedor</span>
               <ChevronDown
                 size={16}
                 className={`transition-transform duration-200 ${isDevInfoOpen ? 'rotate-180' : ''}`}
@@ -382,9 +220,9 @@ export function Contact({ isLoading }: ContactProps = {}) {
                   className="pt-3 space-y-3"
                 >
                   <p className="text-xs text-text-light leading-relaxed">
-                    O Correio Elegante é uma plataforma digital desenvolvida com React 19, TypeScript, Express 5, Prisma, Remotion e gateways integrados.
+                    Plataforma idealizada e desenvolvida por Thiago com React 19, TypeScript e Node.js.
                   </p>
-                  <div className="flex items-center gap-3 pt-1">
+                  <div className="flex items-center gap-4 pt-1">
                     <a
                       href="https://github.com/thisux1"
                       target="_blank"
@@ -393,6 +231,7 @@ export function Contact({ isLoading }: ContactProps = {}) {
                     >
                       <Github size={14} />
                       GitHub (@thisux1)
+                      <ExternalLink size={12} className="opacity-60" />
                     </a>
                     <span>•</span>
                     <a
@@ -403,6 +242,7 @@ export function Contact({ isLoading }: ContactProps = {}) {
                     >
                       <Linkedin size={14} />
                       LinkedIn
+                      <ExternalLink size={12} className="opacity-60" />
                     </a>
                   </div>
                 </motion.div>
