@@ -34,6 +34,7 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
 
   // Reply form state
   const [replyText, setReplyText] = useState('')
+  const [replyStatus, setReplyStatus] = useState<string>('keep')
   const [isSendingReply, setIsSendingReply] = useState(false)
   const [replySuccess, setReplySuccess] = useState('')
   const [replyError, setReplyError] = useState('')
@@ -44,6 +45,7 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
     } else {
       setSelectedTicket(null)
       setReplyText('')
+      setReplyStatus('keep')
       setReplySuccess('')
       setReplyError('')
     }
@@ -81,12 +83,12 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
       const res = await contactService.replyToTicket(
         selectedTicket.id,
         replyText.trim(),
-        'resolved'
+        replyStatus === 'keep' ? selectedTicket.status : replyStatus
       )
       setReplySuccess(
         res.emailSent
-          ? `Resposta enviada via Resend para ${selectedTicket.email}!`
-          : 'Resposta salva no chamado com sucesso!'
+          ? `Resposta enviada com sucesso para ${selectedTicket.email} via Resend!`
+          : 'Resposta gravada no chamado com sucesso!'
       )
       setReplyText('')
       setSelectedTicket(res.ticket)
@@ -166,7 +168,7 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                   Central de Atendimento
                 </h3>
                 <p className="text-[10px] sm:text-xs text-[#701a35]/70 truncate">
-                  Respostas oficiais por e-mail via Resend
+                  Gestão de chamados e respostas por e-mail
                 </p>
               </div>
             </div>
@@ -216,6 +218,15 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
               </button>
               <button
                 type="button"
+                onClick={() => setFilterStatus('in_progress')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  filterStatus === 'in_progress' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
+                }`}
+              >
+                Em Atendimento
+              </button>
+              <button
+                type="button"
                 onClick={() => setFilterStatus('resolved')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   filterStatus === 'resolved' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
@@ -256,7 +267,12 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                     <button
                       key={t.id}
                       type="button"
-                      onClick={() => setSelectedTicket(t)}
+                      onClick={() => {
+                        setSelectedTicket(t)
+                        setReplyStatus('keep')
+                        setReplySuccess('')
+                        setReplyError('')
+                      }}
                       className={`w-full text-left p-3 rounded-2xl transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-rose-100/70 border border-rose-300 shadow-xs'
@@ -326,7 +342,10 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                     </p>
                   </div>
 
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex flex-col items-end gap-1">
+                    <label className="text-[10px] font-bold text-[#701a35]/70 uppercase">
+                      Alterar Status:
+                    </label>
                     <select
                       value={selectedTicket.status}
                       onChange={(e) => handleStatusChange(e.target.value)}
@@ -374,7 +393,7 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                           <div className="flex items-center justify-between text-[11px] text-emerald-800 font-bold">
                             <span className="flex items-center gap-1.5">
                               <Mail size={12} />
-                              Resposta enviada por e-mail (Resend)
+                              Resposta enviada ao cliente
                             </span>
                             <span className="font-mono text-[10px]">
                               {new Date(reply.createdAt).toLocaleString('pt-BR')}
@@ -399,19 +418,35 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                 {/* Caixa de Resposta (Fixa na base) */}
                 <div className="p-3 sm:p-4 border-t border-rose-100 bg-white space-y-2.5 shrink-0">
                   <label className="text-[11px] sm:text-xs font-bold text-[#4c0519] block break-words">
-                    Responder para <strong>{selectedTicket.email}</strong>:
+                    Escrever Resposta para <strong>{selectedTicket.email}</strong>:
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Digite sua resposta oficial aqui. O cliente receberá um e-mail formatado via Resend..."
+                    placeholder="Digite sua resposta oficial aqui..."
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     className="w-full p-2.5 sm:p-3 text-xs sm:text-sm rounded-xl border border-rose-200 bg-surface text-text focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                   />
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-                    <span className="text-[10px] text-text-muted">
-                      O chamado será marcado como <strong>Resolvido</strong>.
-                    </span>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                    {/* Seletor Manual de Status no envio */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] font-semibold text-text-muted shrink-0">
+                        Status após envio:
+                      </label>
+                      <select
+                        value={replyStatus}
+                        onChange={(e) => setReplyStatus(e.target.value)}
+                        className="text-xs font-semibold px-2 py-1 rounded-lg border border-rose-200 bg-rose-50/40 text-[#4c0519]"
+                      >
+                        <option value="keep">Manter status atual</option>
+                        <option value="in_progress">Em Atendimento</option>
+                        <option value="resolved">Resolvido</option>
+                        <option value="closed">Fechado</option>
+                        <option value="open">Aberto</option>
+                      </select>
+                    </div>
+
                     <Button
                       size="sm"
                       onClick={handleSendReply}
@@ -419,7 +454,7 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                       className="font-bold shadow-xs w-full sm:w-auto"
                     >
                       <Send size={13} className="mr-1.5" />
-                      {isSendingReply ? 'Enviando e-mail...' : 'Responder por E-mail'}
+                      {isSendingReply ? 'Enviando resposta...' : 'Enviar Resposta'}
                     </Button>
                   </div>
                 </div>
@@ -433,7 +468,7 @@ export function TicketsInboxModal({ isOpen, onClose }: TicketsInboxModalProps) {
                   Nenhum chamado selecionado
                 </h4>
                 <p className="text-xs text-[#701a35]/70 max-w-xs">
-                  Selecione um chamado na lista ao lado para ler os detalhes e responder por e-mail.
+                  Selecione um chamado na lista ao lado para ler os detalhes e responder ao cliente.
                 </p>
               </div>
             )}

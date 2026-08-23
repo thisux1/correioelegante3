@@ -35,7 +35,7 @@ export const replySupportTicketSchema = z.object({
     .trim()
     .min(5, 'A resposta deve ter no mínimo 5 caracteres')
     .max(5000, 'A resposta deve ter no máximo 5000 caracteres'),
-  status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
+  status: z.enum(['open', 'in_progress', 'resolved', 'closed', 'keep']).optional(),
 });
 
 export type ReplySupportTicketInput = z.infer<typeof replySupportTicketSchema>;
