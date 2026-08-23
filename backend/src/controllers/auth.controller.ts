@@ -15,7 +15,8 @@ function setCookieRefreshToken(res: Response, token: string) {
 
 export async function register(req: Request, res: Response): Promise<void> {
   const { email, password, age, legalAccepted } = req.body;
-  const { user, accessToken, refreshToken } = await authService.registerUser(email, password, age, legalAccepted);
+  const origin = req.headers.origin as string | undefined || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
+  const { user, accessToken, refreshToken } = await authService.registerUser(email, password, age, legalAccepted, origin);
   setCookieRefreshToken(res, refreshToken);
   res.status(201).json({ user, accessToken });
 }
@@ -76,5 +77,17 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
   const { user, accessToken, refreshToken } = await authService.resetPassword(token, password);
   setCookieRefreshToken(res, refreshToken);
   res.json({ user, accessToken, message: 'Senha redefinida com sucesso!' });
+}
+
+export async function verifyEmail(req: Request, res: Response): Promise<void> {
+  const { token } = req.body;
+  const result = await authService.verifyEmail(token);
+  res.json(result);
+}
+
+export async function resendVerification(req: AuthRequest, res: Response): Promise<void> {
+  const origin = req.headers.origin as string | undefined || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
+  const result = await authService.resendVerificationEmail(req.userId!, origin);
+  res.json(result);
 }
 

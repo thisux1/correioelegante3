@@ -2,6 +2,17 @@ import { Resend } from 'resend';
 
 let resendClient: Resend | null = null;
 
+// Escapa conteúdo fornecido por usuários antes de interpolar em templates HTML,
+// prevenindo HTML injection / phishing via e-mails transacionais.
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -232,12 +243,12 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
 
       <div class="envelope-body">
         <h1>Redefinição de Senha</h1>
-        <p>Olá${params.userName ? `, <strong>${params.userName}</strong>` : ''}!</p>
+        <p>Olá${params.userName ? `, <strong>${escapeHtml(params.userName)}</strong>` : ''}!</p>
         <p>Recebemos uma solicitação segura para criar uma nova senha para sua conta no <strong>Correio Elegante</strong>.</p>
         <p>Para prosseguir com a redefinição, clique no botão abaixo:</p>
 
         <div class="btn-container">
-          <a href="${params.resetUrl}" class="btn-primary" target="_blank">Redefinir Minha Senha</a>
+          <a href="${escapeHtml(params.resetUrl)}" class="btn-primary" target="_blank">Redefinir Minha Senha</a>
         </div>
 
         <p style="font-size: 13px; color: #881337; text-align: center; margin-top: 24px;">
@@ -271,6 +282,87 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
 
     if (error) {
       console.error('[EmailService] Erro ao enviar e-mail via Resend:', error);
+      return { success: false, error: (error as any).message || JSON.stringify(error) };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err: any) {
+    console.error('[EmailService] Falha de conexão com Resend:', err);
+    return { success: false, error: err?.message || 'Falha de conexão com Resend' };
+  }
+}
+
+export interface SendEmailVerificationEmailParams {
+  to: string;
+  verifyUrl: string;
+}
+
+export async function sendEmailVerificationEmail(params: SendEmailVerificationEmailParams): Promise<{ success: boolean; id?: string; error?: string }> {
+  const client = getResendClient();
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificação de E-mail - Correio Elegante</title>
+  <style>${EMAIL_BASE_STYLES}</style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="envelope-card">
+      <div class="envelope-header">
+        <div class="wax-seal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-top: 13px; display: inline-block;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-title">Correio Elegante</div>
+        <p class="brand-tagline">Confirmação de Cadastro</p>
+      </div>
+
+      <div class="envelope-body">
+        <h1>Verificação de E-mail</h1>
+        <p>Olá!</p>
+        <p>Recebemos o seu cadastro no <strong>Correio Elegante</strong>. Para confirmar que este endereço de e-mail pertence a você, clique no botão abaixo:</p>
+
+        <div class="btn-container">
+          <a href="${escapeHtml(params.verifyUrl)}" class="btn-primary" target="_blank">Confirmar Meu E-mail</a>
+        </div>
+
+        <p style="font-size: 13px; color: #881337; text-align: center; margin-top: 24px;">
+          Este link é válido por <strong>24 horas</strong> e pode ser utilizado apenas uma vez.
+        </p>
+      </div>
+
+      <div class="envelope-footer">
+        <div class="stamp-mark">Confirmação de Conta</div>
+        <p>Se você não criou uma conta no Correio Elegante, fique tranquilo. Basta ignorar esta mensagem e nenhuma ação será necessária.</p>
+        <p class="footer-sub">&copy; ${new Date().getFullYear()} Correio Elegante &bull; correioelegante.studio</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (!client) {
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. E-mail de verificação simulado para: ${params.to}`);
+    return { success: true, id: 'simulated_no_key' };
+  }
+
+  try {
+    const { data, error } = await client.emails.send({
+      from,
+      to: params.to,
+      subject: 'Confirme seu e-mail - Correio Elegante',
+      html: htmlContent,
+    });
+
+    if (error) {
+      console.error('[EmailService] Erro ao enviar e-mail de verificação via Resend:', error);
       return { success: false, error: (error as any).message || JSON.stringify(error) };
     }
 
@@ -317,16 +409,16 @@ export async function sendTicketConfirmationEmail(params: SendTicketConfirmation
 
       <div class="envelope-body">
         <div style="text-align: center; margin-bottom: 20px;">
-          <span class="protocol-badge">PROTOCOLO: ${params.protocol}</span>
+          <span class="protocol-badge">PROTOCOLO: ${escapeHtml(params.protocol)}</span>
         </div>
 
         <h1>Chamado Registrado com Sucesso</h1>
-        <p>Olá, <strong>${params.recipientName}</strong>!</p>
-        <p>Sua solicitação sobre <strong>${params.subject}</strong> foi recebida e encaminhada para a nossa equipe de atendimento.</p>
+        <p>Olá, <strong>${escapeHtml(params.recipientName)}</strong>!</p>
+        <p>Sua solicitação sobre <strong>${escapeHtml(params.subject)}</strong> foi recebida e encaminhada para a nossa equipe de atendimento.</p>
 
         <div class="highlight-card">
           <div class="highlight-title">Resumo da sua mensagem:</div>
-          <div class="highlight-content">${params.message}</div>
+          <div class="highlight-content">${escapeHtml(params.message)}</div>
         </div>
 
         <p>Já estamos analisando sua mensagem e responderemos diretamente neste endereço de e-mail assim que concluirmos o atendimento.</p>
@@ -381,13 +473,13 @@ export async function sendNewTicketNotificationToAdmin(params: SendNewTicketAdmi
   const client = getResendClient();
   const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
 
-  const rawAdmins = process.env.ADMIN_EMAILS || 'thicosta1432@gmail.com,contato@correioelegante.studio';
+  const rawAdmins = process.env.ADMIN_EMAILS || 'contato@correioelegante.studio';
   const adminRecipients = rawAdmins
     .split(',')
     .map((e) => e.trim())
     .filter(Boolean);
 
-  const targetEmail = adminRecipients[0] || 'thicosta1432@gmail.com';
+  const targetEmail = adminRecipients[0] || 'contato@correioelegante.studio';
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -413,16 +505,16 @@ export async function sendNewTicketNotificationToAdmin(params: SendNewTicketAdmi
 
       <div class="envelope-body">
         <div style="text-align: center; margin-bottom: 18px;">
-          <span class="protocol-badge">NOVO CHAMADO: ${params.protocol}</span>
+          <span class="protocol-badge">NOVO CHAMADO: ${escapeHtml(params.protocol)}</span>
         </div>
 
-        <h1>${params.subject}</h1>
-        <p><strong>Cliente:</strong> ${params.name} &lt;<a href="mailto:${params.email}" style="color: #e11d48; text-decoration: none;">${params.email}</a>&gt;</p>
-        ${params.orderRef ? `<p><strong>Referência / Carta:</strong> <code style="background: #ffe4ec; padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 13px;">${params.orderRef}</code></p>` : ''}
+        <h1>${escapeHtml(params.subject)}</h1>
+        <p><strong>Cliente:</strong> ${escapeHtml(params.name)} &lt;<a href="mailto:${escapeHtml(params.email)}" style="color: #e11d48; text-decoration: none;">${escapeHtml(params.email)}</a>&gt;</p>
+        ${params.orderRef ? `<p><strong>Referência / Carta:</strong> <code style="background: #ffe4ec; padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 13px;">${escapeHtml(params.orderRef)}</code></p>` : ''}
 
         <div class="highlight-card">
           <div class="highlight-title">Mensagem enviada pelo cliente:</div>
-          <div class="highlight-content">${params.message}</div>
+          <div class="highlight-content">${escapeHtml(params.message)}</div>
         </div>
 
         <div class="btn-container">
@@ -503,21 +595,21 @@ export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promi
 
       <div class="envelope-body">
         <div style="text-align: center; margin-bottom: 18px;">
-          <span class="protocol-badge">PROTOCOLO: ${params.protocol}</span>
+          <span class="protocol-badge">PROTOCOLO: ${escapeHtml(params.protocol)}</span>
         </div>
 
         <h1>Resposta ao seu Chamado</h1>
-        <p>Olá, <strong>${params.recipientName}</strong>!</p>
-        <p>Nossa equipe revisou sua mensagem sobre <strong>${params.subject}</strong> e preparou o seguinte retorno:</p>
+        <p>Olá, <strong>${escapeHtml(params.recipientName)}</strong>!</p>
+        <p>Nossa equipe revisou sua mensagem sobre <strong>${escapeHtml(params.subject)}</strong> e preparou o seguinte retorno:</p>
 
         <div class="highlight-card">
           <div class="highlight-title">Mensagem da Equipe:</div>
-          <div class="highlight-content">${params.replyMessage}</div>
+          <div class="highlight-content">${escapeHtml(params.replyMessage)}</div>
         </div>
 
         <div class="quote-card">
           <div class="quote-title">Sua solicitação original:</div>
-          <div class="quote-body">${params.originalMessage}</div>
+          <div class="quote-body">${escapeHtml(params.originalMessage)}</div>
         </div>
 
         <p style="margin-top: 24px;">Caso ainda tenha qualquer dúvida ou necessite de suporte complementar, basta responder a este e-mail.</p>

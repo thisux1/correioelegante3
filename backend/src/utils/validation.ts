@@ -16,7 +16,7 @@ import {
 
 export const registerSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
   age: z.number({ invalid_type_error: 'Idade inválida' }).int('Idade inválida').min(13, 'Idade mínima é 13 anos').optional(),
   ageConfirmed: z.boolean().optional(),
   legalAccepted: z.literal(true, {
@@ -41,7 +41,7 @@ export const messageSchema = z.object({
 
 export const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Senha atual é obrigatória'),
-  newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
+  newPassword: z.string().min(8, 'Nova senha deve ter no mínimo 8 caracteres'),
 });
 
 export const forgotPasswordSchema = z.object({
@@ -50,7 +50,11 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token de recuperação é obrigatório'),
-  password: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
+  password: z.string().min(8, 'Nova senha deve ter no mínimo 8 caracteres'),
+});
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, 'Token de verificação é obrigatório'),
 });
 
 
@@ -217,6 +221,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
 export type CreateRefundRequestInput = z.infer<typeof createRefundRequestSchema>;
 export type CreatePageInput = z.infer<typeof createPageSchema>;

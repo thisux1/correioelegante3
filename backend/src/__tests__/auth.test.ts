@@ -3,6 +3,12 @@ import request from 'supertest';
 import app from '../app';
 import { prisma } from '../utils/prisma';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
+import { sendEmailVerificationEmail } from '../services/email.service';
+
+vi.mock('../services/email.service', () => ({
+    sendPasswordResetEmail: vi.fn().mockResolvedValue({ success: true, id: 'mock' }),
+    sendEmailVerificationEmail: vi.fn().mockResolvedValue({ success: true, id: 'mock' }),
+}));
 
 // Helper: cria um token de acesso válido para usar nas rotas protegidas
 function makeToken(userId = '507f1f77bcf86cd799439000') {
@@ -21,6 +27,10 @@ const mockUser = {
     subscriptionId: null,
     resetPasswordToken: null,
     resetPasswordExpires: null,
+    emailVerified: false,
+    emailVerificationToken: null,
+    emailVerificationExpires: null,
+    tokenVersion: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
 };
@@ -39,6 +49,8 @@ describe('POST /api/auth/register', () => {
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty('accessToken');
         expect(res.body.user.email).toBe('test@correio.com');
+        expect(res.body.user.emailVerified).toBe(false);
+        expect(sendEmailVerificationEmail).toHaveBeenCalledTimes(1);
     });
 
     it('409 — email já cadastrado', async () => {
@@ -102,7 +114,7 @@ describe('POST /api/auth/login', () => {
         expect(res.headers['set-cookie']).toBeDefined();
     });
 
-    it('401 — usuário não encontrado', async () => {
+    it('401 — usuário não encontrado (mensagem genérica anti-enumeração)', async () => {
         vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
 
         const res = await request(app)
@@ -110,10 +122,10 @@ describe('POST /api/auth/login', () => {
             .send({ email: 'naoexiste@teste.com', password: 'Senha1234' });
 
         expect(res.status).toBe(401);
-        expect(res.body.code).toBe('AUTH_EMAIL_NOT_FOUND');
+        expect(res.body.code).toBe('AUTH_INVALID_CREDENTIALS');
     });
 
-    it('401 — senha incorreta', async () => {
+    it('401 — senha incorreta (mesma mensagem de credenciais inválidas)', async () => {
         const bcrypt = await import('bcryptjs');
         const hash = await bcrypt.hash('OutraSenha', 12);
         vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...mockUser, password: hash });
@@ -123,7 +135,7 @@ describe('POST /api/auth/login', () => {
             .send({ email: 'test@correio.com', password: 'SenhaErrada' });
 
         expect(res.status).toBe(401);
-        expect(res.body.code).toBe('AUTH_INVALID_PASSWORD');
+        expect(res.body.code).toBe('AUTH_INVALID_CREDENTIALS');
     });
 });
 
@@ -354,6 +366,104 @@ describe('POST /api/auth/reset-password', () => {
             });
 
         expect(res.status).toBe(400);
+    });
+});
+
+// ── POST /api/auth/verify-email ──────────────────────────────────────────────
+describe('POST /api/auth/verify-email', () => {
+    it('200 — verifica e-mail com token válido', async () => {
+        vi.mocked(prisma.user.findFirst).mockResolvedValue({
+            ...mockUser,
+            emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        });
+        vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+
+        const res = await request(app)
+            .post('/api/auth/verify-email')
+            .send({ token: 'token-de-verificacao-valido' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.emailVerified).toBe(true);
+        expect(res.body.message).toMatch(/verificado/i);
+        expect(prisma.user.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ emailVerified: true }),
+            }),
+        );
+    });
+
+    it('200 — idempotente quando o e-mail já foi verificado', async () => {
+        vi.mocked(prisma.user.findFirst).mockResolvedValue({
+            ...mockUser,
+            emailVerified: true,
+        });
+
+        const res = await request(app)
+            .post('/api/auth/verify-email')
+            .send({ token: 'token-ja-utilizado' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.emailVerified).toBe(true);
+        expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('400 — token inválido', async () => {
+        vi.mocked(prisma.user.findFirst).mockResolvedValue(null);
+
+        const res = await request(app)
+            .post('/api/auth/verify-email')
+            .send({ token: 'token-inexistente' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe('AUTH_INVALID_VERIFICATION_TOKEN');
+    });
+
+    it('400 — sem token no corpo', async () => {
+        const res = await request(app)
+            .post('/api/auth/verify-email')
+            .send({});
+
+        expect(res.status).toBe(400);
+    });
+});
+
+// ── POST /api/auth/resend-verification ───────────────────────────────────────
+describe('POST /api/auth/resend-verification', () => {
+    it('200 — reenvia e-mail de verificação quando pendente', async () => {
+        vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+        vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+
+        const token = makeToken(mockUser.id);
+        const res = await request(app)
+            .post('/api/auth/resend-verification')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.message).toBeDefined();
+        expect(sendEmailVerificationEmail).toHaveBeenCalledTimes(1);
+        expect(prisma.user.update).toHaveBeenCalled();
+    });
+
+    it('200 — não reenvia quando o e-mail já foi verificado', async () => {
+        vi.mocked(prisma.user.findUnique).mockResolvedValue({
+            ...mockUser,
+            emailVerified: true,
+        });
+
+        const token = makeToken(mockUser.id);
+        const res = await request(app)
+            .post('/api/auth/resend-verification')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).toBe(200);
+        expect(sendEmailVerificationEmail).not.toHaveBeenCalled();
+        expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('401 — sem autenticação', async () => {
+        const res = await request(app).post('/api/auth/resend-verification');
+
+        expect(res.status).toBe(401);
     });
 });
 
