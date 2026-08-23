@@ -23,6 +23,7 @@ model User {
   assets                Asset[]
   consents              UserConsent[]
   refundRequests        RefundRequest[]
+  supportTickets        SupportTicket[]
   resetPasswordToken    String?
   resetPasswordExpires  DateTime?
   createdAt             DateTime        @default(now())
@@ -172,4 +173,22 @@ model RefundRequest {
 
   @@index([userId])
   @@index([userId, resourceType, resourceId, status])
+}
+
+model SupportTicket {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  protocol    String   @unique
+  name        String
+  email       String
+  subject     String
+  orderRef    String?
+  message     String
+  status      String   @default("open")
+  userId      String?  @db.ObjectId
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([email])
+  @@index([status, createdAt])
 }
