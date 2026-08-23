@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
-import { Menu, X, MailOpen, Settings as SettingsIcon } from 'lucide-react'
+import { Menu, X, MailOpen, Settings as SettingsIcon, LifeBuoy } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { Container } from '@/components/layout/Container'
 import { BrandLogo } from '@/components/ui/BrandLogo'
@@ -19,6 +19,7 @@ export function Header() {
   const menuButtonRef = useRef<HTMLButtonElement | null>(null)
   const location = useLocation()
   const { isAuthenticated, user } = useAuthStore()
+  const isAdmin = Boolean(user?.isAdmin || user?.email?.toLowerCase().endsWith('@correioelegante.studio'))
   const isEditorRoute = location.pathname.startsWith('/editor')
   const useMobileLiteGlass = isEditorRoute
   const { scrollYProgress } = useScroll()
@@ -169,6 +170,21 @@ export function Header() {
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
                 <>
+                  {isAdmin ? renderNavLink({
+                    to: '/chamados',
+                    className: `flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors text-xs sm:text-sm font-semibold ${
+                      location.pathname.startsWith('/chamados')
+                        ? 'bg-primary text-white shadow-md shadow-primary/25'
+                        : 'border border-primary/25 bg-rose-50/60 text-primary hover:bg-primary/10 shadow-2xs'
+                    }`,
+                    children: (
+                      <>
+                        <LifeBuoy size={16} />
+                        Chamados
+                      </>
+                    ),
+                  }) : null}
+
                   {renderNavLink({
                     to: '/profile',
                     className: `flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors text-xs sm:text-sm font-semibold ${
@@ -339,6 +355,22 @@ export function Header() {
                         </span>
                       ),
                     })}
+
+                    {isAdmin ? renderNavLink({
+                      to: '/chamados',
+                      onClick: () => setIsMenuOpen(false),
+                      className: `block w-full rounded-2xl px-4 py-3 text-center text-base font-bold transition-colors ${
+                        location.pathname.startsWith('/chamados')
+                          ? 'bg-primary text-white shadow-md'
+                          : 'border border-primary/25 bg-rose-50/80 text-primary hover:bg-rose-100'
+                      }`,
+                      children: (
+                        <span className="flex items-center justify-center gap-2">
+                          <LifeBuoy size={18} />
+                          Central de Chamados
+                        </span>
+                      ),
+                    }) : null}
 
                     {renderNavLink({
                       to: '/settings',
