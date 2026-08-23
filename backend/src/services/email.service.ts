@@ -13,6 +13,191 @@ function getResendClient(): Resend | null {
   return resendClient;
 }
 
+// Estilos e componentes reutilizáveis para os e-mails com a identidade visual do Correio Elegante
+const EMAIL_BASE_STYLES = `
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #fff5f7;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #4c0519;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .wrapper {
+    width: 100%;
+    background-color: #fff5f7;
+    padding: 36px 12px 48px;
+    box-sizing: border-box;
+  }
+  .envelope-card {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 28px;
+    border: 1px solid #fecdd3;
+    box-shadow: 0 16px 36px -8px rgba(225, 29, 72, 0.09), 0 4px 12px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+  }
+  .envelope-header {
+    background: linear-gradient(180deg, #ffe4ec 0%, #fff5f7 100%);
+    padding: 36px 28px 24px;
+    text-align: center;
+    border-bottom: 1px dashed #fda4af;
+    position: relative;
+  }
+  .brand-title {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: #881337;
+    letter-spacing: -0.5px;
+    margin: 12px 0 2px;
+  }
+  .brand-tagline {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #be123c;
+    font-weight: 700;
+    margin: 0;
+  }
+  .envelope-body {
+    padding: 36px 36px 32px;
+  }
+  @media only screen and (max-width: 480px) {
+    .envelope-body {
+      padding: 24px 20px 24px;
+    }
+    .envelope-header {
+      padding: 28px 16px 20px;
+    }
+  }
+  h1 {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #4c0519;
+    margin: 0 0 16px;
+    line-height: 1.3;
+  }
+  p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: #701a35;
+    margin: 14px 0;
+  }
+  .wax-seal {
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e11d48 0%, #9f1239 100%);
+    box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+    border: 2px solid #ffffff;
+    text-align: center;
+    line-height: 48px;
+    vertical-align: middle;
+  }
+  .protocol-badge {
+    display: inline-block;
+    background: #ffe4ec;
+    border: 1px solid #fecdd3;
+    color: #e11d48;
+    font-family: 'SF Mono', Consolas, Monaco, monospace;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+  }
+  .highlight-card {
+    background: #fffafb;
+    border: 1px solid #ffe4ec;
+    border-left: 4px solid #e11d48;
+    border-radius: 4px 16px 16px 4px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .highlight-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 800;
+    color: #e11d48;
+    margin-bottom: 8px;
+  }
+  .highlight-content {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #4c0519;
+    white-space: pre-wrap;
+  }
+  .quote-card {
+    background: #fdf2f4;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-top: 20px;
+    border: 1px solid #ffe4ec;
+  }
+  .quote-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    color: #9f1239;
+    margin-bottom: 6px;
+  }
+  .quote-body {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #701a35;
+    font-style: italic;
+    white-space: pre-wrap;
+  }
+  .btn-container {
+    text-align: center;
+    margin: 32px 0 24px;
+  }
+  .btn-primary {
+    display: inline-block;
+    background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+    color: #ffffff !important;
+    text-decoration: none;
+    padding: 15px 36px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 8px 20px -4px rgba(225, 29, 72, 0.4);
+  }
+  .envelope-footer {
+    background: #fff5f7;
+    border-top: 1px solid #fecdd3;
+    padding: 24px 28px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #881337;
+  }
+  .footer-sub {
+    font-size: 11px;
+    color: #9f1239;
+    margin-top: 8px;
+  }
+  .stamp-mark {
+    display: inline-block;
+    border: 1.5px dashed #fda4af;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #be123c;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+`;
+
 export interface SendPasswordResetEmailParams {
   to: string;
   resetUrl: string;
@@ -30,38 +215,41 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Redefinição de Senha - Correio Elegante</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
-    .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fecdd3; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
-    .logo { text-align: center; margin-bottom: 24px; }
-    .logo-text { font-size: 22px; font-weight: 800; color: #e11d48; letter-spacing: -0.5px; margin: 0; }
-    h1 { font-size: 20px; font-weight: 700; color: #4c0519; text-align: center; margin-top: 0; margin-bottom: 16px; }
-    p { font-size: 15px; line-height: 1.6; color: #701a35; margin: 12px 0; }
-    .btn-container { text-align: center; margin: 32px 0; }
-    .btn { display: inline-block; background: #e11d48; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 15px; }
-    .footer { text-align: center; font-size: 12px; color: #881337; margin-top: 32px; border-top: 1px solid #ffe4ec; padding-top: 20px; }
-    .link-fallback { word-break: break-all; font-size: 12px; color: #e11d48; }
-  </style>
+  <style>${EMAIL_BASE_STYLES}</style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">
-      <h2 class="logo-text">Correio Elegante</h2>
-    </div>
-    <h1>Recuperação de Senha</h1>
-    <p>Olá${params.userName ? `, <strong>${params.userName}</strong>` : ''}!</p>
-    <p>Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Correio Elegante</strong>.</p>
-    <p>Para escolher uma nova senha, clique no botão abaixo:</p>
-    <div class="btn-container">
-      <a href="${params.resetUrl}" class="btn" target="_blank">Redefinir Minha Senha</a>
-    </div>
-    <p style="font-size: 13px; color: #701a35;">
-      Este link é seguro e expira automaticamente em <strong>60 minutos</strong>.
-    </p>
-    <div class="footer">
-      <p>Caso o botão não funcione, copie e cole este link no seu navegador:</p>
-      <p class="link-fallback">${params.resetUrl}</p>
-      <p style="margin-top: 16px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
+  <div class="wrapper">
+    <div class="envelope-card">
+      <div class="envelope-header">
+        <div class="wax-seal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-top: 13px; display: inline-block;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-title">Correio Elegante</div>
+        <p class="brand-tagline">Correspondência Digital</p>
+      </div>
+
+      <div class="envelope-body">
+        <h1>Redefinição de Senha</h1>
+        <p>Olá${params.userName ? `, <strong>${params.userName}</strong>` : ''}!</p>
+        <p>Recebemos uma solicitação segura para criar uma nova senha para sua conta no <strong>Correio Elegante</strong>.</p>
+        <p>Para prosseguir com a redefinição, clique no botão abaixo:</p>
+
+        <div class="btn-container">
+          <a href="${params.resetUrl}" class="btn-primary" target="_blank">Redefinir Minha Senha</a>
+        </div>
+
+        <p style="font-size: 13px; color: #881337; text-align: center; margin-top: 24px;">
+          Este link de acesso é protegido e expira automaticamente em <strong>60 minutos</strong>.
+        </p>
+      </div>
+
+      <div class="envelope-footer">
+        <div class="stamp-mark">Segurança & Autenticação</div>
+        <p>Se você não solicitou a troca de senha, fique tranquilo. Sua conta permanece segura e nenhuma ação é necessária.</p>
+        <p class="footer-sub">&copy; ${new Date().getFullYear()} Correio Elegante &bull; correioelegante.studio</p>
+      </div>
     </div>
   </div>
 </body>
@@ -112,41 +300,43 @@ export async function sendTicketConfirmationEmail(params: SendTicketConfirmation
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chamado Recebido #${params.protocol} - Correio Elegante</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
-    .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fecdd3; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
-    .logo { text-align: center; margin-bottom: 24px; }
-    .logo-text { font-size: 22px; font-weight: 800; color: #e11d48; letter-spacing: -0.5px; margin: 0; }
-    .badge { display: inline-block; background: #ffe4ec; color: #e11d48; padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; font-family: monospace; letter-spacing: 0.5px; margin-bottom: 12px; }
-    h1 { font-size: 22px; font-weight: 700; color: #4c0519; margin-top: 0; margin-bottom: 16px; }
-    p { font-size: 15px; line-height: 1.6; color: #701a35; margin: 12px 0; }
-    .card { background: #fffafb; border: 1px solid #ffe4ec; border-radius: 14px; padding: 20px; margin: 20px 0; }
-    .card-title { font-size: 12px; text-transform: uppercase; font-weight: 700; color: #881337; margin-bottom: 6px; }
-    .card-content { font-size: 14px; color: #4c0519; white-space: pre-wrap; }
-    .footer { text-align: center; font-size: 12px; color: #881337; margin-top: 32px; border-top: 1px solid #ffe4ec; padding-top: 20px; }
-  </style>
+  <style>${EMAIL_BASE_STYLES}</style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">
-      <h2 class="logo-text">Correio Elegante</h2>
-    </div>
-    <div style="text-align: center;">
-      <span class="badge">PROTOCOLO: ${params.protocol}</span>
-      <h1>Chamado Registrado com Sucesso</h1>
-    </div>
-    <p>Olá, <strong>${params.recipientName}</strong>!</p>
-    <p>Recebemos sua mensagem sobre <strong>${params.subject}</strong> e ela já foi registrada em nossa central de atendimento.</p>
-    
-    <div class="card">
-      <div class="card-title">Resumo da sua solicitação:</div>
-      <div class="card-content">${params.message}</div>
-    </div>
+  <div class="wrapper">
+    <div class="envelope-card">
+      <div class="envelope-header">
+        <div class="wax-seal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-top: 13px; display: inline-block;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-title">Correio Elegante</div>
+        <p class="brand-tagline">Central de Atendimento</p>
+      </div>
 
-    <p>Nossa equipe já está analisando o seu caso e retornará em breve.</p>
-    
-    <div class="footer">
-      <p style="margin-top: 12px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
+      <div class="envelope-body">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <span class="protocol-badge">PROTOCOLO: ${params.protocol}</span>
+        </div>
+
+        <h1>Chamado Registrado com Sucesso</h1>
+        <p>Olá, <strong>${params.recipientName}</strong>!</p>
+        <p>Sua solicitação sobre <strong>${params.subject}</strong> foi recebida e encaminhada para a nossa equipe de atendimento.</p>
+
+        <div class="highlight-card">
+          <div class="highlight-title">Resumo da sua mensagem:</div>
+          <div class="highlight-content">${params.message}</div>
+        </div>
+
+        <p>Já estamos analisando sua mensagem e responderemos diretamente neste endereço de e-mail assim que concluirmos o atendimento.</p>
+      </div>
+
+      <div class="envelope-footer">
+        <div class="stamp-mark">Protocolo Oficial #${params.protocol}</div>
+        <p>Para acompanhar ou enviar novos dados, basta responder a este e-mail mantendo o número do protocolo.</p>
+        <p class="footer-sub">&copy; ${new Date().getFullYear()} Correio Elegante &bull; correioelegante.studio</p>
+      </div>
     </div>
   </div>
 </body>
@@ -191,7 +381,6 @@ export async function sendNewTicketNotificationToAdmin(params: SendNewTicketAdmi
   const client = getResendClient();
   const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
 
-  // Destinatários dos alertas para administradores
   const rawAdmins = process.env.ADMIN_EMAILS || 'thicosta1432@gmail.com,contato@correioelegante.studio';
   const adminRecipients = rawAdmins
     .split(',')
@@ -206,36 +395,46 @@ export async function sendNewTicketNotificationToAdmin(params: SendNewTicketAdmi
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Novo Chamado de Suporte [${params.protocol}]</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
-    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 36px 28px; border: 1px solid #fecdd3; }
-    .header { border-bottom: 2px solid #ffe4ec; padding-bottom: 16px; margin-bottom: 20px; }
-    .badge { display: inline-block; background: #e11d48; color: #ffffff; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; font-family: monospace; }
-    h1 { font-size: 20px; font-weight: 800; color: #4c0519; margin: 12px 0 4px 0; }
-    .meta-row { font-size: 13px; color: #701a35; margin: 6px 0; }
-    .msg-box { background: #fff5f7; border-left: 4px solid #e11d48; border-radius: 0 12px 12px 0; padding: 18px; margin: 20px 0; }
-    .msg-title { font-size: 11px; text-transform: uppercase; font-weight: 800; color: #e11d48; margin-bottom: 6px; }
-    .msg-body { font-size: 14px; color: #4c0519; white-space: pre-wrap; line-height: 1.6; }
-    .footer { font-size: 12px; color: #881337; margin-top: 24px; border-top: 1px solid #ffe4ec; padding-top: 16px; text-align: center; }
-  </style>
+  <title>Novo Chamado [${params.protocol}] - Correio Elegante</title>
+  <style>${EMAIL_BASE_STYLES}</style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <span class="badge">NOVO CHAMADO ${params.protocol}</span>
-      <h1>${params.subject}</h1>
-      <div class="meta-row"><strong>Cliente:</strong> ${params.name} &lt;${params.email}&gt;</div>
-      ${params.orderRef ? `<div class="meta-row"><strong>Ref / Carta:</strong> ${params.orderRef}</div>` : ''}
-    </div>
+  <div class="wrapper">
+    <div class="envelope-card">
+      <div class="envelope-header">
+        <div class="wax-seal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-top: 13px; display: inline-block;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-title">Correio Elegante</div>
+        <p class="brand-tagline">Painel de Atendimento</p>
+      </div>
 
-    <div class="msg-box">
-      <div class="msg-title">Mensagem enviada:</div>
-      <div class="msg-body">${params.message}</div>
-    </div>
+      <div class="envelope-body">
+        <div style="text-align: center; margin-bottom: 18px;">
+          <span class="protocol-badge">NOVO CHAMADO: ${params.protocol}</span>
+        </div>
 
-    <div class="footer">
-      Acesse o painel em <strong>Configurações &gt; Central de Chamados</strong> ou na página <strong>/contato</strong> para responder.
+        <h1>${params.subject}</h1>
+        <p><strong>Cliente:</strong> ${params.name} &lt;<a href="mailto:${params.email}" style="color: #e11d48; text-decoration: none;">${params.email}</a>&gt;</p>
+        ${params.orderRef ? `<p><strong>Referência / Carta:</strong> <code style="background: #ffe4ec; padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 13px;">${params.orderRef}</code></p>` : ''}
+
+        <div class="highlight-card">
+          <div class="highlight-title">Mensagem enviada pelo cliente:</div>
+          <div class="highlight-content">${params.message}</div>
+        </div>
+
+        <div class="btn-container">
+          <a href="https://correioelegante.studio/chamados" class="btn-primary" target="_blank">Acessar Central de Chamados</a>
+        </div>
+      </div>
+
+      <div class="envelope-footer">
+        <div class="stamp-mark">Painel Administrativo</div>
+        <p>Notificação automática enviada para a equipe de suporte do Correio Elegante.</p>
+        <p class="footer-sub">&copy; ${new Date().getFullYear()} Correio Elegante &bull; correioelegante.studio</p>
+      </div>
     </div>
   </div>
 </body>
@@ -287,48 +486,48 @@ export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promi
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Resposta ao Chamado #${params.protocol} - Correio Elegante</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fff5f7; margin: 0; padding: 24px; color: #4c0519; }
-    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 40px 32px; border: 1px solid #fecdd3; box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08); }
-    .logo { text-align: center; margin-bottom: 24px; }
-    .logo-text { font-size: 22px; font-weight: 800; color: #e11d48; letter-spacing: -0.5px; margin: 0; }
-    .badge { display: inline-block; background: #ffe4ec; color: #e11d48; padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 800; font-family: monospace; letter-spacing: 0.5px; margin-bottom: 12px; }
-    h1 { font-size: 22px; font-weight: 700; color: #4c0519; margin-top: 0; margin-bottom: 16px; }
-    p { font-size: 15px; line-height: 1.6; color: #701a35; margin: 12px 0; }
-    .reply-card { background: #fff0f4; border-left: 4px solid #e11d48; border-radius: 0 14px 14px 0; padding: 20px 24px; margin: 24px 0; }
-    .reply-title { font-size: 12px; text-transform: uppercase; font-weight: 800; color: #e11d48; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .reply-body { font-size: 15px; color: #4c0519; line-height: 1.7; white-space: pre-wrap; }
-    .original-quote { background: #fafafa; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-top: 24px; }
-    .quote-title { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #94a3b8; margin-bottom: 6px; }
-    .quote-body { font-size: 13px; color: #64748b; font-style: italic; white-space: pre-wrap; }
-    .footer { text-align: center; font-size: 12px; color: #881337; margin-top: 36px; border-top: 1px solid #ffe4ec; padding-top: 20px; }
-  </style>
+  <style>${EMAIL_BASE_STYLES}</style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">
-      <h2 class="logo-text">Correio Elegante</h2>
-    </div>
-    <div style="text-align: center;">
-      <span class="badge">PROTOCOLO: ${params.protocol}</span>
-      <h1>Resposta ao seu Chamado</h1>
-    </div>
-    <p>Olá, <strong>${params.recipientName}</strong>!</p>
-    <p>Nossa equipe revisou sua solicitação referente a <strong>${params.subject}</strong> e preparou o seguinte retorno para você:</p>
-    
-    <div class="reply-card">
-      <div class="reply-title">Mensagem da Equipe:</div>
-      <div class="reply-body">${params.replyMessage}</div>
-    </div>
+  <div class="wrapper">
+    <div class="envelope-card">
+      <div class="envelope-header">
+        <div class="wax-seal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-top: 13px; display: inline-block;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-title">Correio Elegante</div>
+        <p class="brand-tagline">Retorno Oficial de Atendimento</p>
+      </div>
 
-    <div class="original-quote">
-      <div class="quote-title">Sua mensagem original:</div>
-      <div class="quote-body">${params.originalMessage}</div>
-    </div>
+      <div class="envelope-body">
+        <div style="text-align: center; margin-bottom: 18px;">
+          <span class="protocol-badge">PROTOCOLO: ${params.protocol}</span>
+        </div>
 
-    <div class="footer">
-      <p>Caso precise de novos esclarecimentos, basta nos contatar com o protocolo #${params.protocol}.</p>
-      <p style="margin-top: 12px;">© ${new Date().getFullYear()} Correio Elegante. Todos os direitos reservados.</p>
+        <h1>Resposta ao seu Chamado</h1>
+        <p>Olá, <strong>${params.recipientName}</strong>!</p>
+        <p>Nossa equipe revisou sua mensagem sobre <strong>${params.subject}</strong> e preparou o seguinte retorno:</p>
+
+        <div class="highlight-card">
+          <div class="highlight-title">Mensagem da Equipe:</div>
+          <div class="highlight-content">${params.replyMessage}</div>
+        </div>
+
+        <div class="quote-card">
+          <div class="quote-title">Sua solicitação original:</div>
+          <div class="quote-body">${params.originalMessage}</div>
+        </div>
+
+        <p style="margin-top: 24px;">Caso ainda tenha qualquer dúvida ou necessite de suporte complementar, basta responder a este e-mail.</p>
+      </div>
+
+      <div class="envelope-footer">
+        <div class="stamp-mark">Atendimento ao Cliente</div>
+        <p>Agradecemos por fazer parte do Correio Elegante. Estamos à disposição para ajudar.</p>
+        <p class="footer-sub">&copy; ${new Date().getFullYear()} Correio Elegante &bull; correioelegante.studio</p>
+      </div>
     </div>
   </div>
 </body>
