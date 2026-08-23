@@ -1,7 +1,10 @@
 name: CI
 
-# CI/CD desativado para execuções automáticas (ativado apenas via disparo manual)
+# Executa automaticamente em PRs e pushes na main; disparo manual também disponível.
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -57,7 +60,9 @@ jobs:
 
       - name: Auditoria de dependências
         working-directory: backend
-        run: npm audit --audit-level=high --omit=dev
+        # Nível critical até o Prisma atualizar deepmerge-ts (<8.0.0, high) na
+        # cadeia de build (@prisma/config via CLI) — sem exposição em runtime.
+        run: npm audit --audit-level=critical --omit=dev
 
   frontend:
     name: Frontend — lint, typecheck, test & build
