@@ -14,7 +14,7 @@ export function ProfileCardSkeleton({
       role="status"
       aria-live="polite"
       aria-label="Carregando cartas do perfil..."
-      className={`space-y-3.5 ${className}`}
+      className={`space-y-4 ${className}`}
     >
       {Array.from({ length: count }).map((_, index) => {
         const isDraftVariant = index % 2 !== 0
@@ -22,18 +22,18 @@ export function ProfileCardSkeleton({
         return (
           <div
             key={index}
-            className={`glass relative overflow-hidden flex flex-col gap-4 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${
+            className={`glass relative overflow-hidden flex flex-col gap-4 rounded-3xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6 border-2 ${
               isDraftVariant
-                ? 'border border-amber-500/30 bg-surface'
-                : 'border border-primary/20 bg-surface'
+                ? 'border-dashed border-amber-400/80 bg-[#fffdfa]'
+                : 'border-pink-300/80 bg-white'
             }`}
           >
-            {/* Linha sutil de dobra do envelope no topo */}
+            {/* Linha superior de acabamento postal */}
             <div
-              className={`pointer-events-none absolute top-0 inset-x-0 h-1 ${
+              className={`pointer-events-none absolute top-0 inset-x-0 h-1.5 ${
                 isDraftVariant
-                  ? 'bg-gradient-to-r from-amber-500/10 via-amber-500/40 to-amber-500/10'
-                  : 'bg-gradient-to-r from-primary/10 via-primary/30 to-primary/10'
+                  ? 'bg-gradient-to-r from-amber-400/20 via-amber-400/50 to-amber-400/20'
+                  : 'bg-gradient-to-r from-primary/20 via-primary/50 to-primary/20'
               }`}
               aria-hidden="true"
             />
