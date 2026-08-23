@@ -21,7 +21,6 @@ import { Modal } from '@/components/ui/Modal'
 import { InlineAlert } from '@/components/ui/InlineAlert'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { SettingRow } from '@/components/ui/SettingRow'
-import { TicketsInboxModal } from '@/components/support/TicketsInboxModal'
 import { useAuthStore } from '@/store/authStore'
 import { authService } from '@/services/authService'
 import { paymentService, type SubscriptionStatusResponse } from '@/services/paymentService'
@@ -41,9 +40,6 @@ export function Settings() {
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
-
-  // Support Tickets State
-  const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false)
 
   // Delete Account State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -257,11 +253,11 @@ export function Settings() {
                   action={(
                     <Button
                       variant="outline"
-                      onClick={() => setIsTicketsModalOpen(true)}
+                      onClick={() => navigate('/chamados')}
                       className="w-full font-semibold sm:w-auto mt-2 sm:mt-0"
                     >
                       <LifeBuoy size={15} className="mr-2" />
-                      Abrir Chamados
+                      Acessar Painel
                     </Button>
                   )}
                 />
@@ -430,12 +426,6 @@ export function Settings() {
               </div>
             </div>
           </Modal>
-
-          {/* Modal de Gestão de Chamados & Respostas por E-mail via Resend */}
-          <TicketsInboxModal
-            isOpen={isTicketsModalOpen}
-            onClose={() => setIsTicketsModalOpen(false)}
-          />
         </section>
       </Container>
     </div>

@@ -62,6 +62,7 @@ const Pricing = safeLazy(() => import('@/pages/Pricing').then(m => ({ default: m
 const SubscriptionSuccess = safeLazy(() => import('@/pages/SubscriptionSuccess').then(m => ({ default: m.SubscriptionSuccess })))
 const Card = safeLazy(() => import('@/pages/Card').then(m => ({ default: m.Card })))
 const PageCard = safeLazy(() => import('@/pages/PageCard').then(m => ({ default: m.PageCard })))
+const AdminTickets = safeLazy(() => import('@/pages/AdminTickets').then(m => ({ default: m.AdminTickets })))
 const Error404 = safeLazy(() => import('@/pages/Error404').then(m => ({ default: m.Error404 })))
 const Error500 = safeLazy(() => import('@/pages/Error500').then(m => ({ default: m.Error500 })))
 const ErrorSession = safeLazy(() => import('@/pages/ErrorSession').then(m => ({ default: m.ErrorSession })))
@@ -172,6 +173,18 @@ function EditorFeatureRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+function AdminRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuthStore()
+
+  if (isLoading) return <PageLoader />
+  if (!isAuthenticated) return <Navigate to="/auth" replace />
+
+  const isAdmin = Boolean(user?.isAdmin || user?.email?.toLowerCase().endsWith('@correioelegante.studio'))
+  if (!isAdmin) return <Navigate to="/" replace />
+
+  return <>{children}</>
+}
+
 function RouterNavigationBridge() {
   const navigate = useNavigate()
 
@@ -222,6 +235,8 @@ export function AppRouter() {
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/configuracoes" element={<Navigate to="/settings" replace />} />
+              <Route path="/chamados" element={<AdminRoute><AdminTickets /></AdminRoute>} />
+              <Route path="/admin/tickets" element={<Navigate to="/chamados" replace />} />
               <Route path="/payment/page/:pageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
               <Route path="/payment/page/:pageId/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
               <Route path="/payment/:messageId" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
