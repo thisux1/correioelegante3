@@ -22,6 +22,7 @@ import { InlineAlert } from '@/components/ui/InlineAlert'
 import { LegalPageSkeleton } from '@/components/ui/LegalPageSkeleton'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { contactService, type SupportTicketResponse } from '@/services/contactService'
+import { TicketsInboxModal } from '@/components/support/TicketsInboxModal'
 import { useAuthStore } from '@/store/authStore'
 
 export interface ContactProps {
@@ -72,6 +73,7 @@ export function Contact({ isLoading }: ContactProps = {}) {
   const [copiedProtocol, setCopiedProtocol] = useState(false)
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
   const [isDevInfoOpen, setIsDevInfoOpen] = useState(false)
+  const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false)
 
   if (isLoading) {
     return <LegalPageSkeleton />
@@ -151,6 +153,36 @@ export function Contact({ isLoading }: ContactProps = {}) {
             </p>
           </header>
         </ScrollReveal>
+
+        {/* Banner de Acesso Rápido para Administradores */}
+        {(user?.isAdmin || user?.email?.toLowerCase().endsWith('@correioelegante.studio')) ? (
+          <ScrollReveal direction="up" delay={0.03} animateOnMount>
+            <div className="mb-8 rounded-3xl border-2 border-[#e11d48]/30 bg-gradient-to-r from-rose-100/60 via-rose-50 to-white p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-12 h-12 rounded-2xl bg-[#e11d48] text-white flex items-center justify-center shrink-0 shadow-md">
+                  <LifeBuoy className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="font-display text-base sm:text-lg font-bold text-[#4c0519]">
+                    Painel do Administrador
+                  </h2>
+                  <p className="text-xs text-[#701a35]/80">
+                    Você está autenticado com privilégios de suporte ({user?.email}).
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => setIsTicketsModalOpen(true)}
+                className="w-full sm:w-auto font-bold shadow-md shadow-rose-500/20 shrink-0"
+              >
+                <LifeBuoy size={16} className="mr-2" />
+                Abrir Central de Chamados
+              </Button>
+            </div>
+          </ScrollReveal>
+        ) : null}
 
         {/* Formulário de Abertura de Chamado (Funcional) */}
         <ScrollReveal direction="up" delay={0.06} animateOnMount>
@@ -460,6 +492,12 @@ export function Contact({ isLoading }: ContactProps = {}) {
             </AnimatePresence>
           </div>
         </div>
+
+        {/* Modal da Central de Chamados & Respostas via Resend */}
+        <TicketsInboxModal
+          isOpen={isTicketsModalOpen}
+          onClose={() => setIsTicketsModalOpen(false)}
+        />
       </Container>
     </div>
   )
