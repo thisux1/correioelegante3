@@ -38,28 +38,29 @@ export async function createTicket(data: CreateSupportTicketInput, userId?: stri
     },
   });
 
-  // 1. Dispara confirmação para o cliente (em background)
-  sendTicketConfirmationEmail({
-    to: ticket.email,
-    recipientName: ticket.name,
-    protocol: ticket.protocol,
-    subject: ticket.subject,
-    message: ticket.message,
-  }).catch((err) => {
-    console.error('[ContactService] Erro ao enviar confirmação de chamado ao cliente:', err);
-  });
-
-  // 2. Dispara notificação com os dados do chamado para os administradores (em background)
-  sendNewTicketNotificationToAdmin({
-    protocol: ticket.protocol,
-    name: ticket.name,
-    email: ticket.email,
-    subject: ticket.subject,
-    message: ticket.message,
-    orderRef: ticket.orderRef,
-  }).catch((err) => {
-    console.error('[ContactService] Erro ao enviar alerta de chamado para admin:', err);
-  });
+  // Dispara confirmação ao cliente e alerta à equipe aguardando a conclusão
+  // para evitar que o ambiente serverless da Vercel congele antes do envio de rede
+  try {
+    await Promise.allSettled([
+      sendTicketConfirmationEmail({
+        to: ticket.email,
+        recipientName: ticket.name,
+        protocol: ticket.protocol,
+        subject: ticket.subject,
+        message: ticket.message,
+      }),
+      sendNewTicketNotificationToAdmin({
+        protocol: ticket.protocol,
+        name: ticket.name,
+        email: ticket.email,
+        subject: ticket.subject,
+        message: ticket.message,
+        orderRef: ticket.orderRef,
+      }),
+    ]);
+  } catch (err) {
+    console.error('[ContactService] Erro ao disparar e-mails do chamado:', err);
+  }
 
   return {
     id: ticket.id,
