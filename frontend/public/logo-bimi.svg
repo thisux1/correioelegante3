@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 512 512" width="512" height="512">
+  <title>Correio Elegante</title>
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#be123c"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+    <linearGradient id="sealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#ffe4ec"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fundo Sólido Circular / Quadrado com Cantos Suaves -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad)"/>
+
+  <!-- Silhueta da Carta / Envelope -->
+  <path d="M106 170 C106 150 122 134 142 134 L370 134 C390 134 406 150 406 170 L406 342 C406 362 390 378 370 378 L142 378 C122 378 106 362 106 342 Z" fill="#ffffff" opacity="0.95"/>
+
+  <!-- Linhas Dobra da Carta -->
+  <path d="M106 160 L256 276 L406 160" fill="none" stroke="#e11d48" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M106 352 L206 250" fill="none" stroke="#fda4af" stroke-width="8" stroke-linecap="round"/>
+  <path d="M406 352 L306 250" fill="none" stroke="#fda4af" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Selo Central de Cera -->
+  <circle cx="256" cy="276" r="46" fill="#be123c"/>
+  <circle cx="256" cy="276" r="40" fill="#e11d48"/>
+
+  <!-- Monograma de Coração no Selo -->
+  <path d="M256 292 C256 292 236 278 236 266 C236 258 242 252 250 252 C254 252 256 254 256 254 C256 254 258 252 262 252 C270 252 276 258 276 266 C276 278 256 292 256 292 Z" fill="#ffffff"/>
+</svg>
