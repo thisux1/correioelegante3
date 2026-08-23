@@ -26,7 +26,6 @@ vi.mock('../services/stripe.service', () => ({
 }));
 
 import * as pagbankService from '../services/pagbank.service';
-import * as mercadopagoService from '../services/mercadopago.service';
 import * as stripeService from '../services/stripe.service';
 
 // IDs MongoDB válidos (24 chars hex)
@@ -342,11 +341,9 @@ describe('POST /api/payments/webhook/stripe', () => {
     });
 });
 
-// ── POST /api/payments/webhook/mercadopago ────────────────────────────────────
+// ── POST /api/payments/webhook/mercadopago (DESATIVADO) ───────────────────────
 describe('POST /api/payments/webhook/mercadopago', () => {
-    it('200 — processa webhook do Mercado Pago', async () => {
-        vi.mocked(mercadopagoService.handleWebhook).mockResolvedValue({ received: true });
-
+    it('404 — rota desativada (Mercado Pago fora de uso)', async () => {
         const res = await request(app)
             .post('/api/payments/webhook/mercadopago')
             .set('x-signature', 'ts=12345,v1=hashvalid')
@@ -354,46 +351,7 @@ describe('POST /api/payments/webhook/mercadopago', () => {
             .set('Content-Type', 'application/json')
             .send({ type: 'payment', data: { id: '123456789' } });
 
-        expect(res.status).toBe(200);
-        expect(res.body).toHaveProperty('received', true);
-    });
-
-    it('400 — sem header x-signature', async () => {
-        const res = await request(app)
-            .post('/api/payments/webhook/mercadopago')
-            .set('x-request-id', 'req-test-123')
-            .set('Content-Type', 'application/json')
-            .send({ type: 'payment', data: { id: '123456789' } });
-
-        expect(res.status).toBe(400);
-        expect(res.body.error).toMatch(/x-signature/i);
-    });
-
-    it('400 — sem header x-request-id', async () => {
-        const res = await request(app)
-            .post('/api/payments/webhook/mercadopago')
-            .set('x-signature', 'ts=12345,v1=hashvalid')
-            .set('Content-Type', 'application/json')
-            .send({ type: 'payment', data: { id: '123456789' } });
-
-        expect(res.status).toBe(400);
-        expect(res.body.error).toMatch(/x-request-id/i);
-    });
-
-    it('401 — assinatura inválida no webhook do Mercado Pago', async () => {
-        vi.mocked(mercadopagoService.handleWebhook).mockRejectedValue(
-            new AppError('Assinatura inválida', 401)
-        );
-
-        const res = await request(app)
-            .post('/api/payments/webhook/mercadopago')
-            .set('x-signature', 'ts=12345,v1=wronghash')
-            .set('x-request-id', 'req-test-123')
-            .set('Content-Type', 'application/json')
-            .send({ type: 'payment', data: { id: '123456789' } });
-
-        expect(res.status).toBe(401);
-        expect(res.body.error).toMatch(/assinatura inválida/i);
+        expect(res.status).toBe(404);
     });
 });
 

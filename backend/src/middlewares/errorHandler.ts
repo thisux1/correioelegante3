@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../utils/AppError';
+import { sendCriticalAlert } from '../services/alert.service';
 
 export function errorHandler(
   err: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void {
@@ -57,6 +58,11 @@ export function errorHandler(
       return;
     }
     console.error('Prisma error:', err);
+    void sendCriticalAlert({
+      context: 'server_error',
+      title: `Erro de banco de dados em ${req.method} ${req.path}`,
+      error: err,
+    });
     res.status(500).json({
       error: 'Erro interno do servidor',
       code: 'DATABASE_ERROR',
@@ -65,6 +71,11 @@ export function errorHandler(
   }
 
   console.error('Unexpected error:', err);
+  void sendCriticalAlert({
+    context: 'server_error',
+    title: `Erro interno em ${req.method} ${req.path}`,
+    error: err,
+  });
   res.status(500).json({
     error: 'Erro interno do servidor',
     code: 'INTERNAL_SERVER_ERROR',

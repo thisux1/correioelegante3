@@ -12,14 +12,26 @@ function generateProtocol(): string {
   return `TKT-${randomNum}`;
 }
 
+// Remove tags iterativamente até estabilizar — evita bypass via tags aninhadas
+// (ex: "<<script>script>" viraria "<script>" numa única passada).
+function stripHtmlTags(input: string): string {
+  let current = input;
+  let previous: string;
+  do {
+    previous = current;
+    current = current.replace(/<[^>]*>/g, '');
+  } while (current !== previous);
+  return current;
+}
+
 export async function createTicket(data: CreateSupportTicketInput, userId?: string) {
   const protocol = generateProtocol();
 
   // Basic HTML sanitization to prevent injection
-  const sanitizedMessage = data.message.replace(/<[^>]*>/g, '').trim();
-  const sanitizedName = data.name.replace(/<[^>]*>/g, '').trim();
-  const sanitizedSubject = data.subject.replace(/<[^>]*>/g, '').trim();
-  const sanitizedOrderRef = data.orderRef ? data.orderRef.replace(/<[^>]*>/g, '').trim() : null;
+  const sanitizedMessage = stripHtmlTags(data.message).trim();
+  const sanitizedName = stripHtmlTags(data.name).trim();
+  const sanitizedSubject = stripHtmlTags(data.subject).trim();
+  const sanitizedOrderRef = data.orderRef ? stripHtmlTags(data.orderRef).trim() : null;
 
   if (!sanitizedMessage || sanitizedMessage.length < 10) {
     throw new AppError('Mensagem inválida ou muito curta.', 400, 'INVALID_MESSAGE');
@@ -152,7 +164,7 @@ export async function replyToTicket(ticketId: string, input: ReplyTicketInput) {
     throw new AppError('Chamado de suporte não encontrado.', 404, 'TICKET_NOT_FOUND');
   }
 
-  const sanitizedReply = input.replyMessage.replace(/<[^>]*>/g, '').trim();
+  const sanitizedReply = stripHtmlTags(input.replyMessage).trim();
   if (!sanitizedReply || sanitizedReply.length < 5) {
     throw new AppError('A resposta deve ter no mínimo 5 caracteres.', 400, 'INVALID_REPLY');
   }

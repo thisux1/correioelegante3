@@ -5,6 +5,7 @@ import * as pagbankService from '../services/pagbank.service';
 import * as mercadopagoService from '../services/mercadopago.service';
 import * as stripeService from '../services/stripe.service';
 import * as subscriptionService from '../services/subscription.service';
+import { sendCriticalAlert } from '../services/alert.service';
 import { prisma } from '../utils/prisma';
 
 type PaymentResourceType = 'message' | 'page';
@@ -158,24 +159,31 @@ export async function createPayment(req: AuthRequest, res: Response): Promise<vo
   // Se o usuário possui assinatura ativa, auto-libera o recurso gratuitamente
   const isSubscribed = await subscriptionService.isUserSubscribed(req.userId!);
   if (isSubscribed) {
+    // Segurança: filtro por userId impede que um assinante libere recursos de terceiros
     if (target.resourceType === 'message') {
-      await prisma.message.update({
-        where: { id: target.resourceId },
+      const result = await prisma.message.updateMany({
+        where: { id: target.resourceId, userId: req.userId },
         data: {
           paymentStatus: 'paid',
           status: 'published',
           publishedAt: new Date(),
         },
       });
+      if (result.count === 0) {
+        throw new AppError('Mensagem não encontrada', 404);
+      }
     } else {
-      await prisma.page.update({
-        where: { id: target.resourceId },
+      const result = await prisma.page.updateMany({
+        where: { id: target.resourceId, userId: req.userId },
         data: {
           paymentStatus: 'paid',
           status: 'published',
           publishedAt: new Date(),
         },
       });
+      if (result.count === 0) {
+        throw new AppError('Pagina nao encontrada', 404);
+      }
     }
 
     res.json({
@@ -209,11 +217,12 @@ export async function createPayment(req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
-  if (paymentMethod === 'mercadopago_checkout') {
-    const result = await mercadopagoService.createMercadoPagoPreferenceForResource(target, req.userId!);
-    res.json(result);
-    return;
-  }
+  // ── Mercado Pago DESATIVADO (provedor fora de uso) ─────────────────────────
+  // if (paymentMethod === 'mercadopago_checkout') {
+  //   const result = await mercadopagoService.createMercadoPagoPreferenceForResource(target, req.userId!);
+  //   res.json(result);
+  //   return;
+  // }
 
   if (paymentMethod === 'credit_card') {
     const result = await stripeService.createCardPaymentForResource(target, req.userId!);
@@ -221,7 +230,7 @@ export async function createPayment(req: AuthRequest, res: Response): Promise<vo
     return;
   }
 
-  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card", "pagbank_card" ou "mercadopago_checkout".', 400);
+  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card" ou "pagbank_card".', 400);
 }
 
 export async function stripeWebhookHandler(req: Request, res: Response): Promise<void> {
@@ -231,32 +240,46 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
     throw new AppError('Header stripe-signature obrigatorio', 400);
   }
   const payload = (req as any).rawBody || req.body;
-  const result = await stripeService.handleWebhook(payload, sig);
-  res.status(200).json(result);
+  try {
+    const result = await stripeService.handleWebhook(payload, sig);
+    res.status(200).json(result);
+  } catch (err) {
+    await sendCriticalAlert({
+      context: 'stripe_webhook',
+      title: 'Falha ao processar webhook do Stripe',
+      detail: `statusCode=${(err as AppError)?.statusCode ?? 'desconhecido'}`,
+      error: err,
+    });
+    throw err;
+  }
 }
 
-export async function mercadopagoWebhookHandler(req: Request, res: Response): Promise<void> {
-  const body = (req.body || {}) as Record<string, unknown>;
-  const rawDataId = (body?.data as Record<string, unknown> | undefined)?.id;
-  const isSimulation = body?.id === '123456' || rawDataId === '123456' || body?.live_mode === false;
-
-  if (isSimulation) {
-    res.status(200).json({ received: true, simulation: true });
-    return;
-  }
-
-  const signature = req.headers['x-signature'] as string;
-  const requestId = req.headers['x-request-id'] as string;
-  if (!signature || !requestId) {
-    throw new AppError('Headers x-signature e x-request-id obrigatorios', 400);
-  }
-  const result = await mercadopagoService.handleWebhook(
-    body,
-    signature,
-    requestId,
-  );
-  res.status(200).json(result);
-}
+// ── Mercado Pago DESATIVADO (provedor fora de uso) ───────────────────────────
+// Reativar: descomentar este handler, a rota em routes/payment.routes.ts e o
+// branch de checkout acima. A sincronização de status legado em
+// getResourcePaymentStatus permanece ativa para pagamentos antigos pendentes.
+// export async function mercadopagoWebhookHandler(req: Request, res: Response): Promise<void> {
+//   const body = (req.body || {}) as Record<string, unknown>;
+//   const rawDataId = (body?.data as Record<string, unknown> | undefined)?.id;
+//   const isSimulation = body?.id === '123456' || rawDataId === '123456' || body?.live_mode === false;
+//
+//   if (isSimulation) {
+//     res.status(200).json({ received: true, simulation: true });
+//     return;
+//   }
+//
+//   const signature = req.headers['x-signature'] as string;
+//   const requestId = req.headers['x-request-id'] as string;
+//   if (!signature || !requestId) {
+//     throw new AppError('Headers x-signature e x-request-id obrigatorios', 400);
+//   }
+//   const result = await mercadopagoService.handleWebhook(
+//     body,
+//     signature,
+//     requestId,
+//   );
+//   res.status(200).json(result);
+// }
 
 export async function getPaymentStatus(req: AuthRequest, res: Response): Promise<void> {
   const { messageId } = req.params as Record<string, string>;
@@ -434,11 +457,12 @@ export async function createSubscriptionPayment(req: AuthRequest, res: Response)
     return;
   }
 
-  if (paymentMethod === 'mercadopago_checkout') {
-    const result = await subscriptionService.createSubscriptionMercadoPagoPreference(req.userId!);
-    res.json(result);
-    return;
-  }
+  // ── Mercado Pago DESATIVADO (provedor fora de uso) ─────────────────────────
+  // if (paymentMethod === 'mercadopago_checkout') {
+  //   const result = await subscriptionService.createSubscriptionMercadoPagoPreference(req.userId!);
+  //   res.json(result);
+  //   return;
+  // }
 
   if (paymentMethod === 'credit_card') {
     const result = await subscriptionService.createSubscriptionStripeSession(req.userId!);
@@ -446,13 +470,29 @@ export async function createSubscriptionPayment(req: AuthRequest, res: Response)
     return;
   }
 
-  throw new AppError('Método de pagamento inválido. Use "pix", "credit_card", "pagbank_card" ou "mercadopago_checkout".', 400);
+  throw new AppError('Método de pagamento inválido. Use "pix" ou "credit_card".', 400);
 }
 
 export async function pagbankWebhookHandler(req: Request, res: Response): Promise<void> {
   const body = (req.body || {}) as Record<string, unknown>;
-  const result = await pagbankService.handleWebhook(body);
-  res.status(200).json(result);
+  try {
+    const result = await pagbankService.handleWebhook(body);
+    if (result.status === 'ignored_order_lookup_failed') {
+      await sendCriticalAlert({
+        context: 'pagbank_webhook',
+        title: 'Webhook PagBank recebido mas pedido não confirmado na API',
+        detail: `orderId=${String(body.id ?? body.order_id ?? '?')} — possível tentativa de forjamento ou indisponibilidade do PagBank.`,
+      });
+    }
+    res.status(200).json(result);
+  } catch (err) {
+    await sendCriticalAlert({
+      context: 'pagbank_webhook',
+      title: 'Erro inesperado no processamento do webhook PagBank',
+      error: err,
+    });
+    throw err;
+  }
 }
 
 export async function getSubscriptionStatus(req: AuthRequest, res: Response): Promise<void> {
