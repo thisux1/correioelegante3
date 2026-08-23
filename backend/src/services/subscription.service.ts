@@ -1,4 +1,3 @@
-import MercadoPagoConfig, { Payment, Preference } from 'mercadopago';
 import Stripe from 'stripe';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/AppError';
@@ -9,13 +8,7 @@ export const SUBSCRIPTION_PRICE_CENTS = 1500;
 export const SUBSCRIPTION_DURATION_DAYS = 30;
 const PIX_EXPIRATION_MINUTES = Number(process.env.PIX_EXPIRATION_MINUTES) || 30;
 
-function getMercadoPagoClient(): MercadoPagoConfig {
-  const token = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
-  if (!token) {
-    throw new Error('MERCADOPAGO_ACCESS_TOKEN (ou MP_ACCESS_TOKEN) não configurada');
-  }
-  return new MercadoPagoConfig({ accessToken: token });
-}
+// Mercado Pago desativado — SDK removido das dependências (ver mercadopago.service.ts).
 
 function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -190,175 +183,14 @@ export async function activateUserSubscription(params: {
   };
 }
 
-export async function createSubscriptionPixPayment(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) {
-    throw new AppError('Usuário não encontrado', 404);
-  }
-
-  const rawEmail = user.email?.trim() || '';
-  const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
-  const isSellerEmail = rawEmail.toLowerCase() === 'thicosta1432@gmail.com' || rawEmail.toLowerCase() === 'thiagocostabr74@gmail.com';
-  const isTestUserDomain = rawEmail.toLowerCase().includes('@testuser.com');
-  const payerEmail = isSandbox
-    ? (isTestUserDomain ? rawEmail : 'test_user_comprador@testuser.com')
-    : ((!rawEmail || isSellerEmail) ? 'comprador_correio@example.com' : rawEmail);
-
-  const expiresAt = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
-  const notificationUrl = process.env.MERCADOPAGO_NOTIFICATION_URL || process.env.MP_NOTIFICATION_URL;
-
-  const client = getMercadoPagoClient();
-  const payment = new Payment(client);
-
-  const paymentBody: Record<string, unknown> = {
-    transaction_amount: SUBSCRIPTION_PRICE,
-    description: 'Correio Elegante Ilimitado - 1 Mês',
-    payment_method_id: 'pix',
-    statement_descriptor: 'CORREIOILIM',
-    date_of_expiration: expiresAt.toISOString(),
-    external_reference: `subscription:${userId}`,
-    payer: {
-      email: payerEmail,
-      first_name: 'Assinante',
-      last_name: 'Elegante',
-      identification: {
-        type: 'CPF',
-        number: '19119119100',
-      },
-    },
-    metadata: {
-      resource_type: 'subscription',
-      user_id: userId,
-      plan_id: SUBSCRIPTION_PLAN_ID,
-    },
-  };
-
-  if (notificationUrl) {
-    paymentBody.notification_url = notificationUrl;
-  }
-
-  let result;
-  try {
-    result = await payment.create({
-      body: paymentBody,
-      requestOptions: {
-        idempotencyKey: `pix_sub_${userId}_${Date.now()}`,
-      },
-    });
-  } catch (mpErr) {
-    console.error('Mercado Pago Pix Subscription error:', mpErr);
-    throw new AppError(
-      'Não foi possível gerar o Pix da assinatura no momento. Tente novamente.',
-      502,
-      'SUBSCRIPTION_PIX_FAILED',
-    );
-  }
-
-  if (result && result.id && result.point_of_interaction?.transaction_data?.qr_code) {
-    const pixData = result.point_of_interaction.transaction_data;
-    return {
-      paymentId: String(result.id),
-      status: result.status ?? 'pending',
-      pixQrCode: pixData.qr_code ?? null,
-      pixQrCodeBase64: pixData.qr_code_base64 ?? null,
-      pixExpiresAt: expiresAt.toISOString(),
-      amount: SUBSCRIPTION_PRICE,
-      planId: SUBSCRIPTION_PLAN_ID,
-    };
-  }
-
-  throw new AppError(
-    'Não foi possível carregar os dados do Pix da assinatura.',
-    502,
-    'PAYMENT_DATA_UNAVAILABLE',
-  );
+// Mercado Pago desativado — SDK removido das dependências (ver mercadopago.service.ts).
+export async function createSubscriptionPixPayment(_userId: string): Promise<never> {
+  throw new AppError('Mercado Pago não está mais disponível. Use Pix (PagBank) ou cartão (Stripe).', 410, 'PROVIDER_DISABLED');
 }
 
-export async function createSubscriptionMercadoPagoPreference(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) {
-    throw new AppError('Usuário não encontrado', 404);
-  }
-
-  const rawEmail = user.email?.trim() || '';
-  const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').startsWith('TEST-');
-  const isSellerEmail = rawEmail.toLowerCase() === 'thicosta1432@gmail.com' || rawEmail.toLowerCase() === 'thiagocostabr74@gmail.com';
-  const isTestUserDomain = rawEmail.toLowerCase().includes('@testuser.com');
-
-  const client = getMercadoPagoClient();
-  const preference = new Preference(client);
-
-  const rawBaseUrl = (process.env.FRONTEND_URL || '').trim();
-  const baseUrl = (!rawBaseUrl || rawBaseUrl.includes('correioelegantevercel.app'))
-    ? (process.env.NODE_ENV === 'production' ? 'https://www.correioelegante.studio' : 'http://localhost:5173')
-    : rawBaseUrl.replace(/\/+$/, '');
-
-  const isHttps = baseUrl.startsWith('https://');
-
-  const successUrl = isHttps
-    ? `${baseUrl}/planos/sucesso`
-    : 'https://www.correioelegante.studio/planos/sucesso';
-
-  const cancelUrl = isHttps
-    ? `${baseUrl}/planos`
-    : 'https://www.correioelegante.studio/planos';
-
-  const notificationUrl = isHttps
-    ? `${baseUrl}/api/payment/webhook/mercadopago`
-    : undefined;
-
-  const prefBody: Record<string, unknown> = {
-    items: [
-      {
-        id: SUBSCRIPTION_PLAN_ID,
-        title: 'Correio Elegante Ilimitado - 1 Mês',
-        description: 'Acesso ilimitado por 30 dias para criar e enviar cartas e páginas.',
-        category_id: 'services',
-        unit_price: SUBSCRIPTION_PRICE,
-        quantity: 1,
-        currency_id: 'BRL',
-      },
-    ],
-    back_urls: {
-      success: successUrl,
-      pending: successUrl,
-      failure: cancelUrl,
-    },
-    auto_return: 'approved',
-    statement_descriptor: 'CORREIOELEGAN',
-    notification_url: notificationUrl,
-    metadata: {
-      resource_type: 'subscription',
-      user_id: userId,
-      plan_id: SUBSCRIPTION_PLAN_ID,
-    },
-    external_reference: `subscription:${userId}`,
-  };
-
-  if (!isSandbox && user.email && !isSellerEmail) {
-    prefBody.payer = { email: user.email };
-  } else if (isSandbox && user.email && isTestUserDomain) {
-    prefBody.payer = { email: user.email };
-  }
-
-  const prefResult = await preference.create({
-    body: prefBody as Parameters<typeof preference.create>[0]['body'],
-  });
-
-  if (prefResult && prefResult.id) {
-    const checkoutUrl = prefResult.init_point || prefResult.sandbox_init_point;
-
-    return {
-      paymentId: String(prefResult.id),
-      status: 'pending',
-      preferenceId: String(prefResult.id),
-      checkoutUrl,
-      amount: SUBSCRIPTION_PRICE,
-      planId: SUBSCRIPTION_PLAN_ID,
-    };
-  }
-
-  throw new AppError('Não foi possível gerar o Checkout de assinatura.', 502);
+// Mercado Pago desativado — SDK removido das dependências (ver mercadopago.service.ts).
+export async function createSubscriptionMercadoPagoPreference(_userId: string): Promise<never> {
+  throw new AppError('Mercado Pago não está mais disponível. Use Pix (PagBank) ou cartão (Stripe).', 410, 'PROVIDER_DISABLED');
 }
 
 export async function createSubscriptionStripeSession(userId: string) {

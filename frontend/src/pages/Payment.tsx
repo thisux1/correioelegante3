@@ -17,12 +17,6 @@ import {
   type PaymentTarget,
 } from '@/services/paymentService'
 
-declare global {
-  interface Window {
-    MercadoPago?: new (publicKey: string, options?: { locale?: string }) => unknown
-  }
-}
-
 type Step = 'select' | 'pix' | 'card_redirect' | 'paid'
 
 export interface PaymentProps {
@@ -38,25 +32,12 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
   const [step, setStep] = useState<Step>('select')
   const [pixData, setPixData] = useState<PixPaymentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingMethod, setLoadingMethod] = useState<PaymentMethod | 'mercadopago_checkout' | null>(null)
+  const [loadingMethod, setLoadingMethod] = useState<PaymentMethod | null>(null)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const turnstileRef = useRef<TurnstileRef>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
-
-
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.MercadoPago) {
-      try {
-        const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY || 'APP_USR-2126b201-7c82-4066-b68f-4508baddcc83'
-        new window.MercadoPago(publicKey, { locale: 'pt-BR' })
-      } catch {
-        // Ignora se já instanciado
-      }
-    }
-  }, [])
 
   const isPageFlow = location.pathname.includes('/payment/page')
   const resolvedPageId = pageId || (isPageFlow ? location.pathname.split('/payment/page/')[1]?.split('/')[0]?.split('?')[0] : undefined)
@@ -148,31 +129,6 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
       setLoadingMethod(null)
     }
   }
-
-  async function handleMercadoPagoCheckout() {
-    if (!target) return
-    setIsLoading(true)
-    setLoadingMethod('mercadopago_checkout')
-    setError(null)
-
-    try {
-      const response = await paymentService.createMercadoPagoCheckout(target, turnstileToken || undefined)
-      if (response.data.checkoutUrl) {
-        window.location.href = response.data.checkoutUrl
-      } else {
-        setError('Não foi possível iniciar o Checkout do Mercado Pago.')
-      }
-    } catch (err: unknown) {
-      turnstileRef.current?.reset()
-      const axiosErr = err as { response?: { data?: { error?: string } } }
-      setError(axiosErr.response?.data?.error || 'Erro ao iniciar checkout do Mercado Pago.')
-    } finally {
-      setIsLoading(false)
-      setLoadingMethod(null)
-    }
-  }
-
-
 
   async function handleCopy() {
     if (!pixData?.pixQrCode) return
@@ -376,23 +332,6 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
                   </div>
                   {loadingMethod === 'credit_card' && (
                     <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 aspect-square text-blue-600" />
-                  )}
-                </button>
-
-                <button
-                  onClick={handleMercadoPagoCheckout}
-                  disabled={isLoading}
-                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-transparent bg-sky-50 hover:border-sky-400 hover:bg-sky-100 transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <div className="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <CreditCard className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-text">Mercado Pago (Checkout Pro)</p>
-                    <p className="text-sm text-text-light">Teste com Cartões de Teste Sandbox</p>
-                  </div>
-                  {loadingMethod === 'mercadopago_checkout' && (
-                    <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 aspect-square text-sky-600" />
                   )}
                 </button>
               </div>
