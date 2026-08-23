@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Mail,
   HelpCircle,
@@ -22,7 +23,6 @@ import { InlineAlert } from '@/components/ui/InlineAlert'
 import { LegalPageSkeleton } from '@/components/ui/LegalPageSkeleton'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { contactService, type SupportTicketResponse } from '@/services/contactService'
-import { TicketsInboxModal } from '@/components/support/TicketsInboxModal'
 import { useAuthStore } from '@/store/authStore'
 
 export interface ContactProps {
@@ -58,6 +58,7 @@ const faqs = [
 ]
 
 export function Contact({ isLoading }: ContactProps = {}) {
+  const navigate = useNavigate()
   const { user } = useAuthStore()
 
   const [name, setName] = useState('')
@@ -73,7 +74,6 @@ export function Contact({ isLoading }: ContactProps = {}) {
   const [copiedProtocol, setCopiedProtocol] = useState(false)
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
   const [isDevInfoOpen, setIsDevInfoOpen] = useState(false)
-  const [isTicketsModalOpen, setIsTicketsModalOpen] = useState(false)
 
   if (isLoading) {
     return <LegalPageSkeleton />
@@ -174,11 +174,11 @@ export function Contact({ isLoading }: ContactProps = {}) {
 
               <Button
                 type="button"
-                onClick={() => setIsTicketsModalOpen(true)}
+                onClick={() => navigate('/chamados')}
                 className="w-full sm:w-auto font-bold shadow-md shadow-rose-500/20 shrink-0"
               >
                 <LifeBuoy size={16} className="mr-2" />
-                Abrir Central de Chamados
+                Acessar Painel de Chamados
               </Button>
             </div>
           </ScrollReveal>
@@ -492,12 +492,6 @@ export function Contact({ isLoading }: ContactProps = {}) {
             </AnimatePresence>
           </div>
         </div>
-
-        {/* Modal da Central de Chamados & Respostas via Resend */}
-        <TicketsInboxModal
-          isOpen={isTicketsModalOpen}
-          onClose={() => setIsTicketsModalOpen(false)}
-        />
       </Container>
     </div>
   )
