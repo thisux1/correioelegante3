@@ -7,7 +7,7 @@ import { MagneticButton } from '@/components/animations/MagneticButton'
 import { SiteAtmosphere } from '@/components/animations/SiteAtmosphere'
 import { BackgroundField } from '@/components/animations/BackgroundField'
 import { Container } from '@/components/layout/Container'
-import { HeroInteractiveShowcase } from '@/components/animations/HeroInteractiveShowcase'
+import { ThreeHeroExperience } from '@/components/animations/ThreeHeroExperience'
 
 import { InteractiveEnvelopeDemo } from '@/components/sections/InteractiveEnvelopeDemo'
 import { CompareExperienceSection } from '@/components/sections/CompareExperienceSection'
@@ -111,14 +111,14 @@ function HeroSection() {
             </div>
           </motion.div>
 
-          {/* COLUNA DIREITA: O ELEMENTO INESQUECÍVEL — SHOWPIECE 3D INTERATIVO */}
+          {/* COLUNA DIREITA: O ELEMENTO INESQUECÍVEL — ARTIFACT 3D WEBGL COM THREE.JS */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-6 xl:col-span-5 relative"
           >
-            <HeroInteractiveShowcase />
+            <ThreeHeroExperience />
           </motion.div>
 
         </div>
