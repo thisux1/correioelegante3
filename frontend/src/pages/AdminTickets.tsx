@@ -14,7 +14,6 @@ import {
   Inbox,
   Check,
 } from 'lucide-react'
-import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { InlineAlert } from '@/components/ui/InlineAlert'
 import {
@@ -152,39 +151,38 @@ export function AdminTickets() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-16 bg-[#fffafb]">
-      <Container size="wide" className="px-4 sm:px-6 lg:px-8 max-w-7xl">
-        {/* Cabeçalho da Página */}
-        <header className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-rose-100 pb-5">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-primary flex items-center justify-center shrink-0">
-                <LifeBuoy className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#4c0519] tracking-tight">
-                  Central de Atendimento
-                </h1>
-                <p className="text-xs sm:text-sm text-[#701a35]/80">
-                  Gerenciamento de solicitações e respostas diretas aos clientes via Resend
-                </p>
-              </div>
+    <div className="space-y-0">
+      {/* Cabecalho da Secao */}
+      <header className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-rose-100 pb-5">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 text-primary flex items-center justify-center shrink-0">
+              <LifeBuoy className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-display text-xl sm:text-2xl font-extrabold text-[#4c0519] tracking-tight">
+                Central de Atendimento
+              </h2>
+              <p className="text-xs sm:text-sm text-[#701a35]/80">
+                Gerenciamento de solicitacoes e respostas diretas aos clientes via Resend
+              </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchTickets}
-              disabled={isLoading}
-              className="text-xs font-semibold bg-white border-rose-200 text-[#4c0519] hover:bg-rose-50"
-            >
-              <RefreshCw size={14} className={`mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-          </div>
-        </header>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchTickets}
+            disabled={isLoading}
+            className="text-xs font-semibold bg-white border-rose-200 text-[#4c0519] hover:bg-rose-50"
+          >
+            <RefreshCw size={14} className={`mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
+      </header>
 
         {/* Layout Master-Detail em Tela Cheia */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[76vh] min-h-[600px]">
@@ -498,9 +496,8 @@ export function AdminTickets() {
                 </p>
               </div>
             )}
-          </section>
-        </div>
-      </Container>
+        </section>
+      </div>
     </div>
   )
 }
