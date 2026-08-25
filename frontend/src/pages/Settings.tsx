@@ -253,7 +253,7 @@ export function Settings() {
                   action={(
                     <Button
                       variant="outline"
-                      onClick={() => navigate('/chamados')}
+                      onClick={() => navigate('/admin')}
                       className="w-full font-semibold sm:w-auto mt-2 sm:mt-0"
                     >
                       <LifeBuoy size={15} className="mr-2" />
