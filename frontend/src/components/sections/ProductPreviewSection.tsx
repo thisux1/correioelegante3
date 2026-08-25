@@ -38,14 +38,14 @@ const examples: ExampleLetter[] = [
     id: 'vinil',
     tabLabel: 'Carta com Trilha Sonora',
     icon: Music2,
-    title: 'Para o amor da minha vida',
+    title: 'Para o Amor da Minha Vida',
     subtitle: 'Nossa Canção Especial',
     recipient: 'Beatriz',
     message:
-      'Desde a primeira vez em que ouvimos essa música juntos, soube que você seria meu lar. Obrigado por cada riso e por colorir os meus dias com tanta luz.',
+      'Desde a primeira vez em que ouvimos essa música juntos, soube que você seria meu lar. Obrigado por cada riso e por colorir os meus dias com tanta ternura.',
     extraType: 'music',
-    audioTitle: 'Aliança e Poesia',
-    audioArtist: 'Trilha Sonora do Casal',
+    audioTitle: 'Aliança & Poesia',
+    audioArtist: 'Trilha Sonora Sincronizada',
   },
   {
     id: 'timeline',
@@ -83,17 +83,17 @@ export function ProductPreviewSection() {
       <Container size="default">
         {/* Cabeçalho da Seção sem badges */}
         <SectionReveal scrollRange={[0.0, 0.08, 0.85, 1.0]}>
-          <div className="text-center mb-12">
-            <h2 className="font-display text-4xl sm:text-5xl font-extrabold text-[#4c0519] mb-4 tracking-tight">
-              Veja o que você pode <span className="text-[#e11d48]">criar</span>
+          <div className="text-center mb-14 max-w-3xl mx-auto">
+            <h2 className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-[#4c0519] mb-4 tracking-tight leading-[1.15]">
+              Recursos criados para <span className="text-[#e11d48] italic font-serif">emocionar</span>
             </h2>
-            <p className="text-base sm:text-lg text-[#701a35] font-medium max-w-2xl mx-auto">
-              Cada carta é uma obra de arte digital única, com elementos interativos que surpreendem em cada detalhe.
+            <p className="text-base sm:text-lg text-[#701a35] font-medium leading-relaxed">
+              Cada homenagem é montada como uma peça de arte digital única, com elementos dinâmicos que surpreendem quem recebe.
             </p>
           </div>
         </SectionReveal>
 
-        {/* Abas de Navegação dos Exemplos */}
+        {/* Seletor de Formatos com Navegação Tátil */}
         <SectionReveal delay={0.1} scrollRange={[0.02, 0.12, 0.88, 1.0]}>
           <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
             {examples.map((ex) => {
@@ -108,13 +108,13 @@ export function ProductPreviewSection() {
                     setActiveTab(ex.id)
                     setIsPlaying(false)
                   }}
-                  className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#e11d48] text-white shadow-lg shadow-rose-500/30 scale-105'
+                      ? 'bg-[#e11d48] text-white shadow-xl shadow-rose-500/30 scale-105 ring-4 ring-rose-200'
                       : 'bg-white text-[#4c0519] border-2 border-pink-200 hover:bg-rose-50 hover:border-pink-300 shadow-xs'
                   }`}
                 >
-                  <Icon size={16} />
+                  <Icon size={18} />
                   <span>{ex.tabLabel}</span>
                 </button>
               )
@@ -122,28 +122,28 @@ export function ProductPreviewSection() {
           </div>
         </SectionReveal>
 
-        {/* Grade de Apresentação: Preview Interativo + Recursos */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* Grade Editorial: Preview Interativo + Detalhes de Cada Formato */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Card Interativo de Preview (7 colunas) */}
           <div className="lg:col-span-7">
-            <CardTilt3D intensity={6}>
+            <CardTilt3D intensity={5}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentExample.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                  initial={{ opacity: 0, y: 24, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.98 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="rounded-3xl border-2 border-pink-300/80 bg-white p-6 sm:p-8 shadow-2xl shadow-rose-500/10 text-[#4c0519]"
+                  exit={{ opacity: 0, y: -24, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className="rounded-3xl border-2 border-pink-300/80 bg-white p-6 sm:p-9 shadow-2xl shadow-rose-500/12 text-[#4c0519] relative overflow-hidden"
                 >
-                  {/* Topo da Carta com Selo de Cera 3D */}
+                  {/* Topo da Carta com Lacre em Relevo */}
                   <div className="flex items-center justify-between pb-5 mb-5 border-b border-pink-100">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-pink-400 via-rose-500 to-pink-600 shadow-md flex items-center justify-center text-white ring-4 ring-pink-400/15 border border-pink-300/50">
-                        <Heart size={16} className="fill-white" />
+                    <div className="flex items-center gap-3.5">
+                      <div className="h-11 w-11 rounded-full wax-seal-3d shadow-md flex items-center justify-center text-white ring-4 ring-pink-400/20">
+                        <Heart size={18} className="fill-white" />
                       </div>
                       <div>
-                        <span className="block font-bold text-sm text-[#4c0519]">
+                        <span className="block font-bold text-sm sm:text-base text-[#4c0519]">
                           {currentExample.subtitle}
                         </span>
                         <span className="text-xs font-semibold text-[#701a35]">
@@ -153,84 +153,92 @@ export function ProductPreviewSection() {
                     </div>
                   </div>
 
-                  {/* Título & Mensagem com Alta Legibilidade */}
+                  {/* Título & Mensagem com Tipografia Poética */}
                   <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#4c0519] mb-3">
                     {currentExample.title}
                   </h3>
-                  <p className="text-base sm:text-lg text-[#4c0519] leading-relaxed mb-6 font-serif font-medium">
+                  <p className="text-base sm:text-xl text-[#4c0519] leading-relaxed mb-6 font-serif italic font-medium">
                     "{currentExample.message}"
                   </p>
 
-                  {/* Bloco Dinâmico Interativo Conforme o Tipo */}
+                  {/* 1. MÚSICA & VINIL */}
                   {currentExample.extraType === 'music' && (
-                    <div className="rounded-2xl border-2 border-pink-200 bg-pink-50/50 p-4 shadow-sm">
-                      <div className="flex items-center gap-4">
-                        {/* Vinil Giratório */}
-                        <motion.div
-                          animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
-                          transition={{ repeat: Infinity, duration: 4, ease: 'linear' }}
-                          className="relative h-14 w-14 shrink-0 rounded-full bg-[#881337] p-1 shadow-md flex items-center justify-center border-2 border-pink-300"
-                        >
-                          <div className="h-6 w-6 rounded-full bg-[#e11d48] flex items-center justify-center text-white text-[10px]">
-                            <Heart size={10} className="fill-white" />
-                          </div>
-                        </motion.div>
+                    <div className="rounded-3xl border-2 border-pink-200 bg-[#fff5f8] p-5 shadow-sm">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                          {/* Disco de Vinil com Ranhuras */}
+                          <motion.div
+                            animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
+                            transition={{ repeat: Infinity, duration: 4, ease: 'linear' }}
+                            className="relative h-16 w-16 shrink-0 rounded-full vinyl-grooves p-1.5 flex items-center justify-center border-2 border-pink-300"
+                          >
+                            <div className="h-6 w-6 rounded-full bg-[#e11d48] flex items-center justify-center text-white">
+                              <Heart size={10} className="fill-white" />
+                            </div>
+                          </motion.div>
 
-                        <div className="flex-1 min-w-0">
-                          <span className="block text-sm font-bold text-[#4c0519] truncate">
-                            {currentExample.audioTitle}
-                          </span>
-                          <span className="block text-xs font-semibold text-[#701a35] truncate mt-0.5">
-                            {currentExample.audioArtist}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-sm font-bold text-[#4c0519] truncate">
+                              {currentExample.audioTitle}
+                            </span>
+                            <span className="block text-xs font-semibold text-[#701a35] truncate mt-0.5">
+                              {currentExample.audioArtist}
+                            </span>
 
-                          {/* Equalizador animado */}
-                          <div className="flex items-center gap-1 mt-2">
-                            {[0.4, 0.8, 0.5, 1, 0.7, 0.3, 0.9, 0.6].map((h, i) => (
-                              <motion.div
-                                key={i}
-                                animate={
-                                  isPlaying
-                                    ? { scaleY: [0.3, h, 0.3] }
-                                    : { scaleY: 0.3 }
-                                }
-                                transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.1 }}
-                                className="h-4 w-1 rounded-full bg-[#e11d48] origin-bottom"
-                              />
-                            ))}
+                            {/* Equalizador de Ondas */}
+                            <div className="flex items-center gap-1.5 mt-2.5">
+                              {[0.35, 0.85, 0.5, 1, 0.7, 0.4, 0.9, 0.65].map((h, i) => (
+                                <motion.div
+                                  key={i}
+                                  animate={isPlaying ? { scaleY: [0.25, h, 0.25] } : { scaleY: 0.25 }}
+                                  transition={{ repeat: Infinity, duration: 0.75, delay: i * 0.08 }}
+                                  className="h-4 w-1.5 rounded-full bg-[#e11d48] origin-bottom"
+                                />
+                              ))}
+                            </div>
                           </div>
                         </div>
 
-                        {/* Botão Play/Pause */}
+                        {/* Botão Play / Pause */}
                         <button
                           type="button"
                           onClick={() => setIsPlaying(!isPlaying)}
-                          className="h-10 w-10 rounded-full bg-[#e11d48] hover:bg-[#be123c] text-white flex items-center justify-center shadow-md transition-all cursor-pointer shrink-0"
+                          className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-[#e11d48] hover:bg-[#be123c] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer shrink-0"
                           aria-label={isPlaying ? 'Pausar música' : 'Tocar música'}
                         >
-                          {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                          {isPlaying ? (
+                            <>
+                              <Pause size={15} />
+                              <span>Pausar</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play size={15} className="fill-white ml-0.5" />
+                              <span>Ouvir</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* Linha do Tempo Fiel ao Produto Real */}
+                  {/* 2. LINHA DO TEMPO COM POLAROIDS */}
                   {currentExample.extraType === 'timeline' && (
-                    <div className="relative rounded-2xl border-2 border-pink-200/90 bg-[#fff9fa] p-5 sm:p-6 shadow-sm overflow-hidden">
+                    <div className="relative rounded-3xl border-2 border-pink-200/90 bg-[#fff9fa] p-5 sm:p-6 shadow-sm overflow-hidden">
                       {/* Linha vertical central luminosa */}
-                      <div className="absolute left-6 sm:left-8 top-6 bottom-6 w-0.5 bg-gradient-to-b from-[#e11d48] via-rose-300 to-[#e11d48]/40" />
+                      <div className="absolute left-6 sm:left-8 top-6 bottom-6 w-0.5 bg-gradient-to-b from-[#e11d48] via-rose-300 to-[#e11d48]/30" />
 
-                      <div className="space-y-6 relative z-10">
+                      <div className="space-y-5 relative z-10">
                         {/* Marco 1 */}
                         <div className="flex items-start gap-4">
                           <div className="relative flex items-center justify-center shrink-0">
-                            <div className="h-7 w-7 rounded-full bg-[#e11d48] text-white flex items-center justify-center shadow-md ring-4 ring-rose-300/40">
-                              <Heart size={13} className="fill-white" />
+                            <div className="h-8 w-8 rounded-full bg-[#e11d48] text-white flex items-center justify-center shadow-md ring-4 ring-rose-200">
+                              <Heart size={14} className="fill-white" />
                             </div>
                           </div>
-                          <div className="flex-1 rounded-xl bg-white p-4 border border-pink-200/80 shadow-xs">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#be123c] bg-rose-50 px-2 py-0.5 rounded-md">
+                          <div className="flex-1 rounded-2xl bg-white p-4 border border-pink-200/80 shadow-xs">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#be123c] bg-rose-50 px-2.5 py-0.5 rounded-lg">
                                 <Calendar size={11} /> 14 de Fevereiro de 2023
                               </span>
                             </div>
@@ -244,14 +252,14 @@ export function ProductPreviewSection() {
                         {/* Marco 2 */}
                         <div className="flex items-start gap-4">
                           <div className="relative flex items-center justify-center shrink-0">
-                            <div className="h-7 w-7 rounded-full bg-[#e11d48] text-white flex items-center justify-center shadow-md ring-4 ring-rose-300/40">
-                              <Heart size={13} className="fill-white" />
+                            <div className="h-8 w-8 rounded-full bg-[#e11d48] text-white flex items-center justify-center shadow-md ring-4 ring-rose-200">
+                              <MapPin size={14} />
                             </div>
                           </div>
-                          <div className="flex-1 rounded-xl bg-white p-4 border border-pink-200/80 shadow-xs">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#be123c] bg-rose-50 px-2 py-0.5 rounded-md">
-                                <MapPin size={11} /> 12 de Junho de 2024
+                          <div className="flex-1 rounded-2xl bg-white p-4 border border-pink-200/80 shadow-xs">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#be123c] bg-rose-50 px-2.5 py-0.5 rounded-lg">
+                                <Calendar size={11} /> 12 de Junho de 2024
                               </span>
                             </div>
                             <h4 className="font-bold text-sm text-[#4c0519]">Nossa Viagem Inesquecível</h4>
@@ -260,38 +268,18 @@ export function ProductPreviewSection() {
                             </p>
                           </div>
                         </div>
-
-                        {/* Marco 3 */}
-                        <div className="flex items-start gap-4">
-                          <div className="relative flex items-center justify-center shrink-0">
-                            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-[#f43f5e] to-[#be123c] text-white flex items-center justify-center shadow-md ring-4 ring-rose-400/50 animate-pulse">
-                              <Sparkles size={13} />
-                            </div>
-                          </div>
-                          <div className="flex-1 rounded-xl bg-gradient-to-br from-[#fff0f4] to-white p-4 border border-rose-300 shadow-xs">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#e11d48] bg-rose-100 px-2 py-0.5 rounded-md">
-                                <Calendar size={11} /> Hoje e Sempre
-                              </span>
-                            </div>
-                            <h4 className="font-bold text-sm text-[#4c0519]">Construindo Nossa Vida</h4>
-                            <p className="text-xs text-[#701a35] mt-1 leading-relaxed">
-                              A certeza diária de que escolher você foi a melhor e mais linda decisão da minha vida inteira.
-                            </p>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Raspadinha de Segredo Real com Canvas */}
+                  {/* 3. RASPADINHA DE SEGREDO */}
                   {currentExample.extraType === 'scratch' && (
-                    <div>
+                    <div className="rounded-3xl border-2 border-pink-200 p-2 bg-[#fff5f8]">
                       <InteractiveScratchCanvas
-                        coverText={'Raspe suavemente com o dedo ou mouse\npara descobrir a surpresa...'}
-                        secretSubtitle="Destino Secreto"
+                        coverText={'Raspe suavemente com o dedo ou mouse\npara revelar o recado secreto...'}
+                        secretSubtitle="Destino & Surpresa Revelados"
                         secretText={currentExample.scratchSecret || 'Passagens reservadas: Nossa viagem dos sonhos a Gramado!'}
-                        height={130}
+                        height={140}
                       />
                     </div>
                   )}
@@ -300,42 +288,42 @@ export function ProductPreviewSection() {
             </CardTilt3D>
           </div>
 
-          {/* Coluna de Explicações & Recursos (5 colunas) */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="p-6 rounded-2xl bg-white border-2 border-pink-200/80 shadow-md">
-              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2">
-                <Music2 size={20} className="text-[#e11d48]" />
-                Cartas com Trilha Sonora
+          {/* Coluna Editorial de Recursos (5 colunas) */}
+          <div className="lg:col-span-5 space-y-5">
+            <div className="p-6 rounded-3xl bg-white border-2 border-pink-200/80 shadow-md transition-all hover:border-pink-300">
+              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2.5">
+                <Music2 size={22} className="text-[#e11d48]" />
+                Trilha Sonora Sincronizada
               </h3>
               <p className="text-sm text-[#701a35] leading-relaxed">
-                Adicione a música que marcou a história de vocês com vinil interativo e reprodução ao vivo.
+                A música que define a história de vocês começa a tocar suavemente no instante em que o lacre de cera é aberto.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white border-2 border-pink-200/80 shadow-md">
-              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2">
-                <CalendarHeart size={20} className="text-[#e11d48]" />
+            <div className="p-6 rounded-3xl bg-white border-2 border-pink-200/80 shadow-md transition-all hover:border-pink-300">
+              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2.5">
+                <CalendarHeart size={22} className="text-[#e11d48]" />
                 Linha do Tempo Visual
               </h3>
               <p className="text-sm text-[#701a35] leading-relaxed">
-                Reviva cada marco especial com datas, fotos estilo Polaroid e relatos inesquecíveis.
+                Organize datas marcantes, fotos e relatos para construir uma narrativa cronológica dos momentos mais belos do casal.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white border-2 border-pink-200/80 shadow-md">
-              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2">
-                <Sparkles size={20} className="text-[#e11d48]" />
-                Raspadinhas de Segredo
+            <div className="p-6 rounded-3xl bg-white border-2 border-pink-200/80 shadow-md transition-all hover:border-pink-300">
+              <h3 className="font-display text-xl font-bold text-[#4c0519] mb-2 flex items-center gap-2.5">
+                <Sparkles size={22} className="text-[#e11d48]" />
+                Raspadinha Interativa
               </h3>
               <p className="text-sm text-[#701a35] leading-relaxed">
-                Surpreenda com declarações misteriosas ou presentes que só aparecem ao raspar o papel digital.
+                Crie um momento de suspense onde o presente, a surpresa ou a declaração mais importante só se revelam ao raspar o cartão.
               </p>
             </div>
 
             <div className="pt-2">
               <Link to="/create">
                 <Button size="lg" className="w-full shadow-xl shadow-rose-500/30 bg-[#e11d48] hover:bg-[#be123c] text-white font-bold py-4 text-base rounded-2xl">
-                  <span>Criar minha carta agora</span>
+                  <span>Montar minha carta personalizada</span>
                   <ArrowRight size={18} />
                 </Button>
               </Link>

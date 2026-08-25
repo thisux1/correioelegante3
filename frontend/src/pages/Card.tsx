@@ -148,68 +148,68 @@ export function Card() {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-lg relative z-10"
       >
-        <CardTilt3D intensity={8}>
-          <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-10 shadow-2xl">
+        <CardTilt3D intensity={6}>
+          <div className="rounded-3xl border-2 border-pink-300/80 bg-white p-8 sm:p-10 shadow-2xl shadow-rose-900/10">
             <div className="flex justify-center gap-2 mb-6">
               {[...Array(3)].map((_, i) => (
                 <motion.div
                   key={i}
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 2, delay: i * 0.3, repeat: Infinity }}
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 2.2, delay: i * 0.25, repeat: Infinity }}
                 >
-                  <Heart className="w-5 h-5 text-primary/40 fill-primary/40" />
+                  <Heart className="w-5 h-5 text-[#e11d48]/40 fill-[#e11d48]/40" />
                 </motion.div>
               ))}
             </div>
 
-            <p className="text-center text-sm text-text-light mb-2 font-medium">
-              Para:
+            <p className="text-center text-xs sm:text-sm text-[#701a35] mb-1 font-semibold uppercase tracking-wider">
+              Para
             </p>
-            <p className="text-center font-display text-2xl font-bold text-text mb-8">
+            <p className="text-center font-display text-3xl sm:text-4xl font-extrabold text-[#4c0519] mb-8">
               {card.recipient}
             </p>
 
-            <div className="mb-8 rounded-2xl border border-border bg-surface-glass p-6 backdrop-blur-sm">
-              <p className="font-cursive text-2xl sm:text-3xl text-text leading-relaxed text-center">
-                {card.message}
+            <div className="mb-8 rounded-2xl border-2 border-pink-200/80 bg-[#fffafc] p-6 sm:p-8 shadow-xs">
+              <p className="font-serif italic text-xl sm:text-2xl text-[#4c0519] leading-relaxed text-center font-medium">
+                "{card.message}"
               </p>
             </div>
 
             {card.mediaUrl && (
-              <div className="mb-8 rounded-2xl overflow-hidden shadow-xs">
+              <div className="mb-8 rounded-2xl overflow-hidden shadow-md border-2 border-pink-200/60 polaroid-frame">
                 <img
                   src={card.mediaUrl}
                   alt="Mídia anexada"
-                  className="w-full object-cover rounded-2xl"
+                  className="w-full object-cover rounded-xl"
                 />
               </div>
             )}
 
-            <div className="text-center pt-4 border-t border-black/5">
-              <p className="text-xs text-text-muted mb-1">
+            <div className="text-center pt-5 border-t border-pink-100">
+              <p className="text-xs text-[#701a35] mb-1.5 font-medium">
                 {new Date(card.createdAt).toLocaleDateString('pt-BR', {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',
                 })}
               </p>
-              <p className="text-xs text-text-muted flex items-center justify-center gap-1.5 font-medium">
-                <Heart className="w-3.5 h-3.5 text-primary fill-primary" />
-                <span>Correio Elegante</span>
+              <p className="text-xs text-[#be123c] flex items-center justify-center gap-1.5 font-bold">
+                <Heart className="w-3.5 h-3.5 text-[#e11d48] fill-[#e11d48]" />
+                <span>Correio Elegante • Edição Exclusiva</span>
               </p>
             </div>
 
-            <div className="mt-6 pt-5 border-t border-border/40 text-center">
-              <p className="text-xs text-text-light mb-2.5">
-                Gostou desse correio elegante?
+            <div className="mt-8 pt-6 border-t border-pink-200/80 text-center">
+              <p className="text-xs font-semibold text-[#701a35] mb-3">
+                Gostou dessa homenagem inesquecível?
               </p>
               <Link to="/create">
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold shadow-xs hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#e11d48] hover:bg-[#be123c] text-white text-xs sm:text-sm font-bold shadow-lg shadow-rose-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  <Heart className="w-3.5 h-3.5 fill-white" />
-                  <span>Envie um correio especial também</span>
+                  <Heart className="w-4 h-4 fill-white" />
+                  <span>Envie uma carta especial também</span>
                 </button>
               </Link>
             </div>

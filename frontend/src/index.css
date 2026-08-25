@@ -7,16 +7,22 @@
   --color-primary-dark: #be123c;
   --color-secondary: #f43f5e;
   --color-accent: #fda4af;
-  --color-background: #fdf2f8;
+  --color-background: #fff5f7;
   --color-surface: #ffffff;
-  --color-surface-raised: #f9fafb;
-  --color-surface-glass: rgba(255, 255, 255, 0.6);
-  --color-text: #1f2937;
-  --color-text-light: #6b7280;
-  --color-text-muted: #9ca3af;
-  --color-border: rgba(255, 255, 255, 0.4);
+  --color-surface-raised: #fffbfd;
+  --color-surface-glass: rgba(255, 255, 255, 0.75);
+  --color-text: #4c0519;
+  --color-text-light: #701a35;
+  --color-text-muted: #9f3a58;
+  --color-border: rgba(244, 63, 94, 0.18);
   --color-gold: #d4a574;
   --color-gold-light: #e8c9a0;
+  
+  --color-wine-dark: #4c0519;
+  --color-wine-medium: #701a35;
+  --color-rose-vibrant: #e11d48;
+  --color-rose-blush: #fff5f7;
+  --color-paper-light: #fffdfa;
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
@@ -28,7 +34,21 @@
   --font-outfit: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-elastic: cubic-bezier(0.16, 1, 0.3, 1);
   --animate-shimmer: shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-pulse-subtle: pulse-subtle 3s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.025);
+    opacity: 0.96;
+  }
 }
 
 @keyframes shimmer-sweep {
@@ -130,6 +150,49 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Papel Artesanal / Cartão Físico */
+  .paper-card {
+    background-color: #ffffff;
+    border: 1.5px solid rgba(244, 63, 94, 0.22);
+    box-shadow: 0 4px 20px -2px rgba(76, 5, 25, 0.05), 0 16px 36px -4px rgba(225, 29, 72, 0.08);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .paper-card:hover {
+    box-shadow: 0 8px 30px -4px rgba(76, 5, 25, 0.08), 0 20px 48px -4px rgba(225, 29, 72, 0.12);
+  }
+
+  /* Selo de Cera 3D Tátil */
+  .wax-seal-3d {
+    background: radial-gradient(circle at 35% 35%, #fb7185 0%, #e11d48 45%, #9f1239 85%, #881337 100%);
+    box-shadow: 
+      0 8px 24px -4px rgba(225, 29, 72, 0.4),
+      0 2px 6px rgba(136, 19, 55, 0.3),
+      inset 0 2px 4px rgba(255, 255, 255, 0.45),
+      inset 0 -3px 6px rgba(76, 5, 25, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+  }
+
+  /* Efeito de Ranhuras de Disco de Vinil */
+  .vinyl-grooves {
+    background: repeating-radial-gradient(
+      circle at center,
+      #701a35 0,
+      #701a35 3px,
+      #4c0519 4px,
+      #4c0519 6px
+    );
+    box-shadow: 0 10px 25px -5px rgba(76, 5, 25, 0.3);
+  }
+
+  /* Moldura Polaroid Editorial */
+  .polaroid-frame {
+    background: #ffffff;
+    padding: 12px 12px 32px 12px;
+    box-shadow: 0 8px 24px -4px rgba(76, 5, 25, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(244, 63, 94, 0.15);
   }
 
   /* Toolbar tab entrance — slides out from panel side */

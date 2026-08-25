@@ -60,16 +60,16 @@ function HeroSection() {
           data-no-ink="true"
         >
           <Container size="default" className="text-center px-4 sm:px-6">
-            {/* Título Principal com Alto Contraste */}
+            {/* Título Principal com Alto Contraste Editorial */}
             <motion.h1
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="font-display text-5xl sm:text-6xl md:text-7xl font-extrabold text-[#4c0519] leading-[1.18] mb-6 tracking-tight drop-shadow-xs"
+              transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+              className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-[#4c0519] leading-[1.14] mb-6 tracking-tight drop-shadow-xs"
             >
-              Mande um recado{' '}
-              <span className="text-[#e11d48] font-extrabold">
-                que faz sorrir
+              Mande uma declaração{' '}
+              <span className="text-[#e11d48] italic font-serif font-bold">
+                que toca a alma
               </span>
             </motion.h1>
 
@@ -77,25 +77,25 @@ function HeroSection() {
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="text-base sm:text-xl text-[#701a35] font-medium max-w-2xl mx-auto mb-10 leading-relaxed font-sans"
+              transition={{ duration: 0.75, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-lg sm:text-xl md:text-2xl text-[#701a35] font-medium max-w-2xl mx-auto mb-10 leading-relaxed font-sans"
             >
-              Escreva uma carta especial com suas fotos, trilha sonora e lacre de cera.
-              Entregue em segundos por link ou QR Code.
+              Crie uma carta especial com suas fotos, trilha sonora e lacre de cera artesanal.
+              Entregue em segundos por link seguro ou QR Code.
             </motion.p>
 
             {/* Botões de Ação — Rosa Forte Vibrante e Branco Limpo */}
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.75, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-20"
             >
               <MagneticButton>
                 <Link to="/create">
                   <Button
                     size="lg"
-                    className="inline-flex items-center justify-center gap-2 shadow-xl shadow-rose-500/30 hover:shadow-rose-500/45 bg-[#e11d48] hover:bg-[#be123c] text-white font-bold px-8 py-4 text-base rounded-2xl transition-all duration-200"
+                    className="inline-flex items-center justify-center gap-2.5 shadow-2xl shadow-rose-500/35 hover:shadow-rose-500/50 bg-[#e11d48] hover:bg-[#be123c] text-white font-bold px-8 py-4 text-base rounded-2xl transition-all duration-200"
                   >
                     <span>Escrever minha carta</span>
                     <ArrowRight size={18} className="shrink-0" />
@@ -108,7 +108,7 @@ function HeroSection() {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="bg-white hover:bg-rose-50 text-[#4c0519] hover:text-[#e11d48] font-bold px-8 py-4 text-base rounded-2xl border-2 border-pink-300/80 shadow-md shadow-pink-500/10 transition-all duration-200"
+                    className="bg-white hover:bg-rose-50 text-[#4c0519] hover:text-[#e11d48] font-bold px-8 py-4 text-base rounded-2xl border-2 border-pink-300/90 shadow-md shadow-pink-500/10 transition-all duration-200"
                   >
                     Ver demonstração
                   </Button>
