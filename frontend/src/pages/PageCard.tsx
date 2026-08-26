@@ -14,15 +14,36 @@ import type { PageSummary } from '@/services/pageService'
 import { pageService } from '@/services/pageService'
 
 export function PageCard() {
-  const { pageId } = useParams<{ pageId: string }>()
+  const { pageId, id } = useParams<{ pageId?: string; id?: string }>()
+  const resolvedPageId = pageId || id
   const [page, setPage] = useState<PageSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isEnvelopeOpened, setIsEnvelopeOpened] = useState(false)
 
+  // Privacidade: Garante que cartas acessíveis por link direto NUNCA sejam indexadas por buscadores (Google/Bing)
   useEffect(() => {
-    if (!pageId) {
-      setError('Pagina nao encontrada')
+    let meta = document.querySelector('meta[name="robots"]')
+    const created = !meta
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.setAttribute('name', 'robots')
+      document.head.appendChild(meta)
+    }
+    meta.setAttribute('content', 'noindex, nofollow')
+
+    return () => {
+      if (created && meta && meta.parentNode) {
+        meta.parentNode.removeChild(meta)
+      } else if (meta) {
+        meta.setAttribute('content', 'index, follow')
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!resolvedPageId) {
+      setError('Página não encontrada')
       setIsLoading(false)
       return
     }
@@ -30,19 +51,19 @@ export function PageCard() {
     const abortController = new AbortController()
 
     async function fetchPageCard() {
-      if (!pageId) {
+      if (!resolvedPageId) {
         return
       }
 
       try {
-        const loadedPage = await pageService.loadPage(pageId)
+        const loadedPage = await pageService.loadPage(resolvedPageId)
         if (!abortController.signal.aborted) {
           setPage(loadedPage)
         }
       } catch (err: unknown) {
         if (!abortController.signal.aborted) {
           const axiosErr = err as { response?: { data?: { error?: string } } }
-          setError(axiosErr.response?.data?.error || 'Pagina nao encontrada ou pagamento pendente')
+          setError(axiosErr.response?.data?.error || 'Página não encontrada ou com pagamento pendente')
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -53,7 +74,7 @@ export function PageCard() {
 
     fetchPageCard()
     return () => abortController.abort()
-  }, [pageId])
+  }, [resolvedPageId])
 
   useEffect(() => {
     if (!page) {

@@ -29,9 +29,9 @@ export function PaymentSuccess({ isLoading }: PaymentSuccessProps = {}) {
   }, [isPageFlow, resolvedMessageId, resolvedPageId])
 
   const cardHref = isPageFlow && resolvedPageId
-    ? `/card/page/${resolvedPageId}`
+    ? `/p/${resolvedPageId}`
     : resolvedMessageId
-      ? `/card/${resolvedMessageId}`
+      ? `/c/${resolvedMessageId}`
       : '/profile'
 
   // Aguarda o webhook confirmar o pagamento (pode haver delay do Stripe)

@@ -764,7 +764,9 @@ export function Editor() {
         throw new Error('Não foi possível identificar a página salva.')
       }
 
-      if (userSubscribed || paymentStatus === 'paid' || targetStatus === 'published') {
+      const isPaidOrSubscribed = Boolean(userSubscribed || paymentStatus === 'paid')
+
+      if (isPaidOrSubscribed) {
         setStatus('published')
         setSaveState('saved')
         setFeedback('Carta salva e publicada com sucesso!')
