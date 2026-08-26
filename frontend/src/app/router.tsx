@@ -248,6 +248,8 @@ export function AppRouter() {
               <Route path="/legal/terms" element={<LegalTerms />} />
               <Route path="/legal/privacy" element={<LegalPrivacy />} />
               <Route path="/legal/cookies" element={<LegalCookies />} />
+              <Route path="/p/:pageId" element={<PageCard />} />
+              <Route path="/c/:id" element={<Card />} />
               <Route path="/card/:id" element={<Card />} />
               <Route path="/card/page/:pageId" element={<PageCard />} />
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
