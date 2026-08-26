@@ -268,4 +268,52 @@ describe('PagBank Service (API V3 Checkout Transparente)', () => {
       expect(result.status).toBe('ignored_no_order_id');
     });
   });
+
+  describe('Helpers e Resiliência', () => {
+    it('formatIsoWithoutMs remove milissegundos do ISO', () => {
+      const date = new Date('2026-08-26T18:30:00.123Z');
+      expect(pagbankService.formatIsoWithoutMs(date)).toBe('2026-08-26T18:30:00Z');
+    });
+
+    it('extractPagBankErrorMessage formata error_messages do PagBank', () => {
+      const errorData = {
+        error_messages: [
+          { code: '40010', description: 'pix_key_not_found', parameter_name: 'qr_codes' },
+          { code: '40002', description: 'invalid_parameter', parameter_name: 'customer.tax_id' },
+        ],
+      };
+      const formatted = pagbankService.extractPagBankErrorMessage(errorData);
+      expect(formatted).toBe('[40010] pix_key_not_found (campo: qr_codes); [40002] invalid_parameter (campo: customer.tax_id)');
+    });
+
+    it('extractQrCodeFromOrder suporta qr_codes e charges[0].qr_code', () => {
+      const orderWithQrCodes: pagbankService.PagBankOrderResponse = {
+        id: 'ORDE_1',
+        reference_id: 'ref1',
+        created_at: new Date().toISOString(),
+        qr_codes: [
+          { id: 'QRCO_1', amount: { value: 499 }, text: '000201...pix' },
+        ],
+      };
+      expect(pagbankService.extractQrCodeFromOrder(orderWithQrCodes)?.text).toBe('000201...pix');
+
+      const orderWithCharges: pagbankService.PagBankOrderResponse = {
+        id: 'ORDE_2',
+        reference_id: 'ref2',
+        created_at: new Date().toISOString(),
+        charges: [
+          {
+            id: 'CHAR_1',
+            status: 'WAITING',
+            amount: { value: 499, currency: 'BRL' },
+            payment_method: {
+              type: 'PIX',
+            },
+            ...({ qr_code: { id: 'QRCO_2', text: '000201...charges_pix' } } as any),
+          },
+        ],
+      };
+      expect(pagbankService.extractQrCodeFromOrder(orderWithCharges)?.text).toBe('000201...charges_pix');
+    });
+  });
 });

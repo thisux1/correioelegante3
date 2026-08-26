@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../utils/AppError';
 import { activateUserSubscription } from './subscription.service';
+import { sendCriticalAlert } from './alert.service';
 
 export const AMOUNT_AVULSO_CENTS = 499; // R$ 4,99
 export const AMOUNT_AVULSO = 4.99;
@@ -10,6 +11,80 @@ export const AMOUNT_SUBSCRIPTION = 15.00;
 
 // Expiração do QR Code Pix em minutos (padrão PagBank: 30 a 60 min)
 const PIX_EXPIRATION_MINUTES = Number(process.env.PIX_EXPIRATION_MINUTES) || 30;
+
+export function formatIsoWithoutMs(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+export function extractPagBankErrorMessage(errorData: unknown): string {
+  if (typeof errorData === 'object' && errorData !== null && 'error_messages' in errorData) {
+    const messages = (errorData as { error_messages?: Array<{ code?: string; description?: string; parameter_name?: string }> }).error_messages;
+    if (Array.isArray(messages) && messages.length > 0) {
+      return messages
+        .map((m) => {
+          const parts: string[] = [];
+          if (m.code) parts.push(`[${m.code}]`);
+          if (m.description) parts.push(m.description);
+          if (m.parameter_name) parts.push(`(campo: ${m.parameter_name})`);
+          return parts.join(' ');
+        })
+        .join('; ');
+    }
+  }
+  return '';
+}
+
+export interface ExtractedQrCode {
+  id?: string;
+  text: string;
+  links?: Array<{ rel: string; href: string; media?: string; type?: string }>;
+  expiration_date?: string;
+}
+
+export interface PagBankCharge {
+  id: string;
+  reference_id?: string;
+  status: 'PAID' | 'AUTHORIZED' | 'IN_ANALYSIS' | 'DECLINED' | 'CANCELED' | 'WAITING';
+  amount: { value: number; currency: string };
+  payment_method?: {
+    type: string;
+    pix?: {
+      expiration_date?: string;
+    };
+  };
+  payment_response?: {
+    code: string;
+    message: string;
+  };
+  qr_code?: {
+    id?: string;
+    text: string;
+  };
+  links?: Array<{
+    rel: string;
+    href: string;
+    media?: string;
+    type?: string;
+  }>;
+}
+
+export function extractQrCodeFromOrder(order: PagBankOrderResponse): ExtractedQrCode | null {
+  if (order.qr_codes && order.qr_codes.length > 0 && order.qr_codes[0]?.text) {
+    return order.qr_codes[0];
+  }
+
+  const charge = order.charges?.[0];
+  if (charge?.qr_code?.text) {
+    return {
+      id: charge.qr_code.id || charge.id || order.id,
+      text: charge.qr_code.text,
+      links: charge.links || order.links || [],
+      expiration_date: charge.payment_method?.pix?.expiration_date,
+    };
+  }
+
+  return null;
+}
 
 export type PaymentResourceType = 'message' | 'page';
 
@@ -93,20 +168,14 @@ export interface PagBankOrderResponse {
     }>;
     expiration_date?: string;
   }>;
-  charges?: Array<{
-    id: string;
-    reference_id?: string;
-    status: 'PAID' | 'AUTHORIZED' | 'IN_ANALYSIS' | 'DECLINED' | 'CANCELED' | 'WAITING';
-    amount: { value: number; currency: string };
-    payment_method?: {
-      type: string;
-    };
-    payment_response?: {
-      code: string;
-      message: string;
-    };
-  }>;
+  charges?: PagBankCharge[];
   notification_urls?: string[];
+  links?: Array<{
+    rel: string;
+    href: string;
+    media?: string;
+    type?: string;
+  }>;
 }
 
 export function getPagBankBaseUrl(): string {
@@ -277,6 +346,7 @@ export async function createPixPaymentForResource(
 
   const customer = formatCustomerData(user, customerInput);
   const expirationDate = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
+  const formattedExpirationDate = formatIsoWithoutMs(expirationDate);
   const notificationUrl = resolveNotificationUrl();
 
   const orderPayload: PagBankOrderPayload = {
@@ -295,7 +365,7 @@ export async function createPixPaymentForResource(
         amount: {
           value: AMOUNT_AVULSO_CENTS,
         },
-        expiration_date: expirationDate.toISOString(),
+        expiration_date: formattedExpirationDate,
       },
     ],
     notification_urls: [notificationUrl],
@@ -308,7 +378,21 @@ export async function createPixPaymentForResource(
     response = await client.post<PagBankOrderResponse>('/orders', orderPayload);
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: unknown; status?: number }; message?: string };
-    console.error('[PAGBANK] Erro ao gerar Pix:', axiosError.response?.data || axiosError.message);
+    const status = axiosError.response?.status;
+    const errorDetails = extractPagBankErrorMessage(axiosError.response?.data);
+    const rawData = JSON.stringify(axiosError.response?.data || axiosError.message);
+
+    console.error(
+      `[PAGBANK] Erro ao gerar Pix (HTTP ${status ?? 'desconhecido'}): ${errorDetails || rawData}`,
+    );
+
+    void sendCriticalAlert({
+      context: 'pagbank_order',
+      title: `Falha ao gerar Pix no PagBank (HTTP ${status ?? 'desconhecido'})`,
+      detail: `recurso=${target.resourceType}:${target.resourceId}, usuario=${userId}, erro=${errorDetails || rawData}`,
+      error: err,
+    });
+
     throw new AppError(
       'Não foi possível gerar o pagamento Pix no PagBank. Tente novamente em instantes.',
       502,
@@ -317,7 +401,7 @@ export async function createPixPaymentForResource(
   }
 
   const order = response.data;
-  const qrCodeData = order.qr_codes?.[0];
+  const qrCodeData = extractQrCodeFromOrder(order);
 
   if (!qrCodeData || !qrCodeData.text) {
     throw new AppError(
@@ -344,7 +428,7 @@ export async function createPixPaymentForResource(
     pixQrCode: qrCodeData.text, // Código Copia e Cola
     pixQrCodeBase64: null,
     pixQrCodeUrl: qrCodePngLink,
-    pixExpiresAt: qrCodeData.expiration_date || expirationDate.toISOString(),
+    pixExpiresAt: qrCodeData.expiration_date || formattedExpirationDate,
     amount: AMOUNT_AVULSO,
   };
 }
@@ -425,7 +509,21 @@ export async function createCreditCardPaymentForResource(
     response = await client.post<PagBankOrderResponse>('/orders', orderPayload);
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: unknown; status?: number }; message?: string };
-    console.error('[PAGBANK] Erro ao processar cartão:', axiosError.response?.data || axiosError.message);
+    const status = axiosError.response?.status;
+    const errorDetails = extractPagBankErrorMessage(axiosError.response?.data);
+    const rawData = JSON.stringify(axiosError.response?.data || axiosError.message);
+
+    console.error(
+      `[PAGBANK] Erro ao processar cartão (HTTP ${status ?? 'desconhecido'}): ${errorDetails || rawData}`,
+    );
+
+    void sendCriticalAlert({
+      context: 'pagbank_order',
+      title: `Falha ao processar cartão no PagBank (HTTP ${status ?? 'desconhecido'})`,
+      detail: `recurso=${target.resourceType}:${target.resourceId}, usuario=${userId}, erro=${errorDetails || rawData}`,
+      error: err,
+    });
+
     throw new AppError(
       'Não foi possível processar o cartão no PagBank. Verifique os dados digitados.',
       400,
@@ -482,6 +580,7 @@ export async function createSubscriptionPagBankPixPayment(
 
   const customer = formatCustomerData(user, customerInput);
   const expirationDate = new Date(Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000);
+  const formattedExpirationDate = formatIsoWithoutMs(expirationDate);
   const notificationUrl = resolveNotificationUrl();
 
   const orderPayload: PagBankOrderPayload = {
@@ -500,7 +599,7 @@ export async function createSubscriptionPagBankPixPayment(
         amount: {
           value: AMOUNT_SUBSCRIPTION_CENTS,
         },
-        expiration_date: expirationDate.toISOString(),
+        expiration_date: formattedExpirationDate,
       },
     ],
     notification_urls: [notificationUrl],
@@ -513,7 +612,21 @@ export async function createSubscriptionPagBankPixPayment(
     response = await client.post<PagBankOrderResponse>('/orders', orderPayload);
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: unknown; status?: number }; message?: string };
-    console.error('[PAGBANK] Erro ao gerar Pix de assinatura:', axiosError.response?.data || axiosError.message);
+    const status = axiosError.response?.status;
+    const errorDetails = extractPagBankErrorMessage(axiosError.response?.data);
+    const rawData = JSON.stringify(axiosError.response?.data || axiosError.message);
+
+    console.error(
+      `[PAGBANK] Erro ao gerar Pix de assinatura (HTTP ${status ?? 'desconhecido'}): ${errorDetails || rawData}`,
+    );
+
+    void sendCriticalAlert({
+      context: 'pagbank_order',
+      title: `Falha ao gerar Pix de assinatura no PagBank (HTTP ${status ?? 'desconhecido'})`,
+      detail: `usuario=${userId}, erro=${errorDetails || rawData}`,
+      error: err,
+    });
+
     throw new AppError(
       'Não foi possível gerar o Pix da assinatura no PagBank.',
       502,
@@ -522,7 +635,7 @@ export async function createSubscriptionPagBankPixPayment(
   }
 
   const order = response.data;
-  const qrCodeData = order.qr_codes?.[0];
+  const qrCodeData = extractQrCodeFromOrder(order);
 
   if (!qrCodeData || !qrCodeData.text) {
     throw new AppError(
@@ -542,7 +655,7 @@ export async function createSubscriptionPagBankPixPayment(
     pixQrCode: qrCodeData.text,
     pixQrCodeBase64: null,
     pixQrCodeUrl: qrCodePngLink,
-    pixExpiresAt: qrCodeData.expiration_date || expirationDate.toISOString(),
+    pixExpiresAt: qrCodeData.expiration_date || formattedExpirationDate,
     amount: AMOUNT_SUBSCRIPTION,
     planId: 'monthly_unlimited',
   };

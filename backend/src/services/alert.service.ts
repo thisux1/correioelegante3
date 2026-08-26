@@ -20,6 +20,7 @@ const recentAlertKeys = new Map<string, number>();
 export type AlertContext =
   | 'stripe_webhook'
   | 'pagbank_webhook'
+  | 'pagbank_order'
   | 'payment_sync'
   | 'server_error'
   | 'email_delivery';
