@@ -9,7 +9,9 @@ import { Badge } from '@/components/ui/Badge'
 import { PaymentPageSkeleton } from '@/components/ui/PaymentPageSkeleton'
 import { Container } from '@/components/layout/Container'
 import { Turnstile, type TurnstileRef } from '@/components/ui/Turnstile'
+import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/store/authStore'
+import { cleanCpf, formatCpf, isValidCpf } from '@/utils/cpf'
 import {
   paymentService,
   type PaymentMethod,
@@ -38,6 +40,8 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+  const [cpf, setCpf] = useState('')
+  const [cpfError, setCpfError] = useState<string | null>(null)
 
   const isPageFlow = location.pathname.includes('/payment/page')
   const resolvedPageId = pageId || (isPageFlow ? location.pathname.split('/payment/page/')[1]?.split('/')[0]?.split('?')[0] : undefined)
@@ -93,13 +97,29 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
 
   async function handleSelectMethod(method: PaymentMethod) {
     if (!target) return
+    setError(null)
+    setCpfError(null)
+
+    if (method === 'pix' && !isSubscribed) {
+      const clean = cleanCpf(cpf)
+      if (!clean) {
+        setCpfError('Informe seu CPF para emissão do QR Code Pix.')
+        return
+      }
+      if (!isValidCpf(clean)) {
+        setCpfError('CPF inválido. Verifique os 11 dígitos informados.')
+        return
+      }
+    }
+
     setIsLoading(true)
     setLoadingMethod(method)
-    setError(null)
 
     try {
       if (method === 'pix') {
-        const response = await paymentService.createPix(target, turnstileToken || undefined)
+        const clean = cleanCpf(cpf)
+        const customer = clean ? { tax_id: clean } : undefined
+        const response = await paymentService.createPix(target, turnstileToken || undefined, customer)
         if (response.data.status === 'paid') {
           setStep('paid')
           return
@@ -298,6 +318,25 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
                   onError={() => turnstileRef.current?.reset()}
                 />
               </div>
+
+              {!isSubscribed && (
+                <div className="mb-5 text-left">
+                  <Input
+                    label="CPF do Pagador (para emissão do Pix)"
+                    id="cpf-checkout-pix"
+                    placeholder="000.000.000-00"
+                    value={cpf}
+                    onChange={(e) => {
+                      setCpf(formatCpf(e.target.value))
+                      if (cpfError) setCpfError(null)
+                    }}
+                    error={cpfError || undefined}
+                    hint="Exigência do Banco Central"
+                    maxLength={14}
+                    inputMode="numeric"
+                  />
+                </div>
+              )}
 
               <div className="flex flex-col gap-4 mb-6">
                 <button
