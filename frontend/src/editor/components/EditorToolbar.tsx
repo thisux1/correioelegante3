@@ -569,20 +569,32 @@ function ToolbarControls({
       {showPublishCta ? (
         <>
           {separator}
-          <motion.button
-            layoutId="toolbar-btn-publish"
-            layout="position"
-            type="button"
-            onClick={onPublishCtaClick}
-            className={useCompactButtons
-              ? 'flex w-full min-h-11 items-center justify-center rounded-lg bg-primary p-0 text-white shadow-md transition-colors hover:bg-primary-dark active:scale-95 cursor-pointer'
-              : 'inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-md shadow-primary/25 transition-all hover:bg-primary-dark hover:scale-[1.02] active:scale-[0.98] cursor-pointer'}
-            aria-label="Pagar e publicar"
-            title="Pagar e publicar"
-          >
-            <CreditCard size={16} />
-            {!useCompactButtons ? 'Pagar e Publicar' : null}
-          </motion.button>
+          {useCompactButtons ? (
+            <motion.button
+              layoutId="toolbar-btn-publish"
+              layout="position"
+              type="button"
+              onClick={onPublishCtaClick}
+              className={compactBtnAccent}
+              aria-label="Publicar"
+              title="Publicar"
+            >
+              <CreditCard size={16} />
+            </motion.button>
+          ) : (
+            <motion.button
+              layoutId="toolbar-btn-publish"
+              layout="position"
+              type="button"
+              onClick={onPublishCtaClick}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/35 bg-primary px-4 text-sm font-semibold text-white shadow-[0_12px_28px_-16px_rgba(236,72,153,0.7)] transition-colors hover:bg-primary-dark cursor-pointer"
+              aria-label="Publicar"
+              title="Publicar"
+            >
+              <CreditCard size={16} />
+              <span>Publicar</span>
+            </motion.button>
+          )}
         </>
       ) : null}
 

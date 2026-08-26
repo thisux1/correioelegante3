@@ -113,10 +113,10 @@ function HeroSection() {
 
           {/* COLUNA DIREITA: O ELEMENTO INESQUECÍVEL — ARTIFACT 3D WEBGL COM THREE.JS */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-6 xl:col-span-5 relative"
+            className="lg:col-span-6 xl:col-span-5 relative flex items-center justify-center overflow-visible w-full"
           >
             <ThreeHeroExperience />
           </motion.div>

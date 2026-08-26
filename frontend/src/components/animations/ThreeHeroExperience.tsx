@@ -1,142 +1,249 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
-import { motion } from 'framer-motion'
-import { Play, Pause, RotateCcw, Sparkles, Move3d } from 'lucide-react'
 
-// ── Procedural Letter Texture Generator ──────────────────────────
-function createLetterCanvasTexture(): THREE.CanvasTexture {
+// ── Procedural Fine Cotton Paper Texture with Fibers & Bump ────────
+function createCottonPaperTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas')
   canvas.width = 1024
-  canvas.height = 1440
+  canvas.height = 1024
   const ctx = canvas.getContext('2d')
-
   if (!ctx) return new THREE.CanvasTexture(canvas)
 
-  // Fundo em Papel Algodão / Linho
-  ctx.fillStyle = '#fffdfa'
+  ctx.fillStyle = '#faf7f5'
+  ctx.fillRect(0, 0, 1024, 1024)
+
+  const imgData = ctx.getImageData(0, 0, 1024, 1024)
+  const data = imgData.data
+
+  for (let i = 0; i < data.length; i += 4) {
+    const grain = (Math.random() - 0.5) * 14
+    data[i] = Math.min(255, Math.max(0, data[i] + grain))
+    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + grain * 0.95))
+    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + grain * 0.9))
+  }
+  ctx.putImageData(imgData, 0, 0)
+
+  ctx.strokeStyle = 'rgba(214, 180, 190, 0.08)'
+  ctx.lineWidth = 1
+  for (let i = 0; i < 200; i++) {
+    const x = Math.random() * 1024
+    const y = Math.random() * 1024
+    const len = 4 + Math.random() * 12
+    const angle = Math.random() * Math.PI * 2
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len)
+    ctx.stroke()
+  }
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(2, 2)
+  return texture
+}
+
+// ── High-DPI Romantic Calligraphy Letter Texture (2048 x 2880) ──────
+function createLetterCanvasTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = 2048
+  canvas.height = 2880
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return new THREE.CanvasTexture(canvas)
+
+  ctx.fillStyle = '#fffdfb'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  // Borda decorativa dourada dupla
-  ctx.strokeStyle = 'rgba(225, 29, 72, 0.25)'
+  ctx.strokeStyle = 'rgba(212, 165, 116, 0.5)'
   ctx.lineWidth = 6
-  ctx.strokeRect(36, 36, canvas.width - 72, canvas.height - 72)
+  ctx.strokeRect(64, 64, canvas.width - 128, canvas.height - 128)
 
-  ctx.strokeStyle = 'rgba(212, 165, 116, 0.4)'
+  ctx.strokeStyle = 'rgba(225, 29, 72, 0.35)'
   ctx.lineWidth = 2
-  ctx.strokeRect(48, 48, canvas.width - 96, canvas.height - 96)
+  ctx.strokeRect(84, 84, canvas.width - 168, canvas.height - 168)
 
-  // Marca d'água central de coração suave
   ctx.save()
-  ctx.globalAlpha = 0.04
+  ctx.globalAlpha = 0.035
   ctx.fillStyle = '#e11d48'
   ctx.beginPath()
   const cx = canvas.width / 2
   const cy = canvas.height / 2
-  ctx.moveTo(cx, cy + 120)
-  ctx.bezierCurveTo(cx - 200, cy - 80, cx - 350, cy - 250, cx, cy - 400)
-  ctx.bezierCurveTo(cx + 350, cy - 250, cx + 200, cy - 80, cx, cy + 120)
+  ctx.moveTo(cx, cy + 240)
+  ctx.bezierCurveTo(cx - 380, cy - 100, cx - 620, cy - 400, cx, cy - 680)
+  ctx.bezierCurveTo(cx + 620, cy - 400, cx + 380, cy - 100, cx, cy + 240)
   ctx.fill()
   ctx.restore()
 
-  // Cabeçalho da Carta
   ctx.fillStyle = '#be123c'
-  ctx.font = 'bold 36px "Playfair Display", Georgia, serif'
+  ctx.font = 'bold 72px "Playfair Display", Georgia, serif'
   ctx.textAlign = 'center'
-  ctx.fillText('CORREIO ELEGANTE', canvas.width / 2, 130)
+  ctx.fillText('CORREIO ELEGANTE', canvas.width / 2, 290)
 
-  ctx.fillStyle = '#701a35'
-  ctx.font = 'italic 24px "EB Garamond", Georgia, serif'
-  ctx.fillText('Coleção Especial • 14 de Fevereiro', canvas.width / 2, 175)
+  ctx.fillStyle = '#881337'
+  ctx.font = 'italic 46px "EB Garamond", Georgia, serif'
+  ctx.fillText('Declaração Especial • Guardada para Sempre', canvas.width / 2, 375)
 
-  // Linha divisória com arabesco
-  ctx.strokeStyle = '#fda4af'
-  ctx.lineWidth = 2
+  ctx.strokeStyle = '#fecdd3'
+  ctx.lineWidth = 3
   ctx.beginPath()
-  ctx.moveTo(canvas.width / 2 - 180, 210)
-  ctx.lineTo(canvas.width / 2 + 180, 210)
+  ctx.moveTo(canvas.width / 2 - 300, 440)
+  ctx.lineTo(canvas.width / 2 + 300, 440)
   ctx.stroke()
 
-  // Destinatário
-  ctx.fillStyle = '#4c0519'
-  ctx.font = 'bold italic 48px "Playfair Display", Georgia, serif'
-  ctx.textAlign = 'left'
-  ctx.fillText('Para o meu grande amor, Beatriz', 90, 310)
+  ctx.fillStyle = '#e11d48'
+  ctx.font = '36px "Playfair Display", Georgia, serif'
+  ctx.fillText('❦', canvas.width / 2, 448)
 
-  // Corpo da Mensagem em Caligrafia Nobre
-  ctx.font = 'italic 34px "EB Garamond", Georgia, serif'
+  ctx.fillStyle = '#4c0519'
+  ctx.font = 'bold italic 88px "Playfair Display", Georgia, serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('Para o meu grande amor,', 160, 640)
+
+  ctx.font = 'italic 66px "EB Garamond", Georgia, serif'
   ctx.fillStyle = '#4c0519'
 
   const lines = [
-    '"Desde aquele primeiro café sob a chuva até os',
-    'nossos planos de construir uma vida inteira juntos,',
-    'você é o meu lugar favorito no mundo.',
+    'Entre todas as esquinas da vida e todos os encontros',
+    'possíveis no universo, foi no seu sorriso que eu encontrei',
+    'o meu lugar favorito de pertencer.',
     '',
-    'Obrigado por ser minha melhor amiga, minha paz',
-    'e a inspiração de cada um dos meus dias.',
-    'Que a nossa história seja sempre escrita com a',
-    'mesma ternura com que te olho hoje."',
+    'Obrigado por transformar dias comuns em memórias raras,',
+    'por ser a melodia serena no meio do caos e por segurar',
+    'minha mão com a ternura de quem cuida de um sonho.',
+    '',
+    'Que a nossa história continue sendo escrita a cada nascer',
+    'do sol, com o mesmo brilho com que te vejo agora.',
   ]
 
-  let startY = 410
+  let startY = 820
   for (const line of lines) {
-    ctx.fillText(line, 90, startY)
-    startY += 54
+    if (line === '') {
+      startY += 40
+    } else {
+      ctx.fillText(line, 160, startY)
+      startY += 96
+    }
   }
 
-  // Despedida e Assinatura
   ctx.textAlign = 'right'
   ctx.fillStyle = '#701a35'
-  ctx.font = 'italic 28px "EB Garamond", Georgia, serif'
-  ctx.fillText('Com todo o meu amor e carinho eterno,', canvas.width - 90, 1180)
+  ctx.font = 'italic 52px "EB Garamond", Georgia, serif'
+  ctx.fillText('Com todo o amor que habita em mim,', canvas.width - 160, 2380)
 
-  ctx.fillStyle = '#e11d48'
-  ctx.font = 'bold italic 44px "Playfair Display", Georgia, serif'
-  ctx.fillText('Lucas', canvas.width - 90, 1240)
+  ctx.fillStyle = '#be123c'
+  ctx.font = 'bold italic 86px "Playfair Display", Georgia, serif'
+  ctx.fillText('Para Sempre Seu', canvas.width - 160, 2500)
 
   const texture = new THREE.CanvasTexture(canvas)
-  texture.anisotropy = 8
+  texture.anisotropy = 16
   texture.needsUpdate = true
   return texture
 }
 
-// ── Orbit Ribbon Text Canvas Texture ─────────────────────────────
-function createRibbonTextTexture(): THREE.CanvasTexture {
+// ── Contact Shadow Texture ─────────────────────────────────────────
+function createContactShadowTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas')
-  canvas.width = 2048
-  canvas.height = 128
+  canvas.width = 512
+  canvas.height = 512
   const ctx = canvas.getContext('2d')
-
   if (!ctx) return new THREE.CanvasTexture(canvas)
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.0)'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  const gradient = ctx.createRadialGradient(256, 256, 10, 256, 256, 250)
+  gradient.addColorStop(0, 'rgba(76, 5, 25, 0.35)')
+  gradient.addColorStop(0.3, 'rgba(112, 26, 53, 0.18)')
+  gradient.addColorStop(0.65, 'rgba(244, 63, 94, 0.05)')
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
-  ctx.fillStyle = '#e11d48'
-  ctx.font = 'bold 36px "Outfit", sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-
-  const repeatText = '✦ CORREIO ELEGANTE ✦ MOMENTOS ETERNOS ✦ DECLARAÇÕES INESQUECÍVEIS ✦ MÚSICA & POESIA '
-  ctx.fillText(repeatText + repeatText, canvas.width / 2, canvas.height / 2)
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 512, 512)
 
   const texture = new THREE.CanvasTexture(canvas)
-  texture.wrapS = THREE.RepeatWrapping
-  texture.wrapT = THREE.ClampToEdgeWrapping
-  texture.needsUpdate = true
   return texture
+}
+
+// ── Glowing Radial Point Texture for Stardust Particles ────────────
+function createGlowPointTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return new THREE.CanvasTexture(canvas)
+
+  const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 30)
+  grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
+  grad.addColorStop(0.2, 'rgba(255, 190, 210, 0.9)')
+  grad.addColorStop(0.55, 'rgba(225, 29, 72, 0.35)')
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, 64, 64)
+
+  const tex = new THREE.CanvasTexture(canvas)
+  return tex
+}
+
+// ── Volumetric Sunbeam Texture ─────────────────────────────────────
+function createSunbeamTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = 512
+  canvas.height = 512
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return new THREE.CanvasTexture(canvas)
+
+  const grad = ctx.createLinearGradient(0, 0, 512, 512)
+  grad.addColorStop(0, 'rgba(255, 245, 230, 0.28)')
+  grad.addColorStop(0.35, 'rgba(255, 210, 225, 0.14)')
+  grad.addColorStop(0.7, 'rgba(244, 63, 94, 0.04)')
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, 512, 512)
+  return new THREE.CanvasTexture(canvas)
+}
+
+// ── Organic Wax Seal Geometry with Natural Pressed Edge ───────────
+function createOrganicWaxGeometry(): THREE.BufferGeometry {
+  const shape = new THREE.Shape()
+  const segments = 48
+  const baseRadius = 0.42
+
+  for (let i = 0; i <= segments; i++) {
+    const theta = (i / segments) * Math.PI * 2
+    const noise =
+      Math.sin(theta * 5) * 0.025 +
+      Math.cos(theta * 8) * 0.015 +
+      Math.sin(theta * 13) * 0.01
+    const r = baseRadius + noise
+    const x = Math.cos(theta) * r
+    const y = Math.sin(theta) * r
+
+    if (i === 0) {
+      shape.moveTo(x, y)
+    } else {
+      shape.lineTo(x, y)
+    }
+  }
+
+  const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+    steps: 1,
+    depth: 0.07,
+    bevelEnabled: true,
+    bevelThickness: 0.035,
+    bevelSize: 0.035,
+    bevelOffset: 0,
+    bevelSegments: 4,
+  }
+
+  return new THREE.ExtrudeGeometry(shape, extrudeSettings)
 }
 
 export function ThreeHeroExperience() {
   const mountRef = useRef<HTMLDivElement>(null)
-  const [isOpen, setIsOpen] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
 
-  // Referências mutáveis para a animação
   const animState = useRef({
     openProgress: 0,
     targetOpenProgress: 0,
+    isOpen: false,
     rotationY: 0,
     targetRotationY: 0,
     rotationX: 0,
@@ -144,34 +251,28 @@ export function ThreeHeroExperience() {
     isDragging: false,
     prevPointerX: 0,
     prevPointerY: 0,
-    vinylRotation: 0,
-    ribbonOffset: 0,
+    isHovered: false,
   })
 
-  // Disparar abertura / fechamento
   const toggleOpen = useCallback(() => {
-    setIsOpen((prev) => {
-      const next = !prev
-      animState.current.targetOpenProgress = next ? 1 : 0
-      if (next) setIsPlaying(true)
-      return next
-    })
+    animState.current.isOpen = !animState.current.isOpen
+    animState.current.targetOpenProgress = animState.current.isOpen ? 1 : 0
   }, [])
 
   useEffect(() => {
     const container = mountRef.current
     if (!container) return
 
-    // 1. Setup Scene, Camera & Renderer
+    // 1. Scene, Camera & Renderer
     const scene = new THREE.Scene()
 
     const camera = new THREE.PerspectiveCamera(
-      42,
+      38,
       container.clientWidth / container.clientHeight,
       0.1,
       100
     )
-    camera.position.set(0, 0, 7.2)
+    camera.position.set(0, 0.15, 8.4)
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -181,383 +282,566 @@ export function ThreeHeroExperience() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.2
+    renderer.toneMappingExposure = 1.35
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap
     container.appendChild(renderer.domElement)
 
-    // 2. Iluminação Tridimensional Cinemática
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2)
+    // 2. Background Ethereal Aura Shader Mesh
+    const auraUniforms = {
+      uTime: { value: 0 },
+      uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+    }
+
+    const auraMaterial = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec2 uMouse;
+        varying vec2 vUv;
+
+        void main() {
+          vec2 p = vUv - 0.5;
+          float dist = length(p);
+          
+          float wave1 = sin(dist * 7.0 - uTime * 0.7) * 0.12;
+          float wave2 = cos(p.x * 5.0 + p.y * 3.5 + uTime * 0.5) * 0.10;
+          float glow = 1.0 - smoothstep(0.0, 0.62 + wave1 + wave2, dist);
+          
+          vec3 colCenter = vec3(1.0, 0.92, 0.94);
+          vec3 colMid = vec3(0.96, 0.45, 0.58);
+          vec3 colOuter = vec3(0.55, 0.08, 0.22);
+          
+          vec3 color = mix(colCenter, colMid, smoothstep(0.0, 0.4, dist));
+          color = mix(color, colOuter, smoothstep(0.3, 0.68, dist));
+          
+          float alpha = glow * 0.32 * (1.0 - smoothstep(0.25, 0.75, dist));
+          gl_FragColor = vec4(color, alpha);
+        }
+      `,
+      uniforms: auraUniforms,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending,
+    })
+
+    const auraPlane = new THREE.Mesh(new THREE.PlaneGeometry(16, 12), auraMaterial)
+    auraPlane.position.set(0, 0.2, -3.2)
+    scene.add(auraPlane)
+
+    // 3. Volumetric Sunbeam Mesh
+    const sunbeamTex = createSunbeamTexture()
+    const sunbeamMat = new THREE.MeshBasicMaterial({
+      map: sunbeamTex,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+    const sunbeamPlane = new THREE.Mesh(new THREE.PlaneGeometry(10, 8), sunbeamMat)
+    sunbeamPlane.rotation.z = -0.42
+    sunbeamPlane.position.set(-1.2, 1.2, -1.0)
+    scene.add(sunbeamPlane)
+
+    // 4. Iluminação Suave de Estúdio Físico
+    const ambientLight = new THREE.AmbientLight(0xfff7f9, 1.9)
     scene.add(ambientLight)
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.0)
-    keyLight.position.set(4, 5, 6)
+    const keyLight = new THREE.DirectionalLight(0xfffbf5, 2.8)
+    keyLight.position.set(3.5, 6, 4.5)
+    keyLight.castShadow = true
+    keyLight.shadow.mapSize.width = 2048
+    keyLight.shadow.mapSize.height = 2048
+    keyLight.shadow.camera.near = 0.5
+    keyLight.shadow.camera.far = 18
+    keyLight.shadow.bias = -0.0008
     scene.add(keyLight)
 
-    const fillLight = new THREE.PointLight(0xffa5ba, 2.5, 12)
-    fillLight.position.set(-4, -2, 4)
+    const fillLight = new THREE.PointLight(0xffa5ba, 2.2, 14)
+    fillLight.position.set(-4, -1.5, 4.0)
     scene.add(fillLight)
 
-    const goldRimLight = new THREE.PointLight(0xffd166, 2.0, 10)
-    goldRimLight.position.set(0, 4, -3)
-    scene.add(goldRimLight)
+    const rimGold = new THREE.PointLight(0xfcd34d, 2.4, 12)
+    rimGold.position.set(0, 5.0, -3.5)
+    scene.add(rimGold)
 
-    // Luz que acompanha o mouse
-    const pointerLight = new THREE.PointLight(0xff2b5e, 2.5, 8)
-    pointerLight.position.set(0, 0, 3)
-    scene.add(pointerLight)
+    const cursorLight = new THREE.PointLight(0xff4372, 1.9, 9)
+    cursorLight.position.set(0, 0, 4.5)
+    scene.add(cursorLight)
 
-    // 3. Grupo Principal da Carta / Envelope
-    const rootGroup = new THREE.Group()
-    scene.add(rootGroup)
+    // 5. Texturas & Materiais
+    const cottonPaperTex = createCottonPaperTexture()
+    const letterTex = createLetterCanvasTexture()
+    const shadowTex = createContactShadowTexture()
+    const glowPointTex = createGlowPointTexture()
 
-    // ── Materiais ────────────────────────────────────────────────
-    const paperMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xfff5f8,
-      roughness: 0.35,
-      metalness: 0.05,
-      clearcoat: 0.2,
-      clearcoatRoughness: 0.1,
+    const envelopeOuterMat = new THREE.MeshPhysicalMaterial({
+      color: 0xfffcfb,
+      roughness: 0.38,
+      map: cottonPaperTex,
+      bumpMap: cottonPaperTex,
+      bumpScale: 0.006,
+      clearcoat: 0.08,
+      clearcoatRoughness: 0.2,
       sheen: 0.6,
-      sheenColor: new THREE.Color(0xffb3c6),
+      sheenColor: new THREE.Color(0xffccd7),
       side: THREE.DoubleSide,
     })
 
-    const insideEnvelopeMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffdbe5,
-      roughness: 0.5,
+    const envelopeInnerMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffe8ee,
+      roughness: 0.45,
+      map: cottonPaperTex,
+      bumpMap: cottonPaperTex,
+      bumpScale: 0.004,
+      sheen: 0.8,
+      sheenColor: new THREE.Color(0xfda4af),
       side: THREE.DoubleSide,
     })
 
     const waxMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xd90429,
-      roughness: 0.15,
-      metalness: 0.2,
+      color: 0xbe123c,
+      roughness: 0.18,
+      metalness: 0.08,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.05,
-      emissive: new THREE.Color(0x590014),
+      clearcoatRoughness: 0.06,
+      sheen: 0.8,
+      sheenColor: new THREE.Color(0xff4372),
+      emissive: new THREE.Color(0x4c0519),
       emissiveIntensity: 0.2,
     })
 
     const goldMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xd4a574,
-      metalness: 0.85,
-      roughness: 0.2,
-      clearcoat: 0.5,
+      metalness: 0.88,
+      roughness: 0.16,
+      clearcoat: 0.8,
     })
 
-    // ── A. Envelope Base ──────────────────────────────────────────
+    // 6. Raiz do Objeto 3D
+    const rootGroup = new THREE.Group()
+    scene.add(rootGroup)
+
+    const envW = 3.5
+    const envH = 2.35
+    const envDepth = 0.14
+
+    // ── SOMBRA DE CONTATO NO PISO ─────────────────────────────────
+    const shadowGeo = new THREE.PlaneGeometry(5.8, 3.4)
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTex,
+      transparent: true,
+      opacity: 0.7,
+      depthWrite: false,
+    })
+    const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat)
+    shadowMesh.rotation.x = -Math.PI / 2
+    shadowMesh.position.y = -2.1
+    scene.add(shadowMesh)
+
+    // ── A. ENVELOPE VOLUMÉTRICO ───────────────────────────────────
     const envelopeGroup = new THREE.Group()
     rootGroup.add(envelopeGroup)
 
-    const envWidth = 3.6
-    const envHeight = 2.4
-    const envDepth = 0.12
+    // Verso sólido do envelope
+    const backShape = new THREE.Shape()
+    const r = 0.12
+    const w2 = envW / 2
+    const h2 = envH / 2
 
-    // Corpo do Envelope (Caixa com espessura)
-    const envBackGeo = new THREE.BoxGeometry(envWidth, envHeight, envDepth)
-    const envBackMesh = new THREE.Mesh(envBackGeo, paperMaterial)
-    envelopeGroup.add(envBackMesh)
+    backShape.moveTo(-w2 + r, -h2)
+    backShape.lineTo(w2 - r, -h2)
+    backShape.quadraticCurveTo(w2, -h2, w2, -h2 + r)
+    backShape.lineTo(w2, h2 - r)
+    backShape.quadraticCurveTo(w2, h2, w2 - r, h2)
+    backShape.lineTo(-w2 + r, h2)
+    backShape.quadraticCurveTo(-w2, h2, -w2, h2 - r)
+    backShape.lineTo(-w2, -h2 + r)
+    backShape.quadraticCurveTo(-w2, -h2, -w2 + r, -h2)
 
-    // Aba Inferior Triangular Frontal
-    const bottomFlapShape = new THREE.Shape()
-    bottomFlapShape.moveTo(-envWidth / 2, -envHeight / 2)
-    bottomFlapShape.lineTo(envWidth / 2, -envHeight / 2)
-    bottomFlapShape.lineTo(0, 0.2)
-    bottomFlapShape.closePath()
-
-    const bottomFlapGeo = new THREE.ShapeGeometry(bottomFlapShape)
-    const bottomFlapMesh = new THREE.Mesh(bottomFlapGeo, paperMaterial)
-    bottomFlapMesh.position.z = envDepth / 2 + 0.01
-    envelopeGroup.add(bottomFlapMesh)
-
-    // Abas Laterais
-    const leftFlapShape = new THREE.Shape()
-    leftFlapShape.moveTo(-envWidth / 2, -envHeight / 2)
-    leftFlapShape.lineTo(-envWidth / 2, envHeight / 2)
-    leftFlapShape.lineTo(0, 0)
-    leftFlapShape.closePath()
-
-    const leftFlapMesh = new THREE.Mesh(
-      new THREE.ShapeGeometry(leftFlapShape),
-      insideEnvelopeMaterial
-    )
-    leftFlapMesh.position.z = envDepth / 2 + 0.005
-    envelopeGroup.add(leftFlapMesh)
-
-    const rightFlapShape = new THREE.Shape()
-    rightFlapShape.moveTo(envWidth / 2, -envHeight / 2)
-    rightFlapShape.lineTo(envWidth / 2, envHeight / 2)
-    rightFlapShape.lineTo(0, 0)
-    rightFlapShape.closePath()
-
-    const rightFlapMesh = new THREE.Mesh(
-      new THREE.ShapeGeometry(rightFlapShape),
-      insideEnvelopeMaterial
-    )
-    rightFlapMesh.position.z = envDepth / 2 + 0.005
-    envelopeGroup.add(rightFlapMesh)
-
-    // ── B. Aba Superior com Dobradiça (Top Flap Hinge) ───────────
-    const topFlapHinge = new THREE.Group()
-    topFlapHinge.position.set(0, envHeight / 2, envDepth / 2 + 0.012)
-    envelopeGroup.add(topFlapHinge)
-
-    const topFlapShape = new THREE.Shape()
-    topFlapShape.moveTo(-envWidth / 2, 0)
-    topFlapShape.lineTo(envWidth / 2, 0)
-    topFlapShape.lineTo(0, -envHeight * 0.58)
-    topFlapShape.closePath()
-
-    const topFlapMesh = new THREE.Mesh(new THREE.ShapeGeometry(topFlapShape), paperMaterial)
-    topFlapHinge.add(topFlapMesh)
-
-    // ── C. Selo de Cera 3D no Topo da Aba ─────────────────────────
-    const waxSealGeo = new THREE.CylinderGeometry(0.38, 0.42, 0.09, 32)
-    waxSealGeo.rotateX(Math.PI / 2)
-    const waxSealMesh = new THREE.Mesh(waxSealGeo, waxMaterial)
-    waxSealMesh.position.set(0, -envHeight * 0.52, 0.05)
-    topFlapHinge.add(waxSealMesh)
-
-    // Anel Dourado do Selo
-    const goldRingGeo = new THREE.TorusGeometry(0.34, 0.03, 16, 32)
-    const goldRingMesh = new THREE.Mesh(goldRingGeo, goldMaterial)
-    goldRingMesh.position.set(0, -envHeight * 0.52, 0.09)
-    topFlapHinge.add(goldRingMesh)
-
-    // Coração em Relevo no Centro do Selo
-    const heartShape = new THREE.Shape()
-    const hx = 0, hy = 0
-    heartShape.moveTo(hx, hy + 0.08)
-    heartShape.bezierCurveTo(hx - 0.12, hy + 0.18, hx - 0.22, hy + 0.02, hx, hy - 0.16)
-    heartShape.bezierCurveTo(hx + 0.22, hy + 0.02, hx + 0.12, hy + 0.18, hx, hy + 0.08)
-
-    const heartGeo = new THREE.ExtrudeGeometry(heartShape, {
-      depth: 0.04,
+    const backGeo = new THREE.ExtrudeGeometry(backShape, {
+      depth: 0.035,
       bevelEnabled: true,
       bevelSegments: 3,
-      steps: 1,
-      bevelSize: 0.015,
-      bevelThickness: 0.015,
+      bevelSize: 0.02,
+      bevelThickness: 0.02,
+    })
+    const backMesh = new THREE.Mesh(backGeo, envelopeOuterMat)
+    backMesh.position.z = -envDepth / 2
+    backMesh.castShadow = true
+    backMesh.receiveShadow = true
+    envelopeGroup.add(backMesh)
+
+    // Placa Frontal do envelope (com abertura côncava elegante)
+    const frontShape = new THREE.Shape()
+    frontShape.moveTo(-w2, -h2)
+    frontShape.lineTo(w2, -h2)
+    frontShape.lineTo(w2, 0.05)
+    frontShape.lineTo(0, -0.45)
+    frontShape.lineTo(-w2, 0.05)
+    frontShape.closePath()
+
+    const frontGeo = new THREE.ExtrudeGeometry(frontShape, {
+      depth: 0.02,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      bevelSize: 0.012,
+      bevelThickness: 0.012,
+    })
+    const frontMesh = new THREE.Mesh(frontGeo, envelopeOuterMat)
+    frontMesh.position.z = envDepth / 2
+    frontMesh.castShadow = true
+    frontMesh.receiveShadow = true
+    envelopeGroup.add(frontMesh)
+
+    // Abas Laterais Internas
+    const sideLeftShape = new THREE.Shape()
+    sideLeftShape.moveTo(-w2, -h2)
+    sideLeftShape.lineTo(-w2, h2)
+    sideLeftShape.lineTo(-0.1, -0.05)
+    sideLeftShape.closePath()
+    const leftMesh = new THREE.Mesh(
+      new THREE.ShapeGeometry(sideLeftShape),
+      envelopeInnerMat
+    )
+    leftMesh.position.z = envDepth / 2 - 0.005
+    envelopeGroup.add(leftMesh)
+
+    const sideRightShape = new THREE.Shape()
+    sideRightShape.moveTo(w2, -h2)
+    sideRightShape.lineTo(w2, h2)
+    sideRightShape.lineTo(0.1, -0.05)
+    sideRightShape.closePath()
+    const rightMesh = new THREE.Mesh(
+      new THREE.ShapeGeometry(sideRightShape),
+      envelopeInnerMat
+    )
+    rightMesh.position.z = envDepth / 2 - 0.005
+    envelopeGroup.add(rightMesh)
+
+    // ── B. ABA SUPERIOR COM LACRE DE CERA ARTESANAL ───────────────
+    const topHinge = new THREE.Group()
+    topHinge.position.set(0, h2, envDepth / 2 + 0.012)
+    envelopeGroup.add(topHinge)
+
+    const flapShape = new THREE.Shape()
+    flapShape.moveTo(-w2, 0)
+    flapShape.lineTo(w2, 0)
+    flapShape.lineTo(0, -envH * 0.65)
+    flapShape.closePath()
+
+    const flapGeo = new THREE.ExtrudeGeometry(flapShape, {
+      depth: 0.02,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      bevelSize: 0.012,
+      bevelThickness: 0.012,
+    })
+    const topFlapMesh = new THREE.Mesh(flapGeo, envelopeOuterMat)
+    topFlapMesh.castShadow = true
+    topFlapMesh.receiveShadow = true
+    topHinge.add(topFlapMesh)
+
+    const waxGroup = new THREE.Group()
+    waxGroup.position.set(0, -envH * 0.54, 0.04)
+    topHinge.add(waxGroup)
+
+    const waxGeo = createOrganicWaxGeometry()
+    const waxMesh = new THREE.Mesh(waxGeo, waxMaterial)
+    waxMesh.castShadow = true
+    waxMesh.receiveShadow = true
+    waxGroup.add(waxMesh)
+
+    const goldRim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.3, 0.022, 16, 32),
+      goldMaterial
+    )
+    goldRim.position.z = 0.09
+    waxGroup.add(goldRim)
+
+    const heartShape = new THREE.Shape()
+    const hx = 0
+    const hy = 0
+    heartShape.moveTo(hx, hy + 0.06)
+    heartShape.bezierCurveTo(hx - 0.12, hy + 0.18, hx - 0.22, hy + 0.02, hx, hy - 0.18)
+    heartShape.bezierCurveTo(hx + 0.22, hy + 0.02, hx + 0.12, hy + 0.18, hx, hy + 0.06)
+
+    const heartGeo = new THREE.ExtrudeGeometry(heartShape, {
+      depth: 0.025,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      bevelSize: 0.01,
+      bevelThickness: 0.01,
     })
     const heartMesh = new THREE.Mesh(heartGeo, goldMaterial)
-    heartMesh.position.set(0, -envHeight * 0.52, 0.08)
-    topFlapHinge.add(heartMesh)
+    heartMesh.position.set(0, 0.04, 0.08)
+    heartMesh.scale.set(0.65, 0.65, 0.65)
+    waxGroup.add(heartMesh)
 
-    // ── D. Folha da Carta 3D (Desliza e Desdobra) ────────────────
-    const letterTexture = createLetterCanvasTexture()
-    const letterMaterial = new THREE.MeshPhysicalMaterial({
-      map: letterTexture,
-      roughness: 0.3,
-      metalness: 0.0,
-      clearcoat: 0.15,
+    // ── C. CARTA ARTESANAL 3D COM SUBIDA ESTRITAMENTE VERTICAL ──
+    const letterMat = new THREE.MeshPhysicalMaterial({
+      map: letterTex,
+      bumpMap: cottonPaperTex,
+      bumpScale: 0.005,
+      roughness: 0.32,
+      clearcoat: 0.1,
       side: THREE.DoubleSide,
     })
 
-    const letterWidth = 3.2
-    const letterHeight = 4.2
-    const letterGeo = new THREE.PlaneGeometry(letterWidth, letterHeight, 32, 32)
-    const letterMesh = new THREE.Mesh(letterGeo, letterMaterial)
-    letterMesh.position.set(0, 0, 0)
+    const letterW = 2.85
+    const letterH = 3.65
+    const letterGeo = new THREE.PlaneGeometry(letterW, letterH, 32, 32)
+
+    // Curvatura estática suave das margens do papel
+    const posAttr = letterGeo.attributes.position
+    for (let i = 0; i < posAttr.count; i++) {
+      const vx = posAttr.getX(i)
+      const vy = posAttr.getY(i)
+      const arch = Math.sin((vx / letterW) * Math.PI) * 0.04 - Math.cos((vy / letterH) * Math.PI) * 0.02
+      posAttr.setZ(i, arch)
+    }
+    letterGeo.computeVertexNormals()
+
+    // O papel reside estritamente em z = 0.00 no centro do bolsão do envelope
+    const letterMesh = new THREE.Mesh(letterGeo, letterMat)
+    letterMesh.castShadow = true
+    letterMesh.receiveShadow = true
+    letterMesh.position.set(0, -0.28, 0.0)
     rootGroup.add(letterMesh)
 
-    // ── E. Disco de Vinil 3D Giratório ────────────────────────────
-    const vinylGroup = new THREE.Group()
-    vinylGroup.position.set(2.4, 0.8, -0.4)
-    rootGroup.add(vinylGroup)
+    // ── D. PINGENTES DE CORAÇÃO DOURADO FLUTUANTES (CHARMS) ──────
+    const charmGroup = new THREE.Group()
+    scene.add(charmGroup)
 
-    const vinylGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.04, 48)
-    const vinylMat = new THREE.MeshPhysicalMaterial({
-      color: 0x1f040b,
-      roughness: 0.18,
-      metalness: 0.3,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.1,
-      iridescence: 0.9,
-      iridescenceIOR: 1.6,
-    })
-    const vinylMesh = new THREE.Mesh(vinylGeo, vinylMat)
-    vinylMesh.rotation.x = Math.PI / 2
-    vinylGroup.add(vinylMesh)
-
-    // Selo Central do Vinil
-    const vinylCenterGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.045, 32)
-    const vinylCenterMat = new THREE.MeshPhysicalMaterial({
-      color: 0xe11d48,
-      roughness: 0.3,
-      clearcoat: 0.5,
-    })
-    const vinylCenterMesh = new THREE.Mesh(vinylCenterGeo, vinylCenterMat)
-    vinylCenterMesh.rotation.x = Math.PI / 2
-    vinylGroup.add(vinylCenterMesh)
-
-    // ── F. Anel Orbital de Texto Cinético 3D ──────────────────────
-    const ribbonTex = createRibbonTextTexture()
-    const ribbonMat = new THREE.MeshBasicMaterial({
-      map: ribbonTex,
-      transparent: true,
-      opacity: 0.75,
-      side: THREE.DoubleSide,
-    })
-    const ribbonGeo = new THREE.CylinderGeometry(3.6, 3.6, 0.45, 64, 1, true)
-    const ribbonMesh = new THREE.Mesh(ribbonGeo, ribbonMat)
-    ribbonMesh.rotation.z = THREE.MathUtils.degToRad(22)
-    ribbonMesh.rotation.x = THREE.MathUtils.degToRad(15)
-    scene.add(ribbonMesh)
-
-    // ── G. Partículas Flutuantes de Poeira Dourada e Brilhos ───────
-    const particleCount = 140
-    const particleGeo = new THREE.BufferGeometry()
-    const particlePositions = new Float32Array(particleCount * 3)
-    const particleScales = new Float32Array(particleCount)
-
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3 + 0] = (Math.random() - 0.5) * 14
-      particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 10
-      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 8
-      particleScales[i] = Math.random() * 0.08 + 0.02
+    const charms: { mesh: THREE.Mesh; basePos: THREE.Vector3; speed: number; rotX: number; rotY: number; phase: number }[] = []
+    for (let i = 0; i < 5; i++) {
+      const charmMesh = new THREE.Mesh(heartGeo, goldMaterial)
+      const angle = (i / 5) * Math.PI * 2
+      const rad = 3.3 + (i % 2) * 0.7
+      const basePos = new THREE.Vector3(
+        Math.cos(angle) * rad,
+        -0.8 + (i % 3) * 0.9,
+        (i % 2 === 0 ? 1 : -1) * (0.6 + (i * 0.3))
+      )
+      charmMesh.position.copy(basePos)
+      charmMesh.scale.setScalar(0.2 + (i % 3) * 0.06)
+      charmGroup.add(charmMesh)
+      charms.push({
+        mesh: charmMesh,
+        basePos,
+        speed: 0.7 + (i * 0.15),
+        rotX: 0.01 + (i * 0.005),
+        rotY: 0.015 + (i * 0.004),
+        phase: i * 1.4,
+      })
     }
 
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3))
-    const particleMat = new THREE.PointsMaterial({
-      color: 0xffa5ba,
-      size: 0.12,
-      transparent: true,
-      opacity: 0.55,
-      blending: THREE.AdditiveBlending,
-    })
-    const particlePoints = new THREE.Points(particleGeo, particleMat)
-    scene.add(particlePoints)
+    // ── E. STARDUST: NUVEM DE PARTÍCULAS EM CAMADAS COM GLOW ──────
+    const pCount = 110
+    const pGeo = new THREE.BufferGeometry()
+    const pPos = new Float32Array(pCount * 3)
 
-    // ── Interação com o Mouse / Touch ─────────────────────────────
+    for (let i = 0; i < pCount; i++) {
+      pPos[i * 3 + 0] = (Math.random() - 0.5) * 11
+      pPos[i * 3 + 1] = (Math.random() - 0.5) * 9
+      pPos[i * 3 + 2] = (Math.random() - 0.5) * 7
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3))
+    const pMat = new THREE.PointsMaterial({
+      map: glowPointTex,
+      size: 0.22,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    const particles = new THREE.Points(pGeo, pMat)
+    scene.add(particles)
+
+    // ── INTERAÇÃO: RAYCASTER, MOUSE E DRAG 360° ──────────────────
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2(-100, -100)
+    const interactiveMeshes = [waxMesh, goldRim, heartMesh, frontMesh, backMesh, topFlapMesh, letterMesh]
 
     const onPointerMove = (e: PointerEvent) => {
       const rect = container.getBoundingClientRect()
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
 
-      // Atualizar posição da luz do cursor no espaço 3D
-      pointerLight.position.x = mouse.x * 4.5
-      pointerLight.position.y = mouse.y * 3.2
+      cursorLight.position.x = mouse.x * 4.2
+      cursorLight.position.y = mouse.y * 3.2
+      auraUniforms.uMouse.value.set((mouse.x + 1) * 0.5, (mouse.y + 1) * 0.5)
 
       if (animState.current.isDragging) {
-        const deltaX = e.clientX - animState.current.prevPointerX
-        const deltaY = e.clientY - animState.current.prevPointerY
-        animState.current.targetRotationY += deltaX * 0.008
-        animState.current.targetRotationX += deltaY * 0.008
+        const dx = e.clientX - animState.current.prevPointerX
+        const dy = e.clientY - animState.current.prevPointerY
+        animState.current.targetRotationY += dx * 0.007
+        animState.current.targetRotationX += dy * 0.007
       } else {
-        // Parallax sutil ao mover o mouse
-        animState.current.targetRotationY = mouse.x * 0.35
-        animState.current.targetRotationX = -mouse.y * 0.25
+        animState.current.targetRotationY = mouse.x * 0.28
+        animState.current.targetRotationX = -mouse.y * 0.18
       }
 
       animState.current.prevPointerX = e.clientX
       animState.current.prevPointerY = e.clientY
 
-      // Checar hover sobre o lacre de cera
       raycaster.setFromCamera(mouse, camera)
-      const intersects = raycaster.intersectObject(waxSealMesh, true)
-      setIsHovered(intersects.length > 0)
-      container.style.cursor = intersects.length > 0 ? 'pointer' : 'grab'
+      const hits = raycaster.intersectObjects(interactiveMeshes, true)
+      animState.current.isHovered = hits.length > 0
+      container.style.cursor = animState.current.isDragging
+        ? 'grabbing'
+        : hits.length > 0
+        ? 'pointer'
+        : 'grab'
     }
+
+    let pointerDownTime = 0
 
     const onPointerDown = (e: PointerEvent) => {
       animState.current.isDragging = true
       animState.current.prevPointerX = e.clientX
       animState.current.prevPointerY = e.clientY
-
-      // Checar se clicou no selo de cera
-      raycaster.setFromCamera(mouse, camera)
-      const intersects = raycaster.intersectObject(waxSealMesh, true)
-      if (intersects.length > 0) {
-        toggleOpen()
-      }
+      pointerDownTime = Date.now()
     }
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
+      const isClick = Date.now() - pointerDownTime < 240
       animState.current.isDragging = false
+
+      if (isClick) {
+        const rect = container.getBoundingClientRect()
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+        raycaster.setFromCamera(mouse, camera)
+        const hits = raycaster.intersectObjects(interactiveMeshes, true)
+        if (hits.length > 0) {
+          toggleOpen()
+        }
+      }
     }
 
     container.addEventListener('pointermove', onPointerMove)
     container.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('pointerup', onPointerUp)
 
-    // ── Loop de Renderização e Animação Cinemática ────────────────
+    // ── RENDER LOOP & DINÂMICA FÍSICA CINEMATOGRÁFICA ─────────────
     let animationFrameId: number
     const clock = new THREE.Clock()
 
+    const clamp = (val: number, min = 0, max = 1) => Math.max(min, Math.min(max, val))
+    const smoothstep = (edge0: number, edge1: number, x: number) => {
+      const t = clamp((x - edge0) / (edge1 - edge0))
+      return t * t * (3 - 2 * t)
+    }
+    const easeOutQuart = (x: number) => 1 - Math.pow(1 - x, 4)
+    const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3)
+
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate)
-      const elapsedTime = clock.getElapsedTime()
-
+      const delta = Math.min(clock.getDelta(), 0.05)
+      const t = clock.getElapsedTime()
       const state = animState.current
 
-      // Suavização do estado de abertura (LERP com inércia física)
-      state.openProgress += (state.targetOpenProgress - state.openProgress) * 0.08
+      // Atualiza shader do background
+      auraUniforms.uTime.value = t
+
+      // Suavização do estado de abertura geral cadenciada (~1.8s)
+      const target = state.targetOpenProgress
+      const animSpeed = 0.52
+      const step = delta * animSpeed
+      if (state.openProgress < target) {
+        state.openProgress = Math.min(target, state.openProgress + step)
+      } else if (state.openProgress > target) {
+        state.openProgress = Math.max(target, state.openProgress - step)
+      }
       const p = state.openProgress
 
-      // Suavização de rotação com LERP
-      state.rotationX += (state.targetRotationX - state.rotationX) * 0.08
-      state.rotationY += (state.targetRotationY - state.rotationY) * 0.08
+      // ── COREOGRAFIA DRAMÁTICA EM 2 ETAPAS (SEM CLIPPING) ───────
+      // ETAPA 1: O lacre de cera quebra, a aba superior abre e recua para trás do envelope (0.0 -> 0.44)
+      const flapProgress = smoothstep(0.0, 0.44, p)
+      topHinge.position.z = THREE.MathUtils.lerp(envDepth / 2 + 0.012, -envDepth / 2 - 0.025, flapProgress)
+      topHinge.rotation.x = -flapProgress * Math.PI * 1.15
 
-      // Rotação suave do grupo principal
+      // ETAPA 2: A carta desliza estritamente na vertical e o conjunto se eleva (0.38 -> 1.0)
+      const letterNorm = clamp((p - 0.38) / 0.62)
+      const letterProgress = easeOutQuart(letterNorm)
+      const compositionLift = easeOutCubic(letterNorm)
+
+      // Câmera dinâmica cinematográfica sem clipping
+      camera.position.y = 0.15 + compositionLift * 0.52
+      camera.position.z = 8.4 + compositionLift * 0.65
+
+      // Rotação inercial com amortecimento suave
+      state.rotationX += (state.targetRotationX - state.rotationX) * 0.075
+      state.rotationY += (state.targetRotationY - state.rotationY) * 0.075
+
       rootGroup.rotation.x = state.rotationX
       rootGroup.rotation.y = state.rotationY
 
-      // Flutuação Orgânica em 3D
-      rootGroup.position.y = Math.sin(elapsedTime * 1.6) * 0.08
-      rootGroup.position.z = Math.cos(elapsedTime * 1.2) * 0.05
+      // Flutuação orgânica levitando no ar
+      const floatY = Math.sin(t * 1.4) * 0.07
+      rootGroup.position.y = floatY
 
-      // 1. Animação da Aba Superior do Envelope (Abre -170°)
-      topFlapHinge.rotation.x = -p * Math.PI * 0.95
+      // Sombra acompanha a distância do chão
+      shadowMesh.scale.setScalar(1 - floatY * 0.35)
+      shadowMesh.material.opacity = 0.55 - floatY * 0.15
 
-      // 2. Animação da Folha da Carta (Desliza para cima e vem para a frente)
-      letterMesh.position.y = -0.1 + p * 2.2
-      letterMesh.position.z = envDepth / 2 + 0.02 + p * 0.15
+      // 1. Envelope como pedestal
+      envelopeGroup.position.y = -compositionLift * 0.28
+
+      // 2. A folha da carta sobe estritamente ao longo de Y em z = 0.00 (ZERO colisão / ZERO clipping)
+      letterMesh.position.y = -0.28 + letterProgress * 2.15
+      letterMesh.position.z = 0.00
+      letterMesh.rotation.x = 0.00
       letterMesh.scale.set(
-        0.95 + p * 0.05,
-        0.5 + p * 0.5,
+        0.96 + letterProgress * 0.04,
+        0.55 + letterProgress * 0.45,
         1
       )
+      letterMesh.visible = flapProgress > 0.05
 
-      // Leve curvatura e inclinação poética da carta aberta
-      letterMesh.rotation.x = p * 0.15
-      letterMesh.rotation.z = -p * 0.04
-
-      // 3. Disco de Vinil (Surge flutuando e gira)
-      vinylGroup.position.x = 1.2 + p * 1.6
-      vinylGroup.position.y = 0.2 + p * 1.1 + Math.sin(elapsedTime * 2) * 0.05
-      vinylGroup.scale.setScalar(0.4 + p * 0.6)
-      vinylGroup.rotation.y = p * 0.35
-
-      if (isPlaying || p > 0.5) {
-        state.vinylRotation += 0.035
-        vinylMesh.rotation.z = state.vinylRotation
-      }
-
-      // 4. Anel Orbital de Texto
-      state.ribbonOffset += 0.0015
-      ribbonTex.offset.x = state.ribbonOffset
-      ribbonMesh.rotation.y = elapsedTime * 0.15
-
-      // 5. Partículas flutuantes
-      particlePoints.rotation.y = elapsedTime * 0.03
-      particlePoints.rotation.x = Math.sin(elapsedTime * 0.05) * 0.1
-
-      // 6. Pulsação do Selo de Cera quando fechado
-      if (p < 0.2) {
-        const pulse = 1 + Math.sin(elapsedTime * 3) * 0.04
-        waxSealMesh.scale.set(pulse, pulse, pulse)
+      // 3. Brilho do lacre de cera e pulso poético
+      if (p < 0.15) {
+        const pulse = 1 + Math.sin(t * 3.2) * 0.035
+        waxGroup.scale.set(pulse, pulse, pulse)
+        waxMaterial.emissiveIntensity = 0.2 + Math.sin(t * 3.2) * 0.1
       } else {
-        waxSealMesh.scale.set(1, 1, 1)
+        waxGroup.scale.set(1, 1, 1)
+        waxMaterial.emissiveIntensity = 0.15
       }
+
+      // 4. Feixe de luz solar oscila suavemente
+      sunbeamPlane.rotation.z = -0.42 + Math.sin(t * 0.6) * 0.04
+      sunbeamMat.opacity = 0.45 + compositionLift * 0.15 + Math.sin(t * 1.2) * 0.06
+
+      // 5. Luzes intensificam sutilmente na abertura
+      keyLight.intensity = 2.8 + compositionLift * 0.6
+      fillLight.intensity = 2.2 + compositionLift * 0.4
+
+      // 6. Charms flutuantes orbitam suavemente
+      for (const charm of charms) {
+        charm.mesh.position.y = charm.basePos.y + Math.sin(t * charm.speed + charm.phase) * 0.14
+        charm.mesh.rotation.x += charm.rotX
+        charm.mesh.rotation.y += charm.rotY
+      }
+
+      // 7. Partículas flutuam suavemente
+      particles.rotation.y = t * 0.02
+      particles.position.y = Math.sin(t * 0.7) * 0.06
 
       renderer.render(scene, camera)
     }
 
     animate()
 
-    // ── Resize Observer ───────────────────────────────────────────
+    // ── Resize & Cleanup ──────────────────────────────────────────
     const handleResize = () => {
       if (!container) return
       camera.aspect = container.clientWidth / container.clientHeight
@@ -567,7 +851,6 @@ export function ThreeHeroExperience() {
 
     window.addEventListener('resize', handleResize)
 
-    // ── Cleanup ───────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(animationFrameId)
       container.removeEventListener('pointermove', onPointerMove)
@@ -576,62 +859,35 @@ export function ThreeHeroExperience() {
       window.removeEventListener('resize', handleResize)
 
       renderer.dispose()
-      letterTexture.dispose()
-      ribbonTex.dispose()
+      cottonPaperTex.dispose()
+      letterTex.dispose()
+      shadowTex.dispose()
+      glowPointTex.dispose()
+      sunbeamTex.dispose()
+      waxGeo.dispose()
+      backGeo.dispose()
+      frontGeo.dispose()
+      flapGeo.dispose()
+      letterGeo.dispose()
+      shadowGeo.dispose()
+      pGeo.dispose()
+      heartGeo.dispose()
+
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement)
       }
     }
-  }, [toggleOpen, isPlaying])
+  }, [toggleOpen])
 
   return (
-    <div className="relative w-full h-[480px] sm:h-[580px] lg:h-[640px] flex items-center justify-center">
+    <div className="relative w-full h-[520px] sm:h-[620px] lg:h-[700px] flex items-center justify-center overflow-visible">
       {/* Canvas 3D do Three.js */}
       <div
         ref={mountRef}
-        className="w-full h-full relative z-10 touch-none select-none"
+        className="w-full h-full relative z-10 touch-none select-none cursor-grab active:cursor-grabbing overflow-visible"
       />
-
-      {/* Dica Flutuante de Interação no Canvas */}
-      <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-2 pointer-events-auto bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-pink-300/80 shadow-lg shadow-rose-900/10 text-xs font-bold text-[#4c0519]">
-        <button
-          type="button"
-          onClick={toggleOpen}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#e11d48] text-white hover:bg-[#be123c] transition-all cursor-pointer shadow-xs"
-        >
-          {isOpen ? <RotateCcw size={14} /> : <Sparkles size={14} />}
-          <span>{isOpen ? 'Fechar carta 3D' : 'Deslacrar em 3D'}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setIsPlaying(!isPlaying)}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
-            isPlaying
-              ? 'bg-rose-100 border-rose-300 text-[#e11d48]'
-              : 'bg-white border-pink-200 text-[#701a35] hover:bg-rose-50'
-          }`}
-        >
-          {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-          <span>{isPlaying ? 'Pausar música' : 'Tocar vinil'}</span>
-        </button>
-
-        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[#701a35] font-medium pl-1">
-          <Move3d size={13} className="text-[#e11d48]" />
-          Arraste para girar 360°
-        </span>
-      </div>
-
-      {/* Feedback de Hover sobre o Selo */}
-      {isHovered && !isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute top-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none bg-[#4c0519] text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg"
-        >
-          Toque para quebrar o lacre de cera
-        </motion.div>
-      )}
     </div>
   )
 }
+
+

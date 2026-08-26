@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
 
+const frontendPort = Number(process.env.FRONTEND_PORT || process.env.VITE_PORT || 5173)
+const backendPort = Number(process.env.BACKEND_PORT || 3000)
+
 export default defineConfig({
   plugins: [
     react(), 
@@ -32,10 +35,10 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: true,
-    port: 5173,
+    port: frontendPort,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: `http://localhost:${backendPort}`,
         changeOrigin: true,
       },
     },
