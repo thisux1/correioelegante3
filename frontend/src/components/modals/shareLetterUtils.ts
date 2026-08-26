@@ -8,9 +8,15 @@ export function formatLetterUrl(pageId?: string, customUrl?: string): string {
       window.location.hostname === '127.0.0.1'
 
     if (isLocal) {
-      return `${window.location.origin}/card/page/${pageId}`
+      return `${window.location.origin}/p/${pageId}`
     }
+
+    const origin = window.location.origin.includes('correioelegante')
+      ? 'https://www.correioelegante.studio'
+      : window.location.origin
+
+    return `${origin}/p/${pageId}`
   }
 
-  return `https://correioelegante.studio/p/${pageId}`
+  return `https://www.correioelegante.studio/p/${pageId}`
 }
