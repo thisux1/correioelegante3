@@ -72,9 +72,18 @@ export interface SubscriptionStatusResponse {
   }>
 }
 
+export interface CustomerData {
+  name?: string
+  email?: string
+  tax_id?: string
+}
+
 export const paymentService = {
-  createPix(target: PaymentTarget, turnstileToken?: string) {
+  createPix(target: PaymentTarget, turnstileToken?: string, customer?: CustomerData) {
     const payload = buildCreatePayload(target, 'pix', turnstileToken)
+    if (customer) {
+      payload.customer = customer
+    }
     return turnstileToken
       ? api.post<PixPaymentResponse>('/payments/create', payload, { headers: { 'cf-turnstile-response': turnstileToken } })
       : api.post<PixPaymentResponse>('/payments/create', payload)
@@ -124,13 +133,16 @@ export const paymentService = {
     })
   },
 
-  createSubscriptionPix(turnstileToken?: string) {
+  createSubscriptionPix(turnstileToken?: string, customer?: CustomerData) {
     const payload: Record<string, unknown> = {
       paymentMethod: 'pix',
       planId: 'monthly_unlimited',
     }
     if (turnstileToken) {
       payload.turnstileToken = turnstileToken
+    }
+    if (customer) {
+      payload.customer = customer
     }
 
     return turnstileToken
