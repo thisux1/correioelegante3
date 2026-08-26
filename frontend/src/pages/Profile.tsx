@@ -184,7 +184,7 @@ export function Profile() {
       return `/page/${candidate.slug.trim()}`
     }
 
-    return `/card/page/${page.id}`
+    return `/p/${page.id}`
   }
 
   function isAbsoluteUrl(value: string) {
