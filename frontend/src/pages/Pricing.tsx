@@ -21,12 +21,14 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { Input } from '@/components/ui/Input'
 import { Container } from '@/components/layout/Container'
 import { ScrollReveal } from '@/components/animations/ScrollReveal'
 import { Turnstile, type TurnstileRef } from '@/components/ui/Turnstile'
 import { PricingPageSkeleton } from '@/components/ui/PricingPageSkeleton'
 import { useAuthStore } from '@/store/authStore'
 import { paymentService, type PixPaymentResponse } from '@/services/paymentService'
+import { cleanCpf, formatCpf, isValidCpf } from '@/utils/cpf'
 
 export interface PricingProps {
   isLoading?: boolean
@@ -47,8 +49,8 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
   const turnstileRef = useRef<TurnstileRef>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
-
-
+  const [cpf, setCpf] = useState('')
+  const [cpfError, setCpfError] = useState<string | null>(null)
 
   const isSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
 
@@ -59,23 +61,24 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
     const interval = setInterval(async () => {
       try {
         const { data } = await paymentService.getSubscriptionStatus()
-        if (data.isSubscribed) {
-          setCheckoutStep('success')
+        if (data.isSubscribed || data.status === 'active') {
           await refreshUser()
+          setCheckoutStep('success')
           clearInterval(interval)
           setTimeout(() => {
+            setIsCheckoutModalOpen(false)
             navigate('/planos/sucesso')
           }, 1500)
         }
       } catch {
-        // Ignora erros momentâneos de polling
+        // Ignora erros de polling
       }
-    }, 3500)
+    }, 4000)
 
     return () => clearInterval(interval)
   }, [checkoutStep, isCheckoutModalOpen, navigate, refreshUser])
 
-  // Countdown do Pix
+  // Countdown timer do Pix
   useEffect(() => {
     if (!pixData?.pixExpiresAt) return
 
@@ -93,16 +96,29 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
       return
     }
     setError(null)
+    setCpfError(null)
     setCheckoutStep('select')
     setIsCheckoutModalOpen(true)
   }
 
   const handleStartPix = async () => {
+    setError(null)
+    setCpfError(null)
+
+    const clean = cleanCpf(cpf)
+    if (!clean) {
+      setCpfError('Informe seu CPF para emissão do QR Code Pix.')
+      return
+    }
+    if (!isValidCpf(clean)) {
+      setCpfError('CPF inválido. Verifique os 11 dígitos informados.')
+      return
+    }
+
     setIsLoading(true)
     setLoadingMethod('pix')
-    setError(null)
     try {
-      const { data } = await paymentService.createSubscriptionPix(turnstileToken || undefined)
+      const { data } = await paymentService.createSubscriptionPix(turnstileToken || undefined, { tax_id: clean })
       setPixData(data)
       setCheckoutStep('pix')
     } catch (err: unknown) {
@@ -455,6 +471,23 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
                   onSuccess={(token) => setTurnstileToken(token)}
                   onExpire={() => setTurnstileToken(null)}
                   onError={() => turnstileRef.current?.reset()}
+                />
+              </div>
+
+              <div className="text-left">
+                <Input
+                  label="CPF do Pagador (para emissão do Pix)"
+                  id="cpf-subscription-pix"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={(e) => {
+                    setCpf(formatCpf(e.target.value))
+                    if (cpfError) setCpfError(null)
+                  }}
+                  error={cpfError || undefined}
+                  hint="Exigência do Banco Central"
+                  maxLength={14}
+                  inputMode="numeric"
                 />
               </div>
 
