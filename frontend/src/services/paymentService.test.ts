@@ -67,6 +67,35 @@ describe('paymentService', () => {
     expect(res.data.isSubscribed).toBe(true)
   })
 
+  it('createPix envia customer quando fornecido', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: { paymentId: '123' } })
+
+    await paymentService.createPix(
+      { resourceType: 'page', resourceId: '507f1f77bcf86cd799439022' },
+      undefined,
+      { tax_id: '12345678909' }
+    )
+
+    expect(api.post).toHaveBeenCalledWith('/payments/create', {
+      paymentMethod: 'pix',
+      resourceType: 'page',
+      resourceId: '507f1f77bcf86cd799439022',
+      customer: { tax_id: '12345678909' },
+    })
+  })
+
+  it('createSubscriptionPix envia customer quando fornecido', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: { paymentId: 'sub_123' } })
+
+    await paymentService.createSubscriptionPix(undefined, { tax_id: '12345678909' })
+
+    expect(api.post).toHaveBeenCalledWith('/payments/subscription/checkout', {
+      paymentMethod: 'pix',
+      planId: 'monthly_unlimited',
+      customer: { tax_id: '12345678909' },
+    })
+  })
+
   it('createPix envia turnstileToken no payload e headers quando fornecido', async () => {
     vi.mocked(api.post).mockResolvedValue({ data: { paymentId: '123' } })
 
