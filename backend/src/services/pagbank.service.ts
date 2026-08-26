@@ -121,10 +121,10 @@ export function getPagBankBaseUrl(): string {
 }
 
 export function getPagBankClient(): AxiosInstance {
-  const token = process.env.PAGBANK_TOKEN || process.env.PAGSEGURO_TOKEN;
+  const token = process.env.PAGBANK_TOKEN || process.env.PAGSEGURO_TOKEN || process.env.PAGBANK_KEY;
   if (!token) {
     throw new AppError(
-      'PAGBANK_TOKEN (ou PAGSEGURO_TOKEN) não configurado no ambiente.',
+      'PAGBANK_TOKEN (ou PAGSEGURO_TOKEN / PAGBANK_KEY) não configurado no ambiente.',
       500,
       'PAGBANK_CONFIG_ERROR',
     );

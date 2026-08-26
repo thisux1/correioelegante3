@@ -636,7 +636,7 @@ export function Profile() {
                           <Link to={`/payment/page/${page.id}`} className="flex-1 sm:flex-initial">
                             <Button size="sm" className="w-full text-xs font-bold shadow-xs">
                               <Zap className="w-3.5 h-3.5 mr-1" />
-                              Pagar e Publicar
+                              Publicar
                             </Button>
                           </Link>
                         ) : null}
