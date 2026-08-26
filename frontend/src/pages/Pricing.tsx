@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 
 import { useNavigate, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Check,
   Sparkles,
@@ -16,6 +17,7 @@ import {
   ArrowRight,
   RefreshCw,
   Loader2,
+  ChevronDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -49,6 +51,7 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
   const turnstileRef = useRef<TurnstileRef>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
+  const [isPixExpanded, setIsPixExpanded] = useState(false)
   const [cpf, setCpf] = useState('')
   const [cpfError, setCpfError] = useState<string | null>(null)
 
@@ -97,6 +100,7 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
     }
     setError(null)
     setCpfError(null)
+    setIsPixExpanded(false)
     setCheckoutStep('select')
     setIsCheckoutModalOpen(true)
   }
@@ -107,11 +111,11 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
 
     const clean = cleanCpf(cpf)
     if (!clean) {
-      setCpfError('Informe seu CPF para emissão do QR Code Pix.')
+      setCpfError('Informe seu CPF')
       return
     }
     if (!isValidCpf(clean)) {
-      setCpfError('CPF inválido. Verifique os 11 dígitos informados.')
+      setCpfError('CPF inválido')
       return
     }
 
@@ -474,48 +478,88 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
                 />
               </div>
 
-              <div className="text-left">
-                <Input
-                  label="CPF do Pagador (para emissão do Pix)"
-                  id="cpf-subscription-pix"
-                  placeholder="000.000.000-00"
-                  value={cpf}
-                  onChange={(e) => {
-                    setCpf(formatCpf(e.target.value))
-                    if (cpfError) setCpfError(null)
-                  }}
-                  error={cpfError || undefined}
-                  hint="Exigência do Banco Central"
-                  maxLength={14}
-                  inputMode="numeric"
-                />
-              </div>
-
               <p className="text-xs font-semibold text-text-light">Escolha a forma de pagamento:</p>
 
               <div className="grid grid-cols-1 gap-3">
-                <button
+                <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/40 transition-all overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null)
+                      setCpfError(null)
+                      setIsPixExpanded((prev) => !prev)
+                    }}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-between p-4 text-left transition-all hover:bg-emerald-100/50 disabled:opacity-50 group"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm shadow-emerald-500/20">
+                        <Smartphone size={22} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-text">Pix Instantâneo</p>
+                        <p className="text-xs text-text-light">Liberação imediata via QR Code</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {loadingMethod === 'pix' ? (
+                        <Loader2 size={20} className="animate-spin shrink-0 text-emerald-600" />
+                      ) : (
+                        <ChevronDown
+                          size={18}
+                          className={`text-text-muted transition-transform duration-200 ${
+                            isPixExpanded ? 'rotate-180 text-emerald-600' : ''
+                          }`}
+                        />
+                      )}
+                    </div>
+                  </button>
 
-                  type="button"
-                  onClick={handleStartPix}
-                  disabled={isLoading}
-                  className="flex items-center justify-between rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/40 p-4 text-left transition-all hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-md disabled:opacity-50 group"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm shadow-emerald-500/20">
-                      <Smartphone size={22} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-text">Pix Instantâneo</p>
-                      <p className="text-xs text-text-light">Liberação imediata via QR Code</p>
-                    </div>
-                  </div>
-                  {loadingMethod === 'pix' ? (
-                    <Loader2 size={20} className="animate-spin shrink-0 aspect-square text-emerald-600" />
-                  ) : (
-                    <Badge variant="success" className="text-xs">Mais Rápido</Badge>
-                  )}
-                </button>
+                  <AnimatePresence initial={false}>
+                    {isPixExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-t border-emerald-200/60 bg-white/80 p-4"
+                      >
+                        <div className="space-y-3 text-left">
+                          <Input
+                            label="CPF"
+                            id="cpf-subscription-pix"
+                            placeholder="000.000.000-00"
+                            value={cpf}
+                            onChange={(e) => {
+                              setCpf(formatCpf(e.target.value))
+                              if (cpfError) setCpfError(null)
+                            }}
+                            error={cpfError || undefined}
+                            maxLength={14}
+                            inputMode="numeric"
+                            autoFocus
+                          />
+
+                          <Button
+                            type="button"
+                            onClick={handleStartPix}
+                            disabled={isLoading}
+                            className="w-full font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs shadow-sm shadow-emerald-500/20"
+                          >
+                            {loadingMethod === 'pix' ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <Loader2 size={14} className="animate-spin" />
+                                Gerando Pix...
+                              </span>
+                            ) : (
+                              'Gerar Pix (R$ 15,00)'
+                            )}
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 <button
                   type="button"
@@ -533,7 +577,7 @@ export function Pricing({ isLoading: propIsLoading = false }: PricingProps = {})
                     </div>
                   </div>
                   {loadingMethod === 'credit_card' ? (
-                    <Loader2 size={20} className="animate-spin shrink-0 aspect-square text-violet-600" />
+                    <Loader2 size={20} className="animate-spin shrink-0 text-violet-600" />
                   ) : (
                     <ArrowRight size={18} className="text-text-muted transition-transform group-hover:translate-x-1" />
                   )}

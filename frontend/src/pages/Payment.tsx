@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { motion } from 'framer-motion'
-import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone, Zap, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Copy, Check, ArrowLeft, Clock, AlertCircle, CreditCard, Smartphone, Zap, Loader2, ChevronDown, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -40,6 +40,7 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+  const [isPixExpanded, setIsPixExpanded] = useState(false)
   const [cpf, setCpf] = useState('')
   const [cpfError, setCpfError] = useState<string | null>(null)
 
@@ -103,11 +104,11 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
     if (method === 'pix' && !isSubscribed) {
       const clean = cleanCpf(cpf)
       if (!clean) {
-        setCpfError('Informe seu CPF para emissão do QR Code Pix.')
+        setCpfError('Informe seu CPF')
         return
       }
       if (!isValidCpf(clean)) {
-        setCpfError('CPF inválido. Verifique os 11 dígitos informados.')
+        setCpfError('CPF inválido')
         return
       }
     }
@@ -319,58 +320,106 @@ export function Payment({ isLoading: propIsLoading }: PaymentProps = {}) {
                 />
               </div>
 
-              {!isSubscribed && (
-                <div className="mb-5 text-left">
-                  <Input
-                    label="CPF do Pagador (para emissão do Pix)"
-                    id="cpf-checkout-pix"
-                    placeholder="000.000.000-00"
-                    value={cpf}
-                    onChange={(e) => {
-                      setCpf(formatCpf(e.target.value))
-                      if (cpfError) setCpfError(null)
-                    }}
-                    error={cpfError || undefined}
-                    hint="Exigência do Banco Central"
-                    maxLength={14}
-                    inputMode="numeric"
-                  />
-                </div>
-              )}
-
               <div className="flex flex-col gap-4 mb-6">
-                <button
+                <div className="rounded-2xl border-2 border-emerald-200/80 bg-emerald-50/40 transition-all overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null)
+                      setCpfError(null)
+                      setIsPixExpanded((prev) => !prev)
+                    }}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-between p-5 text-left transition-all hover:bg-emerald-100/50 disabled:opacity-60 disabled:cursor-not-allowed group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-sm shadow-emerald-500/20">
+                        <Smartphone className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-text">Pix</p>
+                        <p className="text-sm text-text-light">Pagamento instantâneo via QR Code</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {loadingMethod === 'pix' ? (
+                        <Loader2 className="w-5 h-5 animate-spin shrink-0 text-emerald-600" />
+                      ) : (
+                        <ChevronDown
+                          className={`w-5 h-5 text-text-muted transition-transform duration-200 ${
+                            isPixExpanded ? 'rotate-180 text-emerald-600' : ''
+                          }`}
+                        />
+                      )}
+                    </div>
+                  </button>
 
-                  onClick={() => handleSelectMethod('pix')}
-                  disabled={isLoading}
-                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-transparent bg-emerald-50 hover:border-emerald-400 hover:bg-emerald-100 transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed group"
-                >
-                  <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Smartphone className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-text">Pix</p>
-                    <p className="text-sm text-text-light">Pagamento instantâneo via QR Code</p>
-                  </div>
-                  {loadingMethod === 'pix' && (
-                    <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 aspect-square text-emerald-600" />
-                  )}
-                </button>
+                  <AnimatePresence initial={false}>
+                    {isPixExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-t border-emerald-200/60 bg-white/70 px-5 pt-4 pb-5"
+                      >
+                        <div className="space-y-4 text-left">
+                          <Input
+                            label="CPF"
+                            id="cpf-checkout-pix"
+                            placeholder="000.000.000-00"
+                            value={cpf}
+                            onChange={(e) => {
+                              setCpf(formatCpf(e.target.value))
+                              if (cpfError) setCpfError(null)
+                            }}
+                            error={cpfError || undefined}
+                            maxLength={14}
+                            inputMode="numeric"
+                            autoFocus
+                          />
+
+                          <Button
+                            type="button"
+                            onClick={() => handleSelectMethod('pix')}
+                            disabled={isLoading}
+                            size="lg"
+                            className="w-full font-bold shadow-md shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white text-sm"
+                          >
+                            {loadingMethod === 'pix' ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Gerando QR Code...
+                              </span>
+                            ) : (
+                              'Gerar QR Code Pix'
+                            )}
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 <button
+                  type="button"
                   onClick={() => handleSelectMethod('credit_card')}
                   disabled={isLoading}
-                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-transparent bg-blue-50 hover:border-blue-400 hover:bg-blue-100 transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center justify-between p-5 rounded-2xl border-2 border-transparent bg-blue-50 hover:border-blue-400 hover:bg-blue-100 transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed group"
                 >
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <CreditCard className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-sm shadow-blue-500/20">
+                      <CreditCard className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-text">Cartão de Crédito (Stripe)</p>
+                      <p className="text-sm text-text-light">Visa, Mastercard, Elo e outros</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-text">Cartão de Crédito (Stripe)</p>
-                    <p className="text-sm text-text-light">Visa, Mastercard, Elo e outros</p>
-                  </div>
-                  {loadingMethod === 'credit_card' && (
-                    <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 aspect-square text-blue-600" />
+                  {loadingMethod === 'credit_card' ? (
+                    <Loader2 className="ml-auto w-5 h-5 animate-spin shrink-0 text-blue-600" />
+                  ) : (
+                    <ArrowRight className="w-5 h-5 text-text-muted transition-transform group-hover:translate-x-1" />
                   )}
                 </button>
               </div>
