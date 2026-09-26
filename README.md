@@ -1,167 +1,218 @@
-<!-- BANNER ANIMADO -->
-<p align="center">
-  <img src="docs/banner.svg" alt="Correio Elegante Banner" width="100%" style="border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.15);" />
-</p>
+<div align="center">
+  <a href="#correio-elegante"><img src="./docs/banner.svg?v=2" alt="Correio Elegante" width="100%"/></a>
+</div>
 
-<!-- TECH BADGES MINIMALISTAS -->
-<p align="center">
-  <img src="https://img.shields.io/badge/React-19.2-black?style=flat-square&logo=react&logoColor=61DAFB&labelColor=050202" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-black?style=flat-square&logo=typescript&logoColor=3178C6&labelColor=050202" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-v4.0-black?style=flat-square&logo=tailwindcss&logoColor=38BDF8&labelColor=050202" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Framer_Motion-12.3-black?style=flat-square&logo=framer&logoColor=white&labelColor=050202" alt="Framer Motion" />
-  <img src="https://img.shields.io/badge/Express-5.1-black?style=flat-square&logo=express&logoColor=white&labelColor=050202" alt="Express" />
-  <img src="https://img.shields.io/badge/Prisma-6.5-black?style=flat-square&logo=prisma&logoColor=5A67D8&labelColor=050202" alt="Prisma" />
-  <img src="https://img.shields.io/badge/MongoDB-Atlas-black?style=flat-square&logo=mongodb&logoColor=47A248&labelColor=050202" alt="MongoDB" />
-  <img src="https://img.shields.io/badge/Stripe-Checkout-black?style=flat-square&logo=stripe&logoColor=635BFF&labelColor=050202" alt="Stripe" />
+> 🇧🇷 [Versão em Português](docs/README.pt-BR.md)
+
+<table width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <pre lang="text"><code>CORREIO ELEGANTE · postal dispatch
+------------------------------------------------
+item     : interactive digital letter
+editor   : 11 block types, drag-and-drop
+music    : vinyl/cassette + synced lyrics
+seal     : wax-sealed envelope unboxing
+price    : pix R$4.99 · card · R$15/mo plan
+delivery : public link or QR code</code></pre>
+    </td>
+    <td width="50%" valign="top">
+      <pre lang="python"><code>class CorreioElegante:
+    frontend = ["react 19", "vite 7", "tailwind v4",
+                "zustand", "framer motion", "dnd-kit"]
+    backend  = ["express 5", "prisma 6", "mongodb",
+                "stripe", "pagbank v3", "resend"]
+    video    = "remotion 4 · 1920x1080 @ 30fps"
+    deploy   = "vercel · correioelegante.studio"</code></pre>
+    </td>
+  </tr>
+</table>
+
+### ❯ badges
+
+<p align="left">
+  <img src="https://img.shields.io/badge/React-19.2-e11d48?style=flat-square&logo=react&logoColor=white&labelColor=050202" alt="React 19.2" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-e11d48?style=flat-square&logo=typescript&logoColor=white&labelColor=050202" alt="TypeScript 5.9" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-e11d48?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=050202" alt="Tailwind CSS v4" />
+  <img src="https://img.shields.io/badge/Express-5.1-e11d48?style=flat-square&logo=express&logoColor=white&labelColor=050202" alt="Express 5.1" />
+  <img src="https://img.shields.io/badge/Prisma_6-MongoDB_Atlas-e11d48?style=flat-square&logo=mongodb&logoColor=white&labelColor=050202" alt="Prisma 6 + MongoDB Atlas" />
+  <img src="https://img.shields.io/badge/Stripe-checkout-e11d48?style=flat-square&logo=stripe&logoColor=white&labelColor=050202" alt="Stripe checkout" />
+  <img src="https://img.shields.io/badge/PagBank_V3-pix-e11d48?style=flat-square&labelColor=050202" alt="PagBank V3 Pix" />
+  <img src="https://img.shields.io/badge/Remotion-4-e11d48?style=flat-square&labelColor=050202" alt="Remotion 4" />
+  <img src="https://img.shields.io/badge/deploy-correioelegante.studio-d4a574?style=flat-square&labelColor=050202" alt="Live at correioelegante.studio" />
+  <img src="https://img.shields.io/badge/license-MIT-d4a574?style=flat-square&labelColor=050202" alt="MIT license" />
 </p>
 
 ---
 
-## Visão Geral
+### ❯ what_it_is
 
-O **Correio Elegante** é uma plataforma digital e interativa para envio de mensagens e cartões virtuais temáticos de alta fidelidade visual. O projeto combina animações fluidas baseadas em física e transições dinâmicas (Framer Motion, GSAP, Lenis) com um backend robusto integrado a gateways reais de pagamento (Mercado Pago para Pix e Stripe para Cartão de Crédito). O fluxo garante que a mensagem do remetente só seja disponibilizada para leitura e compartilhamento (via link público ou QR Code) após a confirmação automática do pagamento.
+Correio Elegante is a paid digital letter service. The sender writes in a block
+editor (text, photos, a soundtrack with synced lyrics, quizzes, countdowns),
+seals the result inside a wax-stamped envelope animation, and pays per letter or
+on a monthly plan. The letter stays locked until the payment webhook clears it;
+delivery is a shareable link or QR code that opens the full unboxing sequence
+for the recipient. Live at `correioelegante.studio`.
 
----
-
-## Arquitetura de Fluxo de Dados
-
-A imagem abaixo ilustra a integração contínua do ecossistema desde a criação da carta pelo usuário até a entrega final por meio de webhooks de pagamento assíncronos:
-
-<p align="center">
-  <img src="docs/architecture.svg" alt="Arquitetura de Dados Correio Elegante" width="100%" style="border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.08);" />
-</p>
-
-### Ciclo de Vida da Carta Digital
-
-1. **Customização & Escrita**: O remetente cria a mensagem no editor visual do frontend, personaliza os temas estéticos (cores, layouts e fontes) e anexa trilhas sonoras ou mídias (armazenadas em nuvem via Cloudinary).
-2. **Registro & Intenção de Pagamento**: A API Express valida os dados estruturados com esquemas do Zod, cria um registro temporário inativo da carta no banco de dados MongoDB Atlas (gerenciado pelo Prisma ORM) e solicita a criação da sessão de checkout no Stripe ou a cobrança Pix no Mercado Pago.
-3. **Pagamento Seguro**: O cliente é direcionado para a interface oficial do gateway escolhido para efetuar a transação de forma totalmente segura.
-4. **Confirmação e Webhook**: Ao compensar o pagamento, o gateway envia uma notificação HTTP POST (Webhook) em segundo plano para o backend. A API valida a assinatura do webhook, ativa a carta no banco de dados e gera a URL pública de compartilhamento.
-5. **Entrega**: O remetente acessa o QR Code dinâmico ou copia o link para enviar ao destinatário. Ao abrir o link, a carta é renderizada com as transições visuais e efeitos sonoros configurados pelo remetente.
+The repo is an unhoisted monorepo: a React SPA, an Express API, a Remotion
+video workspace, and a Vercel serverless entrypoint that mounts the API under
+`/api/*` on the same domain.
 
 ---
 
-## Detalhes Tecnológicos por Módulo
+### ❯ the_letter_journey
 
-A tabela a seguir descreve a responsabilidade técnica e o conjunto de bibliotecas de cada módulo do monorepo:
+<div align="center">
+  <img src="./docs/architecture.svg?v=2" alt="Data flow: editor, API, payments, webhook, delivery" width="100%"/>
+</div>
 
-| Módulo / Componente | Tecnologias Utilizadas | Papel no Sistema |
+1. **Compose**: the sender builds the letter in the React editor: blocks, theme,
+   soundtrack, and media uploads (stored on Cloudinary, transcoded by an FFmpeg
+   worker for heavy files).
+2. **Checkout**: the Express API validates the payload with Zod, saves the
+   letter as inactive in MongoDB Atlas via Prisma, and opens a payment: PagBank
+   V3 for Pix or transparent card, Stripe Checkout for card.
+3. **Pay**: the sender finishes on the gateway's page or scans the Pix QR code
+   (EMV copia-e-cola payload plus hosted PNG, 30-minute expiry by default).
+4. **Webhook**: the gateway posts back; the API verifies the signature, flips
+   the letter to active, and issues the public URL.
+5. **Deliver**: link or QR code. The recipient gets the wax-seal unboxing, the
+   soundtrack, and every block exactly as designed.
+
+---
+
+### ❯ the_editor
+
+- 11 block types: `text`, `image`, `gallery`, `polaroid`, `music`, `video`,
+  `envelope`, `timer`, `timeline`, `quiz`, `scratch` (a scratch-off secret
+  panel). Schema versioned with forward migration (`frontend/src/editor/`).
+- Drag-and-drop sorting via dnd-kit, autosave drafts, and edit/preview modes.
+- The `music` block pulls synced lyrics from LRCLIB and plays them through
+  vinyl or cassette deck skins (`SyncedLyricsView`, `VinylRecord`,
+  `VintagePlayerDeck`).
+- Motion is Framer Motion plus Lenis smooth scroll and Lottie accents; the
+  envelope unboxing is a hand-rolled animation sequence, no WebGL.
+- Strict light theme across the product: paper background, rose primary, deep
+  wine text, gold accents. Typography: Playfair Display, Inter, Dancing Script.
+
+---
+
+### ❯ payments
+
+- **Pix** runs on the PagBank V3 Orders API. The response carries the EMV
+  copia-e-cola string, a hosted QR code PNG URL, and the expiration timestamp.
+- **Card** runs on Stripe Checkout (hosted session) or PagBank transparent
+  checkout with a client-side encrypted card payload.
+- **Subscription**: R$ 15/month plan for repeat senders, via PagBank Pix or
+  Stripe card (`POST /api/payments/subscription/checkout`).
+- **Mercado Pago is deactivated.** The SDK was removed over CVE exposure; the
+  service file is a documented no-op kept for legacy pending payments, with a
+  four-step re-enable procedure in `backend/src/services/mercadopago.service.ts`.
+- Webhooks verify signatures before anything unlocks
+  (`/api/payments/webhook/pagbank`, Stripe). Cloudflare Turnstile gates checkout
+  creation; auth endpoints are rate limited at 10 requests per minute per IP.
+
+---
+
+### ❯ stack
+
+| module | stack | job |
 | :--- | :--- | :--- |
-| **Frontend Web App** | React 19, Vite, Tailwind CSS v4, Zustand, Framer Motion, GSAP, Lenis | Single Page Application responsiva (Mobile First) que implementa um editor de mensagens rico, animações com física de amortecimento (Framer Motion) e scroll suave. |
-| **Backend API Server** | Node.js, Express 5, TypeScript, JWT, Cookie Parser | API RESTful protegida responsável por autenticação de contas, criação de sessões de checkout, validação de requisições com Zod e processamento de webhooks com segurança de criptografia de assinatura. |
-| **Banco de Dados** | MongoDB Atlas, Prisma Client | Persistência de documentos (esquemas User e Message) de forma assíncrona, facilitada por modelagem tipada via Prisma Schema. |
-| **Provedores de Pagamento** | Stripe SDK, Mercado Pago API | Gateway duplo oferecendo Pix (com QR code dinâmico e código "copia e cola" com expiração configurada) e cartões de crédito internacionais. |
-| **Armazenamento de Mídia** | Cloudinary SDK | Upload e otimização automatizada de mídias enviadas pelos usuários durante a customização da carta. |
+| `frontend/` | React 19.2, Vite 7, TypeScript 5.9, Tailwind CSS v4, Zustand, Framer Motion, dnd-kit, Lenis, Lottie, qrcode.react | SPA: landing, editor, public letter viewer |
+| `backend/` | Express 5.1, Prisma 6.5, MongoDB Atlas, Zod, JWT, bcryptjs, helmet, express-rate-limit | REST API: auth, letters, payments, webhooks |
+| media pipeline | Cloudinary, Multer, FFmpeg/ffprobe worker | user uploads, transcode + poster jobs |
+| comms | Resend, Cloudflare Turnstile | transactional email, bot protection |
+| `my-video/` | Remotion 4.0, React 19, Tailwind v4 | 90-second product film, 1920×1080 @ 30 fps |
+| `api/` | @vercel/node | serverless wrapper mounting the Express app |
+| tests | Vitest 4, Supertest, jsdom | unit and integration suites in every workspace |
 
 ---
 
-## Como Iniciar o Projeto Localmente
+### ❯ screenshots
 
-### Pré-requisitos
-* **Node.js** (versão 18 ou superior)
-* Acesso às chaves de desenvolvimento dos serviços de terceiros (MongoDB, Stripe, Mercado Pago e Cloudinary)
+<table width="100%">
+  <tr>
+    <td width="68%" valign="top"><sub>hero · desktop</sub><br/><img src="docs/landing-hero-desktop-top.png" alt="Landing hero, desktop" width="100%"/></td>
+    <td width="32%" valign="top"><sub>hero · mobile</sub><br/><img src="docs/landing-hero-mobile-top.png" alt="Landing hero, mobile" width="100%"/></td>
+  </tr>
+  <tr>
+    <td valign="top"><sub>after scroll · desktop</sub><br/><img src="docs/landing-hero-desktop-scroll.png" alt="Landing page after scroll, desktop" width="100%"/></td>
+    <td valign="top"><sub>after scroll · mobile</sub><br/><img src="docs/landing-hero-mobile-scroll.png" alt="Landing page after scroll, mobile" width="100%"/></td>
+  </tr>
+</table>
 
-<details>
-<summary><b>1. Clonar e Instalar Dependências</b></summary>
-<br />
+---
 
-Execute a instalação dos pacotes diretamente da raiz do monorepo para ambas as aplicações:
+### ❯ setup
+
+Prerequisites: Node 18+, a MongoDB Atlas connection string (replica set, needed
+for Prisma transactions), and sandbox keys for Stripe, PagBank, Cloudinary,
+Resend, and Turnstile.
 
 ```bash
-# Instala as dependências de orquestração do monorepo
 npm install
-
-# Instala as dependências do Frontend e Backend
 npm install --prefix frontend
 npm install --prefix backend
-```
-</details>
+npm install --prefix my-video   # only if you touch the video workspace
 
-<details>
-<summary><b>2. Configurar Variáveis de Ambiente</b></summary>
-<br />
+cp backend/.env.example backend/.env   # then fill in the keys
+npm run prisma:generate --prefix backend
 
-Crie as configurações de ambiente para o servidor de API:
-
-```bash
-cd backend
-cp .env.example .env
+npm run dev   # backend :3000 + frontend :5173, via concurrently
 ```
 
-Abra o arquivo `backend/.env` e insira suas credenciais:
+Essential variables in `backend/.env`:
 
-| Variável | Descrição |
+| variable | unlocks |
 | :--- | :--- |
-| `PORT` | Porta de escuta da API (padrão: 3001) |
-| `NODE_ENV` | Define o ambiente (`development` ou `production`) |
-| `FRONTEND_URL` | URL de origem permitida para CORS (ex: `http://localhost:5173`) |
-| `DATABASE_URL` | String de conexão MongoDB Atlas |
-| `JWT_SECRET` | Chave de assinatura para tokens de acesso JWT |
-| `JWT_REFRESH_SECRET` | Chave de assinatura para tokens de renovação JWT |
-| `CLOUDINARY_CLOUD_NAME` | Nome do cloud storage do Cloudinary |
-| `CLOUDINARY_API_KEY` | API Key do Cloudinary |
-| `CLOUDINARY_API_SECRET` | API Secret do Cloudinary |
-| `STRIPE_SECRET_KEY` | Chave secreta de teste do Stripe (`sk_test_...`) |
-| `STRIPE_WEBHOOK_SECRET` | Segredo de validação de assinatura de webhooks do Stripe |
-| `MP_ACCESS_TOKEN` | Token de acesso para a API do Mercado Pago |
-| `MP_PUBLIC_KEY` | Chave pública da API do Mercado Pago |
-</details>
+| `DATABASE_URL` | MongoDB Atlas connection |
+| `JWT_SECRET` / `JWT_REFRESH_SECRET` | access tokens (15 min) + httpOnly refresh cookie (7 d) |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | card checkout + signed webhooks |
+| `PAGBANK_TOKEN` / `PAGBANK_PUBLIC_KEY` / `PAGBANK_ENV` | Pix orders + transparent card (`sandbox` first) |
+| `CLOUDINARY_URL` | media storage and delivery |
+| `TURNSTILE_SECRET` | bot check on checkout endpoints |
+| `RESEND_API_KEY` / `EMAIL_FROM` | verification and receipt emails |
+| `FRONTEND_URL` | CORS origin and post-payment redirects |
 
-<details>
-<summary><b>3. Inicializar Modelagem de Dados (Prisma)</b></summary>
-<br />
+Mercado Pago variables exist in `.env.example` only to support reactivating the
+disabled provider; leave them empty otherwise.
 
-Gere o cliente de tipos do Prisma no diretório do backend:
+Sanity checks before shipping anything:
 
 ```bash
-cd backend
-npm run prisma:generate
-```
-</details>
-
-<details>
-<summary><b>4. Executar em Desenvolvimento</b></summary>
-<br />
-
-Para rodar simultaneamente o backend e o frontend com auto-reload ativado em ambos:
-
-```bash
-# Execute a partir da raiz do repositório
-npm run all
-```
-
-Após a inicialização:
-* **Frontend SPA**: `http://localhost:5173`
-* **Backend API**: `http://localhost:3001`
-</details>
-
----
-
-## Estrutura de Pastas Principal
-
-```path
-correioelegante3/
-├── frontend/          # SPA React com editor de cartas e animações premium
-│   ├── src/
-│   │   ├── app/       # Roteamento central e inicializadores de contexto
-│   │   ├── components/# Componentes visuais comuns (layout, UI e efeitos)
-│   │   ├── editor/    # Módulos específicos do painel de customização
-│   │   ├── services/  # Camada de comunicação HTTP baseada em Axios
-│   │   └── store/     # Gerenciamento de estados globais com Zustand
-├── backend/           # API Rest em Express e esquemas do Prisma
-│   ├── prisma/        # Schema de dados relacionais e coleções do MongoDB
-│   ├── src/
-│   │   ├── controllers/# Lógica de validação e controle de rotas
-│   │   ├── middlewares/# Interceptadores de segurança, tokens e erros
-│   │   ├── routes/    # Mapeamento dos endpoints expostos da API
-│   │   └── services/  # Regras de negócio e adaptadores de gateways
-└── docs/              # Elementos gráficos da documentação
-    ├── banner.svg     # Banner animado principal
-    └── architecture.svg# Diagrama de fluxo e arquitetura
+npm test          # vitest: frontend + backend
+npm run lint      # eslint: frontend + backend + my-video
+npm run typecheck # tsc in all three workspaces
+npm run build     # production builds
 ```
 
 ---
 
-## Licença
+### ❯ structure
 
-Este projeto está sob os termos da [Licença MIT](LICENSE). É livre para estudo, distribuição e uso.
+<pre lang="text"><code>correioelegante3/
+├── frontend/          React 19 SPA · landing, block editor, public viewer
+│   └── src/editor/    block types, themes, autosave, schema migration
+├── backend/           Express 5 API · zod-validated routes, domain services
+│   ├── prisma/        MongoDB schema (11 models: user, message, page, asset...)
+│   └── src/services/  pagbank, stripe, cloudinary, resend, media worker
+├── my-video/          Remotion 4 workspace · 90 s product film
+├── api/               Vercel serverless entry mounting the Express app
+├── docs/              banner + architecture SVGs, landing screenshots
+├── graphify-out/      generated codebase knowledge graph (graph.html, report)
+├── SPEC.md            API contracts, data models, payment state machine
+└── ARCHITECTURE.md    request pipelines and security boundaries</code></pre>
+
+---
+
+### ❯ docs
+
+`SPEC.md` · API contracts and the payment state machine  
+`ARCHITECTURE.md` · request pipelines and security boundaries  
+`AGENTS.md` · repo rules for coding agents  
+`graphify-out/GRAPH_REPORT.md` + `graph.html` · generated codebase graph  
+`frontend/README.md` / `my-video/README.md` · per-workspace notes
+
+---
+
+MIT © 2026 Thiago Araújo. See [LICENSE](LICENSE).
