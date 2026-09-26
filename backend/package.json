@@ -33,7 +33,7 @@
     "resend": "^6.21.0",
     "smol-toml": "^1.6.1",
     "stripe": "^20.4.0",
-    "zod": "^3.24.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
