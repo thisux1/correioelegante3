@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="#correio-elegante"><img src="./docs/banner.svg?v=2" alt="Correio Elegante" width="100%"/></a>
+  <a href="#correio-elegante"><img src="./docs/banner.svg?v=3" alt="Correio Elegante" width="100%"/></a>
 </div>
 
 > 🇧🇷 [Versão em Português](docs/README.pt-BR.md)
@@ -28,24 +28,24 @@ delivery : public link or QR code</code></pre>
   </tr>
 </table>
 
-### ❯ badges
+## Badges
 
 <p align="left">
-  <img src="https://img.shields.io/badge/React-19.2-e11d48?style=flat-square&logo=react&logoColor=white&labelColor=050202" alt="React 19.2" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-e11d48?style=flat-square&logo=typescript&logoColor=white&labelColor=050202" alt="TypeScript 5.9" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-e11d48?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=050202" alt="Tailwind CSS v4" />
-  <img src="https://img.shields.io/badge/Express-5.1-e11d48?style=flat-square&logo=express&logoColor=white&labelColor=050202" alt="Express 5.1" />
-  <img src="https://img.shields.io/badge/Prisma_6-MongoDB_Atlas-e11d48?style=flat-square&logo=mongodb&logoColor=white&labelColor=050202" alt="Prisma 6 + MongoDB Atlas" />
-  <img src="https://img.shields.io/badge/Stripe-checkout-e11d48?style=flat-square&logo=stripe&logoColor=white&labelColor=050202" alt="Stripe checkout" />
-  <img src="https://img.shields.io/badge/PagBank_V3-pix-e11d48?style=flat-square&labelColor=050202" alt="PagBank V3 Pix" />
-  <img src="https://img.shields.io/badge/Remotion-4-e11d48?style=flat-square&labelColor=050202" alt="Remotion 4" />
-  <img src="https://img.shields.io/badge/deploy-correioelegante.studio-d4a574?style=flat-square&labelColor=050202" alt="Live at correioelegante.studio" />
-  <img src="https://img.shields.io/badge/license-MIT-d4a574?style=flat-square&labelColor=050202" alt="MIT license" />
+  <img src="https://img.shields.io/badge/React-19.2-e11d48?style=flat-square&logo=react&logoColor=white&labelColor=4c0519" alt="React 19.2" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-e11d48?style=flat-square&logo=typescript&logoColor=white&labelColor=4c0519" alt="TypeScript 5.9" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-e11d48?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=4c0519" alt="Tailwind CSS v4" />
+  <img src="https://img.shields.io/badge/Express-5.1-e11d48?style=flat-square&logo=express&logoColor=white&labelColor=4c0519" alt="Express 5.1" />
+  <img src="https://img.shields.io/badge/Prisma_6-MongoDB_Atlas-e11d48?style=flat-square&logo=mongodb&logoColor=white&labelColor=4c0519" alt="Prisma 6 + MongoDB Atlas" />
+  <img src="https://img.shields.io/badge/Stripe-checkout-e11d48?style=flat-square&logo=stripe&logoColor=white&labelColor=4c0519" alt="Stripe checkout" />
+  <img src="https://img.shields.io/badge/PagBank_V3-pix-e11d48?style=flat-square&labelColor=4c0519" alt="PagBank V3 Pix" />
+  <img src="https://img.shields.io/badge/Remotion-4-e11d48?style=flat-square&labelColor=4c0519" alt="Remotion 4" />
+  <img src="https://img.shields.io/badge/deploy-correioelegante.studio-d4a574?style=flat-square&labelColor=4c0519" alt="Live at correioelegante.studio" />
+  <img src="https://img.shields.io/badge/license-MIT-d4a574?style=flat-square&labelColor=4c0519" alt="MIT license" />
 </p>
 
 ---
 
-### ❯ what_it_is
+## What it is
 
 Correio Elegante is a paid digital letter service. The sender writes in a block
 editor (text, photos, a soundtrack with synced lyrics, quizzes, countdowns),
@@ -60,7 +60,7 @@ video workspace, and a Vercel serverless entrypoint that mounts the API under
 
 ---
 
-### ❯ the_letter_journey
+## The letter journey
 
 <div align="center">
   <img src="./docs/architecture.svg?v=2" alt="Data flow: editor, API, payments, webhook, delivery" width="100%"/>
@@ -81,7 +81,7 @@ video workspace, and a Vercel serverless entrypoint that mounts the API under
 
 ---
 
-### ❯ the_editor
+## The editor
 
 - 11 block types: `text`, `image`, `gallery`, `polaroid`, `music`, `video`,
   `envelope`, `timer`, `timeline`, `quiz`, `scratch` (a scratch-off secret
@@ -97,7 +97,7 @@ video workspace, and a Vercel serverless entrypoint that mounts the API under
 
 ---
 
-### ❯ payments
+## Payments
 
 - **Pix** runs on the PagBank V3 Orders API. The response carries the EMV
   copia-e-cola string, a hosted QR code PNG URL, and the expiration timestamp.
@@ -114,7 +114,7 @@ video workspace, and a Vercel serverless entrypoint that mounts the API under
 
 ---
 
-### ❯ stack
+## Stack
 
 | module | stack | job |
 | :--- | :--- | :--- |
@@ -128,22 +128,7 @@ video workspace, and a Vercel serverless entrypoint that mounts the API under
 
 ---
 
-### ❯ screenshots
-
-<table width="100%">
-  <tr>
-    <td width="68%" valign="top"><sub>hero · desktop</sub><br/><img src="docs/landing-hero-desktop-top.png" alt="Landing hero, desktop" width="100%"/></td>
-    <td width="32%" valign="top"><sub>hero · mobile</sub><br/><img src="docs/landing-hero-mobile-top.png" alt="Landing hero, mobile" width="100%"/></td>
-  </tr>
-  <tr>
-    <td valign="top"><sub>after scroll · desktop</sub><br/><img src="docs/landing-hero-desktop-scroll.png" alt="Landing page after scroll, desktop" width="100%"/></td>
-    <td valign="top"><sub>after scroll · mobile</sub><br/><img src="docs/landing-hero-mobile-scroll.png" alt="Landing page after scroll, mobile" width="100%"/></td>
-  </tr>
-</table>
-
----
-
-### ❯ setup
+## Setup
 
 Prerequisites: Node 18+, a MongoDB Atlas connection string (replica set, needed
 for Prisma transactions), and sandbox keys for Stripe, PagBank, Cloudinary,
@@ -188,7 +173,7 @@ npm run build     # production builds
 
 ---
 
-### ❯ structure
+## Structure
 
 <pre lang="text"><code>correioelegante3/
 ├── frontend/          React 19 SPA · landing, block editor, public viewer
@@ -198,14 +183,14 @@ npm run build     # production builds
 │   └── src/services/  pagbank, stripe, cloudinary, resend, media worker
 ├── my-video/          Remotion 4 workspace · 90 s product film
 ├── api/               Vercel serverless entry mounting the Express app
-├── docs/              banner + architecture SVGs, landing screenshots
+├── docs/              banner + architecture SVGs
 ├── graphify-out/      generated codebase knowledge graph (graph.html, report)
 ├── SPEC.md            API contracts, data models, payment state machine
 └── ARCHITECTURE.md    request pipelines and security boundaries</code></pre>
 
 ---
 
-### ❯ docs
+## Docs
 
 `SPEC.md` · API contracts and the payment state machine  
 `ARCHITECTURE.md` · request pipelines and security boundaries  
