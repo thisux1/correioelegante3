@@ -1,73 +1,108 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 300" width="1100" height="300">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300">
   <defs>
-    <pattern id="ce3-dots" width="24" height="24" patternUnits="userSpaceOnUse">
-      <circle cx="1.5" cy="1.5" r="0.9" fill="#e11d48" opacity="0.07"/>
+    <pattern id="cedots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1.4" cy="1.4" r="1.3" fill="#fda4af"/>
     </pattern>
-    <filter id="ce3-soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#4c0519" flood-opacity="0.12"/>
+    <filter id="cesoft" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#881337" flood-opacity="0.14"/>
     </filter>
+    <path id="hrt" d="M0 4 C0 1.5 1.5 0 3.5 0 C5.2 0 6.5 1.2 7 2.8 C7.5 1.2 8.8 0 10.5 0 C12.5 0 14 1.5 14 4 C14 8.5 9.5 11.5 7 14 C4.5 11.5 0 8.5 0 4 Z"/>
   </defs>
-  <rect width="1100" height="300" fill="#fff5f7"/>
-  <rect width="1100" height="300" fill="url(#ce3-dots)"/>
-  <rect x="0.5" y="0.5" width="1099" height="299" fill="none" stroke="#e11d48" stroke-opacity="0.35" stroke-width="1.5" rx="8"/>
 
-  <!-- left: the letter editor -->
-  <g filter="url(#ce3-soft)">
-    <rect x="56" y="56" width="250" height="196" rx="10" fill="#ffffff" stroke="#fda4af" stroke-width="1.5"/>
-  </g>
-  <rect x="56" y="56" width="250" height="34" rx="10" fill="#ffe4ec"/>
-  <rect x="56" y="78" width="250" height="12" fill="#ffe4ec"/>
-  <circle cx="74" cy="73" r="5" fill="#f43f5e"/>
-  <circle cx="90" cy="73" r="5" fill="#fda4af"/>
-  <circle cx="106" cy="73" r="5" fill="#fecdd3"/>
-  <text x="290" y="76" font-family="ui-monospace,monospace" font-size="10.5" fill="#9f1239" text-anchor="end">editor de carta</text>
+  <rect width="880" height="300" fill="#fff5f7"/>
+  <rect x="14" y="14" width="852" height="272" rx="10" fill="url(#cedots)" opacity="0.45"/>
+  <rect x="8.5" y="8.5" width="863" height="283" rx="13" fill="none" stroke="#f43f5e" stroke-opacity="0.42" stroke-width="1.5"/>
+  <rect x="14" y="14" width="852" height="272" rx="10" fill="none" stroke="#fecdd3" stroke-width="1"/>
 
-  <g font-family="ui-monospace,monospace" font-size="10.5" fill="#9f1239">
-    <rect x="72" y="102" width="218" height="34" rx="6" fill="#fff5f7" stroke="#fecdd3"/>
-    <rect x="80" y="112" width="150" height="4" rx="2" fill="#fda4af"/>
-    <rect x="80" y="121" width="110" height="4" rx="2" fill="#fecdd3"/>
-    <text x="238" y="122">parágrafo</text>
-
-    <rect x="72" y="142" width="218" height="40" rx="6" fill="#fff5f7" stroke="#fecdd3"/>
-    <rect x="80" y="150" width="52" height="24" rx="4" fill="#fecdd3"/>
-    <path d="M 84 170 l 10 -10 l 8 7 l 6 -5 l 10 8" stroke="#e11d48" stroke-width="1.5" fill="none"/>
-    <circle cx="122" cy="156" r="3" fill="#e11d48"/>
-    <text x="146" y="166">foto</text>
-
-    <rect x="72" y="188" width="218" height="34" rx="6" fill="#fff5f7" stroke="#fecdd3"/>
-    <g stroke="#e11d48" stroke-width="2" stroke-linecap="round">
-      <line x1="82" y1="205" x2="82" y2="205"><animate attributeName="y1" values="205;199;205" dur="1.1s" repeatCount="indefinite"/><animate attributeName="y2" values="205;211;205" dur="1.1s" repeatCount="indefinite"/></line>
-      <line x1="90" y1="205" x2="90" y2="205"><animate attributeName="y1" values="205;202;205" dur="0.9s" repeatCount="indefinite"/><animate attributeName="y2" values="205;208;205" dur="0.9s" repeatCount="indefinite"/></line>
-      <line x1="98" y1="205" x2="98" y2="205"><animate attributeName="y1" values="205;197;205" dur="1.3s" repeatCount="indefinite"/><animate attributeName="y2" values="205;213;205" dur="1.3s" repeatCount="indefinite"/></line>
-      <line x1="106" y1="205" x2="106" y2="205"><animate attributeName="y1" values="205;201;205" dur="1.0s" repeatCount="indefinite"/><animate attributeName="y2" values="205;209;205" dur="1.0s" repeatCount="indefinite"/></line>
-      <line x1="114" y1="205" x2="114" y2="205"><animate attributeName="y1" values="205;198;205" dur="1.2s" repeatCount="indefinite"/><animate attributeName="y2" values="205;212;205" dur="1.2s" repeatCount="indefinite"/></line>
-    </g>
-    <text x="238" y="210">áudio</text>
-  </g>
-
-  <!-- wax seal -->
+  <!-- ===== trilha da carta: do envelope ao cartão impresso ===== -->
+  <path d="M 254 54 C 392 4, 574 6, 710 46" fill="none" stroke="#f43f5e" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.1 7"/>
   <g>
-    <circle cx="290" cy="252" r="20" fill="#d4a574"/>
-    <circle cx="290" cy="252" r="20" fill="none" stroke="#a0713f" stroke-width="1" stroke-dasharray="3 3">
-      <animateTransform attributeName="transform" type="rotate" from="0 290 252" to="360 290 252" dur="24s" repeatCount="indefinite"/>
-    </circle>
-    <path d="M 290 258 c -6 -4 -9 -8 -9 -11.5 a 5 5 0 0 1 9 -3 a 5 5 0 0 1 9 3 c 0 3.5 -3 7.5 -9 11.5 z" fill="#fff5f7"/>
+    <animateMotion path="M 254 54 C 392 4, 574 6, 710 46" dur="7s" repeatCount="indefinite"/>
+    <use href="#hrt" transform="translate(-6.3,-6.3) scale(0.9)" fill="#e11d48">
+      <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.08;0.85;1" dur="7s" repeatCount="indefinite"/>
+    </use>
   </g>
 
-  <!-- right: identity + flow -->
-  <text x="380" y="88" font-family="Georgia,serif" font-size="19" font-style="italic" fill="#d4a574">com muito afeto…</text>
-  <text x="378" y="142" font-family="Georgia,'Times New Roman',serif" font-size="58" font-weight="bold" fill="#4c0519">Correio <tspan fill="#e11d48" font-style="italic">Elegante</tspan></text>
-  <text x="380" y="174" font-family="ui-monospace,'Fira Code',monospace" font-size="14" fill="#701a35">cartas digitais com editor próprio, pagamento e QR</text>
+  <!-- ===== envelope + carta de blocos ===== -->
+  <ellipse cx="148" cy="254" rx="96" ry="5.5" fill="#881337" opacity="0.12"/>
+  <path d="M48 152 L148 82 L248 152 Z" fill="#881337"/>
 
-  <g font-family="ui-monospace,'Fira Code',monospace" font-size="13" fill="#4c0519">
-    <rect x="380" y="196" width="640" height="48" rx="8" fill="#ffffff" fill-opacity="0.6" stroke="#fecdd3"/>
-    <text x="400" y="225">editor de blocos</text>
-    <text x="556" y="225" fill="#e11d48">→</text>
-    <text x="584" y="225">pix r$5</text>
-    <text x="700" y="225" fill="#e11d48">→</text>
-    <text x="728" y="225">qr impresso</text>
-    <text x="876" y="225" fill="#e11d48">→</text>
-    <text x="904" y="225">/card/:id</text>
+  <g filter="url(#cesoft)">
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 -12;0 0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" dur="5.4s" repeatCount="indefinite"/>
+      <rect x="72" y="54" width="152" height="114" rx="7" fill="#ffffff" stroke="#fecdd3" stroke-width="1.3"/>
+      <!-- bloco parágrafo -->
+      <rect x="80" y="62" width="136" height="26" rx="5" fill="#fff5f7" stroke="#fecdd3" stroke-width="0.9"/>
+      <rect x="88" y="70" width="84" height="4" rx="2" fill="#fda4af"/>
+      <rect x="88" y="79" width="56" height="4" rx="2" fill="#fecdd3"/>
+      <g fill="#fda4af" opacity="0.85"><circle cx="206" cy="70" r="1.3"/><circle cx="211" cy="70" r="1.3"/><circle cx="206" cy="76" r="1.3"/><circle cx="211" cy="76" r="1.3"/><circle cx="206" cy="82" r="1.3"/><circle cx="211" cy="82" r="1.3"/></g>
+      <!-- bloco imagem -->
+      <rect x="80" y="94" width="136" height="30" rx="5" fill="#fff5f7" stroke="#fecdd3" stroke-width="0.9"/>
+      <rect x="88" y="100" width="26" height="18" rx="3" fill="#ffe4ec"/>
+      <circle cx="108.5" cy="104.5" r="1.8" fill="#f43f5e"/>
+      <path d="M 89.5 115.5 L 95 109.5 L 99 113 L 102 110.5 L 113 115.5" fill="none" stroke="#e11d48" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="120" y="104" width="62" height="4" rx="2" fill="#fecdd3"/>
+      <rect x="120" y="112" width="44" height="4" rx="2" fill="#fecdd3"/>
+      <g fill="#fda4af" opacity="0.85"><circle cx="206" cy="103" r="1.3"/><circle cx="211" cy="103" r="1.3"/><circle cx="206" cy="109" r="1.3"/><circle cx="211" cy="109" r="1.3"/><circle cx="206" cy="115" r="1.3"/><circle cx="211" cy="115" r="1.3"/></g>
+      <!-- bloco música -->
+      <rect x="80" y="130" width="136" height="26" rx="5" fill="#fff5f7" stroke="#fecdd3" stroke-width="0.9"/>
+      <g stroke="#e11d48" stroke-width="2" stroke-linecap="round">
+        <line x1="91" y1="143" x2="91" y2="143"><animate attributeName="y1" values="143;138;143" dur="1.1s" repeatCount="indefinite"/><animate attributeName="y2" values="143;148;143" dur="1.1s" repeatCount="indefinite"/></line>
+        <line x1="98" y1="143" x2="98" y2="143"><animate attributeName="y1" values="143;140;143" dur="0.9s" repeatCount="indefinite"/><animate attributeName="y2" values="143;146;143" dur="0.9s" repeatCount="indefinite"/></line>
+        <line x1="105" y1="143" x2="105" y2="143"><animate attributeName="y1" values="143;136;143" dur="1.3s" repeatCount="indefinite"/><animate attributeName="y2" values="143;150;143" dur="1.3s" repeatCount="indefinite"/></line>
+        <line x1="112" y1="143" x2="112" y2="143"><animate attributeName="y1" values="143;139;143" dur="1s" repeatCount="indefinite"/><animate attributeName="y2" values="143;147;143" dur="1s" repeatCount="indefinite"/></line>
+        <line x1="119" y1="143" x2="119" y2="143"><animate attributeName="y1" values="143;137;143" dur="1.2s" repeatCount="indefinite"/><animate attributeName="y2" values="143;149;143" dur="1.2s" repeatCount="indefinite"/></line>
+      </g>
+      <rect x="128" y="139" width="52" height="4" rx="2" fill="#fecdd3"/>
+      <rect x="128" y="147" width="36" height="4" rx="2" fill="#fecdd3"/>
+      <g fill="#fda4af" opacity="0.85"><circle cx="206" cy="137" r="1.3"/><circle cx="211" cy="137" r="1.3"/><circle cx="206" cy="143" r="1.3"/><circle cx="211" cy="143" r="1.3"/><circle cx="206" cy="149" r="1.3"/><circle cx="211" cy="149" r="1.3"/></g>
+    </g>
   </g>
-  <text x="382" y="270" font-family="ui-monospace,monospace" font-size="11.5" fill="#9f1239" opacity="0.75">react 19 · express 5 · prisma · stripe + pagbank · remotion</text>
+
+  <rect x="48" y="152" width="200" height="100" rx="8" fill="#e11d48"/>
+  <rect x="48" y="152" width="200" height="5" fill="#881337" opacity="0.28"/>
+  <path d="M48 152 L148 228 L248 152 Z" fill="#f43f5e" stroke="#be123c" stroke-width="1"/>
+  <path d="M48 252 L120 198 M248 252 L176 198" fill="none" stroke="#be123c" stroke-width="1.2" stroke-opacity="0.5"/>
+
+  <!-- selo de cera -->
+  <circle cx="148" cy="224" r="17.5" fill="#be123c"/>
+  <circle cx="148" cy="224" r="14" fill="#e11d48"/>
+  <circle cx="148" cy="224" r="10.5" fill="none" stroke="#f43f5e" stroke-width="1.3" stroke-dasharray="2.5 3" stroke-linecap="round">
+    <animateTransform attributeName="transform" type="rotate" from="0 148 224" to="360 148 224" dur="24s" repeatCount="indefinite"/>
+  </circle>
+  <use href="#hrt" transform="translate(141.9,217.9) scale(0.87)" fill="#fff5f7"/>
+
+  <!-- corações que escapam -->
+  <g><animateTransform attributeName="transform" type="translate" values="58 118;58 48" dur="6s" begin="0s" repeatCount="indefinite"/><use href="#hrt" transform="translate(-6,-6) scale(0.85)" fill="#e11d48"><animate attributeName="opacity" values="0;0.85;0.85;0" keyTimes="0;0.15;0.7;1" dur="6s" repeatCount="indefinite"/></use></g>
+  <g><animateTransform attributeName="transform" type="translate" values="219 122;219 52" dur="7.2s" begin="2.1s" repeatCount="indefinite"/><use href="#hrt" transform="translate(-5,-5) scale(0.7)" fill="#f43f5e"><animate attributeName="opacity" values="0;0.8;0.8;0" keyTimes="0;0.15;0.7;1" dur="7.2s" begin="2.1s" repeatCount="indefinite"/></use></g>
+  <g><animateTransform attributeName="transform" type="translate" values="64 126;64 56" dur="7.8s" begin="4s" repeatCount="indefinite"/><use href="#hrt" transform="translate(-4.2,-4.2) scale(0.6)" fill="#be123c"><animate attributeName="opacity" values="0;0.75;0.75;0" keyTimes="0;0.15;0.7;1" dur="7.8s" begin="4s" repeatCount="indefinite"/></use></g>
+
+  <!-- ===== título e fluxo ===== -->
+  <text x="292" y="62" font-family="Georgia,'Times New Roman',serif" font-size="15" font-style="italic" fill="#be123c">escrita no editor, selada com cera</text>
+  <text x="292" y="116" font-family="Georgia,'Times New Roman',serif" font-size="56" font-weight="bold" fill="#4c0519">Correio</text>
+  <text x="292" y="168" font-family="Georgia,'Times New Roman',serif" font-size="56" font-style="italic" fill="#e11d48">Elegante</text>
+  <text x="292" y="200" font-family="'Fira Code','JetBrains Mono',ui-monospace,monospace" font-size="13" fill="#701a35">editor de blocos · pix e cartão · qr impresso</text>
+  <text x="292" y="226" font-family="Georgia,'Times New Roman',serif" font-size="14.5" font-style="italic" fill="#881337">a carta que chega por link, QR impresso e vídeo</text>
+  <text x="292" y="251" font-family="'Fira Code','JetBrains Mono',ui-monospace,monospace" font-size="13" fill="#4c0519">editor <tspan fill="#e11d48">→</tspan> checkout <tspan fill="#e11d48">→</tspan> webhook <tspan fill="#e11d48">→</tspan> qr <tspan fill="#e11d48">→</tspan> /card/:id</text>
+
+  <!-- ===== rodapé ===== -->
+  <path d="M44 266 H836" stroke="#fda4af" stroke-width="1"/>
+  <text x="44" y="284" font-family="'Fira Code','JetBrains Mono',ui-monospace,monospace" font-size="13" fill="#701a35" opacity="0.9">react 19 · express 5 · prisma · stripe + pagbank · remotion 4</text>
+  <text x="836" y="284" text-anchor="end" font-family="'Fira Code','JetBrains Mono',ui-monospace,monospace" font-size="13" fill="#881337" opacity="0.85">v3 · correioelegante.studio</text>
+
+  <!-- ===== cartão QR impresso ===== -->
+  <ellipse cx="785" cy="251" rx="68" ry="5.5" fill="#881337" opacity="0.1"/>
+  <g transform="rotate(-3 783 146)">
+    <rect x="716" y="48" width="138" height="196" rx="12" fill="#ffffff" stroke="#fda4af" stroke-width="1.5" filter="url(#cesoft)"/>
+    <rect x="720.5" y="52.5" width="129" height="187" rx="9" fill="none" stroke="#fecdd3" stroke-width="1" stroke-dasharray="4 4"/>
+    <path fill="#4c0519" d="M726 66h4.5v4.5h-4.5zM730.5 66h4.5v4.5h-4.5zM735 66h4.5v4.5h-4.5zM739.5 66h4.5v4.5h-4.5zM744 66h4.5v4.5h-4.5zM748.5 66h4.5v4.5h-4.5zM753 66h4.5v4.5h-4.5zM766.5 66h4.5v4.5h-4.5zM780 66h4.5v4.5h-4.5zM784.5 66h4.5v4.5h-4.5zM798 66h4.5v4.5h-4.5zM807 66h4.5v4.5h-4.5zM811.5 66h4.5v4.5h-4.5zM816 66h4.5v4.5h-4.5zM820.5 66h4.5v4.5h-4.5zM825 66h4.5v4.5h-4.5zM829.5 66h4.5v4.5h-4.5zM834 66h4.5v4.5h-4.5zM726 70.5h4.5v4.5h-4.5zM753 70.5h4.5v4.5h-4.5zM762 70.5h4.5v4.5h-4.5zM766.5 70.5h4.5v4.5h-4.5zM771 70.5h4.5v4.5h-4.5zM775.5 70.5h4.5v4.5h-4.5zM780 70.5h4.5v4.5h-4.5zM793.5 70.5h4.5v4.5h-4.5zM807 70.5h4.5v4.5h-4.5zM834 70.5h4.5v4.5h-4.5zM726 75h4.5v4.5h-4.5zM735 75h4.5v4.5h-4.5zM739.5 75h4.5v4.5h-4.5zM744 75h4.5v4.5h-4.5zM753 75h4.5v4.5h-4.5zM766.5 75h4.5v4.5h-4.5zM771 75h4.5v4.5h-4.5zM775.5 75h4.5v4.5h-4.5zM807 75h4.5v4.5h-4.5zM816 75h4.5v4.5h-4.5zM820.5 75h4.5v4.5h-4.5zM825 75h4.5v4.5h-4.5zM834 75h4.5v4.5h-4.5zM726 79.5h4.5v4.5h-4.5zM735 79.5h4.5v4.5h-4.5zM739.5 79.5h4.5v4.5h-4.5zM744 79.5h4.5v4.5h-4.5zM753 79.5h4.5v4.5h-4.5zM766.5 79.5h4.5v4.5h-4.5zM775.5 79.5h4.5v4.5h-4.5zM784.5 79.5h4.5v4.5h-4.5zM798 79.5h4.5v4.5h-4.5zM807 79.5h4.5v4.5h-4.5zM816 79.5h4.5v4.5h-4.5zM820.5 79.5h4.5v4.5h-4.5zM825 79.5h4.5v4.5h-4.5zM834 79.5h4.5v4.5h-4.5zM726 84h4.5v4.5h-4.5zM735 84h4.5v4.5h-4.5zM739.5 84h4.5v4.5h-4.5zM744 84h4.5v4.5h-4.5zM753 84h4.5v4.5h-4.5zM766.5 84h4.5v4.5h-4.5zM793.5 84h4.5v4.5h-4.5zM798 84h4.5v4.5h-4.5zM807 84h4.5v4.5h-4.5zM816 84h4.5v4.5h-4.5zM820.5 84h4.5v4.5h-4.5zM825 84h4.5v4.5h-4.5zM834 84h4.5v4.5h-4.5zM726 88.5h4.5v4.5h-4.5zM753 88.5h4.5v4.5h-4.5zM762 88.5h4.5v4.5h-4.5zM775.5 88.5h4.5v4.5h-4.5zM780 88.5h4.5v4.5h-4.5zM784.5 88.5h4.5v4.5h-4.5zM789 88.5h4.5v4.5h-4.5zM793.5 88.5h4.5v4.5h-4.5zM798 88.5h4.5v4.5h-4.5zM807 88.5h4.5v4.5h-4.5zM834 88.5h4.5v4.5h-4.5zM726 93h4.5v4.5h-4.5zM730.5 93h4.5v4.5h-4.5zM735 93h4.5v4.5h-4.5zM739.5 93h4.5v4.5h-4.5zM744 93h4.5v4.5h-4.5zM748.5 93h4.5v4.5h-4.5zM753 93h4.5v4.5h-4.5zM762 93h4.5v4.5h-4.5zM771 93h4.5v4.5h-4.5zM780 93h4.5v4.5h-4.5zM789 93h4.5v4.5h-4.5zM798 93h4.5v4.5h-4.5zM807 93h4.5v4.5h-4.5zM811.5 93h4.5v4.5h-4.5zM816 93h4.5v4.5h-4.5zM820.5 93h4.5v4.5h-4.5zM825 93h4.5v4.5h-4.5zM829.5 93h4.5v4.5h-4.5zM834 93h4.5v4.5h-4.5zM762 97.5h4.5v4.5h-4.5zM771 97.5h4.5v4.5h-4.5zM775.5 97.5h4.5v4.5h-4.5zM784.5 97.5h4.5v4.5h-4.5zM789 97.5h4.5v4.5h-4.5zM793.5 97.5h4.5v4.5h-4.5zM798 97.5h4.5v4.5h-4.5zM726 102h4.5v4.5h-4.5zM735 102h4.5v4.5h-4.5zM739.5 102h4.5v4.5h-4.5zM753 102h4.5v4.5h-4.5zM762 102h4.5v4.5h-4.5zM784.5 102h4.5v4.5h-4.5zM793.5 102h4.5v4.5h-4.5zM798 102h4.5v4.5h-4.5zM802.5 102h4.5v4.5h-4.5zM807 102h4.5v4.5h-4.5zM820.5 102h4.5v4.5h-4.5zM726 106.5h4.5v4.5h-4.5zM739.5 106.5h4.5v4.5h-4.5zM748.5 106.5h4.5v4.5h-4.5zM771 106.5h4.5v4.5h-4.5zM775.5 106.5h4.5v4.5h-4.5zM784.5 106.5h4.5v4.5h-4.5zM807 106.5h4.5v4.5h-4.5zM811.5 106.5h4.5v4.5h-4.5zM816 106.5h4.5v4.5h-4.5zM820.5 106.5h4.5v4.5h-4.5zM834 106.5h4.5v4.5h-4.5zM726 111h4.5v4.5h-4.5zM739.5 111h4.5v4.5h-4.5zM744 111h4.5v4.5h-4.5zM748.5 111h4.5v4.5h-4.5zM753 111h4.5v4.5h-4.5zM766.5 111h4.5v4.5h-4.5zM775.5 111h4.5v4.5h-4.5zM780 111h4.5v4.5h-4.5zM811.5 111h4.5v4.5h-4.5zM816 111h4.5v4.5h-4.5zM820.5 111h4.5v4.5h-4.5zM829.5 111h4.5v4.5h-4.5zM834 111h4.5v4.5h-4.5zM735 115.5h4.5v4.5h-4.5zM744 115.5h4.5v4.5h-4.5zM757.5 115.5h4.5v4.5h-4.5zM784.5 115.5h4.5v4.5h-4.5zM789 115.5h4.5v4.5h-4.5zM798 115.5h4.5v4.5h-4.5zM802.5 115.5h4.5v4.5h-4.5zM807 115.5h4.5v4.5h-4.5zM820.5 115.5h4.5v4.5h-4.5zM825 115.5h4.5v4.5h-4.5zM829.5 115.5h4.5v4.5h-4.5zM834 115.5h4.5v4.5h-4.5zM726 120h4.5v4.5h-4.5zM735 120h4.5v4.5h-4.5zM739.5 120h4.5v4.5h-4.5zM753 120h4.5v4.5h-4.5zM757.5 120h4.5v4.5h-4.5zM766.5 120h4.5v4.5h-4.5zM775.5 120h4.5v4.5h-4.5zM793.5 120h4.5v4.5h-4.5zM798 120h4.5v4.5h-4.5zM807 120h4.5v4.5h-4.5zM811.5 120h4.5v4.5h-4.5zM816 120h4.5v4.5h-4.5zM829.5 120h4.5v4.5h-4.5zM834 120h4.5v4.5h-4.5zM730.5 124.5h4.5v4.5h-4.5zM744 124.5h4.5v4.5h-4.5zM775.5 124.5h4.5v4.5h-4.5zM780 124.5h4.5v4.5h-4.5zM789 124.5h4.5v4.5h-4.5zM793.5 124.5h4.5v4.5h-4.5zM802.5 124.5h4.5v4.5h-4.5zM825 124.5h4.5v4.5h-4.5zM834 124.5h4.5v4.5h-4.5zM730.5 129h4.5v4.5h-4.5zM735 129h4.5v4.5h-4.5zM739.5 129h4.5v4.5h-4.5zM753 129h4.5v4.5h-4.5zM757.5 129h4.5v4.5h-4.5zM766.5 129h4.5v4.5h-4.5zM771 129h4.5v4.5h-4.5zM775.5 129h4.5v4.5h-4.5zM780 129h4.5v4.5h-4.5zM789 129h4.5v4.5h-4.5zM798 129h4.5v4.5h-4.5zM807 129h4.5v4.5h-4.5zM811.5 129h4.5v4.5h-4.5zM820.5 129h4.5v4.5h-4.5zM829.5 129h4.5v4.5h-4.5zM726 133.5h4.5v4.5h-4.5zM757.5 133.5h4.5v4.5h-4.5zM762 133.5h4.5v4.5h-4.5zM766.5 133.5h4.5v4.5h-4.5zM775.5 133.5h4.5v4.5h-4.5zM780 133.5h4.5v4.5h-4.5zM802.5 133.5h4.5v4.5h-4.5zM816 133.5h4.5v4.5h-4.5zM825 133.5h4.5v4.5h-4.5zM829.5 133.5h4.5v4.5h-4.5zM726 138h4.5v4.5h-4.5zM730.5 138h4.5v4.5h-4.5zM739.5 138h4.5v4.5h-4.5zM744 138h4.5v4.5h-4.5zM753 138h4.5v4.5h-4.5zM757.5 138h4.5v4.5h-4.5zM766.5 138h4.5v4.5h-4.5zM771 138h4.5v4.5h-4.5zM784.5 138h4.5v4.5h-4.5zM793.5 138h4.5v4.5h-4.5zM798 138h4.5v4.5h-4.5zM807 138h4.5v4.5h-4.5zM816 138h4.5v4.5h-4.5zM820.5 138h4.5v4.5h-4.5zM825 138h4.5v4.5h-4.5zM834 138h4.5v4.5h-4.5zM766.5 142.5h4.5v4.5h-4.5zM775.5 142.5h4.5v4.5h-4.5zM780 142.5h4.5v4.5h-4.5zM807 142.5h4.5v4.5h-4.5zM816 142.5h4.5v4.5h-4.5zM820.5 142.5h4.5v4.5h-4.5zM825 142.5h4.5v4.5h-4.5zM829.5 142.5h4.5v4.5h-4.5zM726 147h4.5v4.5h-4.5zM730.5 147h4.5v4.5h-4.5zM735 147h4.5v4.5h-4.5zM739.5 147h4.5v4.5h-4.5zM744 147h4.5v4.5h-4.5zM748.5 147h4.5v4.5h-4.5zM753 147h4.5v4.5h-4.5zM762 147h4.5v4.5h-4.5zM780 147h4.5v4.5h-4.5zM789 147h4.5v4.5h-4.5zM793.5 147h4.5v4.5h-4.5zM829.5 147h4.5v4.5h-4.5zM834 147h4.5v4.5h-4.5zM726 151.5h4.5v4.5h-4.5zM753 151.5h4.5v4.5h-4.5zM762 151.5h4.5v4.5h-4.5zM775.5 151.5h4.5v4.5h-4.5zM789 151.5h4.5v4.5h-4.5zM793.5 151.5h4.5v4.5h-4.5zM798 151.5h4.5v4.5h-4.5zM807 151.5h4.5v4.5h-4.5zM811.5 151.5h4.5v4.5h-4.5zM816 151.5h4.5v4.5h-4.5zM825 151.5h4.5v4.5h-4.5zM726 156h4.5v4.5h-4.5zM735 156h4.5v4.5h-4.5zM739.5 156h4.5v4.5h-4.5zM744 156h4.5v4.5h-4.5zM753 156h4.5v4.5h-4.5zM766.5 156h4.5v4.5h-4.5zM780 156h4.5v4.5h-4.5zM784.5 156h4.5v4.5h-4.5zM789 156h4.5v4.5h-4.5zM802.5 156h4.5v4.5h-4.5zM807 156h4.5v4.5h-4.5zM816 156h4.5v4.5h-4.5zM825 156h4.5v4.5h-4.5zM726 160.5h4.5v4.5h-4.5zM735 160.5h4.5v4.5h-4.5zM739.5 160.5h4.5v4.5h-4.5zM744 160.5h4.5v4.5h-4.5zM753 160.5h4.5v4.5h-4.5zM762 160.5h4.5v4.5h-4.5zM766.5 160.5h4.5v4.5h-4.5zM780 160.5h4.5v4.5h-4.5zM784.5 160.5h4.5v4.5h-4.5zM789 160.5h4.5v4.5h-4.5zM811.5 160.5h4.5v4.5h-4.5zM816 160.5h4.5v4.5h-4.5zM829.5 160.5h4.5v4.5h-4.5zM834 160.5h4.5v4.5h-4.5zM726 165h4.5v4.5h-4.5zM735 165h4.5v4.5h-4.5zM739.5 165h4.5v4.5h-4.5zM744 165h4.5v4.5h-4.5zM753 165h4.5v4.5h-4.5zM775.5 165h4.5v4.5h-4.5zM784.5 165h4.5v4.5h-4.5zM789 165h4.5v4.5h-4.5zM802.5 165h4.5v4.5h-4.5zM825 165h4.5v4.5h-4.5zM829.5 165h4.5v4.5h-4.5zM726 169.5h4.5v4.5h-4.5zM753 169.5h4.5v4.5h-4.5zM766.5 169.5h4.5v4.5h-4.5zM771 169.5h4.5v4.5h-4.5zM775.5 169.5h4.5v4.5h-4.5zM798 169.5h4.5v4.5h-4.5zM811.5 169.5h4.5v4.5h-4.5zM829.5 169.5h4.5v4.5h-4.5zM726 174h4.5v4.5h-4.5zM730.5 174h4.5v4.5h-4.5zM735 174h4.5v4.5h-4.5zM739.5 174h4.5v4.5h-4.5zM744 174h4.5v4.5h-4.5zM748.5 174h4.5v4.5h-4.5zM753 174h4.5v4.5h-4.5zM762 174h4.5v4.5h-4.5zM766.5 174h4.5v4.5h-4.5zM775.5 174h4.5v4.5h-4.5zM780 174h4.5v4.5h-4.5zM807 174h4.5v4.5h-4.5zM820.5 174h4.5v4.5h-4.5zM825 174h4.5v4.5h-4.5zM829.5 174h4.5v4.5h-4.5zM834 174h4.5v4.5h-4.5z"/>
+    <rect x="726" y="68" width="112" height="3" fill="#f43f5e" opacity="0.3">
+      <animate attributeName="y" values="68;174;68" dur="6s" repeatCount="indefinite"/>
+    </rect>
+    <text x="785" y="204" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="13.5" font-style="italic" fill="#881337">escaneie para ler</text>
+    <text x="785" y="223" text-anchor="middle" font-family="'Fira Code','JetBrains Mono',ui-monospace,monospace" font-size="13" fill="#701a35">→ /card/:id</text>
+    <circle cx="848" cy="238" r="9.5" fill="#be123c"/>
+    <circle cx="848" cy="238" r="6.5" fill="#e11d48"/>
+    <use href="#hrt" transform="translate(844.85,234.85) scale(0.45)" fill="#fff5f7"/>
+  </g>
 </svg>

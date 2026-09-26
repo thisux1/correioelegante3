@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="#correio-elegante"><img src="./banner.svg?v=3" alt="Correio Elegante" width="100%"/></a>
+  <a href="#correio-elegante"><img src="./banner.svg?v=4" alt="Correio Elegante" width="100%"/></a>
 </div>
 
 > 🇺🇸 [English version](../README.md)
