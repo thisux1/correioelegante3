@@ -178,7 +178,7 @@
   <g transform="translate(450, 65)">
     <rect width="180" height="115" rx="20" ry="20" fill="url(#grad-card-rose)" stroke="#e11d48" stroke-width="1.2" class="card-rose" filter="url(#card-shadow)"/>
     <text x="18" y="32" class="node-title">03. PAGAMENTOS</text>
-    <text x="18" y="54" class="node-desc">PagBank &amp; Stripe</text>
+    <text x="18" y="54" class="node-desc">Stripe &amp; PagBank</text>
     <text x="18" y="70" class="node-desc">Pix Dinâmico &amp; Cartão</text>
     <text x="18" y="92" class="node-tag" fill="#e11d48">Sessão Segura</text>
 
