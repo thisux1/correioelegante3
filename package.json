@@ -18,7 +18,10 @@
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0",
+    "concurrently": "^9.2.4",
     "rollup-plugin-visualizer": "^7.0.1"
+  },
+  "overrides": {
+    "shell-quote": "^1.12.0"
   }
 }

@@ -19,5 +19,15 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // React Compiler rules added in eslint-plugin-react-hooks 7.1 flag
+      // pre-existing patterns (setState in effects, refs in render).
+      // Keep them visible as warnings until the flagged code is refactored.
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/incompatible-library': 'warn',
+      'react-hooks/immutability': 'warn',
+    },
   },
 ])
