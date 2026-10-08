@@ -14,7 +14,6 @@ Status: `Active / Authoritative`
 - **Interactive Block-Based Editor**: Drag-and-drop letter creation with real-time preview, rich typography, background atmospheres, audio/music playback, galleries, and countdown timers.
 - **Hybrid Monetization**: Pay-per-message / pay-per-page model supporting Stripe (Credit Card, Boleto, Apple/Google Pay) and Mercado Pago (Pix QR Code).
 - **Public & Private Shareability**: Public links, unlisted links, and owner-managed private links with instant QR code generation.
-- **Automated Video Export**: Automated Remotion-powered video generation rendering letters as motion videos for social sharing (Instagram Stories, TikTok).
 
 ---
 
@@ -26,7 +25,6 @@ The workspace is organized as an unhoisted monorepo with distinct responsibility
 correioelegante3/
 ├── frontend/          # React 19 + Vite + Tailwind v4 + Zustand + Framer Motion (SPA)
 ├── backend/           # Express 5 + TypeScript + Prisma (MongoDB) + Vitest API
-├── my-video/          # Remotion 4 + React 19 + Tailwind v4 Motion Video Engine
 ├── api/               # Vercel Serverless Function entrypoints
 ├── graphify-out/      # Codebase knowledge graph, interactive HTML & audit report
 ├── docs/              # Visual assets, architecture diagrams, performance audits
