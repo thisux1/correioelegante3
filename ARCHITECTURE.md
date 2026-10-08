@@ -37,11 +37,6 @@ graph TD
         MercadoPago["Mercado Pago (Pix)"]
     end
 
-    subgraph VideoEngine["Remotion Video Engine (my-video)"]
-        RemotionCLI["Remotion CLI / Bundler"]
-        Compositions["Video Compositions (Scenes, Audio Waveforms, Fonts)"]
-    end
-
     User --> Viewer
     Admin --> Landing
     Admin --> Editor
@@ -58,7 +53,6 @@ graph TD
     Services --> MercadoPago
     Services --> Worker
     Worker --> Cloudinary
-    RemotionCLI --> Compositions
 ```
 
 ---
@@ -184,11 +178,3 @@ sequenceDiagram
 2. **Direct Storage Upload**: Browser uploads binary payload directly to Cloudinary CDN, bypassing server memory/bandwidth limits.
 3. **Upload Confirmation**: Client calls `POST /api/assets/complete`. Backend marks asset `processing` and enqueues relevant `MediaJob` records (e.g. `waveform_generation`, `video_transcode`, `moderation`).
 4. **Worker Processing**: `mediaWorker.service.ts` processes pending jobs asynchronously, updates asset waveforms/posterUrls, and transitions status to `completed`.
-
----
-
-## 6. Video Generation Architecture (`my-video/`)
-
-- Built with **Remotion 4** and **Tailwind v4**.
-- Renders programmatic MP4 videos from letter messages with styled dynamic text typography, heart particle animations, audio waveform sync, and background gradient motion.
-- Invoked locally or in CI/server workers via `npx remotion render src/index.ts LetterVideo out/letter.mp4 --props='{...}'`.
