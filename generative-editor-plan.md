@@ -681,11 +681,11 @@ orquestrador atualiza o plano/`stack-research.md` antes da próxima sessão.
 
 | # | Sessão | Modo | Gate de entrada (deve existir) | Critério de saída |
 |---|---|---|---|---|
-| S1 | **Contratos**: decisão zod shared (15.9), `CreativeBrief`, `PageSpec` v1, `Section`/`GridPlacement`, checklist de registro de bloco | main | plano §3–4 lido | schemas compilando; contrato documentado |
-| S2 | **Auditorias F0** ×3: UX do editor, estética sem viés (D15), inventário de padrões | 3 subagents bg | CTX-A | 3 relatórios com issues ranqueados |
-| S3 | **Engine + compiler**: L0 regras, L1v1 scoring, `compilePageSpec`, registry `crush_secreto` | main | S1 | suite de decisões verde; `decisions[]` |
-| S4 | **Copy bank crush_secreto** + voice guide | sub | S1, S3 (formato de slots) | banco + cura humana aprovada |
-| S5 | **Slice E2E crush**: momento picker → form → `/api/generate` → editor populado → reveal | main | S3, S4 | funil completo rodando em dev |
+| ~~S1~~ ✅ | **Contratos** (`contracts/generation.contract.ts`) | main | ✅ | schemas compilando; 7 testes verdes |
+| ~~S2~~ ✅ | **Auditorias** → `design-research/audits/`: `editor-ux.md`, `pixel-execution-refs.md`, `preview-inventory.md` | 3 subagents bg | ✅ | 3 relatórios entregues — ver §16.8 |
+| ~~S3~~ ✅ | **Engine + compiler** (`generate/engine/`, `compile.ts`) | main | S1 | 8 testes de decisão verdes; `decisions[]` |
+| ~~S4~~ ✅ | **Copy bank** (`copy/crushSecreto.ts` + `voice-guide.md`) — aguarda **cura humana** | sub | S1, S3 | 12 slots, 7 testes; pendente review de copy |
+| ~~S5~~ ✅ | **Slice E2E crush**: `/gerar` → form → `POST /api/generate` → editor populado | main | S3, S4 | verificado E2E em dev (5175→3100) |
 | S6 | **Schema migration**: `blocks` plano → sections/placement; páginas legadas migram p/ stack implícita | main | S1, relatório editor (S2) | páginas antigas renderizam idênticas (regressão visual) |
 | S7 | **Grid editor**: drag+snap, resize limitado, freezone, collapse mobile (D12), touch | main | S6 | edição grid funciona em touch; 44px targets |
 | S8 | **Copy banks ×7** momentos restantes | sub paralelos | S4 aprovado (guia+formato) | bancos curados |
@@ -718,6 +718,34 @@ Executor entrega: diff + relatório curto (o que fez, o que divergiu do plano,
 o que faltou de contexto). Orquestrador faz review antes de integrar; gosto
 editorial fica centralizado no main context. Divergências → atualizar docs
 vivos antes da próxima sessão.
+
+### 16.8 Achados das auditorias S2 (inputs pras próximas sessões)
+
+**editor-ux.md — bugs de produção confirmados:**
+- ~~F1: sanitizer+migration destruíam props de `text` (category, cor, fonte,
+  justify, `\n`)~~ **CORRIGIDO em S5** (allowlist completa +
+  `sanitizeMultilineText`; 166 testes verdes).
+- F2: tema "Cores da Sua Pessoa" (`persona:*`) reseta pra default — ids não
+  passam `THEME_ID_PATTERN`. Ticket aberto — afeta qualquer tema dinâmico.
+- F3: rascunho `editor-draft` é global único (vaza entre páginas); F4: não
+  existe "salvar rascunho" (só publicar); F5: zero undo/redo.
+- `rect`/`sectionId` morrem em save E load — escopo confirmado da Fatia 3.
+- QuizBlock tem emojis (viola regra) e preview ≠ experiência do destinatário.
+
+**pixel-execution-refs.md — insumos pro "romantic OS" (15.10):**
+- Font stack validado por cmap real: Press Start 2P (títulos), VT323/Departure
+  Mono (corpo), Silkscreen (UI). **Handjet `ELSH=16` renderiza elementos em
+  forma de coração** — candidato a logotipo.
+- Paleta Orkut (#E95B95) ≈ nosso rose (#e11d48); mapeamento Win98→Rosé OS
+  completo (bevels, title bar, tooltip) pronto pra virar tokens.
+- 17 mapeamentos componente→bloco + anti-patterns de pixel art.
+
+**preview-inventory.md — o que os previews já resolvem:**
+- 16 primitivos de runtime reutilizáveis (`PixelSprite`, `useTypewriter`,
+  `ScriptPlayer`, `ChoiceMenu`, `Meter`, `Celebration`...).
+- Lacunas de bloco confirmadas: chat/dialog playback (precisa `ScriptPlayer`),
+  guestbook com submit (única dep de backend), meters.
+- Ranking p/ produção: retro-os > flip-phone > pixel-rpg > orkut-msn.
 
 ---
 

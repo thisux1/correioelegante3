@@ -2,6 +2,8 @@ import { creativeBriefSchema } from '../contracts/generation.contract';
 import type { PageSpec } from '../contracts/generation.contract';
 import { decide } from '../generate/engine';
 import { compilePageSpec } from '../generate/compile';
+import { resolveCopySlots } from '../generate/copy/resolve';
+import { getCopyBank } from '../generate/copy/banks';
 import { sanitizePageContent } from './page.sanitizer';
 import type { PersistedPageContent } from './page.migration';
 import { AppError } from '../utils/AppError';
@@ -28,12 +30,26 @@ export function generateFromBrief(rawBrief: unknown): GenerateResult {
     );
   }
 
-  const spec = decide(parsed.data);
-  const { content, notes } = compilePageSpec(spec);
+  const rawSpec = decide(parsed.data);
+
+  const { spec, missingSlots } = resolveCopySlots(
+    rawSpec,
+    getCopyBank(rawSpec.templateFamily),
+    {
+      nome: parsed.data.nomes.destinatario,
+      remetente: parsed.data.nomes.remetente ?? '',
+    },
+  );
+  const notes = [...spec.decisions];
+  if (missingSlots.length > 0) {
+    notes.push(`copy:slots sem variante no banco → ${missingSlots.join(',')}`);
+  }
+
+  const { content, notes: compileNotes } = compilePageSpec(spec);
 
   return {
     spec,
     content: sanitizePageContent(content),
-    notes,
+    notes: [...notes, ...compileNotes],
   };
 }

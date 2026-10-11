@@ -27,6 +27,46 @@ function sanitizeText(input: string): string {
     .slice(0, MAX_TEXT_CHARS);
 }
 
+// TextBlock keeps real paragraph breaks — strip control chars except \n.
+function sanitizeMultilineText(input: string): string {
+  return input
+    .replace(/<[^>]*>/g, '')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, '')
+    .replace(/\r\n?/g, '\n')
+    .trim()
+    .slice(0, MAX_TEXT_CHARS);
+}
+
+const TEXT_ALIGN_VALUES = ['left', 'center', 'right', 'justify'] as const;
+const TEXT_CATEGORY_VALUES = ['title', 'body', 'quote', 'signature'] as const;
+const CSS_COLOR_PATTERN = /^(#[0-9a-fA-F]{3,8}|(rgb|hsl)a?\([^)]{1,60}\))$/;
+
+function optionalEnumValue<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): T | undefined {
+  return typeof value === 'string' && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : undefined;
+}
+
+function optionalShortText(value: unknown, max = 80): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const sanitized = sanitizeText(value).slice(0, max);
+  return sanitized || undefined;
+}
+
+function optionalCssColor(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim().slice(0, 80);
+  return CSS_COLOR_PATTERN.test(trimmed) ? trimmed : undefined;
+}
+
+function optionalBoolean(value: unknown): true | undefined {
+  return value === true ? true : undefined;
+}
+
 function ensureSafeUrl(raw: string, fieldLabel: string): string {
   const value = raw.trim();
   if (!value) {
@@ -178,11 +218,19 @@ function sanitizeGalleryItems(props: UnknownRecord): GalleryItem[] {
 function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): UnknownRecord {
   switch (type) {
     case 'text': {
-      const alignValue = props.align;
-      const align = alignValue === 'center' || alignValue === 'right' ? alignValue : 'left';
+      const align = optionalEnumValue(props.align, TEXT_ALIGN_VALUES) ?? 'left';
       return {
-        text: sanitizeText(typeof props.text === 'string' ? props.text : ''),
+        text: sanitizeMultilineText(typeof props.text === 'string' ? props.text : ''),
+        category: optionalEnumValue(props.category, TEXT_CATEGORY_VALUES),
+        fontFamily: optionalShortText(props.fontFamily, 80),
+        fontSize: optionalShortText(props.fontSize, 24),
+        color: optionalCssColor(props.color),
         align,
+        letterSpacing: optionalShortText(props.letterSpacing, 24),
+        lineHeight: optionalShortText(props.lineHeight, 24),
+        bold: optionalBoolean(props.bold),
+        italic: optionalBoolean(props.italic),
+        underline: optionalBoolean(props.underline),
       };
     }
     case 'image': {

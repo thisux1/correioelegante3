@@ -24,6 +24,10 @@ describe('POST /api/generate', () => {
       expect(block).toHaveProperty('props');
       expect(block).toHaveProperty('meta');
     }
+    // copySlot markers must be resolved before content leaves the backend
+    expect(JSON.stringify(res.body.content)).not.toContain('copySlot:');
+    // recipient name interpolated into copy
+    expect(JSON.stringify(res.body.content)).toContain('Duda');
   });
 
   it('rejects a malformed brief with 400 and a readable message', async () => {

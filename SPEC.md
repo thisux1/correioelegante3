@@ -132,6 +132,24 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
 - `PUT /:id`: Updates page with optimistic concurrency check (`expectedVersion`).
 - `DELETE /:id`: Deletes page (Owner only).
 
+### 4.3a Generation (`/api/generate`)
+- `POST /`: Public (no auth), rate-limited (20/15min/IP) + Turnstile. Generates a
+  page from a `CreativeBrief` without persisting it — the response is meant to
+  be loaded into the editor as a local draft; publishing follows the normal
+  `POST /api/pages` auth flow.
+  - Body: `{ brief: CreativeBrief }` — schema canônico em
+    `backend/src/contracts/generation.contract.ts` (momento, nomes, apelidos,
+    tom, coresFavoritas, interesses, contexto, memorias, perguntasIntimidade,
+    evento, midias, anonimoParaDestinatario, restricoes).
+  - Response `200`: `{ spec: PageSpec, content: PageContent, notes: string[] }`.
+    `spec` is the intermediate representation (sections/modules/theme/
+    `decisions[]` explainability trail); `content` is the compiled,
+    sanitized `Block[]` identical in shape to `POST /api/pages` content.
+  - Errors: `400 INVALID_BRIEF` (Zod), `403 TURNSTILE_TOKEN_REQUIRED`,
+    `429 RATE_LIMITED`.
+  - Block types not yet persisted are downgraded with explicit adapters
+    (`intimacyGate→quiz`, `youtube→video`, ...) and logged in `notes[]`.
+
 ### 4.4 Payments (`/api/payments`)
 - `POST /create`: Creates a PagBank Pix payment, PagBank transparent card payment, Stripe card session, or Mercado Pago fallback checkout.
   - Body: `{ paymentMethod: "pix" | "credit_card" | "pagbank_card" | "mercadopago_checkout", resourceType: "message" | "page", resourceId: string, messageId?: string, customer?: { name?, email?, tax_id? }, cardData?: { encrypted, holderName, installments? } }`

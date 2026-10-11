@@ -48,6 +48,7 @@ function safeLazy<T extends ComponentType<any>>(
 const Home = safeLazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
 const Create = safeLazy(() => import('@/pages/Create').then(m => ({ default: m.Create })))
 const Editor = safeLazy(() => import('@/pages/Editor').then(m => ({ default: m.Editor })))
+const Generate = safeLazy(() => import('@/pages/Generate').then(m => ({ default: m.Generate })))
 const Auth = safeLazy(() => import('@/pages/Auth').then(m => ({ default: m.Auth })))
 const ResetPassword = safeLazy(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })))
 const Profile = safeLazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
@@ -252,6 +253,7 @@ export function AppRouter() {
               <Route path="/card/:id" element={<Card />} />
               <Route path="/card/page/:pageId" element={<PageCard />} />
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
+              <Route path="/gerar" element={<Generate />} />
               <Route path="/editor" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/editor/:pageId" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

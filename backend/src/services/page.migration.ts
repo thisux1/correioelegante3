@@ -166,10 +166,28 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
   switch (type) {
     case 'text': {
       const alignValue = props.align;
-      const align = alignValue === 'center' || alignValue === 'right' ? alignValue : 'left';
+      const align =
+        alignValue === 'center' || alignValue === 'right' || alignValue === 'justify'
+          ? alignValue
+          : 'left';
+      const categoryValue = props.category;
+      const category =
+        categoryValue === 'title' || categoryValue === 'body' ||
+        categoryValue === 'quote' || categoryValue === 'signature'
+          ? categoryValue
+          : undefined;
       return {
         text: asText(props.text),
+        category,
+        fontFamily: asOptionalText(props.fontFamily),
+        fontSize: asOptionalText(props.fontSize),
+        color: asOptionalText(props.color),
         align,
+        letterSpacing: asOptionalText(props.letterSpacing),
+        lineHeight: asOptionalText(props.lineHeight),
+        bold: props.bold === true ? true : undefined,
+        italic: props.italic === true ? true : undefined,
+        underline: props.underline === true ? true : undefined,
       };
     }
     case 'image':

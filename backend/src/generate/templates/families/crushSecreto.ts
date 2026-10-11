@@ -57,7 +57,7 @@ export const crushSecretoFamily: TemplateFamily = {
           boosts: { anon: 3, hasIntimidade: 1 },
           props: ({ brief }) => ({
             items: brief.apelidos.slice(0, 3),
-            copySlot: 'hints.intro',
+            intro: 'copySlot:hints.intro',
           }),
         },
         {
@@ -80,7 +80,7 @@ export const crushSecretoFamily: TemplateFamily = {
             answer: brief.perguntasIntimidade[0].resposta,
             hint: brief.perguntasIntimidade[0].dica,
             allowSkip: true,
-            copySlot: 'intimacyGate.intro',
+            intro: 'copySlot:intimacyGate.intro',
           }),
         },
         {
