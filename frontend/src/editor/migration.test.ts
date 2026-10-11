@@ -404,3 +404,103 @@ describe('migratePage — sections & placement', () => {
     expect(migrated.blocks[1].rect).toBeUndefined()
   })
 })
+
+describe('migratePage — S10 new block types', () => {
+  it('normaliza youtube, photoBook e bouquet', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: 'y1',
+          type: 'youtube',
+          props: { url: ' https://youtu.be/abc ', title: 9, extra: 'lixo' },
+          meta: {},
+        },
+        {
+          id: 'p1',
+          type: 'photoBook',
+          props: {
+            pages: [
+              { id: 'pg1', src: 'https://x/1.jpg', caption: 'um' },
+              { src: '' },
+              'lixo',
+            ],
+            coverTitle: 'Livro',
+          },
+          meta: {},
+        },
+        {
+          id: 'b1',
+          type: 'bouquet',
+          props: {
+            seed: 7.9,
+            flowers: [{ species: 'rosa' }, { species: 'fake' }],
+            wrap: 'celofane',
+          },
+          meta: {},
+        },
+      ],
+    })
+
+    const [yt, pb, bq] = migrated.blocks
+    expect(yt.type).toBe('youtube')
+    if (yt.type === 'youtube') {
+      expect(yt.props.url).toBe('https://youtu.be/abc')
+      expect(yt.props.title).toBeUndefined()
+      expect('extra' in yt.props).toBe(false)
+    }
+
+    expect(pb.type).toBe('photoBook')
+    if (pb.type === 'photoBook') {
+      expect(pb.props.pages).toHaveLength(1)
+      expect(pb.props.pages[0].caption).toBe('um')
+      expect(pb.props.coverTitle).toBe('Livro')
+    }
+
+    expect(bq.type).toBe('bouquet')
+    if (bq.type === 'bouquet') {
+      expect(bq.props.seed).toBe(7)
+      expect(bq.props.flowers).toEqual([{ species: 'rosa' }])
+      expect(bq.props.wrap).toBe('celofane')
+    }
+  })
+
+  it('normaliza hints e intimacyGate', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: 'h1',
+          type: 'hints',
+          props: {
+            title: 'Dicas',
+            hints: [{ text: 'primeira' }, { text: ' ' }, 'x'],
+          },
+          meta: {},
+        },
+        {
+          id: 'g1',
+          type: 'intimacyGate',
+          props: {
+            question: 'O que tinha na xícara?',
+            answers: ['cappuccino', '', 7],
+            hint: 'quente',
+            allowSkip: true,
+          },
+          meta: {},
+        },
+      ],
+    })
+
+    const [hints, gate] = migrated.blocks
+    expect(hints.type).toBe('hints')
+    if (hints.type === 'hints') {
+      expect(hints.props.hints).toHaveLength(1)
+      expect(hints.props.hints[0].text).toBe('primeira')
+    }
+
+    expect(gate.type).toBe('intimacyGate')
+    if (gate.type === 'intimacyGate') {
+      expect(gate.props.answers).toEqual(['cappuccino'])
+      expect('allowSkip' in gate.props).toBe(false)
+    }
+  })
+})
