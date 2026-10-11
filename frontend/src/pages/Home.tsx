@@ -3,7 +3,7 @@ import { ArrowRight, ChevronDown } from 'lucide-react'
 import { PixelHeart } from '@/components/ui/PixelHeart'
 import { PageRenderer } from '@/editor/components/PageRenderer'
 import { BlockRenderer } from '@/editor/components/BlockRenderer'
-import { DEMO_PAGE_BLOCKS, DEMO_SHOWCASE_BLOCKS } from '@/data/demoBlocks'
+import { HERO_PAGE_BLOCKS, SHOWCASE_BLOCKS } from '@/data/demoBlocks'
 import { MOMENTOS } from '@/data/momentos'
 
 function OsWindowTitle({ children }: { children: React.ReactNode }) {
@@ -62,7 +62,10 @@ function Hero() {
             </a>
           </div>
           <p className="mt-6 text-sm font-medium text-[#701a35]">
-            Criar e testar é grátis. Você só paga na hora de publicar.
+            Criar e testar é grátis. Você só paga na hora de publicar.{' '}
+            <Link to="/demo" className="font-semibold text-[#e11d48] underline underline-offset-2">
+              Abrir uma página completa
+            </Link>
           </p>
         </div>
 
@@ -77,7 +80,7 @@ function Hero() {
               aria-label="Demonstração de página gerada"
             >
               <PageRenderer
-                blocks={DEMO_PAGE_BLOCKS}
+                blocks={HERO_PAGE_BLOCKS}
                 theme="romantic-sunset"
                 showAtmosphere={false}
               />
@@ -96,9 +99,9 @@ function Hero() {
 
 function Showcase() {
   const items = [
-    { title: 'raspadinha.exe', caption: 'Raspa de verdade — no celular ou no mouse.', block: DEMO_SHOWCASE_BLOCKS.scratch },
-    { title: 'pergunta.exe', caption: 'O botão "não" foge. A resposta certa, não.', block: DEMO_SHOWCASE_BLOCKS.quiz },
-    { title: 'pistas.exe', caption: 'Uma pista por vez. O mistério dura o quanto você quiser.', block: DEMO_SHOWCASE_BLOCKS.hints },
+    { title: 'raspadinha.exe', caption: 'Raspa de verdade — no celular ou no mouse.', block: SHOWCASE_BLOCKS.scratch },
+    { title: 'pergunta.exe', caption: 'O botão "não" foge. A resposta certa, não.', block: SHOWCASE_BLOCKS.quiz },
+    { title: 'pistas.exe', caption: 'Uma pista por vez. O mistério dura o quanto você quiser.', block: SHOWCASE_BLOCKS.hints },
   ]
   return (
     <section id="demo-real" className="scroll-mt-24 bg-[#fff5f7] px-4 py-16 sm:py-24">

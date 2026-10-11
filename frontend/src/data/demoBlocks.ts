@@ -4,7 +4,7 @@ const meta = { createdAt: 0, updatedAt: 0 }
 
 // Espelha o arco que o motor de geração produz para crush_secreto:
 // envelope → raspadinha → pistas → carta. Mesmos componentes do destinatário.
-export const DEMO_PAGE_BLOCKS: Block[] = [
+export const HERO_PAGE_BLOCKS: Block[] = [
   {
     id: 'demo-envelope',
     type: 'envelope',
@@ -54,7 +54,7 @@ export const DEMO_PAGE_BLOCKS: Block[] = [
 ]
 
 // Blocos avulsos para a vitrine interativa — mesmos componentes do bloco real.
-export const DEMO_SHOWCASE_BLOCKS = {
+export const SHOWCASE_BLOCKS = {
   scratch: {
     id: 'showcase-scratch',
     type: 'scratch',

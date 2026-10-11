@@ -697,7 +697,7 @@ orquestrador atualiza o plano/`stack-research.md` antes da próxima sessão.
 | S13 | **RSVP backend**: `Response` model, token assinado, cascata notificações | sub + review main | spec §8.2; WABA onboarding iniciado | convite→resposta→notificação E2E |
 | S14 | **RSVP frontend**: `ticketRsvp` block | sub | contrato S13; patterns de S10 | bloco responde E2E |
 | ~~S15~~ ✅ | **LP redesign**: herói com `PageRenderer` real em os-window + vitrine de blocos interativos vivos (scratch/quiz/hints testados ao vivo) + 8 momentos com deep-link `?momento=` + steps/blocos/FAQ honestos (preço real, zero métricas inventadas); `-2.100` linhas de dead code (seções antigas + hero Three.js); bugs encontrados por review e corrigidos: âncora morta por `ScrollToTop`, scroll interno comido por Lenis, emojis reais no `QuizBlock` | main | relatório estética (S2); copy S8 | nova LP |
-| S16 | **Demo real + polish** | main | S15 + blocos S10 | `/demo` pública indexável |
+| ~~S16~~ ✅ | **Demo real + polish**: `/demo` pública indexável renderiza snapshot de output real do `/api/generate` (crush_secreto rico: envelope→scratch→hints→intimacyGate→carta, 4 seções) com ritual EnvelopeUnboxing + PageRenderer dentro de os-window; meta description própria, CTA "Crie a sua" → /gerar; hero da LP linka pra ela | main | S15 + blocos S10 | `/demo` pública indexável |
 
 Dependências cruzadas: S10 depende só de S6 (pode correr paralelo a S7–S9);
 S13 depende de páginas públicas existirem (pode começar cedo); S15 pode

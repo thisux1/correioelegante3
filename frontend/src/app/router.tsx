@@ -46,6 +46,7 @@ function safeLazy<T extends ComponentType<any>>(
 }
 
 const Home = safeLazy(() => import('@/pages/Home').then(m => ({ default: m.Home })))
+const Demo = safeLazy(() => import('@/pages/Demo').then(m => ({ default: m.Demo })))
 const Create = safeLazy(() => import('@/pages/Create').then(m => ({ default: m.Create })))
 const Editor = safeLazy(() => import('@/pages/Editor').then(m => ({ default: m.Editor })))
 const Generate = safeLazy(() => import('@/pages/Generate').then(m => ({ default: m.Generate })))
@@ -238,6 +239,7 @@ export function AppRouter() {
             <Route path="/gerar" element={<Generate />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
+              <Route path="/demo" element={<Demo />} />
               <Route path="/planos" element={<Pricing />} />
               <Route path="/pricing" element={<Navigate to="/planos" replace />} />
               <Route path="/planos/sucesso" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
