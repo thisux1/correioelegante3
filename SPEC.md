@@ -129,8 +129,20 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
 - `GET /`: Lists all pages created by authenticated user.
 - `POST /`: Creates page. Body: `{ content, status?, visibility?, publishedAt? }`.
 - `GET /:id`: Retrieves page. Handles ownership bypass, unlisted access, and public lifecycle gating.
+  - Blocos `ticketRsvp` ganham `props.responseToken` (HMAC-SHA256 de
+    `pageId.blockId`, segredo `RSVP_TOKEN_SECRET ?? JWT_SECRET`) na leitura —
+    nunca persistido, removido pelo sanitizer na escrita.
 - `PUT /:id`: Updates page with optimistic concurrency check (`expectedVersion`).
 - `DELETE /:id`: Deletes page (Owner only).
+- `POST /:pageId/responses`: **Público** (sem auth), rate limit próprio
+  (5/15min/IP). Identidade da destinatária é o `responseToken` da URL.
+  - Body: `{ blockId, token, choice: "yes" | "no" | "other_day", text?, respondentName? }`.
+  - `201 { response: { id, choice, createdAt } }`. Notifica o remetente por
+    e-mail (Resend; sem `RESEND_API_KEY` → `simulated_no_key`).
+  - Erros: `400 VALIDATION_ERROR`, `403 INVALID_TOKEN`, `404 PAGE/RSVP_NOT_FOUND`,
+    `409 ALREADY_RESPONDED` (uma resposta por bloco — `@@unique([pageId, blockId])`).
+- `GET /:pageId/responses`: Lista respostas (`{ responses: [...] }`, ordem
+  `createdAt asc`). Somente o dono da página — estranhos recebem `404`.
 
 ### 4.3a Generation (`/api/generate`)
 - `POST /`: Public (no auth), rate-limited (20/15min/IP) + Turnstile. Generates a
@@ -146,9 +158,11 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
     `decisions[]` explainability trail); `content` is the compiled,
     sanitized `Block[]` identical in shape to `POST /api/pages` content.
   - Errors: `400 INVALID_BRIEF` (Zod), `403 TURNSTILE_TOKEN_REQUIRED`,
-    `429 RATE_LIMITED`.
-  - Block types not yet persisted are downgraded with explicit adapters
-    (`intimacyGate→quiz`, `youtube→video`, ...) and logged in `notes[]`.
+    `422 BRIEF_BLOCKED` (moderação L1 bloqueou o brief), `429 RATE_LIMITED`.
+  - Briefs flagged (PII, padrões suspeitos) seguem a geração e registram
+    `moderation:flagged → ...` em `notes[]`.
+  - Block types not yet persisted are downgraded with explicit adapters and
+    logged in `notes[]`; `ticketRsvp` persiste como bloco real desde S14.
 
 ### 4.4 Payments (`/api/payments`)
 - `POST /create`: Creates a PagBank Pix payment, PagBank transparent card payment, Stripe card session, or Mercado Pago fallback checkout.
