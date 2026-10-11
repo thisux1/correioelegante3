@@ -14,11 +14,13 @@ import {
   FileText,
   MailWarning,
   Send,
+  Inbox,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { PageResponsesModal } from '@/components/modals/PageResponsesModal'
 import { InlineAlert } from '@/components/ui/InlineAlert'
 import { ProfileCardSkeleton } from '@/components/ui/ProfileCardSkeleton'
 import { useAuthStore } from '@/store/authStore'
@@ -54,6 +56,7 @@ export function Profile() {
 
   // Delete Page State
   const [pageToDelete, setPageToDelete] = useState<PageSummary | null>(null)
+  const [responsesPage, setResponsesPage] = useState<PageSummary | null>(null)
   const [isDeletingPage, setIsDeletingPage] = useState(false)
   const [deletePageError, setDeletePageError] = useState('')
 
@@ -152,6 +155,10 @@ export function Profile() {
 
   const editorDraftPages = editorPages.filter((page) => page.status !== 'published')
   const editorPublishedPages = editorPages.filter((page) => page.status === 'published')
+
+  function hasRsvpBlock(page: PageSummary) {
+    return page.blocks.some((block) => block.type === 'ticketRsvp')
+  }
 
   function resolvePublicPageHref(page: PageSummary): string | null {
     const candidate = (
@@ -575,6 +582,18 @@ export function Profile() {
 
                       {/* Seção direita: Ações da Carta */}
                       <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap shrink-0">
+                        {isPublished && hasRsvpBlock(page) ? (
+                          <button
+                            type="button"
+                            onClick={() => setResponsesPage(page)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border-2 border-rose-200/80 bg-white text-xs font-bold text-[#4c0519] hover:bg-rose-50 hover:border-rose-300 transition-colors flex-1 sm:flex-initial shadow-2xs cursor-pointer"
+                            title="Ver respostas do convite"
+                          >
+                            <Inbox className="w-3.5 h-3.5 text-[#701a35]" />
+                            <span>Respostas</span>
+                          </button>
+                        ) : null}
+
                         {isPublished && publicHref ? (
                           <>
                             <button
@@ -657,6 +676,14 @@ export function Profile() {
               })}
             </div>
           )}
+
+          {/* Respostas RSVP da página (S13/S14) */}
+          <PageResponsesModal
+            isOpen={Boolean(responsesPage)}
+            onClose={() => setResponsesPage(null)}
+            pageId={responsesPage?.id ?? ''}
+            pageTitle={responsesPage ? resolveDisplayName(responsesPage) : 'Carta'}
+          />
 
           {/* Modal de confirmação de exclusão de carta */}
           <Modal

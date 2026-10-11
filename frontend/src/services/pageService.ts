@@ -54,6 +54,15 @@ export interface RsvpResponse {
   createdAt: string
 }
 
+/** Resposta vista pelo dono da página (GET /pages/:id/responses). */
+export interface PageResponseEntry {
+  blockId: string
+  choice: RsvpChoice
+  text: string | null
+  respondentName: string | null
+  createdAt: string
+}
+
 export type ReportReason =
   | 'assedio'
   | 'conteudo_improprio'
@@ -149,5 +158,13 @@ export const pageService = {
    */
   async reportPage(pageId: string, input: ReportPageInput): Promise<void> {
     await api.post(`/pages/${pageId}/report`, input)
+  },
+
+  /** Lista respostas RSVP de uma página — somente o dono (backend: 404 p/ outros). */
+  async getPageResponses(pageId: string): Promise<PageResponseEntry[]> {
+    const response = await api.get<{ responses: PageResponseEntry[] }>(
+      `/pages/${pageId}/responses`,
+    )
+    return response.data.responses
   },
 }
