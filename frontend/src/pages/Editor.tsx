@@ -18,6 +18,8 @@ import {
 
 import { Modal } from '@/components/ui/Modal'
 import { ShareLetterModal } from '@/components/modals/ShareLetterModal'
+import { PublishReviewModal } from '@/components/modals/PublishReviewModal'
+import { reviewBlocks } from '@/editor/utils/reviewBlocks'
 import { EditorSkeleton } from '@/components/ui/EditorSkeleton'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
@@ -437,6 +439,7 @@ export function Editor() {
   const setMode = useEditorStore((state) => state.setMode)
   const setPage = useEditorStore((state) => state.setPage)
   const setDraftContext = useEditorStore((state) => state.setDraftContext)
+  const selectBlock = useEditorStore((state) => state.selectBlock)
   const user = useAuthStore((state) => state.user)
 
   const [isLoadingPage, setIsLoadingPage] = useState<boolean>(Boolean(pageIdFromRoute))
@@ -451,6 +454,7 @@ export function Editor() {
   const [templateConflict, setTemplateConflict] = useState<TemplateConflictState | null>(null)
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop')
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
   const handledTemplateKeyRef = useRef<string>('')
 
   const { recipientName, letterTitle } = useMemo(() => {
@@ -722,6 +726,7 @@ export function Editor() {
   })
 
   const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
+  const reviewIssues = useMemo(() => reviewBlocks(blocks), [blocks])
 
   const handlePublish = useCallback(async () => {
     if (isPublishingRef.current) return
@@ -923,7 +928,7 @@ export function Editor() {
           showPublishCta={showPublishCta}
           status={status}
           onShareClick={() => setIsShareModalOpen(true)}
-          onPublishCtaClick={handlePublish}
+          onPublishCtaClick={() => setIsReviewOpen(true)}
         />
 
         <AnimatePresence mode="wait" initial={false}>
@@ -1009,7 +1014,7 @@ export function Editor() {
                 if (status === 'published') {
                   setIsShareModalOpen(true)
                 } else {
-                  void handlePublish()
+                  setIsReviewOpen(true)
                 }
               }}
               disabled={saveState === 'saving'}
@@ -1140,6 +1145,27 @@ export function Editor() {
         pageId={currentPageId || ''}
         pageTitle={letterTitle}
         recipientName={recipientName}
+      />
+
+      <PublishReviewModal
+        isOpen={isReviewOpen}
+        issues={reviewIssues}
+        publishing={saveState === 'saving'}
+        onClose={() => setIsReviewOpen(false)}
+        onGoToBlock={(blockId) => {
+          setIsReviewOpen(false)
+          selectBlock(blockId)
+          if (mode !== 'edit') setMode('edit')
+          window.setTimeout(() => {
+            document
+              .querySelector(`[data-block-id="${blockId}"]`)
+              ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }, 80)
+        }}
+        onPublishAnyway={() => {
+          setIsReviewOpen(false)
+          void handlePublish()
+        }}
       />
     </div>
   )
