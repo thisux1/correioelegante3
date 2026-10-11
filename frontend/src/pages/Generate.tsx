@@ -21,6 +21,36 @@ const TONS = [
   { id: 'cinematico', nome: 'Cinematográfico' },
 ] as const
 
+interface MomentoCampos {
+  /** 'forced' esconde o checkbox e sempre envia anônimo. */
+  anonimo?: boolean | 'forced'
+  apelidos?: boolean
+  memoria?: boolean
+  intimidade?: boolean
+  evento?: boolean
+  musica?: boolean
+}
+
+const MOMENTO_CAMPOS: Record<string, MomentoCampos> = {
+  crush_secreto: { anonimo: true, apelidos: true, memoria: true, intimidade: true, musica: true },
+  carta_amor: { anonimo: true, memoria: true, musica: true },
+  convite_date: { anonimo: true, evento: true, musica: true },
+  pedido_namoro: { anonimo: true, apelidos: true, memoria: true, intimidade: true, evento: true, musica: true },
+  data_especial: { anonimo: true, memoria: true, evento: true, musica: true },
+  desculpas: { anonimo: true, memoria: true, musica: true },
+  anonimo: { anonimo: 'forced', apelidos: true, intimidade: true },
+  so_porque_sim: { anonimo: true, memoria: true, musica: true },
+}
+
+const CAMPOS_PADRAO: Required<Omit<MomentoCampos, 'anonimo'>> & { anonimo: true } = {
+  anonimo: true,
+  apelidos: true,
+  memoria: true,
+  intimidade: true,
+  evento: true,
+  musica: true,
+}
+
 /** Coração pixel 7x6 — sprite vetorial, não emoji. */
 function PixelHeart({ className = '', color = '#e11d48' }: { className?: string; color?: string }) {
   const rows = ['0110110', '1111111', '1111111', '0111110', '0011100', '0001000']
@@ -71,11 +101,15 @@ export function Generate() {
   const [intimidadePergunta, setIntimidadePergunta] = useState('')
   const [intimidadeResposta, setIntimidadeResposta] = useState('')
   const [musicaUrl, setMusicaUrl] = useState('')
+  const [eventoData, setEventoData] = useState('')
+  const [eventoLugar, setEventoLugar] = useState('')
   const [anonimo, setAnonimo] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canSubmit = momento === 'crush_secreto' && destinatario.trim().length > 0 && !loading
+  const campos: MomentoCampos = momento ? (MOMENTO_CAMPOS[momento] ?? CAMPOS_PADRAO) : CAMPOS_PADRAO
+  const anonimoEfetivo = campos.anonimo === 'forced' ? true : anonimo
+  const canSubmit = momento !== null && destinatario.trim().length > 0 && !loading
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,25 +117,37 @@ export function Generate() {
     setLoading(true)
     setError(null)
     try {
+      const evento =
+        campos.evento && (eventoData.trim() || eventoLugar.trim())
+          ? { data: eventoData.trim() || undefined, lugar: eventoLugar.trim() || undefined }
+          : undefined
       const brief: GenerateBriefInput = {
         momento,
         nomes: {
           destinatario: destinatario.trim(),
-          remetente: anonimo ? undefined : remetente.trim() || undefined,
+          remetente: anonimoEfetivo ? undefined : remetente.trim() || undefined,
         },
-        apelidos: apelidos.split(',').map((a) => a.trim()).filter(Boolean),
+        apelidos: campos.apelidos ? apelidos.split(',').map((a) => a.trim()).filter(Boolean) : [],
         tom: tom as GenerateBriefInput['tom'],
         contexto: contexto.trim() || undefined,
-        memorias: memoria.trim() ? [{ titulo: 'Uma memória nossa', descricao: memoria.trim() }] : [],
+        memorias:
+          campos.memoria && memoria.trim()
+            ? [{ titulo: 'Uma memória nossa', descricao: memoria.trim() }]
+            : [],
         perguntasIntimidade:
-          intimidadePergunta.trim() && intimidadeResposta.trim()
+          campos.intimidade && intimidadePergunta.trim() && intimidadeResposta.trim()
             ? [{ pergunta: intimidadePergunta.trim(), resposta: intimidadeResposta.trim() }]
             : [],
-        midias: musicaUrl.trim() ? { fotos: [], musicaUrl: musicaUrl.trim() } : undefined,
-        anonimoParaDestinatario: anonimo,
+        evento,
+        midias: campos.musica && musicaUrl.trim() ? { fotos: [], musicaUrl: musicaUrl.trim() } : undefined,
+        anonimoParaDestinatario: anonimoEfetivo,
       }
       const result = await generateService.generate(brief)
-      setPage({ blocks: result.content.blocks, theme: result.content.theme })
+      setPage({
+        blocks: result.content.blocks,
+        sections: result.content.sections,
+        theme: result.content.theme,
+      })
       setDraftContext(null)
       navigate('/editor')
     } catch (err) {
@@ -183,7 +229,7 @@ export function Generate() {
 
           {/* Passo 2 — brief */}
           <div id="brief-panel">
-            {momento === 'crush_secreto' && (
+            {momento !== null && (
             <fieldset className="os-sunken mt-8 p-4 sm:p-6">
               <legend className="font-pixel-ui bg-[#fffdfa] px-2 text-[16px] font-bold text-[#4c0519]">
                 <span className="mr-2 inline-block bg-[#e11d48] px-1.5 py-0.5 text-[#fff]">02</span>
@@ -207,25 +253,27 @@ export function Generate() {
                   <FieldHint>aparece no envelope e na carta.</FieldHint>
                 </div>
 
-                <label className="os-sunken flex cursor-pointer items-start gap-3 p-4">
-                  <input
-                    type="checkbox"
-                    checked={anonimo}
-                    onChange={(e) => setAnonimo(e.target.checked)}
-                    className="os-check sr-only"
-                  />
-                  <span className="os-check-box mt-0.5" aria-hidden="true" />
-                  <span>
-                    <span className="font-pixel-sans block font-semibold text-[#4c0519]">
-                      Manter mistério (anônimo)
+                {campos.anonimo === true && (
+                  <label className="os-sunken flex cursor-pointer items-start gap-3 p-4">
+                    <input
+                      type="checkbox"
+                      checked={anonimo}
+                      onChange={(e) => setAnonimo(e.target.checked)}
+                      className="os-check sr-only"
+                    />
+                    <span className="os-check-box mt-0.5" aria-hidden="true" />
+                    <span>
+                      <span className="font-pixel-sans block font-semibold text-[#4c0519]">
+                        Manter mistério (anônimo)
+                      </span>
+                      <span className="font-pixel-body mt-0.5 block text-[20px] leading-tight text-[#9f3a58]">
+                        seu nome nunca aparece. a página entrega só pistas.
+                      </span>
                     </span>
-                    <span className="font-pixel-body mt-0.5 block text-[20px] leading-tight text-[#9f3a58]">
-                      seu nome nunca aparece. a página entrega só pistas.
-                    </span>
-                  </span>
-                </label>
+                  </label>
+                )}
 
-                {!anonimo && (
+                {!anonimoEfetivo && (
                   <div>
                     <FieldLabel htmlFor="rem">seu nome (opcional)</FieldLabel>
                     <input
@@ -241,18 +289,55 @@ export function Generate() {
                   </div>
                 )}
 
-                <div>
-                  <FieldLabel htmlFor="apel">apelidos / como você chama a pessoa</FieldLabel>
-                  <input
-                    id="apel"
-                    value={apelidos}
-                    onChange={(e) => setApelidos(e.target.value)}
-                    placeholder="du, dudinha"
-                    className="os-input mt-2 min-h-[44px]"
-                    autoComplete="off"
-                  />
-                  <FieldHint>separe por vírgula. vira pista no jogo de descoberta.</FieldHint>
-                </div>
+                {campos.apelidos && (
+                  <div>
+                    <FieldLabel htmlFor="apel">apelidos / como você chama a pessoa</FieldLabel>
+                    <input
+                      id="apel"
+                      value={apelidos}
+                      onChange={(e) => setApelidos(e.target.value)}
+                      placeholder="du, dudinha"
+                      className="os-input mt-2 min-h-[44px]"
+                      autoComplete="off"
+                    />
+                    <FieldHint>separe por vírgula. vira pista no jogo de descoberta.</FieldHint>
+                  </div>
+                )}
+
+                {campos.evento && (
+                  <div className="os-sunken p-4">
+                    <span className="font-pixel-ui block text-[16px] font-bold text-[#4c0519]">
+                      quando e onde (opcional)
+                    </span>
+                    <p className="font-pixel-body mt-1 text-[20px] leading-tight text-[#9f3a58]">
+                      vira contagem regressiva e convite com lugar marcado.
+                    </p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="evt-data" className="sr-only">data do evento</label>
+                        <input
+                          id="evt-data"
+                          value={eventoData}
+                          onChange={(e) => setEventoData(e.target.value)}
+                          placeholder="sábado, 14 de junho, 19h"
+                          autoComplete="off"
+                          className="os-input min-h-[44px]"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="evt-lugar" className="sr-only">lugar do evento</label>
+                        <input
+                          id="evt-lugar"
+                          value={eventoLugar}
+                          onChange={(e) => setEventoLugar(e.target.value)}
+                          placeholder="sorveteria da praça"
+                          autoComplete="off"
+                          className="os-input min-h-[44px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <span id="tom-label">
@@ -276,19 +361,22 @@ export function Generate() {
                   </div>
                 </div>
 
-                <div>
-                  <FieldLabel htmlFor="mem">uma memória de vocês dois (opcional)</FieldLabel>
-                  <textarea
-                    id="mem"
-                    value={memoria}
-                    onChange={(e) => setMemoria(e.target.value)}
-                    placeholder="Aquele café que a gente tomou depois da aula..."
-                    rows={3}
-                    className="os-input mt-2"
-                  />
-                  <FieldHint>aparece na parte de lembranças da página.</FieldHint>
-                </div>
+                {campos.memoria && (
+                  <div>
+                    <FieldLabel htmlFor="mem">uma memória de vocês dois (opcional)</FieldLabel>
+                    <textarea
+                      id="mem"
+                      value={memoria}
+                      onChange={(e) => setMemoria(e.target.value)}
+                      placeholder="Aquele café que a gente tomou depois da aula..."
+                      rows={3}
+                      className="os-input mt-2"
+                    />
+                    <FieldHint>aparece na parte de lembranças da página.</FieldHint>
+                  </div>
+                )}
 
+                {campos.intimidade && (
                 <div className="os-sunken p-4">
                   <span className="font-pixel-ui block text-[16px] font-bold text-[#4c0519]">
                     pergunta que só vocês sabem (opcional)
@@ -316,21 +404,24 @@ export function Generate() {
                     className="os-input mt-1 min-h-[44px]"
                   />
                 </div>
+                )}
 
-                <div>
-                  <FieldLabel htmlFor="mus">uma música que lembra vocês (link opcional)</FieldLabel>
-                  <input
-                    id="mus"
-                    value={musicaUrl}
-                    onChange={(e) => setMusicaUrl(e.target.value)}
-                    placeholder="https://youtube.com/..."
-                    inputMode="url"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    className="os-input mt-2 min-h-[44px]"
-                  />
-                </div>
+                {campos.musica && (
+                  <div>
+                    <FieldLabel htmlFor="mus">uma música que lembra vocês (link opcional)</FieldLabel>
+                    <input
+                      id="mus"
+                      value={musicaUrl}
+                      onChange={(e) => setMusicaUrl(e.target.value)}
+                      placeholder="https://youtube.com/..."
+                      inputMode="url"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      className="os-input mt-2 min-h-[44px]"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <FieldLabel htmlFor="ctx">quer contar mais alguma coisa? (opcional)</FieldLabel>

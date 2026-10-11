@@ -1,8 +1,9 @@
 import api from './api'
-import type { Block } from '@/editor/types'
+import type { Block, PageSection } from '@/editor/types'
 
 export interface GeneratedPageContent {
   blocks: Block[]
+  sections?: PageSection[]
   theme?: string
   version: number
 }
