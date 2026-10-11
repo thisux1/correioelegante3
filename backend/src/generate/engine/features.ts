@@ -7,7 +7,8 @@ export type BriefFeature =
   | 'hasMemorias'
   | 'hasMusica'
   | 'hasEvento'
-  | 'hasIntimidade';
+  | 'hasIntimidade'
+  | 'hasApelidos';
 
 export function extractFeatures(brief: CreativeBrief): Set<BriefFeature> {
   const features = new Set<BriefFeature>();
@@ -22,6 +23,7 @@ export function extractFeatures(brief: CreativeBrief): Set<BriefFeature> {
     features.add('hasEvento');
   }
   if (brief.perguntasIntimidade.length > 0) features.add('hasIntimidade');
+  if (brief.apelidos.length > 0) features.add('hasApelidos');
 
   return features;
 }

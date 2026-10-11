@@ -713,6 +713,14 @@ export function EditorCanvas() {
             section={group.section}
             blocks={group.blocks}
             onRequestDelete={requestDelete}
+            renderCollapsed={() => (
+              <SortableContext
+                items={group.blocks.map((block) => block.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {renderSectionBlocks(group)}
+              </SortableContext>
+            )}
           />
         ) : (
           <SortableContext

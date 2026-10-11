@@ -67,6 +67,18 @@ describe('engine — decide()', () => {
     expect(types).toContain('intimacyGate');
   });
 
+  it('hints só entra com apelidos — nunca um bloco vazio', () => {
+    const without = decide(brief({}));
+    expect(without.sections.flatMap((s) => s.modules.map((m) => m.type))).not.toContain('hints');
+
+    const withApelidos = decide(brief({ apelidos: ['Duds'] }));
+    const hintsModule = withApelidos.sections
+      .flatMap((s) => s.modules)
+      .find((m) => m.type === 'hints');
+    expect(hintsModule).toBeDefined();
+    expect(hintsModule!.props.items).toEqual(['Duds']);
+  });
+
   it('falls back to crush_secreto family for unregistered momentos and logs it', () => {
     const spec = decide(brief({ momento: 'so_porque_sim' }));
     expect(spec.decisions.join(' ')).toContain('sem família própria');

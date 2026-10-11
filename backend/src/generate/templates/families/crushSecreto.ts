@@ -54,6 +54,7 @@ export const crushSecretoFamily: TemplateFamily = {
         {
           type: 'hints',
           base: 6,
+          requiresAll: ['hasApelidos'],
           boosts: { anon: 3, hasIntimidade: 1 },
           props: ({ brief }) => ({
             items: brief.apelidos.slice(0, 3),

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Trash2 } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { BlockRenderer } from '@/editor/components/BlockRenderer'
@@ -182,9 +182,10 @@ interface GridSectionCanvasProps {
   section: PageSection
   blocks: Block[]
   onRequestDelete: (id: string) => void
+  renderCollapsed?: () => ReactNode
 }
 
-export function GridSectionCanvas({ section, blocks, onRequestDelete }: GridSectionCanvasProps) {
+export function GridSectionCanvas({ section, blocks, onRequestDelete, renderCollapsed }: GridSectionCanvasProps) {
   const cols = Math.min(Math.max(section.grid?.cols ?? 12, 1), 24)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -317,20 +318,26 @@ export function GridSectionCanvas({ section, blocks, onRequestDelete }: GridSect
     [candidateRect, selectBlock, setDragging, updateBlockRect],
   )
 
-  // D12 collapse: below ~640px the placed layout degrades to a plain stack.
-  // Covers mobile AND narrow desktop windows — no dependence on pointer
-  // media detection alone (which also flashes grid on the first frame).
+  // D12 collapse: below ~640px the placed layout degrades to the same
+  // sortable stack used by stack sections — full delete/move/select chrome
+  // survives on narrow windows instead of a read-only card list.
   if (containerWidth > 0 && containerWidth < COLLAPSE_WIDTH) {
     return (
       <div ref={containerRef} className="space-y-4" data-section-id={section.id}>
-        {blocks.map((block) => (
-          <GridStackedCard key={block.id} block={block} />
-        ))}
-        {blocks.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-primary/20 p-6 text-center text-sm text-text-light">
-            Seção vazia — adicione blocos para começar.
-          </p>
-        ) : null}
+        {renderCollapsed ? (
+          renderCollapsed()
+        ) : (
+          <>
+            {blocks.map((block) => (
+              <GridStackedCard key={block.id} block={block} />
+            ))}
+            {blocks.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-primary/20 p-6 text-center text-sm text-text-light">
+                Seção vazia — adicione blocos para começar.
+              </p>
+            ) : null}
+          </>
+        )}
       </div>
     )
   }
