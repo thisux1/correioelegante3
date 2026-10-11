@@ -1,18 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { generateService, type GenerateBriefInput } from '@/services/generateService'
 import { useEditorStore } from '@/editor/store/editorStore'
-
-const MOMENTOS = [
-  { id: 'crush_secreto', nome: 'Crush secreto', descricao: 'Mistério, pistas e a revelação de quem sempre quis contar', disponivel: true },
-  { id: 'carta_amor', nome: 'Carta de amor', descricao: 'Memórias, intimidade e futuro', disponivel: true },
-  { id: 'convite_date', nome: 'Convite pra sair', descricao: 'Chama pra um date com resposta na hora', disponivel: true },
-  { id: 'pedido_namoro', nome: 'Pedido de namoro', descricao: 'Buildup, clímax e celebração', disponivel: true },
-  { id: 'data_especial', nome: 'Data especial', descricao: 'Aniversário de namoro, meses juntos, conquistas', disponivel: true },
-  { id: 'desculpas', nome: 'Pedido de desculpas', descricao: 'Vulnerável e direto, sem jogos', disponivel: true },
-  { id: 'anonimo', nome: 'Anônimo', descricao: 'Intriga total. Ela descobre aos poucos', disponivel: true },
-  { id: 'so_porque_sim', nome: 'Só porque sim', descricao: 'Um gesto pequeno que vale muito', disponivel: true },
-] as const
+import { MOMENTOS } from '@/data/momentos'
+import { PixelHeart } from '@/components/ui/PixelHeart'
 
 const TONS = [
   { id: 'leve', nome: 'Leve e divertido' },
@@ -51,22 +42,6 @@ const CAMPOS_PADRAO: Required<Omit<MomentoCampos, 'anonimo'>> & { anonimo: true 
   musica: true,
 }
 
-/** Coração pixel 7x6 — sprite vetorial, não emoji. */
-function PixelHeart({ className = '', color = '#e11d48' }: { className?: string; color?: string }) {
-  const rows = ['0110110', '1111111', '1111111', '0111110', '0011100', '0001000']
-  return (
-    <svg viewBox="0 0 7 6" className={className} aria-hidden="true" shapeRendering="crispEdges">
-      {rows.map((row, y) =>
-        row.split('').map((cell, x) =>
-          cell === '1' ? (
-            <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={color} />
-          ) : null,
-        ),
-      )}
-    </svg>
-  )
-}
-
 function FieldLabel({ htmlFor, children, required }: { htmlFor?: string; children: React.ReactNode; required?: boolean }) {
   const className = 'font-pixel-ui block text-[16px] font-bold leading-snug text-[#4c0519]'
   const content = (
@@ -91,7 +66,11 @@ export function Generate() {
   const setPage = useEditorStore((s) => s.setPage)
   const setDraftContext = useEditorStore((s) => s.setDraftContext)
 
-  const [momento, setMomento] = useState<string | null>(null)
+  const [searchParams] = useSearchParams()
+  const [momento, setMomento] = useState<string | null>(() => {
+    const m = searchParams.get('momento')
+    return MOMENTOS.some((x) => x.id === m && x.disponivel) ? m : null
+  })
   const [destinatario, setDestinatario] = useState('')
   const [remetente, setRemetente] = useState('')
   const [apelidos, setApelidos] = useState('')
@@ -217,14 +196,16 @@ export function Generate() {
                 </button>
               ))}
             </div>
-            <div className="os-sunken mt-3 divide-y divide-[#ffe4ec]" role="list" aria-label="Momentos em breve">
-              {MOMENTOS.filter((m) => !m.disponivel).map((m) => (
-                <div key={m.id} role="listitem" className="flex items-baseline justify-between gap-3 px-3 py-2">
-                  <span className="font-pixel-sans text-sm font-semibold text-[#c98096]">{m.nome}</span>
-                  <span className="font-pixel-body text-[18px] leading-tight text-[#c98096]">em breve</span>
-                </div>
-              ))}
-            </div>
+            {MOMENTOS.some((m) => !m.disponivel) && (
+              <div className="os-sunken mt-3 divide-y divide-[#ffe4ec]" role="list" aria-label="Momentos em breve">
+                {MOMENTOS.filter((m) => !m.disponivel).map((m) => (
+                  <div key={m.id} role="listitem" className="flex items-baseline justify-between gap-3 px-3 py-2">
+                    <span className="font-pixel-sans text-sm font-semibold text-[#c98096]">{m.nome}</span>
+                    <span className="font-pixel-body text-[18px] leading-tight text-[#c98096]">em breve</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </fieldset>
 
           {/* Passo 2 — brief */}

@@ -119,7 +119,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const question = props.question || 'Quer namorar comigo?'
   const yesText = props.yesButtonText || 'Sim, com todo o coração'
   const noText = props.noButtonText || 'Não'
-  const successMessage = props.successMessage || 'Eu sabia! Te amo muito. ❤️'
+  const successMessage = props.successMessage || 'Eu sabia! Te amo muito.'
 
   return (
     <div className="relative mx-auto w-full max-w-lg select-none px-2 py-3">
@@ -303,7 +303,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               className="h-4 w-4 rounded accent-primary"
               aria-label="Ativar botão não fujão"
             />
-            <span>Botão 'Não' fujão ✨</span>
+            <span>Botão 'Não' fujão</span>
           </label>
 
           <div className="flex items-center gap-2">

@@ -6,7 +6,7 @@ export function ScrollToTop() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  }, [location.pathname, location.search, location.hash])
+  }, [location.pathname, location.search])
 
   return null
 }
