@@ -24,6 +24,11 @@ const SUPPORTED = new Set<string>([
   'timeline',
   'quiz',
   'polaroid',
+  'youtube',
+  'photoBook',
+  'bouquet',
+  'hints',
+  'intimacyGate',
 ]);
 
 /**
@@ -44,31 +49,9 @@ const asText = (value: unknown): string =>
   typeof value === 'string' ? value : '';
 
 const DOWNGRADE: Partial<Record<ModuleType, DowngradeRule>> = {
-  youtube: {
-    to: 'video',
-    adapt: (p) => ({ src: asText(p.src) }),
-  },
-  photoBook: {
-    to: 'gallery',
-    adapt: (p) => ({ images: asStrings(p.images), transition: 'fade' }),
-  },
-  intimacyGate: {
-    to: 'quiz',
-    adapt: (p) => ({
-      question: asText(p.question),
-      yesButtonText: 'Acertei',
-      noButtonText: 'Errei',
-      successMessage: asText(p.hint) || 'Sabia que você ia lembrar.',
-      isPlayfulNo: false,
-    }),
-  },
   togetherCounter: {
     to: 'timer',
     adapt: (p) => ({ targetDate: asText(p.targetDate), label: asText(p.label) }),
-  },
-  hints: {
-    to: 'text',
-    adapt: (p) => ({ text: asStrings(p.items).join(' • '), align: 'center' }),
   },
   memoryCard: {
     to: 'text',
@@ -81,14 +64,32 @@ const DOWNGRADE: Partial<Record<ModuleType, DowngradeRule>> = {
     to: 'text',
     adapt: (p) => ({ text: asStrings(p.items).join('\n'), align: 'left' }),
   },
-  bouquet: {
-    to: 'text',
-    adapt: (p) => ({ text: asText(p.descricao) || 'Um buquê pra você.', align: 'center' }),
-  },
   ticketRsvp: {
     to: 'text',
     adapt: (p) => ({ text: asText(p.title), align: 'center' }),
   },
+};
+
+/**
+ * Real persisted types whose spec-side props shape differs from the block
+ * contract — families emit spec ergonomics (items, answer), persisted blocks
+ * expect their own shape (hints[], answers[]). Adapters run after copy-slot
+ * resolution, so `intro`/`title` arrive as final text.
+ */
+const SPEC_PROPS_ADAPTER: Partial<
+  Record<ModuleType, (props: Record<string, unknown>) => Record<string, unknown>>
+> = {
+  hints: (p) => ({
+    title: asText(p.intro) || undefined,
+    hints: asStrings(p.items).map((text, index) => ({ id: `hint-${index}`, text })),
+  }),
+  intimacyGate: (p) => ({
+    title: asText(p.intro) || undefined,
+    question: asText(p.question),
+    answers: asStrings([p.answer]).concat(asStrings(p.answers)),
+    hint: asText(p.hint) || undefined,
+    successMessage: asText(p.successMessage) || undefined,
+  }),
 };
 
 export interface CompileResult {
@@ -105,7 +106,11 @@ function resolveTypeAndProps(
   notes: string[],
 ): { type: SupportedBlockType; props: Record<string, unknown> } {
   if (SUPPORTED.has(module.type)) {
-    return { type: module.type as SupportedBlockType, props: module.props };
+    const adapt = SPEC_PROPS_ADAPTER[module.type];
+    return {
+      type: module.type as SupportedBlockType,
+      props: adapt ? adapt(module.props) : module.props,
+    };
   }
   const rule = DOWNGRADE[module.type];
   const to = rule?.to ?? 'text';

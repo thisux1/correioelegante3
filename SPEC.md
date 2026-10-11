@@ -202,10 +202,24 @@ All endpoints require authentication + admin (`requireAdmin`). Responses are agg
 
 ## 5. Editor Block Schema & Versioning
 
-The editor represents interactive pages as an ordered collection of serialized blocks:
+The editor represents interactive pages as an ordered collection of serialized
+blocks. The canonical persisted type list lives in
+`backend/src/services/page.constants.ts` (`BLOCK_TYPE_VALUES`); the frontend
+mirror is `frontend/src/editor/types.ts`:
 
 ```typescript
-type BlockType = 'text' | 'media' | 'music' | 'gallery' | 'timer' | 'canvas';
+type BlockType =
+  | 'text' | 'image' | 'timer' | 'gallery' | 'music' | 'video'
+  | 'envelope' | 'scratch' | 'timeline' | 'quiz' | 'polaroid'
+  | 'youtube' | 'photoBook' | 'bouquet' | 'hints' | 'intimacyGate';
+```
+
+Every block's props shape is normalized on read (`page.migration.ts`) and
+sanitized on write (`page.sanitizer.ts`) — unknown types coerce to `text`,
+never crash. The illustrative props below are simplified; per-type prop
+contracts are enforced by the migration/sanitizer pair, not by this doc.
+
+```typescript
 
 interface BaseBlock {
   id: string;

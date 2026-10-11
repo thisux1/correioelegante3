@@ -404,6 +404,7 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       return {
         question: asText(props.question).slice(0, 300),
         answers,
+        title: asOptionalText(props.title),
         hint: asOptionalText(props.hint),
         successMessage: asOptionalText(props.successMessage),
       };

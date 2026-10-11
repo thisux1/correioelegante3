@@ -450,6 +450,7 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
       return {
         question: sanitizeText(typeof props.question === 'string' ? props.question : '').slice(0, 300),
         answers,
+        title: optionalShortText(props.title, 120),
         hint: optionalShortText(props.hint, 240),
         successMessage: optionalShortText(props.successMessage, 400),
       };

@@ -651,6 +651,7 @@ function migrateBlock(input: unknown, index: number): Block {
         props: {
           question: asText(props.question),
           answers: asStringList(props.answers, 8),
+          title: asOptionalText(props.title),
           hint: asOptionalText(props.hint),
           successMessage: asOptionalText(props.successMessage),
         },

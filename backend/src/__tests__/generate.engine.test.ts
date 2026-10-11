@@ -90,8 +90,12 @@ describe('compilePageSpec()', () => {
       expect(block.id).toBeTruthy();
       expect(block.meta.createdAt).toBeGreaterThan(0);
     }
-    // intimacyGate isn't persisted yet — must downgrade visibly, not silently
-    expect(notes.join(' ')).toContain('intimacyGate → quiz');
+    // intimacyGate is persisted now — compiles to the real block, spec props
+    // adapted (answer singular → answers list).
+    const gate = migrated.blocks.find((b) => b.type === 'intimacyGate');
+    expect(gate).toBeDefined();
+    expect(gate!.props.answers).toEqual(['a']);
+    expect(notes.join(' ')).not.toContain('intimacyGate →');
   });
 
   it('orders rect modules row-major inside their section', () => {

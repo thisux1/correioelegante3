@@ -160,3 +160,125 @@ describe('compilePageSpec — sections & placement output', () => {
     );
   });
 });
+
+describe('S10 new block types', () => {
+  it('preserves youtube block props', () => {
+    const result = migratePage({
+      blocks: [
+        {
+          id: 'y1',
+          type: 'youtube',
+          version: 1,
+          props: { url: 'https://youtu.be/abc12345678', title: 'Nossa música' },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+    });
+    const block = result.blocks[0];
+    expect(block.type).toBe('youtube');
+    expect(block.props.url).toBe('https://youtu.be/abc12345678');
+    expect(block.props.title).toBe('Nossa música');
+  });
+
+  it('bounds photoBook pages and drops entries without src', () => {
+    const result = migratePage({
+      blocks: [
+        {
+          id: 'pb1',
+          type: 'photoBook',
+          version: 1,
+          props: {
+            pages: [
+              { src: 'https://x/1.jpg', caption: 'um' },
+              { caption: 'sem src — cai fora' },
+              ...Array.from({ length: 30 }, (_, i) => ({ src: `https://x/${i}.jpg` })),
+            ],
+            coverTitle: 'Livro',
+          },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+    });
+    const pages = (result.blocks[0].props.pages as unknown[]);
+    expect(pages.length).toBeLessThanOrEqual(24);
+    expect(pages.length).toBeGreaterThan(0);
+  });
+
+  it('filters bouquet flowers to valid species and clamps list', () => {
+    const result = migratePage({
+      blocks: [
+        {
+          id: 'b1',
+          type: 'bouquet',
+          version: 1,
+          props: {
+            seed: 42,
+            flowers: [
+              { species: 'rosa', color: '#e11d48' },
+              { species: 'orquidea' },
+              'lixo',
+            ],
+            wrap: 'juta',
+          },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+    });
+    const { props } = result.blocks[0];
+    expect(props.seed).toBe(42);
+    expect(props.flowers).toEqual([{ species: 'rosa', color: '#e11d48' }]);
+    expect(props.wrap).toBe('juta');
+  });
+
+  it('hints keeps only items with text and bounds the list', () => {
+    const result = migratePage({
+      blocks: [
+        {
+          id: 'h1',
+          type: 'hints',
+          version: 1,
+          props: {
+            title: 'Dicas',
+            hints: [
+              { id: 'a', text: 'primeira' },
+              { text: '' },
+              'não-objeto',
+              ...Array.from({ length: 15 }, (_, i) => ({ text: `d${i}` })),
+            ],
+          },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+    });
+    const hints = result.blocks[0].props.hints as Array<{ text: string }>;
+    expect(hints.length).toBeLessThanOrEqual(12);
+    expect(hints[0].text).toBe('primeira');
+    expect(hints.every((h) => h.text.length > 0)).toBe(true);
+  });
+
+  it('intimacyGate keeps question + bounded answers + optional fields', () => {
+    const result = migratePage({
+      blocks: [
+        {
+          id: 'g1',
+          type: 'intimacyGate',
+          version: 1,
+          props: {
+            question: 'O que tinha na xícara?',
+            answers: ['cappuccino', '', 42, 'café'],
+            title: 'só vocês sabem',
+            hint: 'quente',
+            successMessage: 'lembrou!',
+            allowSkip: true,
+          },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+    });
+    const { props } = result.blocks[0];
+    expect(props.question).toBe('O que tinha na xícara?');
+    expect(props.answers).toEqual(['cappuccino', 'café']);
+    expect(props.title).toBe('só vocês sabem');
+    expect(props.allowSkip).toBeUndefined();
+  });
+});

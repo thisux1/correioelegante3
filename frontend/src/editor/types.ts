@@ -215,6 +215,7 @@ export interface HintsBlockProps {
 export interface IntimacyGateBlockProps {
   question: string
   answers: string[]
+  title?: string
   hint?: string
   successMessage?: string
 }
