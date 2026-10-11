@@ -329,12 +329,12 @@ export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
   // Wrap-specific texture passes (dithering clipped to painted cells).
   if (wrap === 'papel') {
     // Soft paper: dithered shade creeping up from the bottom fold.
-    front.applyPattern(27, 100, 69, 117, (existing, x, y) =>
+    front.applyPattern(27, 100, 69, 117, (_existing, x, y) =>
       (x + y) % 3 === 0 ? wrapPal.deep : undefined,
     )
   } else if (wrap === 'juta') {
     // Burlap weave: vertical threads + horizontal shading rows.
-    front.applyPattern(27, 83, 69, 117, (existing, x, y) => {
+    front.applyPattern(27, 83, 69, 117, (_existing, x, y) => {
       if (x % 3 === 0) return wrapPal.deep
       if (y % 3 === 0) return wrapPal.shade
       return undefined

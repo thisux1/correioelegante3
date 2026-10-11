@@ -121,7 +121,7 @@ function PageFace({ page, side, pageNumber = null, endpaper, endpaperText }: Pag
               </div>
             )}
           </div>
-          <p className="mt-[5%] min-h-[1.5em] text-center font-handwriting text-xl leading-tight text-[#701a35] line-clamp-2">
+          <p className="mt-[5%] min-h-[1.5em] text-center font-cursive text-xl leading-tight text-[#701a35] line-clamp-2">
             {page?.caption ?? ''}
           </p>
         </div>
@@ -152,12 +152,13 @@ interface BookCoverProps {
   title?: string
   subtitle?: string
   isEditMode: boolean
+  reduceMotion: boolean
   onOpen: () => void
   onTitleChange?: (value: string) => void
   onSubtitleChange?: (value: string) => void
 }
 
-function BookCover({ title, subtitle, isEditMode, onOpen, onTitleChange, onSubtitleChange }: BookCoverProps) {
+function BookCover({ title, subtitle, isEditMode, reduceMotion, onOpen, onTitleChange, onSubtitleChange }: BookCoverProps) {
   const resolvedTitle = title?.trim() || 'Livro de memórias'
 
   const inner = (
@@ -235,8 +236,8 @@ function BookCover({ title, subtitle, isEditMode, onOpen, onTitleChange, onSubti
     <motion.button
       type="button"
       onClick={onOpen}
-      whileHover={{ scale: 1.015 }}
-      whileTap={{ scale: 0.985 }}
+      whileHover={reduceMotion ? undefined : { scale: 1.015 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.985 }}
       aria-label="Abrir livro de fotos"
       className={`${coverClasses} block cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2`}
       style={COVER_TEXTURE}
@@ -478,6 +479,9 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
 
   const total = pages.length
   const maxSpread = Math.max(0, Math.floor(total / 2))
+  // Se páginas forem removidas com o livro aberto, a visualização usa o spread
+  // já limitado — sem efeito extra nem re-render em cascata.
+  const displaySpread = Math.min(Math.max(spread, 0), maxSpread)
 
   const updateProp = useCallback(
     <K extends keyof PhotoBookBlockProps>(key: K, value: PhotoBookBlockProps[K]) => {
@@ -543,10 +547,10 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
   )
 
   const goNext = useCallback(() => {
-    if (turn || spread >= maxSpread) {
+    if (turn || displaySpread >= maxSpread) {
       return
     }
-    const current = spread
+    const current = displaySpread
     setSpread(current + 1)
     if (!shouldReduceMotion) {
       setTurn({
@@ -555,13 +559,13 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
         back: pages[2 * current + 1],
       })
     }
-  }, [turn, spread, maxSpread, shouldReduceMotion, pages])
+  }, [turn, displaySpread, maxSpread, shouldReduceMotion, pages])
 
   const goPrev = useCallback(() => {
-    if (turn || spread <= 0) {
+    if (turn || displaySpread <= 0) {
       return
     }
-    const current = spread
+    const current = displaySpread
     setSpread(current - 1)
     if (!shouldReduceMotion) {
       setTurn({
@@ -570,7 +574,7 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
         back: pages[2 * (current - 1) + 1],
       })
     }
-  }, [turn, spread, shouldReduceMotion, pages])
+  }, [turn, displaySpread, shouldReduceMotion, pages])
 
   const handleClose = useCallback(() => {
     setIsOpen(false)
@@ -610,14 +614,6 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
     return () => window.clearTimeout(timeoutId)
   }, [turn])
 
-  // Se páginas forem removidas com o livro aberto, volta para um spread válido.
-  useEffect(() => {
-    if (spread > maxSpread) {
-      setSpread(maxSpread)
-      setTurn(null)
-    }
-  }, [maxSpread, spread])
-
   if (!isPhotoBook) {
     return null
   }
@@ -638,7 +634,7 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
           >
             <OpenBookView
               pages={pages}
-              spread={spread}
+              spread={displaySpread}
               turn={turn}
               coverTitle={coverTitle}
               showKeyboardHint={!isEditMode}
@@ -660,6 +656,7 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
               title={coverTitle}
               subtitle={coverSubtitle}
               isEditMode={isEditMode}
+              reduceMotion={shouldReduceMotion ?? false}
               onOpen={() => setIsOpen(true)}
               onTitleChange={(value) => updateProp('coverTitle', value)}
               onSubtitleChange={(value) => updateProp('coverSubtitle', value)}
