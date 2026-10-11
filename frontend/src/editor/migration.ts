@@ -4,6 +4,9 @@ import {
   type Block,
   type BlockType,
   type PageContent,
+  type PageSection,
+  type SectionLayout,
+  type SectionRect,
   type TextBlockAlign,
   type TextBlockCategory,
 } from '@/editor/types'
@@ -224,6 +227,80 @@ function asPolaroidPhotos(value: unknown): Array<{
   }, []).slice(0, 50)
 }
 
+const SECTION_LAYOUT_VALUES: readonly SectionLayout[] = [
+  'stack',
+  'columns',
+  'overlap',
+  'grid',
+  'freezone',
+  'fullbleed',
+]
+
+const IMPLICIT_SECTION_ID = 'main'
+const MAX_SECTIONS = 12
+
+function asIntInRange(value: unknown, min: number, max: number): number | undefined {
+  if (typeof value !== 'number' || !Number.isInteger(value)) {
+    return undefined
+  }
+  return value >= min && value <= max ? value : undefined
+}
+
+function asRect(value: unknown): SectionRect | undefined {
+  const record = asRecord(value)
+  const col = asIntInRange(record.col, 1, 24)
+  const w = asIntInRange(record.w, 1, 24)
+  const h = asIntInRange(record.h, 1, 40)
+  if (
+    col === undefined
+    || w === undefined
+    || h === undefined
+    || typeof record.row !== 'number'
+    || !Number.isInteger(record.row)
+    || record.row < 1
+  ) {
+    return undefined
+  }
+  return { col, row: record.row, w, h }
+}
+
+function asSectionLayout(value: unknown): SectionLayout {
+  return typeof value === 'string' && SECTION_LAYOUT_VALUES.includes(value as SectionLayout)
+    ? (value as SectionLayout)
+    : 'stack'
+}
+
+function migrateSections(value: unknown): PageSection[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const seen = new Set<string>()
+  const sections: PageSection[] = []
+
+  for (const [index, item] of value.slice(0, MAX_SECTIONS).entries()) {
+    const record = asRecord(item)
+    const rawId = asText(record.id)
+    const id = rawId && !seen.has(rawId) ? rawId : `section-${index}`
+    if (seen.has(id)) {
+      continue
+    }
+    seen.add(id)
+
+    const section: PageSection = { id, layout: asSectionLayout(record.layout) }
+    const cols = asIntInRange(asRecord(record.grid).cols, 1, 24)
+    if (cols !== undefined) {
+      section.grid = { cols }
+    }
+    if (record.theme && typeof record.theme === 'object' && !Array.isArray(record.theme)) {
+      section.theme = record.theme as Record<string, unknown>
+    }
+    sections.push(section)
+  }
+
+  return sections
+}
+
 function migrateBlock(input: unknown, index: number): Block {
   const now = Date.now()
   const record = asRecord(input)
@@ -235,10 +312,17 @@ function migrateBlock(input: unknown, index: number): Block {
     ? record.id
     : `legacy-block-${index}-${Math.random().toString(36).slice(2, 8)}`
 
+  const sectionId = typeof record.sectionId === 'string' && record.sectionId.trim().length > 0 && record.sectionId.length <= 80
+    ? record.sectionId
+    : undefined
+  const rect = asRect(record.rect)
+
   const base = {
     id,
     type,
     version: BLOCK_VERSION,
+    ...(sectionId !== undefined ? { sectionId } : {}),
+    ...(rect !== undefined ? { rect } : {}),
     meta: {
       createdAt: asTimestamp(meta.createdAt, now),
       updatedAt: asTimestamp(meta.updatedAt, now),
@@ -442,8 +526,26 @@ export function migratePage(input: unknown): PageContent {
   const maybeBlocks = Array.isArray(record.blocks) ? record.blocks : []
   const normalizedTheme = resolveThemeId(typeof record.theme === 'string' ? record.theme : undefined)
 
+  const blocks = maybeBlocks.map((block, index) => migrateBlock(block, index))
+
+  // Legacy pages carried a flat blocks list; they materialize as a single
+  // implicit "stack" section so every block lands in a known section.
+  const sections = migrateSections(record.sections)
+  if (sections.length === 0 && blocks.length > 0) {
+    sections.push({ id: IMPLICIT_SECTION_ID, layout: 'stack' })
+  }
+
+  const knownSectionIds = new Set(sections.map((section) => section.id))
+  const fallbackSectionId = sections[0]?.id
+  for (const block of blocks) {
+    if (!block.sectionId || !knownSectionIds.has(block.sectionId)) {
+      block.sectionId = fallbackSectionId
+    }
+  }
+
   return {
-    blocks: maybeBlocks.map((block, index) => migrateBlock(block, index)),
+    blocks,
+    sections,
     theme: normalizedTheme,
     version: PAGE_VERSION,
   }

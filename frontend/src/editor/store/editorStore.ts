@@ -9,11 +9,13 @@ import {
   PERSIST_DEBOUNCE_MS,
   type Block,
   type EditorMode,
+  type PageSection,
 } from '@/editor/types'
 import { DEFAULT_THEME_ID, resolveThemeId } from '@/editor/themes'
 
 interface EditorStoreState {
   blocks: Block[]
+  sections: PageSection[]
   theme: string
   selectedBlockId: string | null
   collapsedById: Record<string, boolean>
@@ -32,7 +34,8 @@ interface EditorStoreActions {
   reorderBlocks: (blocks: Block[]) => void
   setBlocks: (blocks: Block[]) => void
   setTheme: (themeId: string) => void
-  setPage: (page: { blocks: Block[]; theme?: string }) => void
+  setSections: (sections: PageSection[]) => void
+  setPage: (page: { blocks: Block[]; sections?: PageSection[]; theme?: string }) => void
   selectBlock: (id: string | null) => void
   toggleBlockCollapsed: (id: string) => void
   setBlockCollapsed: (id: string, collapsed: boolean) => void
@@ -69,6 +72,7 @@ function moveBlockByOffset(blocks: Block[], id: string, offset: -1 | 1) {
 
 const initialEditorState: EditorStoreState = {
   blocks: [],
+  sections: [],
   theme: DEFAULT_THEME_ID,
   selectedBlockId: null,
   collapsedById: {},
@@ -186,8 +190,15 @@ export const useEditorStore = create<EditorStore>()(
             return state
           }
 
+          // New blocks append to the last section so they keep a valid
+          // placement when the page already carries explicit sections.
+          const lastSectionId = state.sections.at(-1)?.id
+          const placedBlock = lastSectionId && !block.sectionId
+            ? { ...block, sectionId: lastSectionId }
+            : block
+
           return {
-            blocks: [...state.blocks, block],
+            blocks: [...state.blocks, placedBlock],
             draftUpdatedAt: nowIsoString(),
           }
         }),
@@ -267,9 +278,15 @@ export const useEditorStore = create<EditorStore>()(
             draftUpdatedAt: nowIsoString(),
           }
         }),
+      setSections: (sections) =>
+        set({
+          sections,
+          draftUpdatedAt: nowIsoString(),
+        }),
       setPage: (page) =>
         set((state) => ({
           blocks: page.blocks,
+          sections: page.sections ?? state.sections,
           theme: resolveThemeId(page.theme),
           selectedBlockId: null,
           collapsedById: pruneCollapsedById(state.collapsedById, page.blocks),
@@ -337,6 +354,7 @@ export const useEditorStore = create<EditorStore>()(
       storage: persistStorage,
       partialize: (state) => ({
         blocks: state.blocks,
+        sections: state.sections,
         theme: state.theme,
         collapsedById: state.collapsedById,
         draftPageId: state.draftPageId,

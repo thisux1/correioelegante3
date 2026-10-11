@@ -125,6 +125,7 @@ function orderModules(modules: SpecModule[]): SpecModule[] {
 
 function toBlock(
   module: SpecModule,
+  sectionId: string,
   notes: string[],
 ): PersistedBlock {
   const now = Date.now();
@@ -134,21 +135,31 @@ function toBlock(
     type,
     version: BLOCK_VERSION,
     props,
+    sectionId,
+    rect: module.rect,
     meta: { createdAt: now, updatedAt: now },
   };
 }
 
 /**
- * PageSpec → persisted page content. Sections flatten in declaration order;
- * modules with rect sort row-major inside their section. Section/grid info
- * is not persisted today — it lands with the schema migration (Fatia 3).
+ * PageSpec → persisted page content. Sections persist as first-class content;
+ * blocks carry sectionId + rect so the grid editor can place them. Modules
+ * with rect sort row-major inside their section so stack renderers keep a
+ * sensible reading order.
  */
 export function compilePageSpec(spec: PageSpec): CompileResult {
   const notes: string[] = [];
 
   const blocks = spec.sections.flatMap((section) =>
-    orderModules(section.modules).map((m) => toBlock(m, notes)),
+    orderModules(section.modules).map((m) => toBlock(m, section.id, notes)),
   );
+
+  const sections = spec.sections.map((section) => ({
+    id: section.id,
+    layout: section.layout,
+    ...(section.grid ? { grid: section.grid } : {}),
+    ...(section.theme ? { theme: section.theme } : {}),
+  }));
 
   // Persisted theme ids resolve against the frontend catalog; the
   // spec's richer theme (palette/typography/motion) survives in spec.theme
@@ -156,6 +167,7 @@ export function compilePageSpec(spec: PageSpec): CompileResult {
   return {
     content: {
       blocks,
+      sections,
       theme: normalizeThemeId('romantic-sunset'),
       version: PAGE_VERSION,
     },

@@ -28,6 +28,7 @@ import {
   AUTOSAVE_DEBOUNCE_MS,
   PAGE_VERSION,
   type Block,
+  type PageSection,
   type PageStatus,
   type PageVisibility,
 } from '@/editor/types'
@@ -48,6 +49,7 @@ interface LocalDraftSnapshot {
   page: {
     id: string
     blocks: PageSummary['blocks']
+    sections?: PageSection[]
     theme?: string
     status: PageStatus
     visibility: PageVisibility
@@ -81,6 +83,7 @@ function toDraftSnapshot(page: PageSummary): LocalDraftSnapshot {
     page: {
       id: page.id,
       blocks: page.blocks,
+      sections: page.sections,
       theme: page.theme,
       status: page.status,
       visibility: page.visibility,
@@ -93,12 +96,14 @@ function toDraftSnapshot(page: PageSummary): LocalDraftSnapshot {
 
 function toPageSignature(input: {
   blocks: PageSummary['blocks']
+  sections?: PageSection[]
   theme?: string
   status: PageStatus
   visibility: PageVisibility
 }) {
   return JSON.stringify({
     blocks: input.blocks,
+    sections: input.sections,
     theme: resolveThemeId(input.theme),
     status: input.status,
     visibility: input.visibility,
@@ -110,6 +115,7 @@ function buildLocalSnapshot(params: {
   localDraftPageId: string | null
   localDraftUpdatedAt: string | null
   localBlocks: PageSummary['blocks']
+  localSections?: PageSection[]
   localTheme?: string
   localStatus: PageStatus
   localVisibility: PageVisibility
@@ -125,6 +131,7 @@ function buildLocalSnapshot(params: {
     page: {
       id: params.pageIdFromRoute,
       blocks: params.localBlocks,
+      sections: params.localSections,
       theme: params.localTheme,
       status: params.localStatus,
       visibility: params.localVisibility,
@@ -273,6 +280,7 @@ function usePageHydration(params: {
           localDraftPageId: editorState.draftPageId,
           localDraftUpdatedAt: editorState.draftUpdatedAt,
           localBlocks: editorState.blocks,
+          localSections: editorState.sections,
           localTheme: editorState.theme,
           localStatus: pageMetaRef.current.status,
           localVisibility: pageMetaRef.current.visibility,
@@ -424,6 +432,7 @@ export function Editor() {
 
   const mode = useEditorStore((state) => state.mode)
   const blocks = useEditorStore((state) => state.blocks)
+  const sections = useEditorStore((state) => state.sections)
   const theme = useEditorStore((state) => state.theme)
   const setMode = useEditorStore((state) => state.setMode)
   const setPage = useEditorStore((state) => state.setPage)
@@ -495,8 +504,8 @@ export function Editor() {
   const hasPageId = Boolean(currentPageId)
   const showPublishCta = !isLoadingPage && status !== 'published' && blocks.length > 0
   const currentSignature = useMemo(
-    () => toPageSignature({ blocks, theme, status, visibility }),
-    [blocks, status, theme, visibility],
+    () => toPageSignature({ blocks, sections, theme, status, visibility }),
+    [blocks, sections, status, theme, visibility],
   )
   const editorThemeStyle = useMemo(() => buildThemeStyle(theme), [theme])
 
@@ -508,7 +517,7 @@ export function Editor() {
     const startedAt = Date.now()
     try {
       const page = await pageService.loadPage(currentPageId)
-      setPage({ blocks: page.blocks, theme: page.theme })
+      setPage({ blocks: page.blocks, sections: page.sections, theme: page.theme })
       setPageVersion(page.version)
       setStatus(page.status)
       setVisibility(page.visibility)
@@ -533,7 +542,7 @@ export function Editor() {
   }, [currentPageId, setDraftContext, setPage])
 
   const applyBackendPage = useCallback((backendPage: PageSummary) => {
-    setPage({ blocks: backendPage.blocks, theme: backendPage.theme })
+    setPage({ blocks: backendPage.blocks, sections: backendPage.sections, theme: backendPage.theme })
     setCurrentPageId(backendPage.id)
     setPageVersion(backendPage.version)
     setStatus(backendPage.status)
@@ -543,7 +552,7 @@ export function Editor() {
   }, [setDraftContext, setPage])
 
   const applyLocalDraft = useCallback((localSnapshot: LocalDraftSnapshot) => {
-    setPage({ blocks: localSnapshot.page.blocks, theme: localSnapshot.page.theme })
+    setPage({ blocks: localSnapshot.page.blocks, sections: localSnapshot.page.sections, theme: localSnapshot.page.theme })
     setCurrentPageId(localSnapshot.pageId)
     setDraftContext(localSnapshot.pageId, localSnapshot.updatedAt)
     setStatus(localSnapshot.page.status)
@@ -554,7 +563,7 @@ export function Editor() {
   }, [setDraftContext, setPage])
 
   const applyTemplate = useCallback((templateBlocks: Block[], templateName: string, templateTheme?: string) => {
-    setPage({ blocks: templateBlocks, theme: templateTheme })
+    setPage({ blocks: templateBlocks, sections: [], theme: templateTheme })
     setCurrentPageId(undefined)
     setPageVersion(undefined)
     setStatus('draft')
@@ -577,6 +586,7 @@ export function Editor() {
         pageId: currentPageId,
         content: {
           blocks,
+          sections,
           theme,
           version: PAGE_VERSION,
         },
@@ -670,6 +680,7 @@ export function Editor() {
     currentSignature,
     navigate,
     pageVersion,
+    sections,
     setDraftContext,
     status,
     theme,
@@ -729,6 +740,7 @@ export function Editor() {
           pageId: currentPageId,
           content: {
             blocks,
+            sections,
             theme,
             version: PAGE_VERSION,
           },
@@ -746,7 +758,7 @@ export function Editor() {
           const latest = await pageService.loadPage(currentPageId)
           const retry = await pageService.savePage({
             pageId: currentPageId,
-            content: { blocks, theme, version: PAGE_VERSION },
+            content: { blocks, sections, theme, version: PAGE_VERSION },
             status: targetStatus,
             visibility,
             version: latest.version,
@@ -798,6 +810,7 @@ export function Editor() {
     currentPageId,
     navigate,
     pageVersion,
+    sections,
     setDraftContext,
     status,
     theme,

@@ -43,6 +43,7 @@ function mapBackendPage(page: BackendPage): PageSummary {
   return {
     id: page.id,
     blocks: migrated.blocks,
+    sections: migrated.sections,
     theme: migrated.theme,
     status: page.status,
     visibility: page.visibility,
@@ -64,6 +65,7 @@ export const pageService = {
     const payload = {
       content: {
         blocks: input.content.blocks,
+        sections: input.content.sections,
         theme: resolveThemeId(input.content.theme),
         version: input.content.version,
       },

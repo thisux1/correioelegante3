@@ -687,7 +687,7 @@ orquestrador atualiza o plano/`stack-research.md` antes da próxima sessão.
 | ~~S4~~ ✅ | **Copy bank** (`copy/crushSecreto.ts` + `voice-guide.md`) — aguarda **cura humana** | sub | S1, S3 | 12 slots, 7 testes; pendente review de copy |
 | ~~S5~~ ✅ | **Slice E2E crush**: `/gerar` → form → `POST /api/generate` → editor populado | main | S3, S4 | verificado E2E em dev (5175→3100) |
 | ~~S5b~~ ✅ | **Romantic OS chrome em `/gerar`**: camada `os-*` (bevels Win98 rose/vinho, fonts pixel), rota fora do Layout, audit UI com 12 achados corrigidos (contraste, VT323≥20px, controles mortos, form semântico, × 44px) | main + subagent review | S5 | renderizado e auditado nos 4 estados |
-| S6 | **Schema migration**: `blocks` plano → sections/placement; páginas legadas migram p/ stack implícita | main | S1, relatório editor (S2) | páginas antigas renderizam idênticas (regressão visual) |
+| ~~S6~~ ✅ | **Schema migration**: `PersistedSection` + `sectionId`/`rect` por bloco; legado → stack implícita `main`; compiler emite sections; round-trip preservado em migration+sanitizer+save/load (ambos os lados) | main | S1, relatório editor (S2) | 10 testes backend + 3 frontend; E2E `/api/generate` retorna sections |
 | S7 | **Grid editor**: drag+snap, resize limitado, freezone, collapse mobile (D12), touch | main | S6 | edição grid funciona em touch; 44px targets |
 | S8 | **Copy banks ×7** momentos restantes | sub paralelos | S4 aprovado (guia+formato) | bancos curados |
 | S9 | **Moderação + proteção**: pipeline L1/L2/L3, Turnstile p/ generate, rate limit, report/block | sub backend | CTX-A + stack §6; Perspective quota pedida | pipeline ativa; testes de falso-positivo |
@@ -730,7 +730,8 @@ vivos antes da próxima sessão.
   passam `THEME_ID_PATTERN`. Ticket aberto — afeta qualquer tema dinâmico.
 - F3: rascunho `editor-draft` é global único (vaza entre páginas); F4: não
   existe "salvar rascunho" (só publicar); F5: zero undo/redo.
-- `rect`/`sectionId` morrem em save E load — escopo confirmado da Fatia 3.
+- ~~`rect`/`sectionId` morrem em save E load~~ **CORRIGIDO em S6** — ambos os
+  pipelines preservam; legado materializa seção `main` implícita.
 - QuizBlock tem emojis (viola regra) e preview ≠ experiência do destinatário.
 
 **pixel-execution-refs.md — insumos pro "romantic OS" (15.10):**

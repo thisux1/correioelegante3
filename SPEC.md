@@ -260,6 +260,58 @@ interface TimerBlock extends BaseBlock {
 }
 ```
 
+### 5.1 Persisted Page Envelope (sections & placement)
+
+`Page.content` is serialized as `PersistedPageContent`. Since the sections
+migration, the envelope is:
+
+```typescript
+interface PersistedRect {
+  col: number; // 1-24
+  row: number; // >= 1
+  w: number;   // 1-24
+  h: number;   // 1-40
+}
+
+type SectionLayout = 'stack' | 'columns' | 'overlap' | 'grid' | 'freezone' | 'fullbleed';
+
+interface PersistedSection {
+  id: string;                 // <= 80 chars, unique per page
+  layout: SectionLayout;      // invalid values normalize to 'stack'
+  grid?: { cols: number };    // 1-24, omitted when absent
+  theme?: Record<string, unknown>;
+}
+
+interface PersistedBlock {
+  id: string;
+  type: SupportedBlockType;
+  version: number;
+  props: Record<string, unknown>;
+  sectionId?: string;         // references a PersistedSection.id
+  rect?: PersistedRect;       // dropped when out of bounds
+  meta: { createdAt: number; updatedAt: number };
+}
+
+interface PersistedPageContent {
+  blocks: PersistedBlock[];
+  sections: PersistedSection[]; // always materialized on read/save
+  theme?: string;
+  version: number;              // PAGE_VERSION = 1
+}
+```
+
+Migration rules (applied on both `GET` read and `PUT` save, so old pages are
+idempotent):
+
+- Pages with `blocks` but no `sections` materialize one implicit
+  `{ id: 'main', layout: 'stack' }` section; every block gets `sectionId: 'main'`.
+- Blocks whose `sectionId` references an unknown section fall back to the first
+  section's id — no block is left unplaced.
+- Duplicate section ids are renamed (`section-<index>`), never dropped.
+- Invalid `rect` values (out of bounds, non-integer) are dropped, not clamped.
+- Ordering stays as the flat `blocks` array — `stack` sections render it
+  verbatim, `grid`/`freezone` use `rect` for placement.
+
 ### Autosave & Concurrency Strategy
 - **Local Persistence**: Drafts are continuously synced to `localStorage` with a 300ms debounce.
 - **Server Sync**: Changes saved via `PUT /api/pages/:id` sending `expectedVersion`. If server version is greater, client receives `409 PAGE_VERSION_CONFLICT` and prompts conflict resolution modal.

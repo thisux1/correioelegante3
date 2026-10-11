@@ -146,6 +146,22 @@ export interface PolaroidBlockProps {
   photos: PolaroidPhoto[]
 }
 
+export type SectionLayout = 'stack' | 'columns' | 'overlap' | 'grid' | 'freezone' | 'fullbleed'
+
+export interface SectionRect {
+  col: number
+  row: number
+  w: number
+  h: number
+}
+
+export interface PageSection {
+  id: string
+  layout: SectionLayout
+  grid?: { cols: number }
+  theme?: Record<string, unknown>
+}
+
 export interface BlockPropsByType {
   text: TextBlockProps
   image: ImageBlockProps
@@ -165,6 +181,8 @@ interface BlockBase<TType extends BlockType> {
   type: TType
   version: number
   props: BlockPropsByType[TType]
+  sectionId?: string
+  rect?: SectionRect
   meta: BlockMeta
 }
 
@@ -175,6 +193,7 @@ export type Block = {
 export interface Page {
   id: string
   blocks: Block[]
+  sections?: PageSection[]
   theme?: string
   status: PageStatus
   visibility: PageVisibility
@@ -184,6 +203,7 @@ export interface Page {
 
 export interface PageContent {
   blocks: Block[]
+  sections?: PageSection[]
   theme?: string
   version: number
 }
@@ -213,6 +233,7 @@ export interface PageLifecycle {
 export interface PageContract extends PageLifecycle {
   id: string
   blocks: Block[]
+  sections?: PageSection[]
   theme?: string
   version: number
   updatedAt: string

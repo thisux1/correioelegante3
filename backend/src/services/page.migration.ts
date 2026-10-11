@@ -11,11 +11,35 @@ type GalleryItem = { src: string; assetId?: string };
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 const MAX_GALLERY_ITEMS = 10;
 
+export interface PersistedRect {
+  col: number;
+  row: number;
+  w: number;
+  h: number;
+}
+
+export type PersistedSectionLayout =
+  | 'stack'
+  | 'columns'
+  | 'overlap'
+  | 'grid'
+  | 'freezone'
+  | 'fullbleed';
+
+export interface PersistedSection {
+  id: string;
+  layout: PersistedSectionLayout;
+  grid?: { cols: number };
+  theme?: UnknownRecord;
+}
+
 export interface PersistedBlock {
   id: string;
   type: SupportedBlockType;
   version: number;
   props: UnknownRecord;
+  sectionId?: string;
+  rect?: PersistedRect;
   meta: {
     createdAt: number;
     updatedAt: number;
@@ -24,6 +48,7 @@ export interface PersistedBlock {
 
 export interface PersistedPageContent {
   blocks: PersistedBlock[];
+  sections: PersistedSection[];
   theme?: string;
   version: number;
 }
@@ -299,6 +324,91 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
   }
 }
 
+const SECTION_LAYOUT_VALUES: readonly PersistedSectionLayout[] = [
+  'stack',
+  'columns',
+  'overlap',
+  'grid',
+  'freezone',
+  'fullbleed',
+];
+
+const IMPLICIT_SECTION_ID = 'main';
+const MAX_SECTIONS = 12;
+const GRID_COL_BOUNDS = { min: 1, max: 24 } as const;
+const GRID_ROW_MIN = 1;
+const GRID_W_BOUNDS = { min: 1, max: 24 } as const;
+const GRID_H_BOUNDS = { min: 1, max: 40 } as const;
+
+function asIntInRange(value: unknown, min: number, max: number): number | undefined {
+  if (typeof value !== 'number' || !Number.isInteger(value)) {
+    return undefined;
+  }
+  return value >= min && value <= max ? value : undefined;
+}
+
+function asRect(value: unknown): PersistedRect | undefined {
+  const record = asRecord(value);
+  const col = asIntInRange(record.col, GRID_COL_BOUNDS.min, GRID_COL_BOUNDS.max);
+  const row = record.row;
+  const w = asIntInRange(record.w, GRID_W_BOUNDS.min, GRID_W_BOUNDS.max);
+  const h = asIntInRange(record.h, GRID_H_BOUNDS.min, GRID_H_BOUNDS.max);
+
+  if (col === undefined || w === undefined || h === undefined) {
+    return undefined;
+  }
+  if (typeof row !== 'number' || !Number.isInteger(row) || row < GRID_ROW_MIN) {
+    return undefined;
+  }
+
+  return { col, row, w, h };
+}
+
+function asSectionLayout(value: unknown): PersistedSectionLayout {
+  if (typeof value === 'string' && SECTION_LAYOUT_VALUES.includes(value as PersistedSectionLayout)) {
+    return value as PersistedSectionLayout;
+  }
+  return 'stack';
+}
+
+function migrateSections(value: unknown): PersistedSection[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const sections: PersistedSection[] = [];
+
+  for (const [index, item] of value.slice(0, MAX_SECTIONS).entries()) {
+    const record = asRecord(item);
+    const rawId = asText(record.id);
+    const id = rawId && !seen.has(rawId) ? rawId : `section-${index}`;
+    if (seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+
+    const section: PersistedSection = { id, layout: asSectionLayout(record.layout) };
+    const grid = asRecord(record.grid);
+    const cols = asIntInRange(grid.cols, 1, 24);
+    if (cols !== undefined) {
+      section.grid = { cols };
+    }
+    if (record.theme && typeof record.theme === 'object' && !Array.isArray(record.theme)) {
+      section.theme = record.theme as UnknownRecord;
+    }
+    sections.push(section);
+  }
+
+  return sections;
+}
+
+function asSectionId(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= 80
+    ? value
+    : undefined;
+}
+
 function sanitizeBlock(input: unknown, index: number): PersistedBlock {
   const now = Date.now();
   const inputRecord = asRecord(input);
@@ -314,6 +424,8 @@ function sanitizeBlock(input: unknown, index: number): PersistedBlock {
     type,
     version: BLOCK_VERSION,
     props,
+    sectionId: asSectionId(inputRecord.sectionId),
+    rect: asRect(inputRecord.rect),
     meta: {
       createdAt: asTimestamp(meta.createdAt, now),
       updatedAt: asTimestamp(meta.updatedAt, now),
@@ -328,8 +440,26 @@ export function migratePage(input: unknown): PersistedPageContent {
     ? inputRecord.blocks
     : [];
 
+  const blocks = maybeBlocks.map((block, index) => sanitizeBlock(block, index));
+
+  // Legacy pages carried a flat blocks list; they materialize as a single
+  // implicit "stack" section so every block lands in a known section.
+  const sections = migrateSections(inputRecord.sections);
+  if (sections.length === 0 && blocks.length > 0) {
+    sections.push({ id: IMPLICIT_SECTION_ID, layout: 'stack' });
+  }
+
+  const knownSectionIds = new Set(sections.map((s) => s.id));
+  const fallbackSectionId = sections[0]?.id;
+  for (const block of blocks) {
+    if (!block.sectionId || !knownSectionIds.has(block.sectionId)) {
+      block.sectionId = fallbackSectionId;
+    }
+  }
+
   return {
-    blocks: maybeBlocks.map((block, index) => sanitizeBlock(block, index)),
+    blocks,
+    sections,
     theme: normalizeThemeId(asOptionalText(inputRecord.theme)),
     version: PAGE_VERSION,
   };

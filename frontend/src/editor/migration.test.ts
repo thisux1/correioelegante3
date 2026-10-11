@@ -360,3 +360,47 @@ describe('migratePage', () => {
   })
 })
 
+
+describe('migratePage — sections & placement', () => {
+  it('materializa secao stack implicita para blocos legados', () => {
+    const migrated = migratePage({
+      blocks: [
+        { id: 'b1', type: 'text', props: { text: 'oi' }, meta: {} },
+        { id: 'b2', type: 'timer', props: { targetDate: '2030-01-01' }, meta: {} },
+      ],
+    })
+
+    expect(migrated.sections).toEqual([{ id: 'main', layout: 'stack' }])
+    expect(migrated.blocks.every((b) => b.sectionId === 'main')).toBe(true)
+  })
+
+  it('preserva sections explicitas com grid e rehoming de blocos orfaos', () => {
+    const migrated = migratePage({
+      blocks: [
+        { id: 'b1', type: 'text', props: { text: 'x' }, sectionId: 'fantasma', meta: {} },
+      ],
+      sections: [
+        { id: 'g', layout: 'grid', grid: { cols: 8 }, theme: { accent: '#fff' } },
+        { id: 's', layout: 'invalida' },
+      ],
+    })
+
+    const sections = migrated.sections ?? []
+    expect(sections).toHaveLength(2)
+    expect(sections[0]).toMatchObject({ id: 'g', layout: 'grid', grid: { cols: 8 } })
+    expect(sections[1].layout).toBe('stack')
+    expect(migrated.blocks[0].sectionId).toBe('g')
+  })
+
+  it('mantem rect valido e descarta placement invalido', () => {
+    const migrated = migratePage({
+      blocks: [
+        { id: 'b1', type: 'text', props: { text: 'x' }, rect: { col: 2, row: 3, w: 4, h: 2 }, meta: {} },
+        { id: 'b2', type: 'text', props: { text: 'y' }, rect: { col: 0, row: 1, w: 4, h: 2 }, meta: {} },
+      ],
+    })
+
+    expect(migrated.blocks[0].rect).toEqual({ col: 2, row: 3, w: 4, h: 2 })
+    expect(migrated.blocks[1].rect).toBeUndefined()
+  })
+})
