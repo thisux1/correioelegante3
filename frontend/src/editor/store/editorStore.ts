@@ -10,6 +10,7 @@ import {
   type Block,
   type EditorMode,
   type PageSection,
+  type SectionRect,
 } from '@/editor/types'
 import { DEFAULT_THEME_ID, resolveThemeId } from '@/editor/themes'
 
@@ -35,6 +36,9 @@ interface EditorStoreActions {
   setBlocks: (blocks: Block[]) => void
   setTheme: (themeId: string) => void
   setSections: (sections: PageSection[]) => void
+  addSection: () => void
+  setSectionLayout: (sectionId: string, layout: PageSection['layout']) => void
+  updateBlockRect: (id: string, rect: SectionRect) => void
   setPage: (page: { blocks: Block[]; sections?: PageSection[]; theme?: string }) => void
   selectBlock: (id: string | null) => void
   toggleBlockCollapsed: (id: string) => void
@@ -283,6 +287,66 @@ export const useEditorStore = create<EditorStore>()(
           sections,
           draftUpdatedAt: nowIsoString(),
         }),
+      addSection: () =>
+        set((state) => {
+          const baseId = `secao-${state.sections.length + 1}`
+          let id = baseId
+          let counter = state.sections.length + 1
+          while (state.sections.some((section) => section.id === id)) {
+            counter += 1
+            id = `secao-${counter}`
+          }
+
+          return {
+            sections: [...state.sections, { id, layout: 'stack' }],
+            draftUpdatedAt: nowIsoString(),
+          }
+        }),
+      setSectionLayout: (sectionId, layout) =>
+        set((state) => {
+          const section = state.sections.find((current) => current.id === sectionId)
+          if (!section || section.layout === layout) {
+            return state
+          }
+
+          const nextSections = state.sections.map((current) =>
+            current.id === sectionId ? { ...current, layout } : current,
+          )
+
+          // Switching to a placed layout auto-assigns rects to blocks that
+          // don't have one yet (full width, sequential rows); rects are kept
+          // when switching back to stack so nothing is lost.
+          const cols = section.grid?.cols ?? 12
+          const boundedW = Math.min(cols, 24)
+          let nextRow = 1
+          const blocks = state.blocks.map((block) => {
+            if (block.sectionId !== sectionId || block.rect) {
+              return block
+            }
+            const rect = { col: 1, row: nextRow, w: boundedW, h: 4 }
+            nextRow += 4 + 1
+            return { ...block, rect }
+          })
+
+          return {
+            sections: nextSections,
+            blocks,
+            draftUpdatedAt: nowIsoString(),
+          }
+        }),
+      updateBlockRect: (id, rect) =>
+        set((state) => ({
+          blocks: state.blocks.map((block) =>
+            block.id === id
+              ? {
+                  ...block,
+                  rect,
+                  meta: { ...block.meta, updatedAt: Date.now() },
+                }
+              : block,
+          ),
+          draftUpdatedAt: nowIsoString(),
+        })),
       setPage: (page) =>
         set((state) => ({
           blocks: page.blocks,

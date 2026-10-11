@@ -106,3 +106,66 @@ describe('editorStore', () => {
     vi.useRealTimers()
   })
 })
+
+describe('sections & placement', () => {
+  beforeEach(() => {
+    resetStore()
+  })
+
+  it('addBlock herda sectionId da ultima secao quando existem secoes', () => {
+    useEditorStore.getState().setSections([{ id: 'a', layout: 'stack' }])
+    const block = createBlock('text')
+    useEditorStore.getState().addBlock(block)
+
+    expect(useEditorStore.getState().blocks[0].sectionId).toBe('a')
+  })
+
+  it('addSection cria id unico com layout stack', () => {
+    useEditorStore.getState().setSections([{ id: 'secao-1', layout: 'grid' }])
+    useEditorStore.getState().addSection()
+
+    const sections = useEditorStore.getState().sections
+    expect(sections).toHaveLength(2)
+    expect(sections[1].layout).toBe('stack')
+    expect(sections[1].id).not.toBe('secao-1')
+  })
+
+  it('setSectionLayout para grid auto-atribui rect aos blocos da secao', () => {
+    const b1 = { ...createBlock('text'), sectionId: 's' }
+    const b2 = { ...createBlock('image'), sectionId: 's' }
+    const b3 = { ...createBlock('timer'), sectionId: 'outra' }
+    useEditorStore.getState().setBlocks([b1, b2, b3])
+    useEditorStore.getState().setSections([{ id: 's', layout: 'stack' }])
+
+    useEditorStore.getState().setSectionLayout('s', 'grid')
+
+    const state = useEditorStore.getState()
+    expect(state.sections[0].layout).toBe('grid')
+    expect(state.blocks[0].rect).toBeDefined()
+    expect(state.blocks[1].rect).toBeDefined()
+    expect(state.blocks[2].rect).toBeUndefined()
+    expect(state.blocks[1].rect!.row).toBeGreaterThan(state.blocks[0].rect!.row)
+  })
+
+  it('setSectionLayout preserva rects existentes', () => {
+    const rect = { col: 3, row: 2, w: 4, h: 5 }
+    const b1 = { ...createBlock('text'), sectionId: 's', rect }
+    useEditorStore.getState().setBlocks([b1])
+    useEditorStore.getState().setSections([{ id: 's', layout: 'stack' }])
+
+    useEditorStore.getState().setSectionLayout('s', 'grid')
+    expect(useEditorStore.getState().blocks[0].rect).toEqual(rect)
+  })
+
+  it('updateBlockRect atualiza placement e updatedAt', () => {
+    const b1 = { ...createBlock('text'), sectionId: 's' }
+    useEditorStore.getState().setBlocks([b1])
+
+    const rect = { col: 5, row: 9, w: 6, h: 3 }
+    useEditorStore.getState().updateBlockRect(b1.id, rect)
+
+    const updated = useEditorStore.getState().blocks[0]
+    expect(updated.rect).toEqual(rect)
+    expect(updated.meta.updatedAt).toBeGreaterThanOrEqual(b1.meta.updatedAt)
+  })
+})

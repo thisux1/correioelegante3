@@ -24,8 +24,9 @@ import { Modal } from '@/components/ui/Modal'
 import { BlockControls } from '@/editor/components/BlockControls'
 import { BlockRenderer } from '@/editor/components/BlockRenderer'
 import { BlockWrapper } from '@/editor/components/BlockWrapper'
+import { GridSectionCanvas } from '@/editor/components/GridSectionCanvas'
 import { useEditorStore } from '@/editor/store/editorStore'
-import type { Block } from '@/editor/types'
+import type { Block, PageSection } from '@/editor/types'
 
 function normalizeId(id: UniqueIdentifier): string {
   return String(id)
@@ -448,9 +449,77 @@ function CanvasBlockComponent({
 
 const CanvasBlock = memo(CanvasBlockComponent)
 
+interface SectionGroup {
+  section: PageSection
+  blocks: Block[]
+}
+
+function groupBlocksBySection(sections: PageSection[], blocks: Block[]): SectionGroup[] {
+  const effective = sections.length > 0
+    ? sections
+    : [{ id: 'main', layout: 'stack' as const }]
+  const known = new Set(effective.map((section) => section.id))
+  const fallbackId = effective[0].id
+
+  return effective.map((section) => ({
+    section,
+    blocks: blocks.filter((block) => {
+      const sectionId = block.sectionId && known.has(block.sectionId)
+        ? block.sectionId
+        : fallbackId
+      return sectionId === section.id
+    }),
+  }))
+}
+
+function isPlacedLayout(layout: PageSection['layout']): boolean {
+  return layout === 'grid' || layout === 'freezone'
+}
+
+interface SectionHeaderProps {
+  section: PageSection
+  isGrid: boolean
+  onToggleLayout: (sectionId: string, layout: PageSection['layout']) => void
+}
+
+function SectionHeader({ section, isGrid, onToggleLayout }: SectionHeaderProps) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <p className="min-w-0 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-text-light/80">
+        seção · {isGrid ? 'grade' : 'empilhada'}
+      </p>
+      <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-surface/70 p-0.5" role="group" aria-label="Layout da seção">
+        <button
+          type="button"
+          aria-pressed={!isGrid}
+          onClick={() => onToggleLayout(section.id, 'stack')}
+          className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 ${
+            !isGrid ? 'bg-primary/10 text-primary' : 'text-text-light hover:text-text'
+          }`}
+        >
+          empilhada
+        </button>
+        <button
+          type="button"
+          aria-pressed={isGrid}
+          onClick={() => onToggleLayout(section.id, 'grid')}
+          className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 ${
+            isGrid ? 'bg-primary/10 text-primary' : 'text-text-light hover:text-text'
+          }`}
+        >
+          grade
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function EditorCanvas() {
   const shouldReduceMotion = useReducedMotion()
-  const blockIds = useEditorStore(useShallow((state) => state.blocks.map((block) => block.id)))
+  const blocks = useEditorStore(useShallow((state) => state.blocks))
+  const sections = useEditorStore(useShallow((state) => state.sections))
+  const sectionGroups = useMemo(() => groupBlocksBySection(sections, blocks), [sections, blocks])
+  const blockIds = useMemo(() => blocks.map((block) => block.id), [blocks])
   const {
     selectedBlockId,
     isDragging,
@@ -458,6 +527,8 @@ export function EditorCanvas() {
     setDragging,
     reorderBlocks,
     removeBlock,
+    setSectionLayout,
+    addSection,
   } = useEditorStore(
     useShallow((state) => ({
       selectedBlockId: state.selectedBlockId,
@@ -466,6 +537,8 @@ export function EditorCanvas() {
       setDragging: state.setDragging,
       reorderBlocks: state.reorderBlocks,
       removeBlock: state.removeBlock,
+      setSectionLayout: state.setSectionLayout,
+      addSection: state.addSection,
     })),
   )
 
@@ -501,6 +574,9 @@ export function EditorCanvas() {
     setActiveId(normalizeId(event.active.id))
   }, [isMobile, selectBlock, setDragging])
 
+  // Reorders stay inside the dragged block's section: the section's block
+  // subset is arrayMove'd, then spliced back into the global array at the
+  // same membership slots (blocks never cross a section boundary via DnD).
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     if (isMobile) {
       return
@@ -510,12 +586,31 @@ export function EditorCanvas() {
     const overBlockId = event.over ? normalizeId(event.over.id) : null
 
     if (overBlockId && activeBlockId !== overBlockId) {
-      const currentBlocks = useEditorStore.getState().blocks
-      const oldIndex = currentBlocks.findIndex((block) => block.id === activeBlockId)
-      const newIndex = currentBlocks.findIndex((block) => block.id === overBlockId)
+      const { blocks: allBlocks, sections: allSections } = useEditorStore.getState()
+      const groups = groupBlocksBySection(allSections, allBlocks)
+      const group = groups.find((current) =>
+        current.blocks.some((block) => block.id === activeBlockId),
+      )
+      const sectionBlocks = group?.blocks ?? []
+
+      // The drop target must live in the same section — otherwise ignore.
+      if (!sectionBlocks.some((block) => block.id === overBlockId)) {
+        setDragging(false)
+        setActiveId(null)
+        return
+      }
+
+      const oldIndex = sectionBlocks.findIndex((block) => block.id === activeBlockId)
+      const newIndex = sectionBlocks.findIndex((block) => block.id === overBlockId)
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        reorderBlocks(arrayMove(currentBlocks, oldIndex, newIndex))
+        const reorderedSection = arrayMove(sectionBlocks, oldIndex, newIndex)
+        const sectionIds = new Set(reorderedSection.map((block) => block.id))
+        const queue = [...reorderedSection]
+        const nextBlocks = allBlocks.map((block) =>
+          sectionIds.has(block.id) ? queue.shift() ?? block : block,
+        )
+        reorderBlocks(nextBlocks)
       }
     }
 
@@ -569,28 +664,30 @@ export function EditorCanvas() {
     }
   }, [selectBlock, selectedBlockId])
 
-  const listContent = useMemo(() => (
+  const renderSectionBlocks = useCallback((group: SectionGroup) => (
     <div
       className="space-y-6"
-      onClick={() => {
-        selectBlock(null)
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          selectBlock(null)
+        }
       }}
     >
       <AnimatePresence initial={false}>
-        {blockIds.map((blockId, index) => (
+        {group.blocks.map((block, index) => (
           <motion.div
-            key={blockId}
+            key={block.id}
             layout={!shouldReduceMotion}
             initial={shouldReduceMotion ? false : { opacity: 0, y: 12, scale: 0.995 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.99 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
-            className={`relative ${selectedBlockId === blockId ? 'z-40' : 'z-10'}`}
+            className={`relative ${selectedBlockId === block.id ? 'z-40' : 'z-10'}`}
           >
             <CanvasBlock
-              blockId={blockId}
+              blockId={block.id}
               index={index}
-              total={blockIds.length}
+              total={group.blocks.length}
               isMobile={isMobile}
               isDraggingGlobal={isDragging}
               onRequestDelete={requestDelete}
@@ -599,7 +696,40 @@ export function EditorCanvas() {
         ))}
       </AnimatePresence>
     </div>
-  ), [blockIds, isDragging, isMobile, requestDelete, selectBlock, selectedBlockId, shouldReduceMotion])
+  ), [isDragging, isMobile, requestDelete, selectBlock, selectedBlockId, shouldReduceMotion])
+
+  const renderSection = useCallback((group: SectionGroup) => {
+    const isGrid = isPlacedLayout(group.section.layout) && !isMobile
+
+    return (
+      <section key={group.section.id} aria-label={`Seção ${isGrid ? 'em grade' : 'empilhada'}`}>
+        <SectionHeader
+          section={group.section}
+          isGrid={isGrid}
+          onToggleLayout={setSectionLayout}
+        />
+        {isGrid ? (
+          <GridSectionCanvas
+            section={group.section}
+            blocks={group.blocks}
+            onRequestDelete={requestDelete}
+          />
+        ) : (
+          <SortableContext
+            items={group.blocks.map((block) => block.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {renderSectionBlocks(group)}
+          </SortableContext>
+        )}
+      </section>
+    )
+  }, [
+    isMobile,
+    renderSectionBlocks,
+    requestDelete,
+    setSectionLayout,
+  ])
 
   if (blockIds.length === 0) {
     return (
@@ -613,10 +743,16 @@ export function EditorCanvas() {
     )
   }
 
+  const canvasContent = (
+    <div className="space-y-10">
+      {sectionGroups.map(renderSection)}
+    </div>
+  )
+
   return (
     <>
       {isMobile ? (
-        listContent
+        canvasContent
       ) : (
         <DndContext
           sensors={sensors}
@@ -625,9 +761,7 @@ export function EditorCanvas() {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
-            {listContent}
-          </SortableContext>
+          {canvasContent}
 
           <DragOverlay>
             {activeBlock ? (
@@ -642,6 +776,16 @@ export function EditorCanvas() {
           </DragOverlay>
         </DndContext>
       )}
+
+      <div className="mt-8 flex justify-center">
+        <button
+          type="button"
+          onClick={addSection}
+          className="min-h-[44px] rounded-xl border border-dashed border-border px-4 py-2 text-sm text-text-light transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
+        >
+          + adicionar seção
+        </button>
+      </div>
 
       <Modal isOpen={Boolean(pendingDeletionId)} onClose={cancelDelete} title="Remover bloco?">
         <div className="space-y-4">
