@@ -92,6 +92,8 @@ model Page {
   version         Int      @default(1)
   userId          String   @db.ObjectId
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses       PageResponse[]
+  reports         PageReport[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -212,6 +214,7 @@ model SupportTicketReply {
 model PageResponse {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   pageId         String   @db.ObjectId
+  page           Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
   blockId        String
   choice         String
   text           String?
@@ -224,6 +227,7 @@ model PageResponse {
 model PageReport {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   pageId    String   @db.ObjectId
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
   reason    String
   details   String?
   resolved  Boolean  @default(false)
