@@ -23,6 +23,11 @@ export function createBlock(type: 'scratch'): Extract<Block, { type: 'scratch' }
 export function createBlock(type: 'timeline'): Extract<Block, { type: 'timeline' }>
 export function createBlock(type: 'quiz'): Extract<Block, { type: 'quiz' }>
 export function createBlock(type: 'polaroid'): Extract<Block, { type: 'polaroid' }>
+export function createBlock(type: 'youtube'): Extract<Block, { type: 'youtube' }>
+export function createBlock(type: 'photoBook'): Extract<Block, { type: 'photoBook' }>
+export function createBlock(type: 'bouquet'): Extract<Block, { type: 'bouquet' }>
+export function createBlock(type: 'hints'): Extract<Block, { type: 'hints' }>
+export function createBlock(type: 'intimacyGate'): Extract<Block, { type: 'intimacyGate' }>
 export function createBlock(type: BlockType): Block
 export function createBlock(type: BlockType): Block {
   const now = Date.now()
@@ -231,6 +236,113 @@ export function createBlock(type: BlockType): Block {
               rotation: 2.5,
             },
           ],
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'youtube':
+      return {
+        id: generateBlockId(),
+        type: 'youtube',
+        version: BLOCK_VERSION,
+        props: {
+          url: '',
+          title: 'A nossa música',
+          caption: 'Aperte o play e pense em nós dois.',
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'photoBook':
+      return {
+        id: generateBlockId(),
+        type: 'photoBook',
+        version: BLOCK_VERSION,
+        props: {
+          pages: [
+            {
+              id: generateBlockId(),
+              src: '',
+              caption: 'O começo de tudo',
+            },
+            {
+              id: generateBlockId(),
+              src: '',
+              caption: 'Aquele dia que a gente não esquece',
+            },
+          ],
+          coverTitle: 'Nosso livro de memórias',
+          coverSubtitle: 'Folheie com carinho',
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'bouquet':
+      return {
+        id: generateBlockId(),
+        type: 'bouquet',
+        version: BLOCK_VERSION,
+        props: {
+          seed: Math.floor(Math.random() * 1_000_000) + 1,
+          flowers: [
+            { species: 'rosa' },
+            { species: 'rosa' },
+            { species: 'rosa' },
+            { species: 'margarida' },
+            { species: 'tulipa' },
+          ],
+          wrap: 'papel',
+          ribbonColor: '#e11d48',
+          message: 'Flores que não murcham nunca.',
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'hints':
+      return {
+        id: generateBlockId(),
+        type: 'hints',
+        version: BLOCK_VERSION,
+        props: {
+          title: 'Dicas sobre quem escreveu',
+          hints: [
+            {
+              id: generateBlockId(),
+              text: 'A gente se conhece faz mais tempo do que você imagina.',
+            },
+            {
+              id: generateBlockId(),
+              text: 'Eu sempre reparo em você quando você entra no lugar.',
+            },
+            {
+              id: generateBlockId(),
+              text: 'Você já me fez rir num dia em que eu estava péssimo.',
+            },
+          ],
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'intimacyGate':
+      return {
+        id: generateBlockId(),
+        type: 'intimacyGate',
+        version: BLOCK_VERSION,
+        props: {
+          question: 'O que estava escrito na primeira mensagem que eu te mandei?',
+          answers: ['oi', 'oi, tudo bem'],
+          hint: 'Começava com a palavra mais simples do mundo.',
+          successMessage: 'Você lembra. É claro que lembra.',
         },
         meta: {
           createdAt: now,

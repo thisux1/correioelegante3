@@ -45,6 +45,31 @@ const PolaroidBlock = lazy(async () => {
   return { default: module.PolaroidBlock }
 })
 
+const YoutubeBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/YoutubeBlock')
+  return { default: module.YoutubeBlock }
+})
+
+const PhotoBookBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/PhotoBookBlock')
+  return { default: module.PhotoBookBlock }
+})
+
+const BouquetBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/BouquetBlock')
+  return { default: module.BouquetBlock }
+})
+
+const HintsBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/HintsBlock')
+  return { default: module.HintsBlock }
+})
+
+const IntimacyGateBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/IntimacyGateBlock')
+  return { default: module.IntimacyGateBlock }
+})
+
 interface BlockRendererProps {
   block: Block
   mode: EditorMode
@@ -63,6 +88,11 @@ const blockMap: BlockMap = {
   timeline: TimelineBlock,
   quiz: QuizBlock,
   polaroid: PolaroidBlock,
+  youtube: YoutubeBlock,
+  photoBook: PhotoBookBlock,
+  bouquet: BouquetBlock,
+  hints: HintsBlock,
+  intimacyGate: IntimacyGateBlock,
 }
 
 function renderFallback(block: Block) {

@@ -32,6 +32,11 @@ const blockTypeLabels: Record<BlockType, string> = {
   timeline: 'Linha do Tempo',
   quiz: 'Pergunta',
   polaroid: 'Polaroid',
+  youtube: 'YouTube',
+  photoBook: 'Livro de Fotos',
+  bouquet: 'Buquê',
+  hints: 'Dicas',
+  intimacyGate: 'Pergunta Secreta',
 }
 
 function BlockControlsComponent({

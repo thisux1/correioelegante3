@@ -1,10 +1,15 @@
 import {
   BLOCK_VERSION,
+  BOUQUET_SPECIES_VALUES,
   PAGE_VERSION,
   type Block,
   type BlockType,
+  type BouquetFlower,
+  type BouquetWrap,
+  type HintItem,
   type PageContent,
   type PageSection,
+  type PhotoBookPage,
   type SectionLayout,
   type SectionRect,
   type TextBlockAlign,
@@ -92,6 +97,11 @@ function asBlockType(value: unknown): BlockType {
     'timeline',
     'quiz',
     'polaroid',
+    'youtube',
+    'photoBook',
+    'bouquet',
+    'hints',
+    'intimacyGate',
   ]
   if (typeof value === 'string' && supported.includes(value as BlockType)) {
     return value as BlockType
@@ -225,6 +235,87 @@ function asPolaroidPhotos(value: unknown): Array<{
 
     return accumulator
   }, []).slice(0, 50)
+}
+
+function asPhotoBookPages(value: unknown): PhotoBookPage[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<PhotoBookPage[]>((accumulator, item, index) => {
+    const record = asRecord(item)
+    const src = asText(record.src)
+    if (!src) {
+      return accumulator
+    }
+
+    accumulator.push({
+      id: asOptionalText(record.id) || `page-${index}-${Math.random().toString(36).slice(2, 7)}`,
+      src,
+      assetId: asOptionalText(record.assetId),
+      caption: asOptionalText(record.caption),
+    })
+
+    return accumulator
+  }, []).slice(0, 24)
+}
+
+function asBouquetFlowers(value: unknown): BouquetFlower[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<BouquetFlower[]>((accumulator, item) => {
+    const record = asRecord(item)
+    const species = asText(record.species)
+    if (!BOUQUET_SPECIES_VALUES.includes(species as BouquetFlower['species'])) {
+      return accumulator
+    }
+
+    const color = asOptionalText(record.color)
+    accumulator.push({
+      species: species as BouquetFlower['species'],
+      ...(color ? { color } : {}),
+    })
+
+    return accumulator
+  }, []).slice(0, 24)
+}
+
+function asBouquetWrap(value: unknown): BouquetWrap {
+  return value === 'juta' || value === 'celofane' ? value : 'papel'
+}
+
+function asHintItems(value: unknown): HintItem[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<HintItem[]>((accumulator, item, index) => {
+    const record = asRecord(item)
+    const text = asText(record.text)
+    if (!text) {
+      return accumulator
+    }
+
+    accumulator.push({
+      id: asOptionalText(record.id) || `hint-${index}-${Math.random().toString(36).slice(2, 7)}`,
+      text,
+    })
+
+    return accumulator
+  }, []).slice(0, 12)
+}
+
+function asStringList(value: unknown, max: number): string[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map((item) => asText(item))
+    .filter((item) => item.length > 0)
+    .slice(0, max)
 }
 
 const SECTION_LAYOUT_VALUES: readonly SectionLayout[] = [
@@ -507,6 +598,61 @@ function migrateBlock(input: unknown, index: number): Block {
         type: 'polaroid',
         props: {
           photos: asPolaroidPhotos(props.photos),
+        },
+      }
+    case 'youtube':
+      return {
+        ...base,
+        type: 'youtube',
+        props: {
+          url: asText(props.url),
+          title: asOptionalText(props.title),
+          caption: asOptionalText(props.caption),
+        },
+      }
+    case 'photoBook':
+      return {
+        ...base,
+        type: 'photoBook',
+        props: {
+          pages: asPhotoBookPages(props.pages),
+          coverTitle: asOptionalText(props.coverTitle),
+          coverSubtitle: asOptionalText(props.coverSubtitle),
+        },
+      }
+    case 'bouquet':
+      return {
+        ...base,
+        type: 'bouquet',
+        props: {
+          seed:
+            typeof props.seed === 'number' && Number.isFinite(props.seed)
+              ? Math.trunc(props.seed)
+              : 1,
+          flowers: asBouquetFlowers(props.flowers),
+          wrap: asBouquetWrap(props.wrap),
+          ribbonColor: asOptionalText(props.ribbonColor),
+          message: asOptionalText(props.message),
+        },
+      }
+    case 'hints':
+      return {
+        ...base,
+        type: 'hints',
+        props: {
+          title: asOptionalText(props.title),
+          hints: asHintItems(props.hints),
+        },
+      }
+    case 'intimacyGate':
+      return {
+        ...base,
+        type: 'intimacyGate',
+        props: {
+          question: asText(props.question),
+          answers: asStringList(props.answers, 8),
+          hint: asOptionalText(props.hint),
+          successMessage: asOptionalText(props.successMessage),
         },
       }
     default:

@@ -16,6 +16,11 @@ export const BLOCK_TYPE_VALUES = [
   'timeline',
   'quiz',
   'polaroid',
+  'youtube',
+  'photoBook',
+  'bouquet',
+  'hints',
+  'intimacyGate',
 ] as const;
 
 export type SupportedBlockType = (typeof BLOCK_TYPE_VALUES)[number];

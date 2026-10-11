@@ -18,6 +18,11 @@ export type BlockType =
   | 'timeline'
   | 'quiz'
   | 'polaroid'
+  | 'youtube'
+  | 'photoBook'
+  | 'bouquet'
+  | 'hints'
+  | 'intimacyGate'
 export type EditorMode = 'edit' | 'preview'
 
 export interface BlockMeta {
@@ -146,6 +151,74 @@ export interface PolaroidBlockProps {
   photos: PolaroidPhoto[]
 }
 
+export interface YoutubeBlockProps {
+  url: string
+  title?: string
+  caption?: string
+}
+
+export interface PhotoBookPage {
+  id: string
+  src: string
+  assetId?: string
+  caption?: string
+}
+
+export interface PhotoBookBlockProps {
+  pages: PhotoBookPage[]
+  coverTitle?: string
+  coverSubtitle?: string
+}
+
+export type BouquetSpecies =
+  | 'rosa'
+  | 'girassol'
+  | 'tulipa'
+  | 'margarida'
+  | 'cravo'
+  | 'lavanda'
+
+export const BOUQUET_SPECIES_VALUES: readonly BouquetSpecies[] = [
+  'rosa',
+  'girassol',
+  'tulipa',
+  'margarida',
+  'cravo',
+  'lavanda',
+]
+
+export interface BouquetFlower {
+  species: BouquetSpecies
+  color?: string
+}
+
+export type BouquetWrap = 'papel' | 'juta' | 'celofane'
+
+export interface BouquetBlockProps {
+  seed: number
+  flowers: BouquetFlower[]
+  wrap?: BouquetWrap
+  ribbonColor?: string
+  message?: string
+}
+
+export interface HintItem {
+  id: string
+  text: string
+}
+
+export interface HintsBlockProps {
+  title?: string
+  hints: HintItem[]
+}
+
+export interface IntimacyGateBlockProps {
+  question: string
+  answers: string[]
+  hint?: string
+  successMessage?: string
+}
+
 export type SectionLayout = 'stack' | 'columns' | 'overlap' | 'grid' | 'freezone' | 'fullbleed'
 
 export interface SectionRect {
@@ -174,6 +247,11 @@ export interface BlockPropsByType {
   timeline: TimelineBlockProps
   quiz: QuizBlockProps
   polaroid: PolaroidBlockProps
+  youtube: YoutubeBlockProps
+  photoBook: PhotoBookBlockProps
+  bouquet: BouquetBlockProps
+  hints: HintsBlockProps
+  intimacyGate: IntimacyGateBlockProps
 }
 
 interface BlockBase<TType extends BlockType> {

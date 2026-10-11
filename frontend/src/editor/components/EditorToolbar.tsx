@@ -25,6 +25,11 @@ import {
   Heart,
   Share2,
   MailOpen,
+  Youtube,
+  BookOpen,
+  Flower2,
+  Lightbulb,
+  KeyRound,
 } from 'lucide-react'
 
 import { MAX_BLOCKS, type BlockType, type PageStatus } from '@/editor/types'
@@ -58,6 +63,11 @@ const addBlockOptions: AddBlockOption[] = [
   { type: 'gallery', label: 'Galeria', icon: Images },
   { type: 'music', label: 'Música', icon: Music2 },
   { type: 'video', label: 'Vídeo', icon: Video },
+  { type: 'youtube', label: 'YouTube', icon: Youtube },
+  { type: 'photoBook', label: 'Livro de Fotos', icon: BookOpen },
+  { type: 'bouquet', label: 'Buquê', icon: Flower2 },
+  { type: 'hints', label: 'Dicas', icon: Lightbulb },
+  { type: 'intimacyGate', label: 'Pergunta Secreta', icon: KeyRound },
 ]
 
 interface ToolbarControlsProps {

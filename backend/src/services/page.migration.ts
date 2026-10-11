@@ -319,6 +319,95 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         assetId: asOptionalText(props.assetId),
         src: asText(props.src),
       };
+    case 'youtube':
+      return {
+        url: asText(props.url).slice(0, 500),
+        title: asOptionalText(props.title),
+        caption: asOptionalText(props.caption),
+      };
+    case 'photoBook': {
+      const pages = (Array.isArray(props.pages) ? props.pages : [])
+        .reduce<Array<{ id: string; src: string; assetId?: string; caption?: string }>>(
+          (accumulator, item, index) => {
+            const record = asRecord(item);
+            const src = asText(record.src);
+            if (!src) {
+              return accumulator;
+            }
+            accumulator.push({
+              id: asOptionalText(record.id) ?? `page-${index}`,
+              src,
+              assetId: asOptionalObjectId(record.assetId),
+              caption: asOptionalText(record.caption),
+            });
+            return accumulator;
+          },
+          [],
+        )
+        .slice(0, 24);
+      return {
+        pages,
+        coverTitle: asOptionalText(props.coverTitle),
+        coverSubtitle: asOptionalText(props.coverSubtitle),
+      };
+    }
+    case 'bouquet': {
+      const validSpecies = new Set(['rosa', 'girassol', 'tulipa', 'margarida', 'cravo', 'lavanda']);
+      const flowers = (Array.isArray(props.flowers) ? props.flowers : [])
+        .reduce<Array<{ species: string; color?: string }>>((accumulator, item) => {
+          const record = asRecord(item);
+          const species = asText(record.species);
+          if (!validSpecies.has(species)) {
+            return accumulator;
+          }
+          const color = asOptionalText(record.color);
+          accumulator.push(color ? { species, color } : { species });
+          return accumulator;
+        }, [])
+        .slice(0, 24);
+      return {
+        seed:
+          typeof props.seed === 'number' && Number.isFinite(props.seed)
+            ? Math.trunc(props.seed)
+            : 1,
+        flowers,
+        wrap: props.wrap === 'juta' || props.wrap === 'celofane' ? props.wrap : 'papel',
+        ribbonColor: asOptionalText(props.ribbonColor),
+        message: asOptionalText(props.message),
+      };
+    }
+    case 'hints': {
+      const hints = (Array.isArray(props.hints) ? props.hints : [])
+        .reduce<Array<{ id: string; text: string }>>((accumulator, item, index) => {
+          const record = asRecord(item);
+          const text = asText(record.text);
+          if (!text) {
+            return accumulator;
+          }
+          accumulator.push({
+            id: asOptionalText(record.id) ?? `hint-${index}`,
+            text,
+          });
+          return accumulator;
+        }, [])
+        .slice(0, 12);
+      return {
+        title: asOptionalText(props.title),
+        hints,
+      };
+    }
+    case 'intimacyGate': {
+      const answers = asStringArray(props.answers)
+        .map((answer) => asText(answer))
+        .filter((answer) => answer.length > 0)
+        .slice(0, 8);
+      return {
+        question: asText(props.question).slice(0, 300),
+        answers,
+        hint: asOptionalText(props.hint),
+        successMessage: asOptionalText(props.successMessage),
+      };
+    }
     default:
       return { ...props };
   }

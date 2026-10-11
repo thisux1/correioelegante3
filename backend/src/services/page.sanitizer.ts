@@ -347,6 +347,113 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         src,
       };
     }
+    case 'youtube': {
+      const url = typeof props.url === 'string'
+        ? ensureSafeUrl(props.url, 'URL do YouTube')
+        : '';
+      return {
+        url,
+        title: optionalShortText(props.title, 120),
+        caption: optionalShortText(props.caption, 300),
+      };
+    }
+    case 'photoBook': {
+      const pages = (Array.isArray(props.pages) ? props.pages : [])
+        .reduce<Array<{ id: string; src: string; assetId?: string; caption?: string }>>(
+          (accumulator, item, index) => {
+            if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+              return accumulator;
+            }
+            const record = item as UnknownRecord;
+            const src = tryNormalizeGalleryUrl(record.src);
+            if (!src) {
+              return accumulator;
+            }
+            accumulator.push({
+              id: optionalShortText(record.id, 80) ?? `page-${index}`,
+              src,
+              assetId: toOptionalObjectId(record.assetId),
+              caption: optionalShortText(record.caption, 160),
+            });
+            return accumulator;
+          },
+          [],
+        )
+        .slice(0, 24);
+      return {
+        pages,
+        coverTitle: optionalShortText(props.coverTitle, 120),
+        coverSubtitle: optionalShortText(props.coverSubtitle, 160),
+      };
+    }
+    case 'bouquet': {
+      const validSpecies = new Set(['rosa', 'girassol', 'tulipa', 'margarida', 'cravo', 'lavanda']);
+      const flowers = (Array.isArray(props.flowers) ? props.flowers : [])
+        .reduce<Array<{ species: string; color?: string }>>((accumulator, item) => {
+          if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+            return accumulator;
+          }
+          const record = item as UnknownRecord;
+          const species = typeof record.species === 'string' ? record.species : '';
+          if (!validSpecies.has(species)) {
+            return accumulator;
+          }
+          const color = optionalCssColor(record.color);
+          accumulator.push(color ? { species, color } : { species });
+          return accumulator;
+        }, [])
+        .slice(0, 24);
+      return {
+        seed:
+          typeof props.seed === 'number' && Number.isFinite(props.seed)
+            ? Math.trunc(props.seed)
+            : 1,
+        flowers,
+        wrap: props.wrap === 'juta' || props.wrap === 'celofane' ? props.wrap : 'papel',
+        ribbonColor: optionalCssColor(props.ribbonColor),
+        message: optionalShortText(props.message, 400),
+      };
+    }
+    case 'hints': {
+      const hints = (Array.isArray(props.hints) ? props.hints : [])
+        .reduce<Array<{ id: string; text: string }>>((accumulator, item, index) => {
+          if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+            return accumulator;
+          }
+          const record = item as UnknownRecord;
+          const text = optionalShortText(record.text, 240);
+          if (!text) {
+            return accumulator;
+          }
+          accumulator.push({
+            id: optionalShortText(record.id, 80) ?? `hint-${index}`,
+            text,
+          });
+          return accumulator;
+        }, [])
+        .slice(0, 12);
+      return {
+        title: optionalShortText(props.title, 120),
+        hints,
+      };
+    }
+    case 'intimacyGate': {
+      const answers = (Array.isArray(props.answers) ? props.answers : [])
+        .reduce<string[]>((accumulator, item) => {
+          const answer = optionalShortText(item, 80);
+          if (answer) {
+            accumulator.push(answer);
+          }
+          return accumulator;
+        }, [])
+        .slice(0, 8);
+      return {
+        question: sanitizeText(typeof props.question === 'string' ? props.question : '').slice(0, 300),
+        answers,
+        hint: optionalShortText(props.hint, 240),
+        successMessage: optionalShortText(props.successMessage, 400),
+      };
+    }
     default:
       return { ...props };
   }
