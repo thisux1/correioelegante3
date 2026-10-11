@@ -235,6 +235,7 @@ export function AppRouter() {
       <RouteErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            <Route path="/gerar" element={<Generate />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
               <Route path="/planos" element={<Pricing />} />
@@ -253,7 +254,6 @@ export function AppRouter() {
               <Route path="/card/:id" element={<Card />} />
               <Route path="/card/page/:pageId" element={<PageCard />} />
               <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
-              <Route path="/gerar" element={<Generate />} />
               <Route path="/editor" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/editor/:pageId" element={<EditorFeatureRoute><Editor /></EditorFeatureRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

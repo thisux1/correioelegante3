@@ -33,6 +33,12 @@
   --font-editorial: "Merriweather", Georgia, "Times New Roman", serif;
   --font-outfit: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
+  /* Romantic OS — pixel stacks (múltiplos do grid nativo: Silkscreen 8px, Press Start 8px) */
+  --font-pixel-display: "Press Start 2P", "Silkscreen", monospace;
+  --font-pixel-ui: "Silkscreen", "Pixelify Sans", monospace;
+  --font-pixel-body: "VT323", "Pixelify Sans", monospace;
+  --font-pixel-sans: "Pixelify Sans", system-ui, sans-serif;
+
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-elastic: cubic-bezier(0.16, 1, 0.3, 1);
   --animate-shimmer: shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
@@ -238,5 +244,295 @@
 
   .animate-shimmer {
     animation: shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+}
+
+/* ============================================================
+   Romantic OS — camada pixel/retro (D3)
+   Bevels Win98 recoloridos rose/vinho (ver design-research/audits/
+   pixel-execution-refs.md §2). Light theme sempre; zero emoji —
+   corações só como sprite pixel/legível.
+   ============================================================ */
+
+:root {
+  --os-hilight: #ffffff;        /* ButtonHilight — luz top-left */
+  --os-light: #ffe4ec;          /* ButtonLight — bevel claro interno */
+  --os-face: #fffdfa;           /* face de painel/janela (creme papel) */
+  --os-shadow: #9f3a58;         /* ButtonShadow — bevel escuro interno */
+  --os-frame: #4c0519;          /* ButtonDkShadow — contorno mais externo */
+  --os-disabled: #c98096;       /* GrayText recolorido */
+  --os-desktop-a: #ffe4ec;      /* wallpaper blush */
+  --os-desktop-b: #fff5f7;
+}
+
+.os-desktop {
+  background-color: var(--os-desktop-b);
+  background-image:
+    linear-gradient(180deg, var(--os-desktop-a) 0%, var(--os-desktop-b) 100%);
+}
+
+/* Janela OS: contorno duro + dois anéis de bevel + drop shadow sem blur. */
+.os-window {
+  background: var(--os-face);
+  border: 2px solid var(--os-frame);
+  box-shadow:
+    inset 2px 2px 0 var(--os-light),
+    inset -2px -2px 0 var(--os-shadow),
+    10px 10px 0 rgba(76, 5, 25, 0.14);
+}
+
+.os-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, var(--os-frame) 0%, #be123c 55%, #e11d48 100%);
+  color: #fff;
+  font-family: var(--font-pixel-ui);
+  font-size: 16px;
+  line-height: 1;
+  padding: 6px 8px;
+  user-select: none;
+}
+
+.os-caption-btn {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  background: var(--os-face);
+  border: 1px solid var(--os-frame);
+  box-shadow:
+    inset 1px 1px 0 var(--os-hilight),
+    inset -1px -1px 0 var(--os-shadow);
+  color: var(--os-frame);
+  font-family: var(--font-pixel-ui);
+  font-size: 8px;
+  line-height: 1;
+}
+
+/* Botão de caption real (fechar): alvo de toque ≥44px via hit zone invisível. */
+button.os-caption-btn {
+  position: relative;
+  cursor: pointer;
+}
+
+button.os-caption-btn::after {
+  content: "";
+  position: absolute;
+  inset: -13px;
+}
+
+/* Painel afundado (áreas de conteúdo / status bar). */
+.os-sunken {
+  background: #fff;
+  border: 2px solid var(--os-frame);
+  box-shadow:
+    inset 2px 2px 0 var(--os-shadow),
+    inset -2px -2px 0 var(--os-hilight);
+}
+
+/* Barra de status no rodapé da janela — segmento afundado sobre a face. */
+.os-statusbar {
+  display: flex;
+  border-top: 2px solid var(--os-frame);
+  padding: 3px;
+  background: var(--os-face);
+}
+
+.os-statusbar .os-sunken {
+  border-width: 1px;
+  box-shadow:
+    inset 1px 1px 0 var(--os-shadow),
+    inset -1px -1px 0 var(--os-hilight);
+}
+
+/* Botão OS elevado; :active inverte o bevel (pressed). */
+.os-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--os-face);
+  border: 2px solid var(--os-frame);
+  box-shadow:
+    inset 2px 2px 0 var(--os-hilight),
+    inset -2px -2px 0 var(--os-shadow);
+  color: var(--os-frame);
+  font-family: var(--font-pixel-sans);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.os-btn:not(:disabled):active {
+  box-shadow:
+    inset 2px 2px 0 var(--os-shadow),
+    inset -2px -2px 0 var(--os-hilight);
+  transform: translate(1px, 1px);
+}
+
+.os-btn:disabled {
+  color: var(--os-disabled);
+  cursor: not-allowed;
+}
+
+.os-btn-primary {
+  background: #e11d48;
+  color: #fff;
+  box-shadow:
+    inset 2px 2px 0 #fb7185,
+    inset -2px -2px 0 #881337,
+    4px 4px 0 var(--os-frame);
+}
+
+.os-btn-primary:not(:disabled):active {
+  box-shadow:
+    inset 2px 2px 0 #881337,
+    inset -2px -2px 0 #fb7185;
+  transform: translate(2px, 2px);
+}
+
+.os-btn-primary:disabled {
+  background: #fda4af;
+  color: #881337;
+  box-shadow: none;
+}
+
+/* Opção selecionável (momento/tom) — estado pressionado quando ativa. */
+.os-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--os-face);
+  border: 2px solid var(--os-frame);
+  box-shadow:
+    inset 2px 2px 0 var(--os-hilight),
+    inset -2px -2px 0 var(--os-shadow);
+  cursor: pointer;
+  color: var(--os-frame);
+}
+
+.os-option[data-selected='true'] {
+  background: var(--os-light);
+  box-shadow:
+    inset 2px 2px 0 var(--os-shadow),
+    inset -2px -2px 0 var(--os-hilight);
+}
+
+/* Marcador de seleção — quadrado sólido, não só cor/estado de bevel. */
+.os-option[data-selected='true'] .os-option-name::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  background: #e11d48;
+}
+
+.os-option:disabled {
+  cursor: not-allowed;
+  color: var(--os-disabled);
+  background: #fdf2f5;
+}
+
+.os-option:disabled .os-option-name {
+  color: var(--os-disabled);
+}
+
+/* Input afundado — texto digitado fica em sans legível (Inter). */
+.os-input {
+  display: block;
+  width: 100%;
+  background: #fff;
+  border: 2px solid var(--os-frame);
+  box-shadow:
+    inset 2px 2px 0 var(--os-shadow),
+    inset -2px -2px 0 var(--os-hilight);
+  padding: 10px 12px;
+  color: var(--os-frame);
+  font-family: var(--font-sans);
+  font-size: 16px;
+}
+
+.os-input::placeholder {
+  color: #9f3a58;
+}
+
+.os-input:focus-visible,
+.os-btn:focus-visible,
+.os-option:focus-visible,
+.os-caption-btn:focus-visible,
+.os-check:focus-visible + .os-check-box {
+  outline: 2px solid #e11d48;
+  outline-offset: 2px;
+}
+
+/* Checkbox pixel: quadrado afundado + marca sólida. */
+.os-check-box {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  background: #fff;
+  border: 2px solid var(--os-frame);
+  box-shadow:
+    inset 2px 2px 0 var(--os-shadow),
+    inset -2px -2px 0 var(--os-hilight);
+}
+
+.os-check:checked + .os-check-box::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #e11d48;
+}
+
+/* Progresso segmentado Win98 — preenche em tijolos durante trabalho real. */
+@keyframes os-progress-fill {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+.os-progress {
+  height: 12px;
+  background: #fff;
+  border: 1px solid var(--os-frame);
+  box-shadow: inset 1px 1px 0 var(--os-shadow);
+  padding: 1px;
+}
+
+.os-progress-fill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    #e11d48 0 8px,
+    transparent 8px 10px
+  );
+  animation: os-progress-fill 1.6s steps(12) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-progress-fill {
+    animation: none;
+    width: 66%;
+  }
+}
+
+/* Cursor piscante de terminal — motion com propósito (estado "aguardando
+   input"), dosado: só no título. */
+@keyframes os-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.os-blink {
+  animation: os-blink 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-blink {
+    animation: none;
   }
 }
