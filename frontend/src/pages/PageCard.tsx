@@ -10,6 +10,7 @@ import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
 import { EnvelopeUnboxing } from '@/components/animations/EnvelopeUnboxing'
 import { PageRenderer } from '@/editor/components/PageRenderer'
 import { ReportPageModal } from '@/components/modals/ReportPageModal'
+import { PixelHeart } from '@/components/ui/PixelHeart'
 import { buildThemeStyle, getThemeAtmosphere } from '@/editor/themes'
 import type { PageSummary } from '@/services/pageService'
 import { pageService } from '@/services/pageService'
@@ -159,6 +160,42 @@ export function PageCard() {
   const recipientName = envelopeProps?.recipientName
   const senderName = envelopeProps?.senderName
 
+  // Páginas geradas (seções presentes, S6+) entram no chrome romantic-OS —
+  // mesmo recipient view prometido pela LP e pela /demo.
+  const isGenerated = (page.sections?.length ?? 0) > 0
+  const windowTitle = recipientName
+    ? `para_${recipientName.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'voce'}.exe`
+    : 'carta.exe'
+
+  const pageFooter = (
+    <div className={`mt-8 border-t text-center ${isGenerated ? 'border-[#ffe4ec] pt-6' : 'border-border/40 pt-6'}`}>
+      <p className={`mb-2.5 ${isGenerated ? 'font-pixel-ui text-[15px] font-bold text-[#701a35]' : 'text-xs text-text-light'}`}>
+        {isGenerated ? 'ESSA PÁGINA FOI FEITA NO CORREIO ELEGANTE' : 'Gostou dessa página mágica?'}
+      </p>
+      <Link to="/create">
+        <button
+          type="button"
+          className={isGenerated
+            ? 'os-btn os-btn-primary inline-flex items-center gap-1.5 px-5 py-2.5 text-sm'
+            : 'inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold shadow-xs hover:bg-primary/90 transition-colors'
+          }
+        >
+          <Heart className="w-3.5 h-3.5 fill-white" />
+          <span>Crie um correio elegante você também</span>
+        </button>
+      </Link>
+      <p className="mt-4">
+        <button
+          type="button"
+          onClick={() => setIsReportOpen(true)}
+          className="min-h-11 px-3 text-xs text-text-light/70 underline decoration-dotted underline-offset-4 hover:text-text-light transition-colors"
+        >
+          denunciar esta página
+        </button>
+      </p>
+    </div>
+  )
+
   return (
     <div
       className="relative min-h-screen flex items-center justify-center pt-24 pb-16 px-6 overflow-hidden"
@@ -187,40 +224,41 @@ export function PageCard() {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-3xl relative z-10"
       >
-        <CardTilt3D intensity={6}>
-          <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-6 shadow-2xl md:p-8">
-            <PageRenderer
-              blocks={page.blocks}
-              theme={page.theme}
-              showAtmosphere={false}
-              pageId={page.id}
-            />
-
-            <div className="mt-8 pt-6 border-t border-border/40 text-center">
-              <p className="text-xs text-text-light mb-2.5">
-                Gostou dessa página mágica?
-              </p>
-              <Link to="/create">
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold shadow-xs hover:bg-primary/90 transition-colors"
-                >
-                  <Heart className="w-3.5 h-3.5 fill-white" />
-                  <span>Crie um correio elegante você também</span>
-                </button>
-              </Link>
-              <p className="mt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsReportOpen(true)}
-                  className="min-h-11 px-3 text-xs text-text-light/70 underline decoration-dotted underline-offset-4 hover:text-text-light transition-colors"
-                >
-                  denunciar esta página
-                </button>
-              </p>
+        {isGenerated ? (
+          <div className="os-window">
+            <div className="os-titlebar">
+              <PixelHeart className="h-3.5 w-4 shrink-0" color="#ffffff" />
+              <span className="min-w-0 flex-1 truncate">{windowTitle}</span>
+              <span className="os-caption-btn" aria-hidden="true">×</span>
+            </div>
+            <div className="p-4 sm:p-8">
+              <PageRenderer
+                blocks={page.blocks}
+                theme={page.theme}
+                showAtmosphere={false}
+                pageId={page.id}
+              />
+              {pageFooter}
+            </div>
+            <div className="os-statusbar">
+              <span className="os-sunken flex-1 px-2 py-1 font-pixel-ui text-[13px] text-[#701a35]">
+                página interativa — tudo aqui responde a toques
+              </span>
             </div>
           </div>
-        </CardTilt3D>
+        ) : (
+          <CardTilt3D intensity={6}>
+            <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-6 shadow-2xl md:p-8">
+              <PageRenderer
+                blocks={page.blocks}
+                theme={page.theme}
+                showAtmosphere={false}
+                pageId={page.id}
+              />
+              {pageFooter}
+            </div>
+          </CardTilt3D>
+        )}
 
         <ReportPageModal
           isOpen={isReportOpen}
