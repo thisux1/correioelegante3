@@ -143,6 +143,14 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
     `409 ALREADY_RESPONDED` (uma resposta por bloco — `@@unique([pageId, blockId])`).
 - `GET /:pageId/responses`: Lista respostas (`{ responses: [...] }`, ordem
   `createdAt asc`). Somente o dono da página — estranhos recebem `404`.
+- `POST /:pageId/report`: **Público** (sem auth), rate limit 3/15min/IP.
+  Denúncia pela destinatária. Só aceita página publicamente acessível
+  (mesma régua do GET — não vaza existência de drafts).
+  - Body: `{ reason: "assedio" | "conteudo_improprio" | "impersonacao" | "spam" | "outro", details? }`.
+  - `201 { report: { id } }`. Revisão via `GET /api/admin/reports`
+    (+ `POST /api/admin/reports/:id/resolve` e
+    `POST /api/admin/pages/:id/unpublish` — o takedown real, que zera
+    `publishedAt` e devolve a página para `draft`).
 
 ### 4.3a Generation (`/api/generate`)
 - `POST /`: Public (no auth), rate-limited (20/15min/IP) + Turnstile. Generates a

@@ -206,6 +206,23 @@ export const createPageResponseSchema = z.object({
   token: z.string().min(1, 'token é obrigatório'),
 });
 
+export const REPORT_REASON_VALUES = [
+  'assedio',
+  'conteudo_improprio',
+  'impersonacao',
+  'spam',
+  'outro',
+] as const;
+
+export const createPageReportSchema = z.object({
+  reason: z.enum(REPORT_REASON_VALUES, {
+    errorMap: () => ({
+      message: `reason inválido. Use: ${REPORT_REASON_VALUES.join(', ')}.`,
+    }),
+  }),
+  details: z.string().max(600, 'details muito longo').optional(),
+});
+
 export const assetUploadUrlSchema = z.object({
   kind: assetKindSchema,
   fileName: z.string().min(3, 'Nome de arquivo invalido').max(255, 'Nome de arquivo invalido'),
@@ -245,3 +262,4 @@ export type AssetCompleteInput = z.infer<typeof assetCompleteSchema>;
 export type AssetReprocessInput = z.infer<typeof assetReprocessSchema>;
 export type AssetListQueryInput = z.infer<typeof assetListQuerySchema>;
 export type CreatePageResponseInput = z.infer<typeof createPageResponseSchema>;
+export type CreatePageReportInput = z.infer<typeof createPageReportSchema>;

@@ -54,6 +54,18 @@ export interface RsvpResponse {
   createdAt: string
 }
 
+export type ReportReason =
+  | 'assedio'
+  | 'conteudo_improprio'
+  | 'impersonacao'
+  | 'spam'
+  | 'outro'
+
+export interface ReportPageInput {
+  reason: ReportReason
+  details?: string
+}
+
 function mapBackendPage(page: BackendPage): PageSummary {
   const migrated = migratePage(page.content)
   return {
@@ -129,5 +141,13 @@ export const pageService = {
       payload,
     )
     return response.data.response
+  },
+
+  /**
+   * Denúncia pública pela destinatária (S9) — sem auth; a página só pode ser
+   * denunciada se estiver publicamente acessível (mesma régua da leitura).
+   */
+  async reportPage(pageId: string, input: ReportPageInput): Promise<void> {
+    await api.post(`/pages/${pageId}/report`, input)
   },
 }

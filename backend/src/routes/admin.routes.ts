@@ -1,7 +1,13 @@
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { authenticate, requireAdmin } from '../middlewares/auth';
+import { validateObjectId } from '../middlewares/validate';
 import * as analyticsService from '../services/analytics.service';
+import {
+  listPageReports,
+  resolvePageReport,
+  unpublishPage,
+} from '../controllers/report.controller';
 import { AppError } from '../utils/AppError';
 
 export const adminAnalyticsRouter = Router();
@@ -56,3 +62,8 @@ adminAnalyticsRouter.get('/analytics/timeseries', authenticate, requireAdmin, ha
 adminAnalyticsRouter.get('/analytics/content', authenticate, requireAdmin, handleContent);
 adminAnalyticsRouter.get('/analytics/funnel', authenticate, requireAdmin, handleFunnel);
 adminAnalyticsRouter.get('/analytics/revenue', authenticate, requireAdmin, handleRevenue);
+
+// Moderação (S9): fila de denúncias + takedown de página.
+adminAnalyticsRouter.get('/reports', authenticate, requireAdmin, listPageReports);
+adminAnalyticsRouter.post('/reports/:id/resolve', authenticate, requireAdmin, validateObjectId('id'), resolvePageReport);
+adminAnalyticsRouter.post('/pages/:id/unpublish', authenticate, requireAdmin, validateObjectId('id'), unpublishPage);

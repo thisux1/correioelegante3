@@ -9,6 +9,7 @@ import { CardTilt3D } from '@/components/animations/CardTilt3D'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
 import { EnvelopeUnboxing } from '@/components/animations/EnvelopeUnboxing'
 import { PageRenderer } from '@/editor/components/PageRenderer'
+import { ReportPageModal } from '@/components/modals/ReportPageModal'
 import { buildThemeStyle, getThemeAtmosphere } from '@/editor/themes'
 import type { PageSummary } from '@/services/pageService'
 import { pageService } from '@/services/pageService'
@@ -20,6 +21,7 @@ export function PageCard() {
   const [isLoading, setIsLoading] = useState(() => Boolean(resolvedPageId))
   const [error, setError] = useState(() => (resolvedPageId ? '' : 'Página não encontrada'))
   const [isEnvelopeOpened, setIsEnvelopeOpened] = useState(false)
+  const [isReportOpen, setIsReportOpen] = useState(false)
 
   // Privacidade: Garante que cartas acessíveis por link direto NUNCA sejam indexadas por buscadores (Google/Bing)
   useEffect(() => {
@@ -207,9 +209,24 @@ export function PageCard() {
                   <span>Crie um correio elegante você também</span>
                 </button>
               </Link>
+              <p className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsReportOpen(true)}
+                  className="min-h-11 px-3 text-xs text-text-light/70 underline decoration-dotted underline-offset-4 hover:text-text-light transition-colors"
+                >
+                  denunciar esta página
+                </button>
+              </p>
             </div>
           </div>
         </CardTilt3D>
+
+        <ReportPageModal
+          isOpen={isReportOpen}
+          onClose={() => setIsReportOpen(false)}
+          pageId={page.id}
+        />
       </motion.div>
     </div>
   )

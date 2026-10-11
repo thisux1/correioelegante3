@@ -221,6 +221,17 @@ model PageResponse {
   @@index([pageId])
 }
 
+model PageReport {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  pageId    String   @db.ObjectId
+  reason    String
+  details   String?
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([pageId])
+  @@index([resolved, createdAt(sort: Desc)])
+}
+
 model PageView {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   resourceId String   // ID da mensagem ou página visualizada

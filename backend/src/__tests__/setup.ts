@@ -53,6 +53,13 @@ vi.mock('../utils/prisma', () => ({
             findMany: vi.fn(),
             create: vi.fn(),
         },
+        pageReport: {
+            findUnique: vi.fn(),
+            findMany: vi.fn(),
+            create: vi.fn(),
+            update: vi.fn(),
+            count: vi.fn(),
+        },
         asset: {
             findUnique: vi.fn(),
             findMany: vi.fn(),

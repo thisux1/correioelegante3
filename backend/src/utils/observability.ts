@@ -29,7 +29,7 @@ export function logPageEvent(payload: PageEventPayload): void {
 }
 
 interface ModerationEventPayload {
-  event: 'moderation_scan';
+  event: 'moderation_scan' | 'page_report' | 'admin_unpublish';
   userId?: string;
   pageId?: string;
   verdict: 'pass' | 'flagged' | 'blocked';
