@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import type { RuntimeMusicTrack } from '@/editor/blocks/music/normalizeMusicTracks'
 
 export interface PlaybackState {
@@ -93,8 +93,7 @@ export function resolveNextTrackIndex(current: number, total: number, isShuffleE
   return next === current ? null : next
 }
 
-export function useMusicPlayback(tracks: RuntimeMusicTrack[]) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+export function useMusicPlayback(tracks: RuntimeMusicTrack[], audioRef: MutableRefObject<HTMLAudioElement | null>) {
   const rafRef = useRef<number | null>(null)
   const trackLoadTokenRef = useRef(0)
   const shouldContinueRef = useRef(false)
@@ -163,7 +162,7 @@ export function useMusicPlayback(tracks: RuntimeMusicTrack[]) {
           hasPlaybackError: true,
         }))
       })
-  }, [activeTrack?.src])
+  }, [activeTrack?.src, audioRef])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -171,7 +170,7 @@ export function useMusicPlayback(tracks: RuntimeMusicTrack[]) {
       return
     }
     audio.volume = state.isMuted ? 0 : state.volume
-  }, [state.isMuted, state.volume])
+  }, [state.isMuted, state.volume, audioRef])
 
   useEffect(() => {
     if (!state.isPlaying || !audioRef.current) {
@@ -197,7 +196,7 @@ export function useMusicPlayback(tracks: RuntimeMusicTrack[]) {
         rafRef.current = null
       }
     }
-  }, [state.isPlaying])
+  }, [state.isPlaying, audioRef])
 
   useEffect(() => {
     return () => {
@@ -208,7 +207,6 @@ export function useMusicPlayback(tracks: RuntimeMusicTrack[]) {
   }, [])
 
   const api = useMemo(() => ({
-    audioRef,
     state: {
       ...state,
       activeTrackIndex,
@@ -386,7 +384,7 @@ export function useMusicPlayback(tracks: RuntimeMusicTrack[]) {
       shouldContinueRef.current = false
       setState((current) => ({ ...current, hasPlaybackError: true, isPlaying: false, shouldContinuePlaying: false }))
     },
-  }), [activeTrack, activeTrackIndex, canGoNext, canGoPrev, state, tracks.length])
+  }), [activeTrack, activeTrackIndex, audioRef, canGoNext, canGoPrev, state, tracks.length])
 
   return api
 }

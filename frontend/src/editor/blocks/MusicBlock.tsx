@@ -98,7 +98,8 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     syncedLyrics,
     plainLyrics,
   }), [artist, assetId, coverAssetId, coverSrc, plainLyrics, src, syncedLyrics, title, tracks])
-  const playback = useMusicPlayback(normalizedPlaylist)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const playback = useMusicPlayback(normalizedPlaylist, audioRef)
 
   const activeTrack = playback.activeTrack
   const selectedAssetId = activeTrack?.assetId ?? assetId
@@ -117,23 +118,12 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     ? Math.min(100, Math.max(0, (playback.state.currentTime / effectiveDuration) * 100))
     : 0
 
-  const handleAudioRef = useCallback((node: HTMLAudioElement | null) => {
-    playback.audioRef.current = node
-  }, [playback.audioRef])
-
   useEffect(() => {
-    if (!isMusicBlock) {
+    if (!isMusicBlock || !selectedAssetId) {
       return
     }
 
     let isMounted = true
-
-    if (!selectedAssetId) {
-      setSelectedAsset(null)
-      return () => {
-        isMounted = false
-      }
-    }
 
     const cancelPolling = () => {
       if (pollTimeoutRef.current !== null) {
@@ -331,7 +321,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return null
   }
 
-  const isActuallyPlaying = resolveIsActuallyPlaying(playback.state.isPlaying, playback.state.shouldContinuePlaying, playback.audioRef.current?.paused)
+  const isActuallyPlaying = resolveIsActuallyPlaying(playback.state.isPlaying, playback.state.shouldContinuePlaying, undefined)
   const safeTitle = activeTrack?.title || title || 'Música Especial'
   const safeArtist = activeTrack?.artist || artist || 'Trilha Sonora'
   const resolvedCover = (activeTrack?.coverSrc || coverSrc).trim()
@@ -649,7 +639,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     return (
       <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-surface via-surface/95 to-surface-raised p-5 sm:p-7 shadow-xl">
         <audio
-          ref={handleAudioRef}
+          ref={audioRef}
           src={activeTrack?.src ?? ''}
           crossOrigin="anonymous"
           preload="auto"
@@ -905,7 +895,7 @@ function MusicBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-surface/90 backdrop-blur-md p-3 sm:p-3.5 shadow-sm hover:shadow-md transition-shadow">
       <audio
-        ref={handleAudioRef}
+        ref={audioRef}
         src={activeTrack?.src ?? ''}
         crossOrigin="anonymous"
         preload="auto"

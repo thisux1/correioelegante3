@@ -367,7 +367,7 @@ function useEditorAutosave(params: {
   lastSyncedSignature: string
   saveState: SaveState
   isLoadingPage: boolean
-  isNavigatingToPayment: boolean
+  isNavigatingToPaymentRef: MutableRefObject<boolean>
   savePage: () => Promise<void>
 }) {
   const {
@@ -377,12 +377,12 @@ function useEditorAutosave(params: {
     lastSyncedSignature,
     saveState,
     isLoadingPage,
-    isNavigatingToPayment,
+    isNavigatingToPaymentRef,
     savePage,
   } = params
 
   useEffect(() => {
-    if (isNavigatingToPayment || !hasPageId || pageVersion === undefined || typeof window === 'undefined') {
+    if (isNavigatingToPaymentRef.current || !hasPageId || pageVersion === undefined || typeof window === 'undefined') {
       return
     }
 
@@ -395,7 +395,7 @@ function useEditorAutosave(params: {
     }
 
     const timeoutId = window.setTimeout(() => {
-      if (!isNavigatingToPayment) {
+      if (!isNavigatingToPaymentRef.current) {
         void savePage()
       }
     }, AUTOSAVE_DEBOUNCE_MS)
@@ -407,7 +407,7 @@ function useEditorAutosave(params: {
     currentSignature,
     hasPageId,
     isLoadingPage,
-    isNavigatingToPayment,
+    isNavigatingToPaymentRef,
     lastSyncedSignature,
     pageVersion,
     savePage,
@@ -706,9 +706,11 @@ export function Editor() {
     lastSyncedSignature,
     saveState,
     isLoadingPage,
-    isNavigatingToPayment: isNavigatingToPaymentRef.current,
+    isNavigatingToPaymentRef,
     savePage,
   })
+
+  const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
 
   const handlePublish = useCallback(async () => {
     if (isPublishingRef.current) return
@@ -717,7 +719,6 @@ export function Editor() {
     try {
       setSaveState('saving')
       setFeedback('Salvando página e preparando publicação...')
-      const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
       const targetStatus = userSubscribed ? 'published' : (status === 'published' ? 'published' : 'draft')
 
       let resultPageId = currentPageId
@@ -800,8 +801,7 @@ export function Editor() {
     setDraftContext,
     status,
     theme,
-    user?.isSubscribed,
-    user?.subscriptionStatus,
+    userSubscribed,
     visibility,
   ])
 

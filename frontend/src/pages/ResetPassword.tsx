@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion } from 'framer-motion'
@@ -67,8 +67,8 @@ export function ResetPassword({ isLoading = false }: ResetPasswordProps = {}) {
     },
   })
 
-  const passwordValue = form.watch('password') || ''
-  const confirmValue = form.watch('confirmPassword') || ''
+  const passwordValue = useWatch({ control: form.control, name: 'password' }) || ''
+  const confirmValue = useWatch({ control: form.control, name: 'confirmPassword' }) || ''
   const strength = useMemo(() => getPasswordStrength(passwordValue), [passwordValue])
   const passwordsMatch = passwordValue.length > 0 && confirmValue.length > 0 && passwordValue === confirmValue
 

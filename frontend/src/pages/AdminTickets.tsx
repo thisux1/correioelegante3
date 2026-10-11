@@ -29,6 +29,8 @@ export function AdminTickets() {
 
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [refreshTick, setRefreshTick] = useState(0)
 
   // Reply state
   const [replyText, setReplyText] = useState('')
@@ -39,31 +41,39 @@ export function AdminTickets() {
   const [statusUpdateSuccess, setStatusUpdateSuccess] = useState(false)
 
   useEffect(() => {
-    fetchTickets()
-  }, [filterStatus])
-
-  async function fetchTickets() {
-    setIsLoading(true)
-    setError('')
-    try {
-      const data = await contactService.listTickets({
-        status: filterStatus !== 'all' ? filterStatus : undefined,
-        search: searchQuery.trim() || undefined,
-      })
+    let cancelled = false
+    contactService.listTickets({
+      status: filterStatus !== 'all' ? filterStatus : undefined,
+      search: appliedSearch || undefined,
+    }).then((data) => {
+      if (cancelled) return
       setTickets(data.tickets)
-      if (selectedTicket) {
-        const updated = data.tickets.find((t) => t.id === selectedTicket.id)
-        if (updated) setSelectedTicket(updated)
-      } else if (data.tickets.length > 0 && window.innerWidth >= 768) {
+      setSelectedTicket((current) => {
+        if (current) {
+          const updated = data.tickets.find((t) => t.id === current.id)
+          return updated ?? current
+        }
         // Auto-select first ticket on desktop
-        setSelectedTicket(data.tickets[0])
-      }
-    } catch (err: unknown) {
+        return data.tickets.length > 0 && window.innerWidth >= 768 ? data.tickets[0] : current
+      })
+    }).catch((err: unknown) => {
+      if (cancelled) return
       const axiosErr = err as { response?: { data?: { error?: string } } }
       setError(axiosErr.response?.data?.error || 'Erro ao carregar chamados de suporte.')
-    } finally {
-      setIsLoading(false)
+    }).finally(() => {
+      if (!cancelled) setIsLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [filterStatus, appliedSearch, refreshTick])
+
+  function applyFiltersAndRefresh(status?: string) {
+    setIsLoading(true)
+    setError('')
+    setAppliedSearch(searchQuery.trim())
+    if (status !== undefined) {
+      setFilterStatus(status)
     }
+    setRefreshTick((tick) => tick + 1)
   }
 
   async function handleSendReply() {
@@ -174,7 +184,7 @@ export function AdminTickets() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchTickets}
+            onClick={() => applyFiltersAndRefresh()}
             disabled={isLoading}
             className="text-xs font-semibold bg-white border-rose-200 text-[#4c0519] hover:bg-rose-50"
           >
@@ -202,7 +212,7 @@ export function AdminTickets() {
                   placeholder="Buscar protocolo, email, nome..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && fetchTickets()}
+                  onKeyDown={(e) => e.key === 'Enter' && applyFiltersAndRefresh()}
                   className="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-xl border border-rose-200 bg-white text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -211,7 +221,7 @@ export function AdminTickets() {
               <div className="flex items-center gap-1 p-0.5 bg-rose-100/50 rounded-xl border border-rose-200/60 overflow-x-auto">
                 <button
                   type="button"
-                  onClick={() => setFilterStatus('all')}
+                  onClick={() => applyFiltersAndRefresh('all')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     filterStatus === 'all' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
                   }`}
@@ -220,7 +230,7 @@ export function AdminTickets() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFilterStatus('open')}
+                  onClick={() => applyFiltersAndRefresh('open')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     filterStatus === 'open' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
                   }`}
@@ -229,7 +239,7 @@ export function AdminTickets() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFilterStatus('in_progress')}
+                  onClick={() => applyFiltersAndRefresh('in_progress')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     filterStatus === 'in_progress' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
                   }`}
@@ -238,7 +248,7 @@ export function AdminTickets() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFilterStatus('resolved')}
+                  onClick={() => applyFiltersAndRefresh('resolved')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     filterStatus === 'resolved' ? 'bg-primary text-white shadow-2xs' : 'text-text-light hover:text-text'
                   }`}

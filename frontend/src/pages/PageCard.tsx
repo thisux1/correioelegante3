@@ -17,8 +17,8 @@ export function PageCard() {
   const { pageId, id } = useParams<{ pageId?: string; id?: string }>()
   const resolvedPageId = pageId || id
   const [page, setPage] = useState<PageSummary | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(() => Boolean(resolvedPageId))
+  const [error, setError] = useState(() => (resolvedPageId ? '' : 'Página não encontrada'))
   const [isEnvelopeOpened, setIsEnvelopeOpened] = useState(false)
 
   // Privacidade: Garante que cartas acessíveis por link direto NUNCA sejam indexadas por buscadores (Google/Bing)
@@ -43,20 +43,15 @@ export function PageCard() {
 
   useEffect(() => {
     if (!resolvedPageId) {
-      setError('Página não encontrada')
-      setIsLoading(false)
       return
     }
 
+    const pageIdToLoad = resolvedPageId
     const abortController = new AbortController()
 
     async function fetchPageCard() {
-      if (!resolvedPageId) {
-        return
-      }
-
       try {
-        const loadedPage = await pageService.loadPage(resolvedPageId)
+        const loadedPage = await pageService.loadPage(pageIdToLoad)
         if (!abortController.signal.aborted) {
           setPage(loadedPage)
         }

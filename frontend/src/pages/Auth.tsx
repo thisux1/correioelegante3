@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { isAxiosError } from 'axios'
 import { z } from 'zod'
@@ -127,8 +127,9 @@ export interface AuthProps {
 export function Auth({ isLoading = false }: AuthProps = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
-  const initialMode = searchParams.get('mode') === 'register' ? 'register' : (searchParams.get('mode') === 'forgot' ? 'forgot' : 'login')
-  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>(initialMode)
+  const urlMode = searchParams.get('mode')
+  const mode: 'login' | 'register' | 'forgot' =
+    urlMode === 'register' || urlMode === 'forgot' ? urlMode : 'login'
   const [forgotSent, setForgotSent] = useState(false)
   
   const [showPassword, setShowPassword] = useState(false)
@@ -138,15 +139,7 @@ export function Auth({ isLoading = false }: AuthProps = {}) {
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
 
-  useEffect(() => {
-    const urlMode = searchParams.get('mode')
-    if (urlMode === 'register' || urlMode === 'login' || urlMode === 'forgot') {
-      setMode(urlMode)
-    }
-  }, [searchParams])
-
   const handleTabChange = (newMode: 'login' | 'register' | 'forgot') => {
-    setMode(newMode)
     setError('')
     setForgotSent(false)
     setSearchParams({ mode: newMode }, { replace: true })
@@ -178,8 +171,8 @@ export function Auth({ isLoading = false }: AuthProps = {}) {
     },
   })
 
-  const registerPassword = registerForm.watch('password') || ''
-  const registerConfirmPassword = registerForm.watch('confirmPassword') || ''
+  const registerPassword = useWatch({ control: registerForm.control, name: 'password' }) || ''
+  const registerConfirmPassword = useWatch({ control: registerForm.control, name: 'confirmPassword' }) || ''
   const strength = useMemo(() => getPasswordStrength(registerPassword), [registerPassword])
   const passwordsMatch = registerPassword.length > 0 && registerConfirmPassword.length > 0 && registerPassword === registerConfirmPassword
 
@@ -251,7 +244,6 @@ export function Auth({ isLoading = false }: AuthProps = {}) {
           message: 'Este e-mail já possui conta cadastrada.',
         })
         setError('Este e-mail já está cadastrado. Faça login para continuar.')
-        setMode('login')
         setSearchParams({ mode: 'login' }, { replace: true })
       } else {
         setError(getApiErrorMessage(err, 'Erro ao criar conta. Tente novamente em instantes.'))
@@ -458,7 +450,7 @@ export function Auth({ isLoading = false }: AuthProps = {}) {
                         <button
                           type="button"
                           onClick={() => {
-                            setMode('forgot')
+                            setSearchParams({ mode: 'forgot' }, { replace: true })
                             setError('')
                             setForgotSent(false)
                           }}
