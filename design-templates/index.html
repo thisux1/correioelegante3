@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Correio Elegante — Prévias de Estilo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'VT323', monospace;
+    background: #fff5f7;
+    color: #4c0519;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  header { max-width: 960px; margin: 0 auto 40px; }
+  h1 {
+    font-family: 'Silkscreen', monospace;
+    font-size: clamp(20px, 4vw, 32px);
+    color: #9f1239;
+    margin-bottom: 8px;
+  }
+  header p { font-size: 20px; color: #881337; }
+  .grid {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: #fff;
+    border: 3px solid #4c0519;
+    box-shadow: 4px 4px 0 #4c0519;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-title {
+    font-family: 'Silkscreen', monospace;
+    font-size: 13px;
+    background: #ffe4ec;
+    border-bottom: 3px solid #4c0519;
+    padding: 10px 12px;
+    color: #4c0519;
+  }
+  .card-body { padding: 14px; flex: 1; }
+  .card-body p { font-size: 18px; line-height: 1.3; margin-bottom: 6px; }
+  .momento { color: #be123c; }
+  .links {
+    display: flex;
+    border-top: 3px solid #4c0519;
+  }
+  .links a {
+    flex: 1;
+    font-family: 'Silkscreen', monospace;
+    font-size: 11px;
+    text-align: center;
+    padding: 12px 8px;
+    text-decoration: none;
+    color: #4c0519;
+    background: #fff5f7;
+  }
+  .links a:hover { background: #e11d48; color: #fff; }
+  .links a + a { border-left: 3px solid #4c0519; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CORREIO ELEGANTE — PRÉVIAS DE ESTILO</h1>
+  <p>6 linguagens × 6 momentos. Exploração para o sistema "romantic OS".</p>
+</header>
+<div class="grid">
+  <div class="card">
+    <div class="card-title">ORKUT × MSN</div>
+    <div class="card-body">
+      <p class="momento">carta de amor</p>
+      <p>Depoimento de Orkut com janela MSN funcional — nudge, karma bars, aprovação de depo.</p>
+    </div>
+    <div class="links"><a href="orkut-msn/lp.html">LP</a><a href="orkut-msn/card.html">CARTA</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">RETRO OS</div>
+    <div class="card-body">
+      <p class="momento">crush secreto</p>
+      <p>Desktop Win9x completo: janelas arrastáveis, taskbar, "1 nova mensagem".</p>
+    </div>
+    <div class="links"><a href="retro-os/lp.html">LP</a><a href="retro-os/card.html">CARTA</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">FRUTIGER AERO</div>
+    <div class="card-body">
+      <p class="momento">data especial</p>
+      <p>Aurora glossy nature-tech, vidro, bolhas procedurais, contador de 365 dias.</p>
+    </div>
+    <div class="links"><a href="frutiger-aero/lp.html">LP</a><a href="frutiger-aero/card.html">CARTA</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">PIXEL RPG</div>
+    <div class="card-body">
+      <p class="momento">pedido de namoro</p>
+      <p>JRPG 16-bit jogável: quest log, heart-HP, escolha YES/YES, "QUEST COMPLETA!".</p>
+    </div>
+    <div class="links"><a href="pixel-rpg/lp.html">LP</a><a href="pixel-rpg/card.html">CARTA</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">FLIP PHONE SMS</div>
+    <div class="card-body">
+      <p class="momento">convite / date</p>
+      <p>Candybar 2004 em CSS puro: LCD verde, T9 funcional, menu de resposta Nokia.</p>
+    </div>
+    <div class="links"><a href="flip-phone-sms/lp.html">LP</a><a href="flip-phone-sms/card.html">CARTA</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">EARLY WEB</div>
+    <div class="card-body">
+      <p class="momento">anônimo</p>
+      <p>Fan page GeoCities: marquee, guestbook, contador travado em 1 visitante, pistas.</p>
+    </div>
+    <div class="links"><a href="early-web/lp.html">LP</a><a href="early-web/card.html">CARTA</a></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Correio Elegante — você escreve como fala, a gente transforma em inesquecível</title>
+<meta name="description" content="Conte a história de vocês do seu jeito. A gente transforma numa página linda, só de vocês dois, pra mandar por link.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Varela+Round&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CORREIO ELEGANTE · FRUTIGER AERO PREVIEW
+   morning-light romantic palette — cream / blush / rose / dew
+   ============================================================ */
+:root{
+  --cream:      #fffaf5;
+  --blush-050:  #fff5f7;
+  --blush-100:  #ffe4ec;
+  --blush-200:  #fecdd3;
+  --blush-300:  #fda4af;
+  --rose-500:   #f43f5e;
+  --rose-600:   #e11d48;
+  --rose-700:   #be123c;
+  --wine-900:   #4c0519;
+  --wine-700:   #701a35;
+  --wine-600:   #881337;
+  --gold:       #ffd98e;
+  --dew-100:    #d7f5e3;
+  --dew-200:    #a9e8c6;
+
+  --glass-bg:   linear-gradient(150deg, rgba(255,255,255,.74), rgba(255,255,255,.36) 58%, rgba(255,255,255,.52));
+  --glass-brd:  rgba(255,255,255,.85);
+  --radius-panel: 28px;
+
+  --font-sans:  "Nunito", "Varela Round", system-ui, sans-serif;
+  --font-round: "Varela Round", "Nunito", system-ui, sans-serif;
+  --font-pixel: "Silkscreen", monospace;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  font-family:var(--font-sans);
+  color:var(--wine-900);
+  background:
+    linear-gradient(180deg,
+      #fffaf4 0%,
+      #fff3ef 14%,
+      #ffeef4 34%,
+      #ffe4ec 58%,
+      #fbdbe7 78%,
+      #f6cfe0 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:rgba(244,63,94,.22); }
+
+/* ---------------- sky layers ---------------- */
+.sky{ position:fixed; inset:0; z-index:-2; overflow:hidden; pointer-events:none; }
+
+.aurora{ position:absolute; border-radius:50%; will-change:transform; }
+.aurora.a1{
+  width:120vmax; height:60vmax; left:-30vmax; top:-28vmax;
+  background:radial-gradient(ellipse at 50% 50%, rgba(253,164,175,.42), transparent 65%);
+  animation:aurora-sway 26s ease-in-out infinite alternate;
+}
+.aurora.a2{
+  width:100vmax; height:52vmax; right:-36vmax; top:-10vmax;
+  background:radial-gradient(ellipse at 50% 50%, rgba(255,213,170,.38), transparent 62%);
+  animation:aurora-sway 32s ease-in-out infinite alternate-reverse;
+}
+.aurora.a3{
+  width:80vmax; height:46vmax; left:-14vmax; top:22vh;
+  background:radial-gradient(ellipse at 50% 50%, rgba(196,181,253,.16), transparent 60%);
+  animation:aurora-sway 38s ease-in-out infinite alternate;
+}
+@keyframes aurora-sway{
+  from{ transform:translate3d(0,0,0) rotate(-2deg); }
+  to  { transform:translate3d(6vmax,3vmax,0) rotate(2deg); }
+}
+
+/* morning sun + lens flare */
+.sun{
+  position:absolute; top:-16vmin; right:6vw;
+  width:68vmin; height:68vmin; border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(255,246,222,.95) 0%,
+    rgba(255,223,164,.55) 28%,
+    rgba(255,203,150,.22) 48%,
+    transparent 70%);
+}
+.flare{
+  position:absolute; border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.55);
+  background:radial-gradient(circle, rgba(255,255,255,.28), transparent 62%);
+}
+.flare.f1{ width:9vmin;  height:9vmin;  top:34vmin; right:34vmin; opacity:.55; }
+.flare.f2{ width:5vmin;  height:5vmin;  top:52vmin; right:52vmin; opacity:.4; }
+.flare.f3{ width:14vmin; height:14vmin; top:74vmin; right:74vmin; opacity:.28; }
+
+/* soft clouds — pure gradient ellipses, no filters */
+.cloud{
+  position:absolute; border-radius:50%;
+  background:radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.85), rgba(255,255,255,0) 68%);
+}
+.cloud.c1{ width:52vmin; height:16vmin; top:12vh; left:-8vw;  animation:cloud-drift 90s linear infinite; }
+.cloud.c2{ width:40vmin; height:12vmin; top:30vh; right:-6vw; animation:cloud-drift 120s linear infinite reverse; opacity:.7; }
+.cloud.c3{ width:64vmin; height:18vmin; top:64vh; left:-14vw; animation:cloud-drift 150s linear infinite; opacity:.5; }
+@keyframes cloud-drift{
+  from{ transform:translateX(0); }
+  to  { transform:translateX(30vw); }
+}
+
+/* dewy meadow mist rising from the bottom */
+.meadow{
+  position:fixed; left:0; right:0; bottom:0; height:44vh; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(70% 120% at 12% 108%, rgba(169,232,198,.5), transparent 68%),
+    radial-gradient(60% 110% at 82% 104%, rgba(187,247,208,.42), transparent 66%),
+    radial-gradient(80% 130% at 50% 118%, rgba(215,245,227,.55), transparent 70%),
+    linear-gradient(180deg, transparent 30%, rgba(215,245,227,.5) 100%);
+}
+.meadow::after{ /* dew droplets resting on the grass-line */
+  content:""; position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 8%  78%, rgba(255,255,255,.9) 0 3px, transparent 5px),
+    radial-gradient(circle at 22% 90%, rgba(255,255,255,.8) 0 2px, transparent 4px),
+    radial-gradient(circle at 41% 84%, rgba(255,255,255,.85) 0 4px, transparent 6px),
+    radial-gradient(circle at 63% 76%, rgba(255,255,255,.8) 0 3px, transparent 5px),
+    radial-gradient(circle at 77% 92%, rgba(255,255,255,.9) 0 2px, transparent 4px),
+    radial-gradient(circle at 91% 82%, rgba(255,255,255,.85) 0 4px, transparent 6px);
+  opacity:.8;
+}
+
+/* ---------------- bubbles & droplets ---------------- */
+#bubbles{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+.bubble{
+  position:absolute; bottom:-90px; border-radius:50%;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,.95) 0 5%, rgba(255,255,255,.4) 14%, transparent 38%),
+    radial-gradient(circle at 66% 76%, rgba(255,255,255,.55) 0 4%, transparent 22%),
+    conic-gradient(from 210deg, transparent 0 32%, rgba(186,230,253,.22) 44%, rgba(255,190,215,.22) 56%, transparent 68%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 55%, rgba(255,255,255,.4) 96%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.5),
+    inset -7px -9px 16px rgba(255,255,255,.32),
+    inset 5px 7px 12px rgba(255,255,255,.55),
+    0 12px 26px rgba(190,18,60,.08);
+  animation:bubble-rise linear infinite;
+  will-change:transform;
+}
+@keyframes bubble-rise{
+  0%  { transform:translate3d(0,0,0) scale(1); opacity:0; }
+  6%  { opacity:1; }
+  92% { opacity:.9; }
+  100%{ transform:translate3d(var(--drift,30px),-112vh,0) scale(1.04); opacity:0; }
+}
+
+/* droplet: sits on glass surfaces */
+.dews{ position:absolute; inset:0; overflow:hidden; border-radius:inherit; pointer-events:none; }
+.droplet{
+  position:absolute;
+  border-radius:52% 48% 55% 45% / 58% 56% 44% 42%;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255,255,255,.95) 0 10%, rgba(255,255,255,.35) 28%, transparent 55%),
+    radial-gradient(circle at 62% 78%, rgba(190,18,60,.08), transparent 55%),
+    linear-gradient(160deg, rgba(255,255,255,.8), rgba(255,255,255,.12) 70%);
+  box-shadow:
+    inset -2px -3px 5px rgba(136,19,55,.14),
+    inset 2px 3px 5px rgba(255,255,255,.95),
+    0 3px 5px rgba(76,5,25,.16);
+}
+.droplet::after{ /* refracted sky at the bottom of the drop */
+  content:""; position:absolute; left:22%; right:22%; bottom:9%; height:26%;
+  border-radius:50%;
+  background:radial-gradient(ellipse, rgba(255,228,236,.75), transparent 70%);
+}
+
+/* ---------------- glass primitives ---------------- */
+.glass{
+  position:relative;
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(16px) saturate(1.5);
+  backdrop-filter:blur(16px) saturate(1.5);
+  border:1px solid var(--glass-brd);
+  border-radius:var(--radius-panel);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,.95),
+    inset 0 -16px 30px rgba(255,255,255,.22),
+    0 26px 60px -22px rgba(136,19,55,.28),
+    0 4px 14px rgba(136,19,55,.07);
+}
+.glass::before{ /* specular sweep across the top */
+  content:""; position:absolute; left:5%; right:5%; top:0; height:42%;
+  border-radius:inherit; border-bottom-left-radius:60% 100%; border-bottom-right-radius:60% 100%;
+  background:linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0) 85%);
+  pointer-events:none;
+}
+
+/* glossy aero buttons */
+.btn{
+  position:relative; display:inline-flex; align-items:center; gap:.55rem;
+  font-family:var(--font-sans); font-weight:800; font-size:1.02rem;
+  color:#fff; text-decoration:none; letter-spacing:.01em;
+  padding:.95rem 2rem; border-radius:999px; border:0; cursor:pointer;
+  background:linear-gradient(180deg, #fb7288 0%, var(--rose-600) 52%, var(--rose-700) 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,.7),
+    inset 0 -10px 16px rgba(136,19,55,.5),
+    0 14px 30px -6px rgba(225,29,72,.5),
+    0 3px 8px rgba(225,29,72,.35);
+  text-shadow:0 1px 2px rgba(136,19,55,.45);
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  overflow:hidden;
+}
+.btn::before{ /* the classic aero gloss cap */
+  content:""; position:absolute; left:5%; right:5%; top:5%; height:46%;
+  border-radius:999px 999px 55% 55% / 999px 999px 42% 42%;
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.18));
+  pointer-events:none;
+}
+.btn::after{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+  pointer-events:none;
+}
+.btn:hover{ transform:translateY(-2px); filter:saturate(1.12); }
+.btn:active{ transform:translateY(1px) scale(.98); }
+
+.btn-ghost{
+  background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.55));
+  color:var(--rose-700); text-shadow:none;
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,1),
+    inset 0 -8px 14px rgba(253,164,175,.28),
+    0 12px 26px -8px rgba(136,19,55,.3),
+    0 2px 6px rgba(136,19,55,.14);
+}
+.btn-ghost::after{ box-shadow:inset 0 0 0 1px rgba(255,255,255,.8); }
+
+/* small orb icon button */
+.orb{
+  position:relative; width:44px; height:44px; flex:none; border-radius:50%;
+  display:grid; place-items:center; color:var(--rose-600);
+  background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,235,240,.65) 45%, rgba(253,164,175,.4) 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,1),
+    inset 0 -6px 10px rgba(225,29,72,.22),
+    0 8px 18px -4px rgba(136,19,55,.3);
+}
+.orb::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);
+}
+
+/* ---------------- layout ---------------- */
+.wrap{ width:min(1120px, 92vw); margin:0 auto; position:relative; z-index:1; }
+
+/* ---------------- nav taskbar ---------------- */
+.taskbar{
+  position:fixed; top:14px; left:50%; transform:translateX(-50%);
+  z-index:50; width:min(1120px, 94vw);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.55rem .65rem .55rem 1.1rem;
+  border-radius:999px;
+}
+.brand{ display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--wine-900); }
+.brand .orb{ width:38px; height:38px; }
+.brand b{ font-family:var(--font-round); font-weight:400; font-size:1.06rem; letter-spacing:.01em; }
+.nav-links{ display:flex; gap:1.6rem; }
+.nav-links a{
+  color:var(--wine-700); text-decoration:none; font-weight:700; font-size:.95rem;
+  transition:color .15s ease;
+}
+.nav-links a:hover{ color:var(--rose-600); }
+.nav-cta{
+  font-size:.9rem; padding:.6rem 1.3rem;
+}
+@media (max-width:640px){ .nav-links{ display:none; } }
+
+/* ---------------- hero ---------------- */
+.hero{
+  display:grid; grid-template-columns:1.15fr .85fr; gap:2.4rem; align-items:center;
+  padding:9.5rem 0 5.5rem;
+}
+@media (max-width:900px){
+  .hero{ grid-template-columns:1fr; padding-top:8rem; gap:2rem; }
+}
+
+.eyebrow{
+  font-family:var(--font-pixel); font-size:.72rem; letter-spacing:.14em;
+  color:var(--rose-700); text-transform:lowercase; margin-bottom:1.1rem;
+  display:flex; align-items:center; gap:.55rem;
+}
+.eyebrow svg{ flex:none; }
+
+.hero h1{
+  font-family:var(--font-round); font-weight:400;
+  font-size:clamp(2.3rem, 5.4vw, 4rem); line-height:1.08;
+  letter-spacing:-.01em; color:var(--wine-900);
+}
+.hero h1 .grad{
+  background:linear-gradient(115deg, var(--rose-600) 10%, var(--rose-500) 55%, #ff8fab 95%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero .lead{
+  margin-top:1.3rem; font-size:1.16rem; line-height:1.65;
+  color:var(--wine-700); max-width:34rem; font-weight:600;
+}
+.hero-ctas{ display:flex; flex-wrap:wrap; gap:.9rem; margin-top:2.1rem; }
+.micro{
+  margin-top:1.4rem; font-size:.86rem; font-weight:700; color:var(--wine-600);
+  display:flex; align-items:center; gap:.45rem; flex-wrap:wrap;
+}
+.micro svg{ color:var(--rose-600); }
+.micro .dot{ opacity:.5; }
+
+/* hero floating preview card */
+.hero-preview{ position:relative; display:grid; place-items:center; }
+.preview-card{
+  width:min(340px, 86vw); padding:1.5rem 1.4rem 1.3rem;
+  transform:rotate(4deg);
+  animation:bob 7s ease-in-out infinite;
+}
+@keyframes bob{
+  0%,100%{ transform:rotate(4deg) translateY(0); }
+  50%    { transform:rotate(2.5deg) translateY(-12px); }
+}
+.preview-card .pc-to{
+  font-family:var(--font-pixel); font-size:.68rem; color:var(--rose-700);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.preview-card .pc-rule{
+  height:1px; margin:.8rem 0;
+  background:linear-gradient(90deg, transparent, rgba(136,19,55,.25), transparent);
+}
+.pc-line{ height:.62rem; border-radius:99px; margin:.55rem 0;
+  background:linear-gradient(90deg, rgba(136,19,55,.16), rgba(136,19,55,.07)); }
+.pc-line.w70{ width:70%; } .pc-line.w85{ width:85%; } .pc-line.w55{ width:55%; }
+.pc-count{
+  margin-top:1rem; display:flex; align-items:baseline; gap:.5rem;
+  font-family:var(--font-pixel); color:var(--wine-900);
+}
+.pc-count b{ font-size:1.6rem; color:var(--rose-600); text-shadow:0 2px 0 rgba(255,255,255,.7); }
+.pc-count span{ font-size:.6rem; color:var(--wine-600); }
+/* secondary floating shard behind the card */
+.shard{
+  position:absolute; width:150px; height:190px; border-radius:22px;
+  background:linear-gradient(140deg, rgba(255,255,255,.6), rgba(255,255,255,.15));
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 18px 40px -14px rgba(136,19,55,.25);
+  transform:rotate(-9deg) translate(-64%, -8%);
+  animation:bob 9s ease-in-out infinite reverse;
+}
+@media (max-width:900px){ .shard{ display:none; } }
+
+/* ---------------- sections ---------------- */
+section{ padding:3.4rem 0; }
+.sec-head{ max-width:44rem; margin-bottom:2.4rem; }
+.sec-head h2{
+  font-family:var(--font-round); font-weight:400;
+  font-size:clamp(1.7rem, 3.6vw, 2.5rem); line-height:1.15; color:var(--wine-900);
+}
+.sec-head p{ margin-top:.7rem; color:var(--wine-700); font-weight:600; font-size:1.06rem; line-height:1.6; }
+
+/* steps */
+.steps-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1.4rem; }
+@media (max-width:860px){ .steps-grid{ grid-template-columns:1fr; } }
+.step{
+  padding:1.9rem 1.7rem 1.7rem;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.step:hover{ transform:translateY(-6px); }
+.step .orb{ margin-bottom:1.2rem; }
+.step .num{
+  position:absolute; top:1.3rem; right:1.5rem;
+  font-family:var(--font-pixel); font-size:.8rem; color:rgba(136,19,55,.4);
+}
+.step h3{ font-family:var(--font-round); font-weight:400; font-size:1.25rem; margin-bottom:.55rem; }
+.step p{ color:var(--wine-700); font-weight:600; font-size:.97rem; line-height:1.6; }
+
+/* momentos */
+.momentos-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1.2rem; }
+@media (max-width:960px){ .momentos-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:560px){ .momentos-grid{ grid-template-columns:1fr; } }
+.momento{
+  padding:1.6rem 1.4rem; overflow:hidden;
+  transition:transform .25s ease;
+}
+.momento:hover{ transform:translateY(-6px) rotate(-.6deg); }
+.momento .orb{ margin-bottom:1rem; }
+.momento h3{ font-family:var(--font-round); font-weight:400; font-size:1.1rem; margin-bottom:.45rem; }
+.momento p{ color:var(--wine-700); font-weight:600; font-size:.92rem; line-height:1.55; }
+
+/* trust strip */
+.strip{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  gap:.4rem 2.4rem; padding:1.4rem 2rem; margin-top:.6rem;
+}
+.strip span{
+  display:flex; align-items:center; gap:.55rem;
+  font-weight:800; font-size:.95rem; color:var(--wine-700); white-space:nowrap;
+}
+.strip svg{ color:var(--rose-600); flex:none; }
+
+/* final cta */
+.cta-panel{
+  text-align:center; padding:4.2rem 2rem 4.4rem; overflow:hidden;
+}
+.cta-panel .sun-mini{
+  position:absolute; top:-34%; left:50%; transform:translateX(-50%);
+  width:60%; aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,240,208,.85), rgba(255,214,160,.3) 45%, transparent 68%);
+  pointer-events:none;
+}
+.cta-panel h2{
+  position:relative; font-family:var(--font-round); font-weight:400;
+  font-size:clamp(1.8rem, 4vw, 2.7rem); line-height:1.15; color:var(--wine-900);
+  max-width:40rem; margin:0 auto;
+}
+.cta-panel p{
+  position:relative; margin:1.1rem auto 2rem; max-width:30rem;
+  color:var(--wine-700); font-weight:600; font-size:1.05rem; line-height:1.6;
+}
+.cta-from{
+  position:relative; margin-top:1.6rem;
+  font-family:var(--font-pixel); font-size:.68rem; color:var(--wine-600);
+}
+
+/* footer */
+footer{ padding:2.6rem 0 7rem; text-align:center; }
+.foot-line{
+  font-family:var(--font-pixel); font-size:.66rem; color:var(--wine-600);
+  display:flex; flex-wrap:wrap; justify-content:center; gap:.5rem 1.2rem;
+}
+.foot-line a{ color:var(--rose-700); text-decoration:none; }
+.foot-line a:hover{ text-decoration:underline; }
+
+/* reveal on scroll */
+.rise{ opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.rise.in{ opacity:1; transform:none; }
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  .rise{ opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- sky -->
+<div class="sky" aria-hidden="true">
+  <div class="aurora a1"></div>
+  <div class="aurora a2"></div>
+  <div class="aurora a3"></div>
+  <div class="sun"></div>
+  <div class="flare f1"></div>
+  <div class="flare f2"></div>
+  <div class="flare f3"></div>
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+</div>
+<div class="meadow" aria-hidden="true"></div>
+<div id="bubbles" aria-hidden="true"></div>
+
+<!-- aero taskbar -->
+<nav class="taskbar glass" aria-label="Navegação">
+  <div class="dews" data-dew="3"></div>
+  <a class="brand" href="#">
+    <span class="orb" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5 12 13l8.5-5.5"/><path d="M12 13l-1.8 3.4a.3.3 0 0 0 .52.3L12 15.5l1.28 1.2a.3.3 0 0 0 .52-.3L12 13Z" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <b>correio elegante</b>
+  </a>
+  <div class="nav-links">
+    <a href="#como-funciona">como funciona</a>
+    <a href="#momentos">momentos</a>
+    <a href="card.html">ver exemplo</a>
+  </div>
+  <a class="btn nav-cta" href="#comecar">começar</a>
+</nav>
+
+<!-- hero -->
+<header class="hero wrap">
+  <div>
+    <p class="eyebrow">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.9-9.8-9.2C.6 8.6 2.4 5.3 5.7 5.1 7.7 5 9.3 6.2 12 8.6c2.7-2.4 4.3-3.6 6.3-3.5 3.3.2 5.1 3.5 3.5 6.7C19.5 16.1 12 21 12 21Z"/></svg>
+      uma carta que mora num link
+    </p>
+    <h1>Você escreve<br>como fala.<br><span class="grad">A gente transforma<br>em inesquecível.</span></h1>
+    <p class="lead">Conta a história de vocês do seu jeito — a gente escreve a carta, monta uma página linda e te entrega um link. Aí é só mandar e ver a pessoa derreter no meio da tarde de uma terça-feira.</p>
+    <div class="hero-ctas">
+      <a class="btn" href="#comecar">Começar minha carta</a>
+      <a class="btn btn-ghost" href="card.html">Ver uma página pronta</a>
+    </div>
+    <p class="micro">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>
+      menos de 3 minutos
+      <span class="dot">·</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>
+      sem precisar escrever bonito
+      <span class="dot">·</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>
+      o link é só de vocês
+    </p>
+  </div>
+
+  <div class="hero-preview" aria-hidden="true">
+    <div class="shard"></div>
+    <div class="preview-card glass">
+      <div class="dews" data-dew="5"></div>
+      <div class="pc-to">
+        <span>para: alguém especial</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--rose-600)"><path d="M12 21s-7.5-4.9-9.8-9.2C.6 8.6 2.4 5.3 5.7 5.1 7.7 5 9.3 6.2 12 8.6c2.7-2.4 4.3-3.6 6.3-3.5 3.3.2 5.1 3.5 3.5 6.7C19.5 16.1 12 21 12 21Z"/></svg>
+      </div>
+      <div class="pc-rule"></div>
+      <div class="pc-line w85"></div>
+      <div class="pc-line w70"></div>
+      <div class="pc-line w85"></div>
+      <div class="pc-line w55"></div>
+      <div class="pc-count"><b>365</b><span>dias de nós</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- como funciona -->
+<section id="como-funciona" class="wrap">
+  <div class="sec-head rise">
+    <p class="eyebrow">// três passos e um suspiro</p>
+    <h2>Como funciona</h2>
+    <p>Nada de formulário com cara de imposto de renda. É uma conversa rápida, e o resto é com a gente.</p>
+  </div>
+  <div class="steps-grid">
+    <article class="step glass rise">
+      <div class="dews" data-dew="3"></div>
+      <span class="num">01</span>
+      <span class="orb" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3 8.9 8.9 0 0 1-3.8-.85L3 20l1.1-5.3a8.1 8.1 0 0 1-.9-3.7A8.4 8.4 0 0 1 11.7 2.7 8.4 8.4 0 0 1 21 11.5Z"/></svg>
+      </span>
+      <h3>Você conta do seu jeito</h3>
+      <p>A gente faz umas perguntas simples sobre vocês dois. Responde como se estivesse conversando com um amigo — gíria, errinho, meia frase. Tudo vale.</p>
+    </article>
+    <article class="step glass rise">
+      <div class="dews" data-dew="4"></div>
+      <span class="num">02</span>
+      <span class="orb" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.9L19 9.8l-4.9 1.9L12 17l-1.9-5.3L5 9.8l5.1-1.9L12 3Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></svg>
+      </span>
+      <h3>A gente escreve a carta</h3>
+      <p>Sua história vira uma carta com a sua cara. Nada de texto pronto de internet: é vocês dois, traduzidos em palavras que parecem suas.</p>
+    </article>
+    <article class="step glass rise">
+      <div class="dews" data-dew="3"></div>
+      <span class="num">03</span>
+      <span class="orb" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7-7.1l-1.7 1.7"/><path d="M14 10a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7 7.1l1.7-1.7"/></svg>
+      </span>
+      <h3>Você recebe um link</h3>
+      <p>Uma página linda, só de vocês, que abre direto no celular. Manda no WhatsApp, no direct, onde quiser. Segura o coração.</p>
+    </article>
+  </div>
+</section>
+
+<!-- momentos -->
+<section id="momentos" class="wrap">
+  <div class="sec-head rise">
+    <p class="eyebrow">// tem sempre um motivo</p>
+    <h2>Pra todo momento que merece virar lembrança</h2>
+    <p>Não precisa de data redonda no calendário. Precisa de vontade de ver a pessoa sorrir.</p>
+  </div>
+  <div class="momentos-grid">
+    <article class="momento glass rise">
+      <span class="orb" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/><path d="M12 17.4s-3-2-3.9-3.7c-.7-1.4.1-2.9 1.5-3 .9-.1 1.6.5 2.4 1.6.8-1.1 1.5-1.7 2.4-1.6 1.4.1 2.2 1.6 1.5 3-1 1.7-3.9 3.7-3.9 3.7Z" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <h3>Data especial</h3>
+      <p>Aniversário de namoro, de casamento, do primeiro beijo. Todo dia que mudou a história de vocês merece marcador.</p>
+    </article>
+    <article class="momento glass rise">
+      <span class="orb" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="5.5"/><path d="M9.8 9.6 11 6l1 1.5L13 6l1.2 3.6"/><path d="M12 12.3l1 1.1a1.5 1.5 0 0 1-2.1 2.1l-.9-.9-.9.9a1.5 1.5 0 0 1-2.1-2.1l1-1.1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <h3>Pedido de namoro</h3>
+      <p>Chega de ensaiar o discurso no chuveiro. Deixa a página perguntar por você — e prepara o print da resposta.</p>
+    </article>
+    <article class="momento glass rise">
+      <span class="orb" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/></svg>
+      </span>
+      <h3>Só porque sim</h3>
+      <p>Terça-feira também merece carta. Aliás, terça é exatamente o dia em que a pessoa mais precisa de uma.</p>
+    </article>
+    <article class="momento glass rise">
+      <span class="orb" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c8 1 14-5 14-13 0-1.5-.5-3-1-4-8 0-14 5-14 13 0 1.5.5 3 1 4Z"/><path d="M4 20c3-7 7-11 13-13"/></svg>
+      </span>
+      <h3>Pedido de desculpas</h3>
+      <p>Errou? Acontece. Uma carta honesta abre uma porta que áudio de cinco minutos não abre.</p>
+    </article>
+  </div>
+</section>
+
+<!-- strip -->
+<section class="wrap">
+  <div class="strip glass rise">
+    <div class="dews" data-dew="4"></div>
+    <span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+      leva menos de 3 minutos
+    </span>
+    <span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7-7.1l-1.7 1.7"/><path d="M14 10a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7 7.1l1.7-1.7"/></svg>
+      o link fica no ar pra sempre
+    </span>
+    <span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.9L19 9.8l-4.9 1.9L12 17l-1.9-5.3L5 9.8l5.1-1.9L12 3Z"/></svg>
+      nada de template frio
+    </span>
+  </div>
+</section>
+
+<!-- final cta -->
+<section id="comecar" class="wrap">
+  <div class="cta-panel glass rise">
+    <div class="dews" data-dew="6"></div>
+    <div class="sun-mini" aria-hidden="true"></div>
+    <h2>A próxima lembrança favorita de vocês começa com uma frase.</h2>
+    <p>Escreve a primeira do jeito que sair. A gente cuida de todo o resto — e o resultado parece obra de quem sabe o que tá fazendo.</p>
+    <a class="btn" href="card.html">Escrever minha carta</a>
+    <p class="cta-from">de: você · para: quem faz seu coração fazer tumb-tum</p>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-line">
+    <span>correio elegante</span>
+    <span>cartas que moram na internet</span>
+    <a href="card.html">ver um exemplo &rarr;</a>
+    <span>feito com vidro, orvalho e carinho</span>
+  </div>
+</footer>
+
+<script>
+/* ---------- floating bubbles (pure CSS circles, transform-only anim) ---------- */
+(function(){
+  var field = document.getElementById('bubbles');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var n = reduce ? 0 : (window.innerWidth < 640 ? 8 : 14);
+  for(var i=0;i<n;i++){
+    var b = document.createElement('i');
+    b.className = 'bubble';
+    var s = 10 + Math.random()*72;
+    b.style.width = b.style.height = s + 'px';
+    b.style.left = (Math.random()*100) + '%';
+    b.style.setProperty('--drift', (Math.random()*90-45) + 'px');
+    b.style.animationDuration = (15 + Math.random()*16) + 's';
+    b.style.animationDelay = (-Math.random()*24) + 's';
+    field.appendChild(b);
+  }
+})();
+
+/* ---------- dew droplets on glass panels ---------- */
+(function(){
+  document.querySelectorAll('[data-dew]').forEach(function(host){
+    var count = parseInt(host.getAttribute('data-dew'), 10) || 3;
+    for(var i=0;i<count;i++){
+      var d = document.createElement('i');
+      d.className = 'droplet';
+      var s = 6 + Math.random()*14;
+      d.style.width = s + 'px';
+      d.style.height = (s * (0.92 + Math.random()*0.2)) + 'px';
+      d.style.left = (4 + Math.random()*90) + '%';
+      d.style.top = (6 + Math.random()*80) + '%';
+      d.style.opacity = (0.55 + Math.random()*0.4).toFixed(2);
+      host.appendChild(d);
+    }
+  });
+})();
+
+/* ---------- gentle rise-in on scroll ---------- */
+(function(){
+  var els = document.querySelectorAll('.rise');
+  if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in');}); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  els.forEach(function(e){ io.observe(e); });
+})();
+</script>
+</body>
+</html>

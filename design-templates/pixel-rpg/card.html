@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#9fd8f7"/>
+<title>Théo te mandou uma quest — Correio Elegante</title>
+<meta name="description" content="Uma carta interativa em pixel art: o Théo tem uma pergunta muito importante pra Mel."/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 6'%3E%3Cpath fill='%23e11d48' d='M1 0h2v1H1zM4 0h2v1H4zM0 1h7v2H0zM1 3h5v1H1zM2 4h3v1H2zM3 5h1v1H3z'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+/* ============ PIXEL-RPG · CORREIO ELEGANTE ============ */
+:root{
+  --ink:#4c0519;
+  --ink-soft:#701a35;
+  --cream:#fff7e0;
+  --cream-deep:#ffeec4;
+  --paper:#fffdf2;
+  --rose:#e11d48;
+  --rose-2:#f43f5e;
+  --rose-soft:#fb8ca0;
+  --rose-pale:#fda4af;
+  --rose-ghost:#f3c2ce;
+  --gold:#f2b134;
+  --gold-soft:#ffe3a1;
+  --sky-1:#9fd8f7;
+  --sky-2:#dff3fe;
+  --grass:#93d48c;
+  --grass-hi:#b5e8ab;
+  --grass-d:#5fae62;
+  --cloud:#ffffff;
+  --cloud-sh:#d7edfa;
+  --shadow:rgba(76,5,25,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'VT323',monospace;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,255,255,.55) 0 90px, transparent 91px),
+    radial-gradient(circle at 82% 78%, rgba(255,255,255,.4) 0 110px, transparent 111px),
+    linear-gradient(160deg,#f8efe0 0%, #f3e7d2 55%, #efd9c9 100%);
+  display:grid;place-items:center;
+  grid-template-columns:minmax(0,100%);
+  overflow:hidden;
+}
+svg{display:block}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+/* ---------- console bezel (desktop) ---------- */
+.console{position:relative;width:100%;min-width:0;height:100dvh}
+.screen{
+  position:relative;width:100%;height:100dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(180deg,var(--sky-1) 0%,var(--sky-2) 62%,#eef9e6 100%);
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+.console-foot{display:none}
+@media(min-width:920px){
+  .console{
+    width:auto;height:auto;padding:26px 30px 12px;
+    background:linear-gradient(180deg,#f8f0de,#efe0c8);
+    border:5px solid var(--ink);
+    box-shadow:
+      inset 0 0 0 4px #fff8ea,
+      inset 0 0 0 6px rgba(76,5,25,.14),
+      14px 14px 0 rgba(76,5,25,.14);
+  }
+  .console::before{ /* power LED */
+    content:"";position:absolute;top:10px;left:12px;width:8px;height:8px;
+    background:var(--rose);box-shadow:0 0 6px 1px rgba(225,29,72,.65);
+    animation:led 2.4s steps(1) infinite;
+  }
+  .console::after{ /* speaker slots */
+    content:"";position:absolute;top:9px;right:14px;width:4px;height:10px;
+    background:var(--ink-soft);opacity:.35;
+    box-shadow:8px 0 0 var(--ink-soft),16px 0 0 var(--ink-soft),24px 0 0 var(--ink-soft);
+  }
+  @keyframes led{0%,60%{opacity:1}61%,100%{opacity:.35}}
+  .screen{
+    width:min(94vw,940px);height:min(80vh,720px);
+    border:6px solid var(--ink);
+    box-shadow:inset 0 0 0 4px rgba(76,5,25,.12), inset 0 0 40px rgba(76,5,25,.06);
+  }
+  .console-foot{
+    display:flex;justify-content:center;align-items:center;gap:10px;
+    font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:3px;
+    color:var(--ink-soft);padding:10px 0 2px;
+  }
+  .console-foot .mini{opacity:.85}
+}
+
+/* ---------- HUD ---------- */
+.hud{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 6px;position:relative;z-index:30;
+}
+.hearts{display:flex;gap:5px}
+.hslot{position:relative;width:30px;height:26px;filter:drop-shadow(2px 2px 0 rgba(76,5,25,.25))}
+.hslot svg{position:absolute;inset:0;width:30px;height:26px}
+.hslot .on,.hslot .gold{display:none}
+.hslot.full .off{display:none}
+.hslot.full .on{display:block}
+.hslot.gold .off,.hslot.gold .on{display:none}
+.hslot.gold .gold{display:block}
+.hslot.pop{animation:hpop .45s steps(3)}
+@keyframes hpop{0%{transform:scale(1)}45%{transform:scale(1.45) rotate(-8deg)}100%{transform:scale(1)}}
+.hud-right{display:flex;align-items:center;gap:12px}
+.hud-brand{
+  font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;
+  color:var(--ink-soft);opacity:.75;display:none;
+}
+@media(min-width:560px){.hud-brand{display:block}}
+.snd-btn{
+  font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;
+  background:var(--cream);border:3px solid var(--ink);padding:5px 9px;
+  box-shadow:3px 3px 0 var(--shadow);
+}
+.snd-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+
+/* ---------- quest strip (mobile) ---------- */
+.quest-strip{
+  margin:2px 12px 0;padding:6px 10px;min-width:0;
+  font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px;
+  background:var(--cream-deep);border:3px solid var(--ink);
+  box-shadow:3px 3px 0 var(--shadow);
+  display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;
+  position:relative;z-index:25;
+}
+.quest-strip .qmark{color:var(--rose);animation:nudge 1s steps(2) infinite}
+.quest-strip .st{margin-left:auto;color:var(--ink-soft)}
+.quest-strip.done .st{color:var(--rose);font-weight:700}
+@media(min-width:768px){.quest-strip{display:none}}
+@media(max-width:380px){.quest-strip{font-size:9px;gap:6px}}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+
+/* ---------- overworld ---------- */
+.overworld{position:relative;flex:1;overflow:hidden}
+.sun{position:absolute;top:26px;left:8%;animation:sunbob 3.2s steps(4) infinite}
+@keyframes sunbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.cloud{position:absolute;animation:drift linear infinite}
+.cloud.c1{top:8%;animation-duration:56s;animation-delay:-8s}
+.cloud.c2{top:20%;animation-duration:74s;animation-delay:-40s;transform:scale(.7)}
+.cloud.c3{top:3%;animation-duration:64s;animation-delay:-22s;transform:scale(.85)}
+@keyframes drift{from{left:-140px}to{left:105%}}
+.float-heart{position:absolute;animation:floaty 4.5s steps(6) infinite;opacity:.9}
+.float-heart.f1{top:16%;left:70%;animation-delay:-1s}
+.float-heart.f2{top:30%;left:88%;animation-delay:-2.6s;transform:scale(.7)}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* grass */
+.grass{
+  position:absolute;left:0;right:0;bottom:0;height:26%;
+  background:
+    linear-gradient(45deg,rgba(76,5,25,.05) 25%,transparent 25%,transparent 75%,rgba(76,5,25,.05) 75%),
+    linear-gradient(45deg,rgba(76,5,25,.05) 25%,transparent 25%,transparent 75%,rgba(76,5,25,.05) 75%),
+    linear-gradient(180deg,var(--grass-hi) 0%,var(--grass) 45%,var(--grass-d) 100%);
+  background-size:10px 10px,10px 10px,auto;
+  background-position:0 0,5px 5px,0 0;
+  border-top:5px solid var(--grass-d);
+  box-shadow:inset 0 6px 0 rgba(255,255,255,.35);
+}
+.deco{position:absolute;bottom:0;left:0;width:100%;height:100%;pointer-events:none}
+.deco span{position:absolute;bottom:22%}
+
+/* actors */
+.actor{position:absolute;bottom:19%;width:92px;transition:transform .18s steps(3)}
+.actor > svg{width:92px;height:auto;animation:bob .7s steps(2) infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.actor-theo{left:50%;margin-left:-106px;z-index:5}
+.actor-mel{left:50%;margin-left:14px;z-index:5;transform:translateX(240px);opacity:0}
+.actor-mel.in{opacity:1;transform:translateX(0);transition:transform 1.4s steps(9),opacity .2s}
+.actor.hop > svg{animation:hop .5s steps(4) 2}
+@keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-16px)}60%{transform:translateY(-16px)}100%{transform:translateY(0)}}
+.bubble{position:absolute;top:-34px;left:50%;transform:translateX(-50%)}
+.exclaim svg{animation:exb .7s steps(2) infinite}
+@keyframes exb{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.1)}}
+.sweat{top:-18px;left:auto;right:-14px;transform:none;display:none}
+.sweat.show{display:block}
+.sweat svg{animation:bob .5s steps(2) infinite}
+@media(max-width:480px){
+  .actor{width:80px}.actor > svg{width:80px}
+  .actor-theo{margin-left:-96px}.actor-mel{margin-left:12px}
+}
+
+/* quest panel (desktop) */
+.quest-panel{
+  display:none;position:absolute;top:14px;right:14px;width:236px;z-index:20;
+}
+@media(min-width:768px){.quest-panel{display:block}}
+.qp-title{
+  font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:1px;
+  color:var(--rose);margin-bottom:8px;
+}
+.qp-quest{font-size:1.25rem;line-height:1.1;margin-bottom:6px}
+.qp-obj{list-style:none;font-size:1.15rem;line-height:1.35}
+.qp-obj li{display:flex;gap:6px;color:var(--ink-soft);opacity:.85}
+.qp-obj li.done{color:var(--ink);opacity:1}
+.qp-obj .tick{width:14px;flex:none;color:var(--rose)}
+.qp-status{
+  margin-top:8px;font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;
+  color:var(--ink-soft);border-top:2px dashed rgba(76,5,25,.3);padding-top:7px;
+}
+.qp-status.done{color:var(--rose);font-weight:700}
+
+/* ---------- shared 8-bit panel ---------- */
+.panel8{
+  background:var(--cream);
+  border:4px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 4px var(--cream-deep),
+    inset 0 0 0 6px var(--ink),
+    7px 7px 0 var(--shadow);
+}
+.panel8-flat{
+  background:var(--cream);
+  border:4px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 4px var(--cream-deep),
+    inset 0 0 0 6px var(--ink);
+}
+
+/* ---------- dialog zone ---------- */
+.dialog-zone{position:relative;z-index:40;padding:6px 12px 12px}
+.nameplate{
+  position:absolute;top:-13px;left:26px;z-index:45;
+  font-family:'Silkscreen',monospace;font-weight:700;font-size:11px;letter-spacing:2px;
+  background:var(--rose);color:#fff8ea;padding:5px 12px 6px;
+  border:3px solid var(--ink);box-shadow:3px 3px 0 var(--shadow);
+}
+.nameplate.sys{background:var(--ink-soft)}
+.dialog-box{min-height:126px;padding:20px 18px 30px;position:relative}
+.dialog-box p{
+  font-size:1.62rem;line-height:1.22;letter-spacing:.2px;
+  white-space:pre-wrap;min-height:3.6em;
+}
+.dialog-box .hint{color:rgba(76,5,25,.55)}
+.dialog-box .hint small{font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1px}
+.cursor{opacity:.9;animation:cblink .8s steps(1) infinite}
+@keyframes cblink{0%,55%{opacity:.9}56%,100%{opacity:.15}}
+.next{
+  position:absolute;right:14px;bottom:9px;display:none;
+  animation:nbob .6s steps(2) infinite;
+}
+.next.vis{display:block}
+@keyframes nbob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+.credit{
+  position:absolute;right:16px;bottom:-8px;z-index:45;
+  font-family:'Silkscreen',monospace;font-size:8px;letter-spacing:1px;
+  color:var(--ink-soft);background:var(--cream);padding:2px 7px;
+  border:2px solid var(--ink);
+}
+@media(max-width:480px){
+  .dialog-box{min-height:114px;padding:16px 14px 26px}
+  .dialog-box p{font-size:1.42rem}
+}
+
+/* ---------- choices ---------- */
+.choices{
+  position:absolute;right:14px;bottom:calc(100% + 10px);
+  width:min(76vw,300px);z-index:50;display:none;
+}
+.choices.show{display:block;animation:chIn .28s steps(4)}
+@keyframes chIn{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ch-title{
+  font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;
+  padding:0 0 6px 4px;color:var(--ink-soft);
+}
+.choice{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  font-family:'Silkscreen',monospace;font-weight:700;font-size:13px;letter-spacing:1px;
+  padding:11px 12px;text-transform:uppercase;
+}
+.choice + .choice{border-top:2px dashed rgba(76,5,25,.3)}
+.choice .cur{opacity:0;flex:none;color:var(--rose)}
+.choice.sel .cur{opacity:1;animation:nudge .5s steps(2) infinite}
+.choice.sel{background:rgba(225,29,72,.09)}
+.choice:active{transform:translate(1px,1px)}
+@media(max-width:480px){.choices{width:min(84vw,300px);right:10px}}
+
+/* ---------- fx ---------- */
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:80}
+.flash.go{animation:flashA .55s steps(4)}
+@keyframes flashA{0%{opacity:0}15%{opacity:.95}45%{opacity:.5}100%{opacity:0}}
+.banner{
+  position:absolute;left:50%;top:30%;transform:translateX(-50%) scale(0);
+  z-index:85;padding:14px 20px;text-align:center;white-space:nowrap;
+  background:var(--gold);border:4px solid var(--ink);
+  box-shadow:inset 0 0 0 3px var(--gold-soft),8px 8px 0 var(--shadow);
+}
+.banner h2{
+  font-family:'Press Start 2P',monospace;font-size:clamp(11px,3.4vw,18px);
+  color:var(--ink);letter-spacing:1px;
+}
+.banner p{font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;margin-top:7px;color:var(--ink-soft)}
+.banner.show{animation:stamp .5s steps(5) forwards}
+.banner.hide{animation:stampOut .4s steps(4) forwards}
+@keyframes stamp{0%{transform:translateX(-50%) scale(0) rotate(-8deg)}70%{transform:translateX(-50%) scale(1.12) rotate(2deg)}100%{transform:translateX(-50%) scale(1) rotate(0)}}
+@keyframes stampOut{to{transform:translateX(-50%) scale(0);opacity:0}}
+.confetti-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:70}
+.cf{position:absolute;top:-24px;animation:cfall var(--d,2.6s) steps(14) forwards;animation-delay:var(--dl,0s)}
+@keyframes cfall{to{transform:translateY(115vh) rotate(360deg)}}
+.riser{position:absolute;animation:rise 1.8s steps(8) forwards;opacity:0}
+@keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-130px);opacity:0}}
+
+/* subtle CRT texture on the screen only */
+.screen::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:90;
+  background:repeating-linear-gradient(0deg,rgba(76,5,25,.022) 0 2px,transparent 2px 4px);
+  mix-blend-mode:multiply;
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01s !important;animation-iteration-count:1 !important;transition-duration:.01s !important}
+}
+</style>
+</head>
+<body>
+<div class="console">
+  <div class="screen" id="screen">
+
+    <header class="hud">
+      <div class="hearts" id="hearts" aria-label="corações do Théo"></div>
+      <div class="hud-right">
+        <span class="hud-brand">CORREIO ELEGANTE</span>
+        <button class="snd-btn" id="sndBtn" aria-label="alternar som">SOM ON</button>
+      </div>
+    </header>
+
+    <div class="quest-strip" id="qstrip">
+      <span class="qmark">▶</span>
+      <span>QUEST: CONQUISTAR O CORAÇÃO DA MEL</span>
+      <span class="st" id="qstripSt">EM ANDAMENTO</span>
+    </div>
+
+    <main class="overworld" id="overworld">
+      <div class="sun" id="sun"></div>
+      <div class="cloud c1" data-cloud></div>
+      <div class="cloud c2" data-cloud></div>
+      <div class="cloud c3" data-cloud></div>
+      <div class="float-heart f1" data-fheart></div>
+      <div class="float-heart f2" data-fheart></div>
+
+      <aside class="quest-panel panel8" aria-label="quest log">
+        <h2 class="qp-title">QUEST LOG</h2>
+        <p class="qp-quest">Conquistar o coração da Mel</p>
+        <ul class="qp-obj" id="qpObj">
+          <li data-obj="0"><span class="tick">▸</span>Falar com o Théo</li>
+          <li data-obj="1"><span class="tick">▸</span>Ouvir o discurso (50x ensaiado)</li>
+          <li data-obj="2"><span class="tick">▸</span>Reunir coragem</li>
+          <li data-obj="3"><span class="tick">▸</span>Fazer a pergunta</li>
+        </ul>
+        <p class="qp-status" id="qpStatus">STATUS: EM ANDAMENTO</p>
+      </aside>
+
+      <div class="actor actor-theo" id="theo">
+        <div class="bubble exclaim" id="exclaim"></div>
+        <div class="bubble sweat" id="sweat"></div>
+      </div>
+      <div class="actor actor-mel" id="mel"></div>
+
+      <div class="grass"><div class="deco" id="deco"></div></div>
+      <div class="confetti-layer" id="confetti"></div>
+    </main>
+
+    <footer class="dialog-zone">
+      <div class="choices panel8" id="choices"></div>
+      <div class="nameplate" id="nameplate">THÉO</div>
+      <div class="dialog-box panel8">
+        <p id="dlg"><span class="hint">O Théo parece querer te dizer uma coisa…<br/><small>— toque na tela pra ouvir —</small></span><span class="cursor" id="cursor"></span></p>
+        <span class="next" id="next" aria-hidden="true"></span>
+      </div>
+      <span class="credit">feito com CORREIO ELEGANTE</span>
+    </footer>
+
+    <div class="banner" id="banner"><h2>QUEST COMPLETA!</h2><p>MEL ENTROU PRO SEU TIME</p></div>
+    <div class="flash" id="flash"></div>
+  </div>
+  <div class="console-foot"><span class="mini" id="footHeart"></span> CORREIO-BOY · POCKET EDITION · 2026</div>
+</div>
+
+<script>
+/* ================= SPRITE ENGINE ================= */
+function sprite(rows, pal, px){
+  px = px || 4;
+  var w = rows[0].length;
+  var rects = '';
+  for (var y = 0; y < rows.length; y++){
+    var r = rows[y].padEnd(w,'.');
+    for (var x = 0; x < w; x++){
+      var c = pal[r[x]];
+      if (c) rects += '<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>';
+    }
+  }
+  return '<svg viewBox="0 0 '+w+' '+rows.length+'" width="'+(w*px)+'" height="'+(rows.length*px)+'" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+rects+'</svg>';
+}
+
+var MAP_HEART = [".XX.XX.","XwXXXXX","XXXXXXX",".XXXXX.","..XXX..","...X..."];
+var MAP_SUN   = [".yyyyyy.","yyyyyyyy","yyyyyyyy","yyyyyyyy","yyyyyyyy","yyyyyyyy","yyyyyyyy",".yyyyyy."];
+var MAP_CLOUD = ["..cccccc....",".cccccccccc.","cccccccccccc",".ssssssssss."];
+var MAP_EXC   = ["..yy..","..yy..","..yy..","..yy..","......","..yy..","..yy.."];
+var MAP_SWEAT = ["..bb..",".bbbb.","bbbbbb","bbbbbb",".bbbb.","..bb.."];
+var MAP_FLOWER= ["..pp..",".pppp.",".pyp..",".pppp.","..pp..","..g...",".gg.g.","..g..."];
+var MAP_TUFT  = [".g..g.",".g..g.","gg..gg","gggggg"];
+var MAP_TRI   = ["xxxxx",".xxx.","..x.."];
+
+var MAP_THEO = [
+"....hhhhhhhh....",
+"..hhhhhhhhhhhh..",
+".hhhhhhhhhhhhhh.",
+".hhhhhhhhhhhhhh.",
+".hhhhhhhhhhhhhh.",
+".hhsssssssssshh.",
+".hsseesssseessh.",
+".hsbssssssssbsh.",
+".hssssssmmssssh.",
+"..ssssssssssss..",
+"...ssssssssss...",
+"...ssssssssss...",
+".jjjjjttttjjjjj.",
+".jjjjjttttjjjjj.",
+"jjjjjjttttjjjjjj",
+".ssjjjjjjjjjjss.",
+"..pppp....pppp..",
+"..kkkk....kkkk.."
+];
+var MAP_MEL = [
+"....hhhhhhhh....",
+"..hhhhhhhhhhhh..",
+".hhhrrhhhhhhhhh.",
+".hhhhhhhhhhhhhh.",
+".hhhhhhhhhhhhhh.",
+".hhsssssssssshh.",
+".hsseesssseessh.",
+".hsbssssssssbsh.",
+".hssssssmmssssh.",
+"..hssssssssssh..",
+"..hssssssssssh..",
+".hhddddddddddhh.",
+".hddddwwddddddh.",
+".hddddddddddddh.",
+"..sdddddddddds..",
+"..dddddddddddd..",
+"..dddddddddddd..",
+"..kkkk....kkkk.."
+];
+
+var PAL = {
+  skin:'#ffd0a3', ink:'#4c0519',
+  heart:{X:'#e11d48',w:'#fb8ca0'},
+  heartOff:{X:'#f3c2ce',w:'#f9dbe2'},
+  heartGold:{X:'#f2b134',w:'#ffe3a1'},
+  sun:{y:'#ffd166'},
+  cloud:{c:'#ffffff',s:'#d7edfa'},
+  gold:{y:'#f2b134'},
+  sweat:{b:'#7cc4f0'},
+  flower:{p:'#f43f5e',y:'#ffd166',g:'#5aa85f'},
+  flower2:{p:'#f7a8bd',y:'#f2b134',g:'#5aa85f'},
+  tuft:{g:'#4f9a56'},
+  tri:{x:'#e11d48'},
+  theo:{h:'#6b4226',s:'#ffd0a3',e:'#40102a',b:'#ff9eb0',m:'#4c0519',j:'#e1557a',t:'#fff9ee',p:'#6b7ba0',k:'#5d2a3c'},
+  mel:{h:'#8a3b5c',r:'#f43f5e',s:'#ffd0a3',e:'#40102a',b:'#ff9eb0',m:'#4c0519',d:'#f7a8bd',w:'#fff9ee',k:'#6d2b4d'}
+};
+
+/* ---------- mount scene sprites ---------- */
+document.getElementById('sun').innerHTML = sprite(MAP_SUN,PAL.sun,7);
+document.querySelectorAll('[data-cloud]').forEach(function(el){el.innerHTML=sprite(MAP_CLOUD,PAL.cloud,6)});
+document.querySelectorAll('[data-fheart]').forEach(function(el){el.innerHTML=sprite(MAP_HEART,PAL.heart,4)});
+document.getElementById('theo').insertAdjacentHTML('beforeend',sprite(MAP_THEO,PAL.theo,6));
+document.getElementById('mel').innerHTML = sprite(MAP_MEL,PAL.mel,6);
+document.getElementById('exclaim').innerHTML = sprite(MAP_EXC,PAL.gold,5);
+document.getElementById('sweat').innerHTML = sprite(MAP_SWEAT,PAL.sweat,4);
+document.getElementById('next').innerHTML = sprite(MAP_TRI,PAL.tri,3);
+document.getElementById('footHeart').innerHTML = sprite(MAP_HEART,PAL.heart,3);
+
+/* grass decorations */
+var deco = document.getElementById('deco');
+[['flower',4,'9%'],['tuft',4,'20%'],['flower2',4,'34%'],['tuft',5,'58%'],['flower',4,'72%'],['tuft',4,'86%'],['flower2',4,'94%']]
+.forEach(function(d){
+  var s = document.createElement('span');
+  s.style.left = d[2];
+  s.innerHTML = sprite(d[0]==='tuft'?MAP_TUFT:MAP_FLOWER, PAL[d[0]]||PAL.flower, d[1]);
+  deco.appendChild(s);
+});
+
+/* hearts HUD */
+var heartsEl = document.getElementById('hearts');
+var heartSlots = [];
+for (var i=0;i<5;i++){
+  var s = document.createElement('span');
+  s.className='hslot';
+  s.innerHTML = '<svg class="off" viewBox="0 0 7 6" shape-rendering="crispEdges">'+heartRects(PAL.heartOff)+'</svg>'
+              + '<svg class="on" viewBox="0 0 7 6" shape-rendering="crispEdges">'+heartRects(PAL.heart)+'</svg>'
+              + '<svg class="gold" viewBox="0 0 7 6" shape-rendering="crispEdges">'+heartRects(PAL.heartGold)+'</svg>';
+  heartsEl.appendChild(s); heartSlots.push(s);
+}
+function heartRects(pal){
+  var r='';
+  MAP_HEART.forEach(function(row,y){row.padEnd(7,'.').split('').forEach(function(ch,x){if(pal[ch])r+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+pal[ch]+'"/>'})});
+  return r;
+}
+function fillHearts(n){
+  heartSlots.forEach(function(s,i){
+    var was = s.classList.contains('full');
+    s.classList.remove('gold');
+    s.classList.toggle('full', i<n);
+    if(i<n && !was){ s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); heartTick(); }
+  });
+}
+function goldHearts(){
+  heartSlots.forEach(function(s,i){
+    setTimeout(function(){ s.classList.add('gold'); s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); }, i*90);
+  });
+}
+
+/* ================= AUDIO (tiny chiptune blips) ================= */
+var AC=null, sound=true;
+function ctx(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return AC; }
+function tone(f,d,type,v,when){
+  if(!sound||!ctx())return;
+  var t=AC.currentTime+(when||0), o=AC.createOscillator(), g=AC.createGain();
+  o.type=type||'square'; o.frequency.value=f;
+  g.gain.setValueAtTime(v||0.025,t); g.gain.exponentialRampToValueAtTime(0.0001,t+(d||0.05));
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+(d||0.05)+0.03);
+}
+function blip(){ tone(540+Math.random()*80,0.028,'square',0.018); }
+function heartTick(){ tone(880,0.05,'triangle',0.03); }
+function advanceSfx(){ tone(392,0.05,'square',0.028); tone(523,0.07,'square',0.028,0.05); }
+function fanfare(){ [523,659,784,1047,1319].forEach(function(f,i){tone(f,0.16,'square',0.035,i*0.09)}); tone(262,0.5,'triangle',0.025,0.45); }
+var sndBtn=document.getElementById('sndBtn');
+sndBtn.addEventListener('pointerdown',function(e){e.stopPropagation();});
+sndBtn.addEventListener('click',function(e){
+  e.stopPropagation();
+  sound=!sound; this.textContent=sound?'SOM ON':'SOM OFF';
+  if(sound){ctx();advanceSfx();}
+});
+
+/* ================= DIALOG / GAME STATE ================= */
+var SCRIPT=[
+ {who:'THEO', t:"Ah... oi, Mel. Cê veio mesmo. Que bom, que bom. Eu cheguei aqui uns quarenta minutos antes, aliás."},
+ {who:'THEO', t:"Ensaiei esse discurso umas cinquenta vezes no espelho. Então faz um favor: finge que tá saindo natural, tá?"},
+ {who:'THEO', t:"Sabe aquele dia no intervalo, quando cê dividiu o seu lanche comigo? Pois é. Meu coração bugou ali e nunca mais voltou ao normal."},
+ {who:'THEO', t:"Toda vez que cê chega perto, esses coraçõezinhos aqui em cima enchem sozinhos. Juro que eu não aperto botão nenhum."},
+ {who:'THEO', t:"Eu podia ficar juntando coragem pra sempre. Mas cê merece uma cena melhor que isso. Merece a cena toda."},
+ {who:'THEO', t:"Então... respira, Théo. Vai com medo mesmo. Três. Dois. Um—"},
+ {who:'THEO', t:"Mel. Quer namorar comigo?", q:true},
+ {who:'JOGO', t:"* MEL aceitou a quest! THÉO recebeu 9.999 pontos de felicidade e o título 'Pessoa Mais Sortuda do Servidor'."},
+ {who:'THEO', t:"Melhor dia da minha vida. Sério. Pode salvar o jogo aqui, porque esse save é pra sempre."}
+];
+var HEARTS_AT=[1,2,2,3,4,4,5,5,5];
+var OBJ_AT={0:0,1:1,4:2};           /* line index -> objective index */
+var SWEAT_LINES={5:true,6:true};
+var Q_LINE=6;
+
+var idx=-1, state='idle', timer=null;
+var dlg=document.getElementById('dlg'), nextEl=document.getElementById('next'),
+    nameplate=document.getElementById('nameplate'), choices=document.getElementById('choices'),
+    cursorEl=document.getElementById('cursor');
+
+function applyFx(i){
+  fillHearts(HEARTS_AT[i]);
+  if(OBJ_AT[i]!==undefined) checkObj(OBJ_AT[i]);
+  document.getElementById('sweat').classList.toggle('show',!!SWEAT_LINES[i]);
+  if(i===0) document.getElementById('exclaim').style.display='none';
+  if(i===5||i===6) hop();
+}
+function checkObj(n){
+  var li=document.querySelector('[data-obj="'+n+'"]');
+  if(li&&!li.classList.contains('done')){li.classList.add('done');li.querySelector('.tick').textContent='✓';}
+}
+function hop(){
+  var t=document.getElementById('theo');
+  t.classList.remove('hop'); void t.offsetWidth; t.classList.add('hop');
+}
+
+function resetDlg(){
+  dlg.innerHTML='';
+  cursorEl=document.createElement('span');
+  cursorEl.className='cursor';
+  dlg.appendChild(cursorEl);
+}
+function typeLine(){
+  state='typing';
+  var line=SCRIPT[idx];
+  nameplate.textContent=line.who;
+  nameplate.classList.toggle('sys',line.who==='JOGO');
+  nextEl.classList.remove('vis');
+  resetDlg();
+  var txt=line.t, i=0;
+  cursorEl.textContent='▌';
+  (function tick(){
+    if(state!=='typing')return;
+    var ch=txt[i];
+    cursorEl.insertAdjacentText('beforebegin',ch);
+    if(i%3===0&&ch.trim())blip();
+    i++;
+    if(i<txt.length){
+      var d=26;
+      if(',;:'.indexOf(ch)>-1)d=150;
+      if('.!?—'.indexOf(ch)>-1)d=230;
+      if(ch===' ')d=16;
+      timer=setTimeout(tick,d);
+    } else lineDone();
+  })();
+}
+function finishLine(){
+  clearTimeout(timer);
+  var txt=SCRIPT[idx].t;
+  resetDlg();
+  cursorEl.insertAdjacentText('beforebegin',txt);
+  lineDone();
+}
+function lineDone(){
+  state='waiting';cursorEl.textContent='';
+  if(idx===Q_LINE){showChoices();}
+  else if(idx===SCRIPT.length-1){showEndChoices();}
+  else{nextEl.classList.add('vis');}
+}
+function advance(){
+  ctx();
+  if(state==='typing'){finishLine();return;}
+  if(state==='idle'||state==='waiting'){
+    if(idx<SCRIPT.length-1 && !(idx===Q_LINE)){
+      idx++;advanceSfx();applyFx(idx);typeLine();
+    }
+  }
+}
+
+/* ---------- choices ---------- */
+var selIdx=0;
+function buildChoices(list,cb){
+  choices.innerHTML='<div class="ch-title">O QUE VOCÊ RESPONDE?</div>';
+  list.forEach(function(label,i){
+    var b=document.createElement('button');
+    b.className='choice';b.innerHTML='<span class="cur">▶</span><span>'+label+'</span>';
+    b.addEventListener('click',function(e){e.stopPropagation();cb(i);});
+    b.addEventListener('mouseenter',function(){select(i,false);});
+    choices.appendChild(b);
+  });
+  selIdx=0;markSel();
+}
+function markSel(){
+  choices.querySelectorAll('.choice').forEach(function(b,i){b.classList.toggle('sel',i===selIdx)});
+}
+function select(i,sfx){selIdx=i;markSel();if(sfx!==false)heartTick();}
+function showChoices(){
+  state='question';
+  buildChoices(['Sim, quero!','Com certeza!'],function(){confirmYes();});
+  choices.classList.add('show');
+}
+function showEndChoices(){
+  state='done';
+  buildChoices(['Jogar de novo','Criar a minha quest →'],function(i){
+    if(i===0)location.reload();
+    else location.href='lp.html';
+  });
+  choices.querySelector('.ch-title').textContent='E AGORA?';
+  choices.classList.add('show');
+}
+function moveSel(dir){
+  var n=choices.querySelectorAll('.choice').length;
+  select((selIdx+dir+n)%n);
+}
+function confirmSel(){
+  choices.querySelectorAll('.choice')[selIdx].click();
+}
+
+/* ---------- celebration ---------- */
+function confirmYes(){
+  if(state!=='question')return;
+  state='celebrating';
+  choices.classList.remove('show');nextEl.classList.remove('vis');
+  fanfare();
+  var f=document.getElementById('flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go');
+  goldHearts();
+  document.getElementById('sweat').classList.remove('show');
+  document.getElementById('mel').classList.add('in');
+  hop();setTimeout(hop,700);
+  confetti();risers();
+  checkObj(3);
+  document.getElementById('qpStatus').textContent='STATUS: QUEST COMPLETA!';
+  document.getElementById('qpStatus').classList.add('done');
+  document.getElementById('qstripSt').textContent='COMPLETA!';
+  document.getElementById('qstrip').classList.add('done');
+  var b=document.getElementById('banner');
+  b.classList.add('show');
+  setTimeout(function(){b.classList.add('hide');},2600);
+  setTimeout(function(){ idx=7; typeLine(); },1100);
+}
+function confetti(){
+  var layer=document.getElementById('confetti'), colors=[PAL.heart,PAL.heartGold,{X:'#f7a8bd',w:'#ffd9e2'},{X:'#ffffff',w:'#ffe4ec'}];
+  for(var i=0;i<30;i++){
+    var s=document.createElement('span');s.className='cf';
+    s.innerHTML='<svg viewBox="0 0 7 6" width="14" height="12" shape-rendering="crispEdges">'+heartRects(colors[i%colors.length])+'</svg>';
+    s.style.left=(Math.random()*96)+'%';
+    s.style.setProperty('--d',(1.8+Math.random()*2.2)+'s');
+    s.style.setProperty('--dl',(Math.random()*0.9)+'s');
+    layer.appendChild(s);
+    setTimeout(function(el){el.remove();}.bind(null,s),4600);
+  }
+}
+function risers(){
+  var layer=document.getElementById('confetti');
+  for(var i=0;i<7;i++){
+    var s=document.createElement('span');s.className='riser';
+    s.innerHTML='<svg viewBox="0 0 7 6" width="16" height="14" shape-rendering="crispEdges">'+heartRects(PAL.heart)+'</svg>';
+    s.style.left=(42+Math.random()*18)+'%';
+    s.style.bottom='30%';
+    s.style.animationDelay=(Math.random()*0.7)+'s';
+    layer.appendChild(s);
+    setTimeout(function(el){el.remove();}.bind(null,s),2800);
+  }
+}
+
+/* ---------- input ---------- */
+document.getElementById('screen').addEventListener('pointerdown',function(){
+  if(state==='question'||state==='done')return;
+  advance();
+});
+document.addEventListener('keydown',function(e){
+  if(e.key===' '||e.key==='Enter'){
+    e.preventDefault();
+    if(state==='question'||state==='done')confirmSel();
+    else advance();
+  }
+  if(state==='question'||state==='done'){
+    if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();moveSel(-1);}
+    if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();moveSel(1);}
+  }
+});
+
+fillHearts(1);
+</script>
+</body>
+</html>

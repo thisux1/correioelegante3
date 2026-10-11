@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para Lari — um ano de nós dois · Correio Elegante</title>
+<meta name="description" content="Uma carta de Gui para Lari, celebrando 365 dias juntos. Feita com Correio Elegante.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Varela+Round&family=Silkscreen:wght@400;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CORREIO ELEGANTE · FRUTIGER AERO PREVIEW — data especial
+   Gui para Lari · 1 ano juntos · morning dew & rose glass
+   ============================================================ */
+:root{
+  --cream:      #fffaf5;
+  --blush-050:  #fff5f7;
+  --blush-100:  #ffe4ec;
+  --blush-200:  #fecdd3;
+  --blush-300:  #fda4af;
+  --rose-500:   #f43f5e;
+  --rose-600:   #e11d48;
+  --rose-700:   #be123c;
+  --wine-900:   #4c0519;
+  --wine-700:   #701a35;
+  --wine-600:   #881337;
+  --gold:       #ffd98e;
+
+  --glass-bg:   linear-gradient(150deg, rgba(255,255,255,.74), rgba(255,255,255,.36) 58%, rgba(255,255,255,.52));
+  --glass-brd:  rgba(255,255,255,.85);
+  --radius-panel: 28px;
+
+  --font-sans:  "Nunito", "Varela Round", system-ui, sans-serif;
+  --font-round: "Varela Round", "Nunito", system-ui, sans-serif;
+  --font-pixel: "Silkscreen", monospace;
+  --font-hand:  "Caveat", cursive;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{
+  font-family:var(--font-sans);
+  color:var(--wine-900);
+  background:
+    linear-gradient(180deg,
+      #fffaf4 0%,
+      #fff3ef 14%,
+      #ffeef4 34%,
+      #ffe4ec 58%,
+      #fbdbe7 78%,
+      #f6cfe0 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:rgba(244,63,94,.22); }
+
+/* ---------------- sky ---------------- */
+.sky{ position:fixed; inset:0; z-index:-2; overflow:hidden; pointer-events:none; }
+.aurora{ position:absolute; border-radius:50%; will-change:transform; }
+.aurora.a1{
+  width:120vmax; height:60vmax; left:-30vmax; top:-28vmax;
+  background:radial-gradient(ellipse at 50% 50%, rgba(253,164,175,.42), transparent 65%);
+  animation:aurora-sway 26s ease-in-out infinite alternate;
+}
+.aurora.a2{
+  width:100vmax; height:52vmax; right:-36vmax; top:-10vmax;
+  background:radial-gradient(ellipse at 50% 50%, rgba(255,213,170,.38), transparent 62%);
+  animation:aurora-sway 32s ease-in-out infinite alternate-reverse;
+}
+.aurora.a3{
+  width:80vmax; height:46vmax; left:-14vmax; top:24vh;
+  background:radial-gradient(ellipse at 50% 50%, rgba(196,181,253,.15), transparent 60%);
+  animation:aurora-sway 38s ease-in-out infinite alternate;
+}
+@keyframes aurora-sway{
+  from{ transform:translate3d(0,0,0) rotate(-2deg); }
+  to  { transform:translate3d(6vmax,3vmax,0) rotate(2deg); }
+}
+.sun{
+  position:absolute; top:-16vmin; left:50%; transform:translateX(-50%);
+  width:72vmin; height:72vmin; border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(255,246,222,.95) 0%,
+    rgba(255,223,164,.55) 28%,
+    rgba(255,203,150,.22) 48%,
+    transparent 70%);
+}
+.flare{
+  position:absolute; border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.55);
+  background:radial-gradient(circle, rgba(255,255,255,.28), transparent 62%);
+}
+.flare.f1{ width:8vmin; height:8vmin; top:30vmin; left:12vw; opacity:.5; }
+.flare.f2{ width:5vmin; height:5vmin; top:48vmin; right:16vw; opacity:.4; }
+.flare.f3{ width:13vmin; height:13vmin; top:70vmin; left:20vw; opacity:.26; }
+
+.cloud{
+  position:absolute; border-radius:50%;
+  background:radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.85), rgba(255,255,255,0) 68%);
+}
+.cloud.c1{ width:52vmin; height:16vmin; top:10vh; left:-8vw;  animation:cloud-drift 90s linear infinite; }
+.cloud.c2{ width:40vmin; height:12vmin; top:34vh; right:-6vw; animation:cloud-drift 120s linear infinite reverse; opacity:.7; }
+.cloud.c3{ width:60vmin; height:18vmin; top:70vh; left:-14vw; animation:cloud-drift 150s linear infinite; opacity:.5; }
+@keyframes cloud-drift{ from{ transform:translateX(0); } to{ transform:translateX(30vw); } }
+
+.meadow{
+  position:fixed; left:0; right:0; bottom:0; height:44vh; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(70% 120% at 12% 108%, rgba(169,232,198,.5), transparent 68%),
+    radial-gradient(60% 110% at 82% 104%, rgba(187,247,208,.42), transparent 66%),
+    radial-gradient(80% 130% at 50% 118%, rgba(215,245,227,.55), transparent 70%),
+    linear-gradient(180deg, transparent 30%, rgba(215,245,227,.5) 100%);
+}
+
+/* ---------------- heart bubbles ---------------- */
+#bubbles{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+.bubble{
+  position:absolute; bottom:-90px; border-radius:50%;
+  display:grid; place-items:center;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,.95) 0 5%, rgba(255,255,255,.4) 14%, transparent 38%),
+    radial-gradient(circle at 66% 76%, rgba(255,255,255,.55) 0 4%, transparent 22%),
+    conic-gradient(from 210deg, transparent 0 32%, rgba(186,230,253,.22) 44%, rgba(255,190,215,.22) 56%, transparent 68%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 55%, rgba(255,255,255,.4) 96%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.5),
+    inset -7px -9px 16px rgba(255,255,255,.32),
+    inset 5px 7px 12px rgba(255,255,255,.55),
+    0 12px 26px rgba(190,18,60,.08);
+  animation:bubble-rise linear infinite;
+  will-change:transform;
+}
+.bubble svg{ width:42%; height:42%; fill:rgba(225,29,72,.34); }
+@keyframes bubble-rise{
+  0%  { transform:translate3d(0,0,0) scale(1); opacity:0; }
+  6%  { opacity:1; }
+  92% { opacity:.9; }
+  100%{ transform:translate3d(var(--drift,30px),-112vh,0) scale(1.04); opacity:0; }
+}
+
+/* a tiny butterfly, because 2009 */
+.butterfly{
+  position:absolute; width:34px; top:38vh; left:-40px;
+  animation:flutter 46s linear infinite; opacity:.85;
+}
+.butterfly svg{ width:100%; }
+@keyframes flutter{
+  0%  { transform:translate(0,0) rotate(6deg); }
+  25% { transform:translate(26vw,-8vh) rotate(-8deg); }
+  50% { transform:translate(52vw,2vh) rotate(8deg); }
+  75% { transform:translate(78vw,-6vh) rotate(-6deg); }
+  100%{ transform:translate(108vw,-2vh) rotate(6deg); }
+}
+
+/* ---------------- droplets on glass ---------------- */
+.dews{ position:absolute; inset:0; overflow:hidden; border-radius:inherit; pointer-events:none; }
+.droplet{
+  position:absolute;
+  border-radius:52% 48% 55% 45% / 58% 56% 44% 42%;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255,255,255,.95) 0 10%, rgba(255,255,255,.35) 28%, transparent 55%),
+    radial-gradient(circle at 62% 78%, rgba(190,18,60,.08), transparent 55%),
+    linear-gradient(160deg, rgba(255,255,255,.8), rgba(255,255,255,.12) 70%);
+  box-shadow:
+    inset -2px -3px 5px rgba(136,19,55,.14),
+    inset 2px 3px 5px rgba(255,255,255,.95),
+    0 3px 5px rgba(76,5,25,.16);
+}
+.droplet::after{
+  content:""; position:absolute; left:22%; right:22%; bottom:9%; height:26%;
+  border-radius:50%;
+  background:radial-gradient(ellipse, rgba(255,228,236,.75), transparent 70%);
+}
+
+/* ---------------- glass primitives ---------------- */
+.glass{
+  position:relative;
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(16px) saturate(1.5);
+  backdrop-filter:blur(16px) saturate(1.5);
+  border:1px solid var(--glass-brd);
+  border-radius:var(--radius-panel);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,.95),
+    inset 0 -16px 30px rgba(255,255,255,.22),
+    0 26px 60px -22px rgba(136,19,55,.28),
+    0 4px 14px rgba(136,19,55,.07);
+}
+.glass::before{
+  content:""; position:absolute; left:5%; right:5%; top:0; height:42%;
+  border-radius:inherit; border-bottom-left-radius:60% 100%; border-bottom-right-radius:60% 100%;
+  background:linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0) 85%);
+  pointer-events:none;
+}
+.orb{
+  position:relative; width:44px; height:44px; flex:none; border-radius:50%;
+  display:grid; place-items:center; color:var(--rose-600);
+  background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,235,240,.65) 45%, rgba(253,164,175,.4) 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,1),
+    inset 0 -6px 10px rgba(225,29,72,.22),
+    0 8px 18px -4px rgba(136,19,55,.3);
+}
+.orb::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);
+}
+.btn{
+  position:relative; display:inline-flex; align-items:center; gap:.55rem;
+  font-family:var(--font-sans); font-weight:800; font-size:1rem;
+  color:#fff; text-decoration:none; letter-spacing:.01em;
+  padding:.9rem 1.9rem; border-radius:999px; border:0; cursor:pointer;
+  background:linear-gradient(180deg, #fb7288 0%, var(--rose-600) 52%, var(--rose-700) 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,.7),
+    inset 0 -10px 16px rgba(136,19,55,.5),
+    0 14px 30px -6px rgba(225,29,72,.5),
+    0 3px 8px rgba(225,29,72,.35);
+  text-shadow:0 1px 2px rgba(136,19,55,.45);
+  transition:transform .18s ease, filter .18s ease;
+  overflow:hidden;
+}
+.btn::before{
+  content:""; position:absolute; left:5%; right:5%; top:5%; height:46%;
+  border-radius:999px 999px 55% 55% / 999px 999px 42% 42%;
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.18));
+  pointer-events:none;
+}
+.btn::after{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+  pointer-events:none;
+}
+.btn:hover{ transform:translateY(-2px); filter:saturate(1.12); }
+.btn:active{ transform:translateY(1px) scale(.98); }
+.btn-ghost{
+  background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.55));
+  color:var(--rose-700); text-shadow:none;
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,1),
+    inset 0 -8px 14px rgba(253,164,175,.28),
+    0 12px 26px -8px rgba(136,19,55,.3),
+    0 2px 6px rgba(136,19,55,.14);
+}
+.btn-ghost::after{ box-shadow:inset 0 0 0 1px rgba(255,255,255,.8); }
+
+/* ---------------- layout ---------------- */
+.wrap{ width:min(760px, 92vw); margin:0 auto; position:relative; z-index:1; }
+section{ padding:1.6rem 0; }
+
+.eyebrow{
+  font-family:var(--font-pixel); font-size:.72rem; letter-spacing:.14em;
+  color:var(--rose-700); text-transform:lowercase; margin-bottom:1rem;
+  display:flex; align-items:center; gap:.55rem;
+}
+
+/* ---------------- envelope header ---------------- */
+.top{
+  padding-top:6.5rem; text-align:center;
+}
+.top .seal{
+  width:84px; height:84px; margin:0 auto 1.4rem; border-radius:50%;
+  display:grid; place-items:center; color:#fff; position:relative;
+  background:radial-gradient(circle at 32% 26%, #fb8aa0, var(--rose-600) 55%, var(--rose-700));
+  box-shadow:
+    inset 0 3px 5px rgba(255,255,255,.75),
+    inset 0 -10px 16px rgba(136,19,55,.55),
+    0 16px 34px -6px rgba(225,29,72,.55);
+  animation:bob 6s ease-in-out infinite;
+}
+@keyframes bob{
+  0%,100%{ transform:translateY(0); }
+  50%    { transform:translateY(-10px); }
+}
+.top h1{
+  font-family:var(--font-round); font-weight:400;
+  font-size:clamp(2.1rem, 6vw, 3.4rem); line-height:1.1; color:var(--wine-900);
+}
+.top .sub{
+  margin-top:.9rem; color:var(--wine-700); font-weight:600; font-size:1.08rem; line-height:1.6;
+}
+.top .eyebrow{ justify-content:center; }
+
+/* ---------------- letter ---------------- */
+.letter{ padding:2.6rem clamp(1.4rem, 5vw, 3rem) 2.4rem; overflow:hidden; }
+.letter::after{ /* faint lined-paper hint at the bottom edge */
+  content:""; position:absolute; left:8%; right:8%; bottom:14px; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(136,19,55,.22), transparent);
+}
+.letter p{
+  font-size:1.06rem; line-height:1.85; color:var(--wine-900);
+  font-weight:600; margin-bottom:1.25rem; position:relative;
+}
+.letter p:last-of-type{ margin-bottom:0; }
+.letter .salute{
+  font-family:var(--font-hand); font-size:2rem; color:var(--rose-700); font-weight:700;
+  margin-bottom:1.1rem; display:block;
+}
+.sign{
+  margin-top:1.8rem; text-align:right; position:relative;
+}
+.sign .name{
+  font-family:var(--font-hand); font-size:2.5rem; color:var(--rose-700); font-weight:700;
+  transform:rotate(-3deg); display:inline-block;
+}
+.sign .ps{
+  margin-top:.9rem; font-size:.95rem; font-weight:700; color:var(--wine-600); font-style:italic;
+}
+
+/* ---------------- counter ---------------- */
+.counter{ text-align:center; padding:2.4rem 1.6rem 2.2rem; overflow:hidden; }
+.counter .eyebrow{ justify-content:center; }
+.big-count{
+  display:flex; align-items:baseline; justify-content:center; gap:.8rem;
+  font-family:var(--font-pixel); color:var(--wine-900);
+}
+.big-count b{
+  font-size:clamp(3rem, 11vw, 5rem); font-weight:700; color:var(--rose-600);
+  text-shadow:0 3px 0 rgba(255,255,255,.8), 0 10px 24px rgba(225,29,72,.25);
+  font-variant-numeric:tabular-nums;
+}
+.big-count span{ font-size:clamp(.7rem, 2vw, .95rem); color:var(--wine-700); }
+.mini-stats{
+  margin-top:1.8rem; display:flex; flex-wrap:wrap; justify-content:center; gap:.9rem 2.2rem;
+}
+.mini-stats .stat{ text-align:center; min-width:110px; }
+.mini-stats .stat b{
+  display:block; font-family:var(--font-pixel); font-size:1.05rem; color:var(--wine-900);
+}
+.mini-stats .stat i{
+  font-style:normal; font-size:.82rem; font-weight:700; color:var(--wine-600);
+}
+
+/* ---------------- polaroids ---------------- */
+.photos-head{ text-align:center; margin-bottom:2.2rem; }
+.photos-head .eyebrow{ justify-content:center; }
+.photos-head h2{
+  font-family:var(--font-round); font-weight:400;
+  font-size:clamp(1.7rem, 4vw, 2.4rem); color:var(--wine-900);
+}
+.polaroids{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:1.6rem; align-items:start;
+}
+@media (max-width:700px){
+  .polaroids{ grid-template-columns:1fr; max-width:330px; margin:0 auto; }
+}
+.polaroid{
+  position:relative; background:linear-gradient(170deg, #ffffff, #fdf2f5);
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:8px; padding:12px 12px 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 18px 36px -14px rgba(136,19,55,.32),
+    0 4px 10px rgba(136,19,55,.12);
+  transition:transform .3s cubic-bezier(.2,.7,.2,1.4);
+}
+.polaroid:nth-child(1){ transform:rotate(-4deg); }
+.polaroid:nth-child(2){ transform:rotate(2.5deg) translateY(14px); }
+.polaroid:nth-child(3){ transform:rotate(-2deg); }
+.polaroid:hover{ transform:rotate(0deg) translateY(-6px) scale(1.03); z-index:2; }
+@media (max-width:700px){
+  .polaroid:nth-child(2){ transform:rotate(2.5deg); }
+}
+.polaroid .tape{
+  position:absolute; top:-13px; left:50%; transform:translateX(-50%) rotate(-3deg);
+  width:86px; height:26px;
+  background:linear-gradient(100deg, rgba(255,255,255,.75), rgba(255,255,255,.45));
+  border-left:1px dashed rgba(255,255,255,.9); border-right:1px dashed rgba(255,255,255,.9);
+  box-shadow:0 3px 6px rgba(136,19,55,.14), inset 0 0 8px rgba(255,255,255,.6);
+  border-radius:2px;
+}
+.polaroid .ph{
+  aspect-ratio:1/1; border-radius:4px; overflow:hidden; position:relative;
+  box-shadow:inset 0 0 0 1px rgba(136,19,55,.1), inset 0 0 24px rgba(136,19,55,.06);
+}
+.polaroid .ph svg{ display:block; width:100%; height:100%; }
+.polaroid .ph::after{ /* glossy photo sheen */
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(125deg, rgba(255,255,255,.5) 0%, transparent 32%);
+}
+.polaroid figcaption{
+  font-family:var(--font-hand); font-size:1.35rem; font-weight:500;
+  color:var(--wine-700); text-align:center; padding:.7rem .4rem .9rem;
+}
+
+/* ---------------- vow / closing ---------------- */
+.vow{ text-align:center; padding:2.8rem 1.8rem 2.6rem; overflow:hidden; }
+.vow .heart-row{ display:flex; justify-content:center; gap:.5rem; margin-bottom:1.2rem; color:var(--rose-600); }
+.vow h2{
+  font-family:var(--font-round); font-weight:400;
+  font-size:clamp(1.6rem, 4vw, 2.2rem); color:var(--wine-900); line-height:1.25;
+}
+.vow p{
+  margin:1rem auto 1.8rem; max-width:30rem;
+  color:var(--wine-700); font-weight:600; font-size:1.04rem; line-height:1.65;
+}
+.vow .promise{
+  font-family:var(--font-hand); font-size:1.8rem; color:var(--rose-700); font-weight:700;
+  display:block; margin-bottom:1.9rem;
+}
+
+/* ---------------- aero mini taskbar footer ---------------- */
+.footbar{
+  margin:2.4rem auto 5rem; max-width:560px;
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.6rem .8rem .6rem 1.1rem; border-radius:999px;
+}
+.footbar .made{
+  font-family:var(--font-pixel); font-size:.62rem; color:var(--wine-600);
+  display:flex; align-items:center; gap:.5rem;
+}
+.footbar .made svg{ color:var(--rose-600); flex:none; }
+.footbar .clock{
+  font-family:var(--font-pixel); font-size:.62rem; color:var(--wine-700);
+  display:flex; align-items:center; gap:.5rem;
+}
+.footbar .btn{ font-size:.8rem; padding:.55rem 1.15rem; }
+@media (max-width:520px){
+  .footbar{ flex-wrap:wrap; justify-content:center; border-radius:24px; }
+}
+
+/* reveal */
+.rise{ opacity:0; transform:translateY(26px); transition:opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.rise.in{ opacity:1; transform:none; }
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  .rise{ opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- sky -->
+<div class="sky" aria-hidden="true">
+  <div class="aurora a1"></div>
+  <div class="aurora a2"></div>
+  <div class="aurora a3"></div>
+  <div class="sun"></div>
+  <div class="flare f1"></div>
+  <div class="flare f2"></div>
+  <div class="flare f3"></div>
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="butterfly" aria-hidden="true">
+    <svg viewBox="0 0 40 30" fill="none">
+      <path d="M20 15C14 4 4 2 3 8c-1 6 7 9 17 7Z" fill="rgba(253,164,175,.85)"/>
+      <path d="M20 15c6-11 16-13 17-7 1 6-7 9-17 7Z" fill="rgba(253,164,175,.7)"/>
+      <path d="M20 16c-5 8-13 10-14 5-1-4 6-7 14-5Z" fill="rgba(244,63,94,.55)"/>
+      <path d="M20 16c5 8 13 10 14 5 1-4-6-7-14-5Z" fill="rgba(244,63,94,.4)"/>
+      <rect x="18.6" y="12" width="2.8" height="9" rx="1.4" fill="#701a35"/>
+    </svg>
+  </div>
+</div>
+<div class="meadow" aria-hidden="true"></div>
+<div id="bubbles" aria-hidden="true"></div>
+
+<!-- envelope header -->
+<header class="top wrap">
+  <div class="seal" aria-hidden="true">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5 12 13l8.5-5.5"/></svg>
+  </div>
+  <p class="eyebrow">para: lari</p>
+  <h1>Um ano de você</h1>
+  <p class="sub">de Gui — com tudo que eu nunca consigo falar direito em voz alta</p>
+</header>
+
+<!-- the letter -->
+<section class="wrap">
+  <div class="letter glass rise">
+    <div class="dews" data-dew="7"></div>
+    <span class="salute">Lari,</span>
+    <p>Faz 365 dias que você olhou pra mim na frente da padaria e falou “então tá, vamos tentar”. Eu lembro que eu ri, porque quem é que começa um namoro com “vamos tentar”? Você. E ainda bem.</p>
+    <p>Nesse um ano você me ensinou que amor não é fogos de artifício. É você guardando o último pedaço de pizza pra mim. É a gente brigando por causa de série e fazendo as pazes antes do episódio acabar. É a sua mão procurando a minha no meio do sono.</p>
+    <p>Eu não sei falar essas coisas olhando no seu olho sem a voz falhar. Então eu escrevi. Porque você merece ouvir — ou ler, vai — todos os dias o que eu só consigo dizer desse jeito atrapalhado.</p>
+    <p>Obrigado por esse ano. Obrigado por escolher ficar, todo dia de novo.</p>
+    <p>Feliz 365 dias, meu amor. Vem que tem mais.</p>
+    <div class="sign">
+      <span class="name">— Gui</span>
+      <p class="ps">p.s.: a pizza continua sendo minha, mas eu divido com você.</p>
+    </div>
+  </div>
+</section>
+
+<!-- counter -->
+<section class="wrap">
+  <div class="counter glass rise">
+    <div class="dews" data-dew="5"></div>
+    <p class="eyebrow">contador oficial de nós dois</p>
+    <div class="big-count"><b id="days">0</b><span>dias de nós</span></div>
+    <div class="mini-stats">
+      <div class="stat"><b>12</b><i>meses juntos</i></div>
+      <div class="stat"><b>8.760</b><i>horas de nós dois</i></div>
+      <div class="stat"><b>1</b><i>playlist compartilhada</i></div>
+      <div class="stat"><b>999+</b><i>memes trocados</i></div>
+    </div>
+  </div>
+</section>
+
+<!-- polaroids -->
+<section class="wrap">
+  <div class="photos-head rise">
+    <p class="eyebrow">// alguns capítulos</p>
+    <h2>Esse ano, em três molduras</h2>
+  </div>
+  <div class="polaroids">
+
+    <figure class="polaroid rise">
+      <span class="tape" aria-hidden="true"></span>
+      <div class="ph">
+        <!-- first date: sunset over the sea -->
+        <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" aria-label="Ilustração de um pôr-do-sol no mar">
+          <defs>
+            <linearGradient id="p1sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffe9d6"/><stop offset=".55" stop-color="#ffc4d0"/><stop offset="1" stop-color="#f78fa8"/>
+            </linearGradient>
+            <linearGradient id="p1sea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f78fa8"/><stop offset="1" stop-color="#be5c7c"/>
+            </linearGradient>
+          </defs>
+          <rect width="200" height="200" fill="url(#p1sky)"/>
+          <circle cx="100" cy="118" r="34" fill="#fff0c8"/>
+          <circle cx="100" cy="118" r="46" fill="#fff0c8" opacity=".28"/>
+          <rect y="128" width="200" height="72" fill="url(#p1sea)"/>
+          <rect x="30" y="140" width="140" height="3" rx="1.5" fill="#ffd9a8" opacity=".65"/>
+          <rect x="55" y="152" width="90" height="3" rx="1.5" fill="#ffd9a8" opacity=".45"/>
+          <rect x="78" y="164" width="46" height="3" rx="1.5" fill="#ffd9a8" opacity=".3"/>
+          <circle cx="52" cy="52" r="3" fill="#fff" opacity=".8"/>
+          <path d="M140 46c3-4 9-4 12 0M154 42c3-4 9-4 12 0" stroke="#881337" stroke-width="2" fill="none" stroke-linecap="round" opacity=".45"/>
+        </svg>
+      </div>
+      <figcaption>o primeiro date, naquele fim de tarde</figcaption>
+    </figure>
+
+    <figure class="polaroid rise">
+      <span class="tape" aria-hidden="true"></span>
+      <div class="ph">
+        <!-- mornings: two coffee cups with heart steam -->
+        <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" aria-label="Ilustração de duas xícaras de café">
+          <defs>
+            <linearGradient id="p2bg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff4ec"/><stop offset="1" stop-color="#ffd9e2"/>
+            </linearGradient>
+          </defs>
+          <rect width="200" height="200" fill="url(#p2bg)"/>
+          <ellipse cx="100" cy="168" rx="78" ry="14" fill="#f6b8c8" opacity=".5"/>
+          <g>
+            <rect x="46" y="96" width="46" height="52" rx="9" fill="#fff" stroke="#e88ba1" stroke-width="3"/>
+            <path d="M92 106h10a10 10 0 0 1 0 26h-12" fill="none" stroke="#e88ba1" stroke-width="3"/>
+            <rect x="52" y="103" width="34" height="6" rx="3" fill="#e88ba1" opacity=".35"/>
+          </g>
+          <g>
+            <rect x="110" y="96" width="46" height="52" rx="9" fill="#fff" stroke="#e88ba1" stroke-width="3"/>
+            <path d="M110 106h-10a10 10 0 0 0 0 26h12" fill="none" stroke="#e88ba1" stroke-width="3"/>
+            <rect x="116" y="103" width="34" height="6" rx="3" fill="#e88ba1" opacity=".35"/>
+          </g>
+          <path d="M100 74c-6-6-16-5-16 2 0 6 8 10 16 14 8-4 16-8 16-14 0-7-10-8-16-2Z" fill="#e11d48" opacity=".8"/>
+          <path d="M76 80c0-8 6-8 6-14M124 80c0-8-6-8-6-14" stroke="#d9779a" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>
+        </svg>
+      </div>
+      <figcaption>toda manhã que começa com você</figcaption>
+    </figure>
+
+    <figure class="polaroid rise">
+      <span class="tape" aria-hidden="true"></span>
+      <div class="ph">
+        <!-- festa junina: ferris wheel at dusk -->
+        <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" aria-label="Ilustração de roda-gigante ao anoitecer">
+          <defs>
+            <linearGradient id="p3bg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffdff0"/><stop offset=".6" stop-color="#f9b8cf"/><stop offset="1" stop-color="#e88bab"/>
+            </linearGradient>
+          </defs>
+          <rect width="200" height="200" fill="url(#p3bg)"/>
+          <circle cx="156" cy="42" r="14" fill="#fff3cf" opacity=".9"/>
+          <g stroke="#7d1f42" stroke-width="3" fill="none" opacity=".85">
+            <circle cx="100" cy="98" r="52"/>
+            <path d="M100 46v104M48 98h104M63 61l74 74M137 61l-74 74"/>
+          </g>
+          <g fill="#fff" stroke="#7d1f42" stroke-width="2.5">
+            <rect x="94" y="34" width="12" height="12" rx="3"/>
+            <rect x="94" y="150" width="12" height="12" rx="3"/>
+            <rect x="36" y="92" width="12" height="12" rx="3"/>
+            <rect x="152" y="92" width="12" height="12" rx="3"/>
+            <rect x="53" y="51" width="12" height="12" rx="3" transform="rotate(-45 59 57)"/>
+            <rect x="135" y="51" width="12" height="12" rx="3" transform="rotate(45 141 57)"/>
+            <rect x="53" y="133" width="12" height="12" rx="3" transform="rotate(45 59 139)"/>
+            <rect x="135" y="133" width="12" height="12" rx="3" transform="rotate(-45 141 139)"/>
+          </g>
+          <path d="M82 150 100 108l18 42" stroke="#7d1f42" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <rect y="168" width="200" height="32" fill="#a44168"/>
+          <path d="M20 168l8-14 8 14M164 168l8-14 8 14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+          <circle cx="40" cy="52" r="2.5" fill="#fff"/>
+          <circle cx="58" cy="34" r="2" fill="#fff" opacity=".7"/>
+          <circle cx="176" cy="80" r="2" fill="#fff" opacity=".8"/>
+        </svg>
+      </div>
+      <figcaption>a festa junina em que a gente se perdeu de propósito</figcaption>
+    </figure>
+
+  </div>
+</section>
+
+<!-- closing vow -->
+<section class="wrap">
+  <div class="vow glass rise">
+    <div class="dews" data-dew="5"></div>
+    <div class="heart-row" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity=".45"><path d="M12 21s-7.5-4.9-9.8-9.2C.6 8.6 2.4 5.3 5.7 5.1 7.7 5 9.3 6.2 12 8.6c2.7-2.4 4.3-3.6 6.3-3.5 3.3.2 5.1 3.5 3.5 6.7C19.5 16.1 12 21 12 21Z"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.9-9.8-9.2C.6 8.6 2.4 5.3 5.7 5.1 7.7 5 9.3 6.2 12 8.6c2.7-2.4 4.3-3.6 6.3-3.5 3.3.2 5.1 3.5 3.5 6.7C19.5 16.1 12 21 12 21Z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity=".45"><path d="M12 21s-7.5-4.9-9.8-9.2C.6 8.6 2.4 5.3 5.7 5.1 7.7 5 9.3 6.2 12 8.6c2.7-2.4 4.3-3.6 6.3-3.5 3.3.2 5.1 3.5 3.5 6.7C19.5 16.1 12 21 12 21Z"/></svg>
+    </div>
+    <h2>Ano um: check.<br>Agora vem a parte boa.</h2>
+    <span class="promise">promessa pro ano dois: mais pôr-do-sol, menos briga por série.</span>
+    <p>Guarda essa página. Quando a gente tiver oitenta anos e a memória curta, ela ainda vai estar aqui lembrando a gente de como começou.</p>
+    <a class="btn" href="#" onclick="return false;">Guardar essa página</a>
+    <p style="margin:1.4rem 0 0; font-size:.82rem; font-weight:700; color:var(--wine-600);">feita em 14/02 · válida por toda a vida</p>
+  </div>
+</section>
+
+<!-- aero taskbar footer -->
+<div class="wrap">
+  <div class="footbar glass">
+    <span class="made">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.9-9.8-9.2C.6 8.6 2.4 5.3 5.7 5.1 7.7 5 9.3 6.2 12 8.6c2.7-2.4 4.3-3.6 6.3-3.5 3.3.2 5.1 3.5 3.5 6.7C19.5 16.1 12 21 12 21Z"/></svg>
+      feito com correio elegante
+    </span>
+    <a class="btn btn-ghost" href="lp.html">faça a sua também</a>
+    <span class="clock" id="clock">--:--</span>
+  </div>
+</div>
+
+<script>
+/* ---------- heart bubbles ---------- */
+(function(){
+  var field = document.getElementById('bubbles');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var heart = '<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-9.8-9.2C.6 8.6 2.4 5.3 5.7 5.1 7.7 5 9.3 6.2 12 8.6c2.7-2.4 4.3-3.6 6.3-3.5 3.3.2 5.1 3.5 3.5 6.7C19.5 16.1 12 21 12 21Z"/></svg>';
+  var n = reduce ? 0 : (window.innerWidth < 640 ? 7 : 12);
+  for(var i=0;i<n;i++){
+    var b = document.createElement('i');
+    b.className = 'bubble';
+    var s = 14 + Math.random()*64;
+    b.style.width = b.style.height = s + 'px';
+    b.style.left = (Math.random()*100) + '%';
+    b.style.setProperty('--drift', (Math.random()*90-45) + 'px');
+    b.style.animationDuration = (16 + Math.random()*16) + 's';
+    b.style.animationDelay = (-Math.random()*26) + 's';
+    if(s > 34 && Math.random() > .35){ b.innerHTML = heart; }
+    field.appendChild(b);
+  }
+})();
+
+/* ---------- dew droplets ---------- */
+(function(){
+  document.querySelectorAll('[data-dew]').forEach(function(host){
+    var count = parseInt(host.getAttribute('data-dew'), 10) || 3;
+    for(var i=0;i<count;i++){
+      var d = document.createElement('i');
+      d.className = 'droplet';
+      var s = 6 + Math.random()*14;
+      d.style.width = s + 'px';
+      d.style.height = (s * (0.92 + Math.random()*0.2)) + 'px';
+      d.style.left = (4 + Math.random()*90) + '%';
+      d.style.top = (6 + Math.random()*80) + '%';
+      d.style.opacity = (0.55 + Math.random()*0.4).toFixed(2);
+      host.appendChild(d);
+    }
+  });
+})();
+
+/* ---------- rise-in ---------- */
+(function(){
+  var els = document.querySelectorAll('.rise');
+  if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in');}); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  els.forEach(function(e){ io.observe(e); });
+})();
+
+/* ---------- 365 count-up ---------- */
+(function(){
+  var el = document.getElementById('days');
+  if(!el) return;
+  var done = false;
+  function run(){
+    if(done) return; done = true;
+    var t0 = null, target = 365, dur = 1600;
+    function tick(t){
+      if(!t0) t0 = t;
+      var p = Math.min((t - t0)/dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(eased * target);
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  if(!('IntersectionObserver' in window)){ run(); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){ run(); io.disconnect(); } });
+  }, { threshold: 0.4 });
+  io.observe(el);
+})();
+
+/* ---------- taskbar clock ---------- */
+(function(){
+  var c = document.getElementById('clock');
+  function up(){
+    var d = new Date();
+    c.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  up(); setInterval(up, 20000);
+})();
+</script>
+</body>
+</html>

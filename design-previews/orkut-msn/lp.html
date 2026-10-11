@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>correio elegante — você escreve como fala, a gente transforma em inesquecível</title>
+<meta name="description" content="Escreva do seu jeito, como se fosse mensagem de MSN. A gente transforma numa página linda, com cara de depoimento, pra pessoa abrir e lembrar pra sempre.">
+<meta name="theme-color" content="#f4eefb">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 8'%3E%3Cpath d='M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z' fill='%23d9439f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CORREIO ELEGANTE · ORKUT × MSN PREVIEW
+   depoimento-era nostalgia — lilás orkut / rosa / azul messenger
+   ============================================================ */
+:root{
+  --bg:          #f4eefb;
+  --bg-dot:      #e4d6f6;
+  --surface:     #ffffff;
+  --surface-2:   #faf6ff;
+  --line:        #d9c9ec;
+  --line-soft:   #e9def7;
+  --dot-sep:     #d8cbe8;
+
+  --purple:      #7a3fa8;
+  --purple-deep: #4e2470;
+  --link:        #6a2fa0;
+  --pink:        #d9439f;
+  --pink-deep:   #a01f6e;
+  --pink-soft:   #f6d7ea;
+
+  --msn-blue:      #3f7ec4;
+  --msn-blue-deep: #2c5f9e;
+  --msn-line:      #9fc0e0;
+  --msn-bg:        #eaf1fa;
+
+  --ink:       #3a2350;
+  --ink-soft:  #6f5a86;
+  --muted:     #8f7ba3;
+
+  --green: #57b25e;
+  --gold:  #ffd94a;
+
+  --font-pixel: "Silkscreen", "VT323", monospace;
+  --font-term:  "VT323", "Silkscreen", monospace;
+  --font-body:  Verdana, Tahoma, Geneva, sans-serif;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  font-family:var(--font-body);
+  font-size:13px; line-height:1.55;
+  color:var(--ink);
+  background:var(--bg);
+  background-image:radial-gradient(var(--bg-dot) 1px, transparent 1.2px);
+  background-size:22px 22px;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:#f3c6e4; color:var(--purple-deep); }
+a{ color:var(--link); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+img,svg{ display:block; }
+button{ font-family:inherit; cursor:pointer; }
+
+.pix{ display:block; }
+.pix svg{ width:100%; height:100%; display:block; shape-rendering:crispEdges; }
+
+/* ---------------- topbar (chrome) ---------------- */
+.topbar{ background:var(--surface); border-bottom:1px solid var(--line); }
+.topbar-row{
+  max-width:1040px; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 14px 7px;
+}
+.brand{
+  font-family:var(--font-pixel); font-weight:700; font-size:16px;
+  color:var(--purple-deep); letter-spacing:.5px;
+  display:flex; align-items:center; gap:8px; white-space:nowrap;
+}
+.brand:hover{ text-decoration:none; }
+.brand em{ font-style:normal; color:var(--pink); }
+.brand .pxh{ width:14px; flex:none; }
+.topbar-user{ font-size:11px; color:var(--muted); text-align:right; }
+.topbar-user a{ color:var(--link); }
+
+.nav{ background:linear-gradient(#f1e9fc,#e3d5f6); border-bottom:1px solid var(--line); }
+.nav-inner{
+  max-width:1040px; margin:0 auto; padding:0 10px;
+  display:flex; gap:2px; overflow-x:auto; scrollbar-width:none;
+}
+.nav-inner::-webkit-scrollbar{ display:none; }
+.nav a{
+  font-family:var(--font-pixel); font-size:10px; color:var(--purple-deep);
+  padding:9px 12px 8px; white-space:nowrap; border:1px solid transparent;
+  border-bottom:none; border-radius:6px 6px 0 0; margin-bottom:-1px;
+}
+.nav a:hover{ background:rgba(255,255,255,.55); text-decoration:none; }
+.nav a.active{
+  background:var(--bg); border-color:var(--line); font-weight:700; position:relative;
+}
+.nav a .cnt{ font-family:var(--font-term); font-size:13px; color:var(--pink-deep); }
+
+/* ---------------- layout ---------------- */
+.wrap{ max-width:1040px; margin:0 auto; padding:0 14px; }
+section{ margin:26px 0; }
+
+/* ---------------- hero ---------------- */
+.hero{ display:grid; gap:26px; padding:26px 0 6px; }
+@media(min-width:920px){
+  .hero{ grid-template-columns:minmax(0,1fr) 460px; align-items:center; gap:34px; padding:40px 0 10px; }
+}
+.kicker{
+  font-family:var(--font-pixel); font-size:11px; letter-spacing:1px;
+  color:var(--pink-deep); margin-bottom:12px;
+}
+.kicker::before{ content:"// "; color:var(--purple); }
+.hero h1{
+  font-family:var(--font-pixel); font-weight:700;
+  font-size:clamp(22px, 6.4vw, 34px); line-height:1.28;
+  color:var(--purple-deep); text-wrap:balance;
+}
+.hero h1 em{ font-style:normal; color:var(--pink); }
+.hero .sub{
+  margin:15px 0 20px; font-size:14px; color:var(--ink-soft); max-width:46ch;
+}
+.cta-row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.mini-note{ margin-top:12px; font-size:11px; color:var(--muted); }
+.mini-note b{ color:var(--pink-deep); font-weight:700; }
+
+/* ---------------- buttons (beveled 2000s) ---------------- */
+.btn{
+  font-family:var(--font-pixel); font-size:12px; display:inline-block;
+  padding:12px 18px; border-radius:5px; border:1px solid; line-height:1;
+  transition:transform .08s ease, filter .15s ease;
+}
+.btn:active{ transform:translateY(1px); }
+.btn-primary{
+  color:#fff; border-color:#8f1f5e;
+  background:linear-gradient(#e663b0,#c22d84);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 #8f1f5e;
+  text-shadow:0 1px 0 rgba(0,0,0,.25);
+}
+.btn-primary:hover{ filter:brightness(1.07); text-decoration:none; }
+.btn-ghost{
+  color:var(--purple-deep); border-color:#a883d0;
+  background:linear-gradient(#ffffff,#eadcf8);
+  box-shadow:inset 0 1px 0 #fff, 0 2px 0 #c5aee0;
+}
+.btn-ghost:hover{ filter:brightness(1.03); text-decoration:none; }
+.btn-sm{ padding:8px 12px; font-size:10px; }
+
+/* ---------------- MSN window ---------------- */
+.msn{
+  border:1px solid #7fa8d8; border-radius:9px;
+  background:var(--msn-bg); overflow:hidden;
+  box-shadow:0 18px 44px -18px rgba(78,36,112,.35), 0 2px 0 rgba(255,255,255,.7) inset;
+}
+.msn-title{
+  display:flex; align-items:center; gap:8px;
+  background:linear-gradient(#f8fbfe,#cfe0f2 48%,#b6d0ea);
+  padding:8px 10px; border-bottom:1px solid var(--msn-line);
+}
+.msn-title-text{
+  font-family:var(--font-pixel); font-size:10px; color:#1d3a5f; flex:1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.win-btns{ display:flex; gap:4px; flex:none; }
+.win-btns i{
+  width:15px; height:15px; border:1px solid #5d84ad; border-radius:3px;
+  background:linear-gradient(#ffffff,#d7e6f5);
+  display:grid; place-items:center;
+  font-style:normal; font-size:9px; line-height:1; color:var(--msn-blue-deep);
+  font-family:var(--font-pixel);
+}
+.win-btns i.x{ background:linear-gradient(#f7aca3,#e0705f); border-color:#b04a3a; color:#fff; }
+.msn-sub{
+  padding:5px 10px; font-size:11px; color:#47688f;
+  border-bottom:1px solid #c6d9ec; background:#f4f8fd;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.msn-sub b{ color:var(--msn-blue-deep); }
+.msn-chat{
+  background:#fff; padding:14px 12px 10px; min-height:216px;
+  border-bottom:1px solid #c6d9ec;
+}
+.msg{ font-size:13px; margin-bottom:9px; }
+.msg:last-child{ margin-bottom:0; }
+.msg .meta{
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+}
+.who{ font-weight:700; font-size:11px; letter-spacing:.2px; }
+.who.you{ color:var(--purple-deep); }
+.who.bot{ color:var(--pink-deep); }
+.time{ font-family:var(--font-term); font-size:14px; color:var(--muted); white-space:nowrap; }
+.msg .text{ display:block; padding-left:14px; color:var(--ink); }
+.msg .text em{ color:var(--muted); font-style:italic; }
+
+.link-card{
+  display:flex; gap:10px; align-items:center;
+  margin:8px 0 10px 14px; padding:10px;
+  border:1px dashed #b9a3d8; border-radius:6px; background:#faf5ff;
+}
+.link-card .pxh{ width:26px; flex:none; }
+.link-card .url{ font-size:12px; color:var(--link); text-decoration:underline; word-break:break-all; }
+.link-card small{ display:block; font-size:10px; color:var(--muted); margin-top:2px; }
+
+.nudge-note{
+  font-size:11px; font-style:italic; color:var(--muted);
+  border-top:1px dotted var(--dot-sep); padding-top:8px; margin-top:4px;
+}
+.nudge-note[hidden]{ display:none; }
+
+.msn-foot{
+  display:flex; align-items:center; gap:6px;
+  padding:5px 10px; font-size:11px; color:#47688f;
+  background:#f4f8fd; border-bottom:1px solid #c6d9ec;
+}
+.msn-foot .typing{ color:var(--pink-deep); }
+.dot{
+  width:9px; height:9px; border-radius:50%; flex:none;
+  border:1px solid rgba(0,0,0,.25);
+}
+.dot.online{ background:var(--green); box-shadow:0 0 4px rgba(87,178,94,.8); }
+.dots i{ display:inline-block; font-style:normal; animation:blink 1.2s infinite; }
+.dots i:nth-child(2){ animation-delay:.22s; }
+.dots i:nth-child(3){ animation-delay:.44s; }
+@keyframes blink{ 0%,60%,100%{ opacity:.15; } 30%{ opacity:1; } }
+
+.msn-input{ padding:7px 10px 10px; }
+.toolbar{ display:flex; gap:6px; margin-bottom:7px; flex-wrap:wrap; }
+.tool{
+  display:flex; align-items:center; gap:6px;
+  font-size:11px; color:var(--msn-blue-deep);
+  background:linear-gradient(#ffffff,#dce8f6);
+  border:1px solid var(--msn-line); border-radius:4px; padding:4px 8px;
+}
+.tool:hover{ background:#fff; }
+.tool .pix{ width:16px; height:16px; }
+#nudgeBtn .pix svg{ filter:drop-shadow(1px 1px 0 rgba(122,90,0,.55)); }
+.tool:active{ transform:translateY(1px); }
+.input-row{ display:flex; gap:8px; }
+.fake-input{
+  flex:1; background:#fff; border:1px solid var(--msn-line); border-radius:4px;
+  padding:8px 9px; font-size:12px; color:var(--ink); font-family:var(--font-body);
+  box-shadow:inset 0 1px 3px rgba(44,95,158,.12);
+  min-width:0;
+}
+.fake-input::placeholder{ color:#8296ac; }
+.fake-input:focus{ outline:1px dotted var(--msn-blue); outline-offset:0; }
+.send-btn{
+  font-family:var(--font-pixel); font-size:10px; color:#fff;
+  background:linear-gradient(#6fa3dc,#3f7ec4); border:1px solid #2c5f9e;
+  border-radius:4px; padding:0 14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+}
+.send-btn:hover{ filter:brightness(1.06); }
+
+@keyframes nudge{
+  0%,100%{ transform:translate(0,0) rotate(0); }
+  15%{ transform:translate(-7px,3px) rotate(-.8deg); }
+  30%{ transform:translate(6px,-3px) rotate(.8deg); }
+  45%{ transform:translate(-5px,-2px) rotate(-.5deg); }
+  60%{ transform:translate(5px,2px) rotate(.5deg); }
+  75%{ transform:translate(-3px,1px) rotate(-.2deg); }
+  90%{ transform:translate(2px,-1px) rotate(.2deg); }
+}
+.msn.shake{ animation:nudge .55s linear; }
+
+/* ---------------- panel (orkut box) ---------------- */
+.panel{
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:8px; overflow:hidden;
+  box-shadow:inset 0 1px 0 #fff, 0 10px 26px -16px rgba(94,52,140,.25);
+}
+.panel-title{
+  font-family:var(--font-pixel); font-weight:700; font-size:13px;
+  color:var(--purple-deep);
+  background:linear-gradient(#f3ebfd,#e4d5f7);
+  padding:11px 14px; border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:9px;
+}
+.panel-title .pxh{ width:13px; flex:none; }
+.panel-title .count{ font-family:var(--font-term); font-size:16px; color:var(--pink-deep); font-weight:400; }
+.panel-body{ padding:6px 14px 10px; }
+
+/* ---------------- steps ---------------- */
+.step{
+  display:grid; grid-template-columns:46px 1fr; gap:6px 12px;
+  padding:15px 0; border-bottom:1px dotted var(--dot-sep);
+}
+.step:last-child{ border-bottom:0; }
+.step .num{
+  font-family:var(--font-pixel); font-weight:700; font-size:22px;
+  color:var(--pink); text-shadow:2px 2px 0 var(--pink-soft); padding-top:1px;
+}
+.step h3{ font-family:var(--font-pixel); font-size:12px; color:var(--purple-deep); margin-bottom:5px; }
+.step p{ color:var(--ink-soft); font-size:13px; }
+.step p a{ font-weight:700; }
+
+/* ---------------- showcase mini profile ---------------- */
+.showcase .panel-body{ padding:0; }
+.mini{
+  display:flex; gap:14px; padding:16px 14px;
+  background:
+    linear-gradient(#fff, #fdfbff);
+}
+.mini-photo{
+  width:88px; flex:none; align-self:flex-start;
+  background:#fff; padding:4px;
+  border:1px solid #cbb8e0; border-radius:6px;
+  box-shadow:0 2px 6px rgba(94,52,140,.15), inset 0 0 0 1px #f4edfc;
+}
+.mini-photo .pix{ width:100%; aspect-ratio:1; background:linear-gradient(#efe6fb,#e3d3f4); border-radius:3px; }
+.mini-photo figcaption{
+  font-size:10px; color:var(--muted); text-align:center; padding-top:4px;
+}
+.mini-info{ min-width:0; }
+.mini-name{
+  font-family:var(--font-pixel); font-size:14px; color:var(--purple-deep);
+  display:flex; align-items:center; gap:7px;
+}
+.mini-meta{ font-size:11px; color:var(--muted); margin:2px 0 10px; }
+.mini-depo{
+  border-left:3px solid var(--pink-soft); background:var(--surface-2);
+  border-radius:0 6px 6px 0; padding:9px 11px; margin-bottom:12px;
+}
+.mini-depo .who{ display:block; font-size:10px; font-weight:700; color:var(--pink-deep); margin-bottom:3px; }
+.mini-depo p{ font-size:12px; color:var(--ink-soft); font-style:italic; }
+
+/* ---------------- testimonials (depoimentos) ---------------- */
+.depo{ display:flex; gap:12px; padding:14px 0; border-bottom:1px dotted var(--dot-sep); }
+.depo:last-child{ border-bottom:0; }
+.depo .avatar{
+  width:44px; height:44px; flex:none;
+  border:1px solid #cbb8e0; border-radius:5px; padding:3px; background:#fff;
+  box-shadow:0 1px 4px rgba(94,52,140,.12);
+}
+.depo .avatar .pix{ width:100%; height:100%; background:linear-gradient(#efe6fb,#e3d3f4); border-radius:3px; }
+.depo-main{ min-width:0; flex:1; }
+.depo-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:3px; }
+.depo-name{ font-weight:700; font-size:12px; color:var(--purple-deep); }
+.depo-date{ font-family:var(--font-term); font-size:14px; color:var(--muted); white-space:nowrap; }
+.depo p{ font-size:13px; color:var(--ink); }
+.depo .heart-row{ margin-top:7px; display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+.depo .heart-row .pxh{ width:11px; }
+
+/* ---------------- final cta ---------------- */
+.final .panel-body{ text-align:center; padding:30px 18px 34px; }
+.final h2{
+  font-family:var(--font-pixel); font-size:clamp(17px,5vw,22px); color:var(--purple-deep);
+  margin-bottom:10px; text-wrap:balance;
+}
+.final h2 em{ font-style:normal; color:var(--pink); }
+.final p{ color:var(--ink-soft); max-width:52ch; margin:0 auto 20px; }
+.final .pix-strip{ display:flex; justify-content:center; gap:10px; margin-bottom:18px; }
+.final .pix-strip .pxh{ width:18px; opacity:.9; }
+.final .pix-strip .pxh:nth-child(2){ transform:translateY(-4px); }
+.final .pix-strip .pxh:nth-child(4){ transform:translateY(-4px); }
+
+/* ---------------- footer ---------------- */
+.footer{
+  margin-top:34px; border-top:1px solid var(--line);
+  background:linear-gradient(#f1e9fc,#e9ddf8);
+}
+.footer-inner{
+  max-width:1040px; margin:0 auto; padding:16px 14px 22px;
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+}
+.footer .fbrand{ font-family:var(--font-pixel); font-size:11px; color:var(--purple-deep); display:flex; align-items:center; gap:7px; }
+.footer .fbrand .pxh{ width:12px; }
+.footer p{ font-size:11px; color:var(--muted); }
+.footer p b{ color:var(--pink-deep); font-weight:700; }
+
+/* pixel heart svg helper */
+.pxh{ display:inline-block; }
+.pxh path{ fill:var(--pink); }
+.pxh.deep path{ fill:var(--pink-deep); }
+.pxh.purple path{ fill:var(--purple); }
+.pxh.ghost path{ fill:#cbb3e0; }
+
+@media (prefers-reduced-motion: reduce){
+  .dots i, .msn.shake{ animation:none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= TOP CHROME ======================= -->
+<header class="topbar">
+  <div class="topbar-row">
+    <a class="brand" href="#">
+      <svg class="pxh deep" viewBox="0 0 9 8" aria-hidden="true"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+      correio<em>elegante</em>
+    </a>
+    <div class="topbar-user">rafa@hotmail.com &nbsp;·&nbsp; <a href="#">sair</a></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="active">início</a>
+      <a href="#como">como funciona</a>
+      <a href="#exemplo">exemplo</a>
+      <a href="#depoimentos">depoimentos <span class="cnt">(128)</span></a>
+      <a href="#comecar">começar</a>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <!-- ======================= HERO ======================= -->
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="kicker">uma carta de amor que cabe num link</p>
+      <h1>você escreve como fala. <em>a gente transforma em algo inesquecível.</em></h1>
+      <p class="sub">
+        sem pressão de parecer poeta. você manda a mensagem do seu jeito — como se fosse
+        um depoimento ou um papo de msn — e a gente monta uma página linda, só de vocês dois.
+        ela abre o link e pronto: choro garantido.
+      </p>
+      <div class="cta-row" id="comecar">
+        <a class="btn btn-primary" href="#">escrever minha carta</a>
+        <a class="btn btn-ghost" href="card.html">ver uma página pronta</a>
+      </div>
+      <p class="mini-note">leva <b>menos de 5 minutos</b> · custa menos que um buquê · fica no ar pra sempre</p>
+    </div>
+
+    <!-- MSN conversation window -->
+    <div class="msn" id="msnWindow" aria-label="prévia em janela de messenger">
+      <div class="msn-title">
+        <span class="dot online"></span>
+        <span class="msn-title-text">Duda &lt;duda@hotmail.com&gt; — Conversa</span>
+        <span class="win-btns"><i>_</i><i>&#9633;</i><i class="x">&times;</i></span>
+      </div>
+      <div class="msn-sub">Para: <b>Duda</b> &lt;a pessoa mais legal do mundo&gt;</div>
+
+      <div class="msn-chat" id="msnChat">
+        <p class="msg">
+          <span class="meta"><span class="who you">Rafa diz:</span><span class="time">13:42</span></span>
+          <span class="text">duda, escrever depoimento em 2010 era coisa séria. então considera isso aqui a maior declaração que existe:</span>
+        </p>
+        <p class="msg">
+          <span class="meta"><span class="who bot">correio elegante diz:</span><span class="time">13:43</span></span>
+          <span class="text">pronto, Rafa. transformei sua carta numa página só de vocês:</span>
+        </p>
+        <div class="link-card">
+          <svg class="pxh" viewBox="0 0 9 8" aria-hidden="true"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+          <div>
+            <a class="url" href="card.html">correioelegante.com.br/rafa-e-duda</a>
+            <small>"com você, até dia comum vira história boa."</small>
+          </div>
+        </div>
+        <p class="msg">
+          <span class="meta"><span class="who bot">correio elegante diz:</span><span class="time">13:43</span></span>
+          <span class="text">manda o link e prepara o lencinho.</span>
+        </p>
+        <p class="nudge-note" id="nudgeNote" hidden>você chamou a atenção de Duda. ela vai amar.</p>
+      </div>
+
+      <div class="msn-foot">
+        <span class="dot online"></span>
+        <span>Duda está online</span>
+        <span class="typing">· digitando<span class="dots"><i>.</i><i>.</i><i>.</i></span></span>
+      </div>
+
+      <div class="msn-input">
+        <div class="toolbar">
+          <button class="tool" type="button" title="emoticons">
+            <span class="pix" data-art="..OOOOOO../.OOOOOOOO./OEOOOOOOEO/OOOOOOOOOO/OOOOOOOOOO/OOMOOOOMOO/.OOMMMMOO./..OOOOOO.." data-pal='{"O":"#ffd94a","E":"#7a5a00","M":"#7a5a00"}'></span>
+            emoticons
+          </button>
+          <button class="tool" type="button" id="nudgeBtn" title="chamar atenção">
+            <span class="pix" data-art="X..X.X.X../X..X.X.X../X..X.X.X.X/XX.X.X.XX/.XXXXXXX../.XXXXXXX../..XXXXX.../..XXXXX.../...XXX...." data-pal='{"X":"#ffd94a"}'></span>
+            chamar atenção
+          </button>
+          <button class="tool" type="button" title="enviar foto">
+            <span class="pix" data-art="FFFFFFFFFF/FSSSSSSSSF/FSSYYSSSSF/FSSMMSSSSF/FSMMMMMSSF/FMMMMMMMSF/FFFFFFFFFF" data-pal='{"F":"#8aa8cc","S":"#d8e9f8","Y":"#ffd94a","M":"#7fb285"}'></span>
+            foto
+          </button>
+        </div>
+        <form class="input-row" id="msnForm">
+          <input class="fake-input" id="msnField" type="text" placeholder="digita aqui, do seu jeito…" autocomplete="off">
+          <button class="send-btn" type="submit">Enviar</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= COMO FUNCIONA ======================= -->
+  <section class="how" id="como">
+    <div class="panel">
+      <h2 class="panel-title">
+        <svg class="pxh purple" viewBox="0 0 9 8" aria-hidden="true"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+        como funciona
+      </h2>
+      <div class="panel-body">
+        <div class="step">
+          <span class="num">01</span>
+          <div>
+            <h3>você escreve do seu jeito</h3>
+            <p>abre a caixinha e escreve como se fosse mensagem de msn: pode errar, pode rir, pode ser sincero. a gente não julga — a gente emociona.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="num">02</span>
+          <div>
+            <h3>a gente monta a página</h3>
+            <p>seu texto vira uma página com cara de depoimento: foto, data, coração pixelado e tudo que a internet dos anos 2000 tinha de melhor.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="num">03</span>
+          <div>
+            <h3>você manda o link</h3>
+            <p>cai no whatsapp, no insta, no e-mail. ela abre no celular e a página tá lá — pra sempre, toda vez que quiser reler.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= SHOWCASE ======================= -->
+  <section class="showcase" id="exemplo">
+    <div class="panel">
+      <h2 class="panel-title">
+        <svg class="pxh purple" viewBox="0 0 9 8" aria-hidden="true"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+        assim que fica
+      </h2>
+      <div class="panel-body">
+        <div class="mini">
+          <figure class="mini-photo">
+            <div class="pix" data-art="
+              ....HHHHHHHH..../
+              ..HHHHHHHHHHHH../
+              .HHHHHHHHHHHHHH./
+              .HHHSSSSSSSSHHH./
+              .HHSSSSSSSSSSHH./
+              .HHSSSSSSSSSSHH./
+              .HHSEESSSSEESSHH./
+              .HHSSSSSSSSSSHH./
+              .HHSCCSSSSCCSHH./
+              .HHSSSSMMSSSSHH./
+              .HHHSSSSSSSSHHH./
+              ..HHSSSSSSSSHH../
+              ..HHHHSSSSHHHH../
+              .HHHTTTTTTTTHHH./
+              ..HHTTTTTTTTHH../
+              ..HHTTTTTTTTHH.."
+              data-pal='{"H":"#7a4530","S":"#f8cfa4","E":"#3a2a20","C":"#f2a0a8","M":"#c25a6a","T":"#a78bda"}'></div>
+            <figcaption>Duda</figcaption>
+          </figure>
+          <div class="mini-info">
+            <p class="mini-name">Duda <span class="dot online"></span></p>
+            <p class="mini-meta">são paulo – sp · namorando com Rafa</p>
+            <div class="mini-depo">
+              <span class="who">Rafa deixou um depoimento:</span>
+              <p>"eu podia listar tudo que a gente já viveu — mas no fim o recado cabe numa frase só: com você, até dia comum vira história boa."</p>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="card.html">abrir a página inteira &raquo;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= DEPOIMENTOS ======================= -->
+  <section class="quotes" id="depoimentos">
+    <div class="panel">
+      <h2 class="panel-title">
+        <svg class="pxh purple" viewBox="0 0 9 8" aria-hidden="true"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+        depoimentos de quem já mandou <span class="count">(128)</span>
+      </h2>
+      <div class="panel-body">
+        <article class="depo">
+          <div class="avatar"><div class="pix" data-art="..HHHHHH../.HHHHHHHH./.HSSSSSSH./.HSESSESH./.HSSMMSSH./..TTTTTT../.TTTTTTTT." data-pal='{"H":"#2e2a2a","S":"#eab98c","E":"#1e1611","M":"#a3545f","T":"#6fa8c8"}'></div></div>
+          <div class="depo-main">
+            <div class="depo-head"><span class="depo-name">Caio</span><span class="depo-date">há 2 dias</span></div>
+            <p>mandei numa terça aleatória, sem data especial nem nada. ela me ligou chorando no meio do expediente. 10/10.</p>
+            <div class="heart-row"><svg class="pxh" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg> namorada dele aprovou</div>
+          </div>
+        </article>
+        <article class="depo">
+          <div class="avatar"><div class="pix" data-art="..HHHHHH../.HHHHHHHH./.HSSSSSSH./.HSESSESH./.HSSMMSSH./..TTTTTT../.TTTTTTTT." data-pal='{"H":"#d9a545","S":"#f2c493","E":"#3a2a20","M":"#c25a6a","T":"#d98a8a"}'></div></div>
+          <div class="depo-main">
+            <div class="depo-head"><span class="depo-name">Pri</span><span class="depo-date">há 1 semana</span></div>
+            <p>meu namorado releu o link umas quinze vezes. tá salvo nos favoritos até hoje, do lado da receita de strogonoff.</p>
+            <div class="heart-row"><svg class="pxh" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg> 14 pessoas acharam fofo</div>
+          </div>
+        </article>
+        <article class="depo">
+          <div class="avatar"><div class="pix" data-art="..HHHHHH../.HHHHHHHH./.HSSSSSSH./.HSESSESH./.HSSMMSSH./..TTTTTT../.TTTTTTTT." data-pal='{"H":"#5a3a28","S":"#8a5a3a","E":"#241812","M":"#7a3a44","T":"#8a6fc0"}'></div></div>
+          <div class="depo-main">
+            <div class="depo-head"><span class="depo-name">Marcos</span><span class="depo-date">há 3 semanas</span></div>
+            <p>achei que ia ficar brega. ficou lindo. minha sogra já mandou pro grupo da família inteira.</p>
+            <div class="heart-row"><svg class="pxh" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg> sogra aprovou</div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= FINAL CTA ======================= -->
+  <section class="final">
+    <div class="panel">
+      <div class="panel-body">
+        <div class="pix-strip" aria-hidden="true">
+          <svg class="pxh ghost" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+          <svg class="pxh" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+          <svg class="pxh deep" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+          <svg class="pxh" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+          <svg class="pxh ghost" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+        </div>
+        <h2>pronto pra fazer alguém <em>chorar de alegria</em>?</h2>
+        <p>daqui a dez anos vocês ainda vão ter esse link. escreve agora, do seu jeito, que a gente cuida do resto.</p>
+        <a class="btn btn-primary" href="#">escrever minha carta</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="fbrand">
+      <svg class="pxh deep" viewBox="0 0 9 8"><path d="M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v1H0zM0 3h9v1H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z"/></svg>
+      correio elegante · 2010–2025
+    </span>
+    <p>feito com saudade da internet que a gente <b>amava</b>.</p>
+  </div>
+</footer>
+
+<script>
+/* ---------- pixel art painter: data-art rows + data-pal palette ---------- */
+(function(){
+  var NS = 'http://www.w3.org/2000/svg';
+  document.querySelectorAll('.pix[data-art]').forEach(function(el){
+    var rows = el.getAttribute('data-art').split('/').map(function(r){ return r.trim(); });
+    var pal = {};
+    try{ pal = JSON.parse(el.getAttribute('data-pal') || '{}'); }catch(e){}
+    var w = Math.max.apply(null, rows.map(function(r){ return r.length; }));
+    var h = rows.length;
+    var per = {};
+    rows.forEach(function(r,y){
+      for(var x=0;x<r.length;x++){
+        var ch = r[x];
+        if(ch === '.' || ch === ' ') continue;
+        var fill = pal[ch] || ch;
+        per[fill] = (per[fill] || '') + 'M' + x + ' ' + y + 'h1v1h-1z';
+      }
+    });
+    var svg = document.createElementNS(NS,'svg');
+    svg.setAttribute('viewBox','0 0 ' + w + ' ' + h);
+    svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    svg.setAttribute('aria-hidden','true');
+    Object.keys(per).forEach(function(fill){
+      var p = document.createElementNS(NS,'path');
+      p.setAttribute('d', per[fill]);
+      p.setAttribute('fill', fill);
+      svg.appendChild(p);
+    });
+    el.appendChild(svg);
+  });
+})();
+
+/* ---------- nudge: shake the window like MSN ---------- */
+(function(){
+  var win = document.getElementById('msnWindow');
+  var btn = document.getElementById('nudgeBtn');
+  var note = document.getElementById('nudgeNote');
+  btn.addEventListener('click', function(){
+    win.classList.remove('shake');
+    void win.offsetWidth; /* restart animation */
+    win.classList.add('shake');
+    note.hidden = false;
+  });
+})();
+
+/* ---------- fake send: playful reply ---------- */
+(function(){
+  var form = document.getElementById('msnForm');
+  var field = document.getElementById('msnField');
+  var chat = document.getElementById('msnChat');
+  var note = document.getElementById('nudgeNote');
+  var replied = false;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var txt = field.value.trim();
+    if(!txt) return;
+    var now = new Date();
+    var hh = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    var msg = document.createElement('p');
+    msg.className = 'msg';
+    msg.innerHTML = '<span class="meta"><span class="who you">você diz:</span><span class="time">' + hh + '</span></span>' +
+                    '<span class="text"></span>';
+    msg.querySelector('.text').textContent = txt;
+    chat.insertBefore(msg, note);
+    field.value = '';
+    if(!replied){
+      replied = true;
+      setTimeout(function(){
+        var bot = document.createElement('p');
+        bot.className = 'msg';
+        bot.innerHTML = '<span class="meta"><span class="who bot">correio elegante diz:</span><span class="time">' + hh + '</span></span>' +
+                        '<span class="text">lindo. agora clica em "escrever minha carta" ali em cima que a gente faz o resto.</span>';
+        chat.insertBefore(bot, note);
+        chat.scrollTop = chat.scrollHeight;
+      }, 900);
+    }
+    chat.scrollTop = chat.scrollHeight;
+  });
+})();
+</script>
+</body>
+</html>

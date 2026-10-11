@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>correio elegante — retro-os</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CORREIO ELEGANTE — design preview · estilo: retro-os (win9x)
+   ============================================================ */
+:root{
+  /* chrome */
+  --face:#c8c4bd;
+  --face-hi:#dfdfdf;
+  --face-white:#ffffff;
+  --face-lo:#868a8e;
+  --face-dk:#0a0a0a;
+  /* marca */
+  --rose:#e11d48;
+  --rose-d:#9f1239;
+  --rose-l:#fb7185;
+  --blush:#ffe4ec;
+  --blush2:#fff5f7;
+  --wine:#4c0519;
+  --ink:#221016;
+  /* papel de parede (claro, obrigatório) */
+  --sky1:#a8d8ff;
+  --sky2:#eaf7ff;
+  --grass1:#b9e39a;
+  --grass2:#93cd71;
+  --font-px:'Silkscreen',monospace;
+  --font-big:'VT323',monospace;
+  --font-body:'Segoe UI',Tahoma,Verdana,sans-serif;
+  --taskbar-h:42px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--font-body);
+  color:var(--ink);
+  overflow:hidden;
+  background:var(--sky2);
+  cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 0l11 6.5-4.2 1 2 5.5-2.2 1-2-5.5L0 12z' fill='%23fff' stroke='%23123'/%3E%3C/svg%3E") 1 1, default;
+}
+::selection{background:var(--rose);color:#fff}
+svg{display:block}
+[hidden]{display:none!important}
+
+/* ---------- área de trabalho ---------- */
+.desktop{
+  position:fixed;
+  inset:0 0 var(--taskbar-h) 0;
+  overflow:hidden;
+}
+.wall{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+/* scanlines bem sutis por cima de tudo na área de trabalho */
+.desktop::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,rgba(60,10,30,.028) 0 1px,transparent 1px 3px);
+}
+
+/* ---------- ícones da área de trabalho ---------- */
+.icons{position:absolute;top:14px;left:12px;z-index:1;display:flex;flex-direction:column;gap:20px}
+.icon{
+  width:82px;background:none;border:0;cursor:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  font-family:var(--font-px);font-size:10px;line-height:1.35;
+  color:#3d1220;user-select:none;-webkit-user-select:none;
+}
+.icon .img{
+  width:44px;height:44px;display:grid;place-items:center;
+  filter:drop-shadow(1px 2px 0 rgba(60,10,30,.18));
+}
+.icon .img svg{width:40px;height:40px;shape-rendering:crispEdges}
+.icon .lbl{padding:1px 4px;text-shadow:0 1px 0 rgba(255,255,255,.75)}
+.icon.sel .img{outline:1px dotted #fff;outline-offset:1px}
+.icon.sel .lbl{background:var(--rose);color:#fff;outline:1px dotted #fff;text-shadow:none}
+
+/* ---------- janela ---------- */
+.window{
+  position:absolute;
+  left:var(--x,40px);top:var(--y,40px);width:var(--w,320px);
+  max-width:calc(100vw - 16px);
+  background:var(--face);
+  padding:3px;
+  box-shadow:
+    inset -1px -1px 0 var(--face-dk),
+    inset  1px  1px 0 var(--face-white),
+    inset -2px -2px 0 var(--face-lo),
+    inset  2px  2px 0 var(--face-hi);
+  filter:drop-shadow(5px 6px 0 rgba(76,5,25,.16));
+  z-index:10;
+  min-width:min(260px,90vw);
+}
+.window[hidden]{display:none}
+.titlebar{
+  display:flex;align-items:center;gap:6px;height:24px;
+  padding:2px 3px 2px 5px;cursor:inherit;user-select:none;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,transparent 1px 2px),
+    linear-gradient(90deg,var(--rose-d) 0%,var(--rose) 55%,var(--rose-l) 100%);
+  color:#fff;
+}
+.window:not(.active) .titlebar{
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 2px),
+    linear-gradient(90deg,#7d7a75 0%,#a5a19b 60%,#c9c5bf 100%);
+}
+.titlebar .ti{width:14px;height:14px;flex:none;shape-rendering:crispEdges}
+.titlebar .t{
+  flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  font-family:var(--font-big);font-size:18px;letter-spacing:.4px;line-height:1;
+  text-shadow:1px 1px 0 rgba(0,0,0,.35);transform:translateY(1px);
+}
+.tb-btns{display:flex;gap:2px;flex:none}
+.tb{
+  width:18px;height:16px;padding:0;border:0;cursor:inherit;
+  background:var(--face);display:grid;place-items:center;
+  box-shadow:
+    inset -1px -1px 0 var(--face-dk),
+    inset  1px  1px 0 var(--face-white),
+    inset -2px -2px 0 var(--face-lo),
+    inset  2px  2px 0 var(--face-hi);
+}
+.tb:active{
+  box-shadow:
+    inset -1px -1px 0 var(--face-white),
+    inset  1px  1px 0 var(--face-dk),
+    inset -2px -2px 0 var(--face-hi),
+    inset  2px  2px 0 var(--face-lo);
+}
+.tb svg{width:10px;height:10px;stroke:#1c0a12;fill:none;stroke-width:1.2}
+.tb .f{fill:#1c0a12;stroke:none}
+
+/* ---------- barra de menu ---------- */
+.menubar{display:flex;gap:1px;padding:2px 1px 1px;background:var(--face)}
+.mi{
+  font-family:var(--font-px);font-size:10px;padding:3px 7px;cursor:inherit;
+  color:var(--ink);user-select:none;
+}
+.mi u{text-decoration:none;position:relative}
+.mi u::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:currentColor}
+.mi:hover{background:var(--rose);color:#fff}
+
+/* ---------- cliente / campos ---------- */
+.client{padding:6px 4px 4px;display:flex;flex-direction:column;gap:7px}
+.field{
+  background:#fff;cursor:text;
+  box-shadow:
+    inset -1px -1px 0 var(--face-white),
+    inset  1px  1px 0 var(--face-dk),
+    inset -2px -2px 0 var(--face-hi),
+    inset  2px  2px 0 var(--face-lo);
+}
+.paper{padding:16px 18px;overflow:auto}
+
+/* ---------- ticker ---------- */
+.ticker{overflow:hidden;white-space:nowrap;height:20px;display:flex;align-items:center}
+.ticker .tk{
+  display:inline-block;padding-left:100%;
+  font-family:var(--font-px);font-size:10px;color:var(--rose-d);
+  animation:tick 26s linear infinite;
+}
+@keyframes tick{to{transform:translateX(-100%)}}
+
+/* ---------- tipografia de marketing ---------- */
+.h1{
+  font-family:var(--font-big);
+  font-size:clamp(34px,5.2vw,52px);
+  line-height:.98;letter-spacing:.5px;color:var(--wine);
+}
+.h1 .rose{color:var(--rose)}
+.sub{font-size:14.5px;line-height:1.6;color:#5a2636;max-width:46ch;margin-top:12px}
+
+.checks{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.checks li{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:#4a1f2d}
+.chk{
+  flex:none;width:14px;height:14px;margin-top:1px;background:#fff;
+  box-shadow:
+    inset -1px -1px 0 var(--face-white),
+    inset  1px  1px 0 var(--face-dk),
+    inset -2px -2px 0 var(--face-hi),
+    inset  2px  2px 0 var(--face-lo);
+  display:grid;place-items:center;
+}
+.chk svg{width:10px;height:10px;stroke:var(--rose-d);stroke-width:2;fill:none}
+
+/* ---------- botões ---------- */
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{
+  border:0;cursor:inherit;user-select:none;
+  font-family:var(--font-px);font-size:11px;color:var(--ink);
+  background:var(--face);padding:8px 20px 9px;
+  box-shadow:
+    inset -1px -1px 0 var(--face-dk),
+    inset  1px  1px 0 var(--face-white),
+    inset -2px -2px 0 var(--face-lo),
+    inset  2px  2px 0 var(--face-hi);
+}
+.btn:active,.btn.pressed{
+  box-shadow:
+    inset -1px -1px 0 var(--face-white),
+    inset  1px  1px 0 var(--face-dk),
+    inset -2px -2px 0 var(--face-hi),
+    inset  2px  2px 0 var(--face-lo);
+  transform:translate(1px,1px);
+}
+.btn.primary{outline:1px solid var(--face-dk);outline-offset:-1px;font-weight:700}
+.btn:focus-visible{outline:1px dotted var(--face-dk);outline-offset:-5px}
+.fine{font-family:var(--font-px);font-size:9.5px;color:#6b4a55;margin-top:8px}
+
+/* ---------- barra de status ---------- */
+.status{display:flex;gap:3px;padding:3px 1px 0}
+.sc{
+  flex:0 1 auto;padding:3px 8px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  font-family:var(--font-px);font-size:9.5px;color:#3d2530;
+  box-shadow:inset -1px -1px 0 var(--face-white),inset 1px 1px 0 var(--face-lo);
+}
+.sc.grow{flex:1}
+.sc.r{text-align:right;margin-left:auto}
+
+/* ---------- bloco de notas ---------- */
+.notes{
+  font-family:var(--font-big);font-size:19px;line-height:1.28;
+  color:#2b121c;white-space:pre-wrap;padding:12px 14px;overflow:auto;
+}
+.notes .dim{color:#8c7d84}
+.notes .hot{color:var(--rose)}
+
+/* ---------- janela de pasta ---------- */
+.addr{display:flex;align-items:center;gap:6px;padding:2px 2px 0}
+.addr .lab{font-family:var(--font-px);font-size:9.5px;color:#3d2530;flex:none}
+.addr .field{flex:1;display:flex;align-items:center;gap:6px;padding:3px 6px;min-width:0}
+.addr .field svg{width:13px;height:13px;flex:none}
+.addr .field .p{
+  flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  font-family:var(--font-px);font-size:10px;color:var(--ink);
+}
+.addr .dd{
+  flex:none;width:16px;height:15px;display:grid;place-items:center;background:var(--face);
+  box-shadow:inset -1px -1px 0 var(--face-dk),inset 1px 1px 0 var(--face-white),inset -2px -2px 0 var(--face-lo),inset 2px 2px 0 var(--face-hi);
+}
+.addr .dd svg{width:8px;height:8px;fill:#1c0a12}
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:10px 6px;
+  padding:12px 10px;min-height:120px;align-content:start;
+}
+.fitem{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:inherit;user-select:none}
+.fitem svg{width:30px;height:30px;shape-rendering:crispEdges}
+.fitem .n{font-family:var(--font-px);font-size:8.5px;color:#2b121c;text-align:center;line-height:1.3;word-break:break-word}
+.fitem:hover .n{background:var(--rose);color:#fff}
+.fitem:hover svg{outline:1px dotted #7a4252}
+
+/* ---------- diálogos ---------- */
+.dialog .client{flex-direction:row;align-items:flex-start;gap:12px;padding:12px 12px 8px}
+.dialog .dicon{flex:none;width:34px;height:34px}
+.dialog .dicon svg{width:34px;height:34px;shape-rendering:crispEdges}
+.dialog .dmsg{font-size:13.5px;line-height:1.55;color:#3d1a26;padding-top:4px;max-width:34ch}
+.dialog .dmsg .b{font-family:var(--font-px);font-size:10.5px;color:var(--rose-d)}
+.dialog .drow{display:flex;gap:10px;justify-content:center;padding:8px 4px 9px;flex-wrap:wrap}
+
+/* barra de progresso segmentada (win9x) */
+.prog{height:20px;padding:2px;flex:1;position:relative}
+.prog .fill{
+  height:100%;width:0%;
+  background:repeating-linear-gradient(90deg,var(--rose) 0 10px,var(--rose-d) 10px 11px,transparent 11px 12px);
+  transition:width .12s steps(3);
+}
+
+/* ---------- menu iniciar ---------- */
+.startmenu{
+  position:fixed;left:2px;top:auto;bottom:var(--taskbar-h);z-index:9600;
+  width:230px;display:flex;padding:3px;
+}
+.startmenu[hidden]{display:none}
+.sm-band{
+  flex:none;width:26px;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.08) 0 1px,transparent 1px 2px),linear-gradient(180deg,var(--rose-l),var(--rose) 40%,var(--rose-d));
+  display:flex;align-items:flex-end;justify-content:center;padding:8px 0;
+}
+.sm-band span{
+  writing-mode:vertical-rl;transform:rotate(180deg);
+  font-family:var(--font-big);font-size:19px;color:#fff;letter-spacing:1px;
+  text-shadow:1px 1px 0 rgba(0,0,0,.3);
+}
+.sm-items{flex:1;display:flex;flex-direction:column;gap:1px;padding:2px}
+.sm-item{
+  display:flex;align-items:center;gap:9px;padding:6px 8px;border:0;background:none;
+  font-family:var(--font-px);font-size:10.5px;color:var(--ink);text-align:left;cursor:inherit;
+}
+.sm-item svg{width:20px;height:20px;flex:none;shape-rendering:crispEdges}
+.sm-item:hover{background:var(--rose);color:#fff}
+.sm-sep{height:0;margin:3px 1px;box-shadow:inset 0 -1px 0 var(--face-white),inset 0 1px 0 var(--face-lo)}
+
+/* ---------- barra de tarefas ---------- */
+.taskbar{
+  position:fixed;left:0;right:0;bottom:0;height:var(--taskbar-h);z-index:9700;
+  background:var(--face);display:flex;align-items:center;gap:5px;
+  padding:4px 5px;border-top:1px solid var(--face-hi);
+  box-shadow:inset 0 1px 0 var(--face-white),inset 0 2px 0 var(--face-hi);
+}
+.startbtn{
+  display:flex;align-items:center;gap:6px;padding:0 12px;height:30px;border:0;cursor:inherit;
+  background:var(--face);font-family:var(--font-px);font-weight:700;font-size:11px;color:var(--ink);
+  box-shadow:inset -1px -1px 0 var(--face-dk),inset 1px 1px 0 var(--face-white),inset -2px -2px 0 var(--face-lo),inset 2px 2px 0 var(--face-hi);
+}
+.startbtn svg{width:16px;height:16px;shape-rendering:crispEdges}
+.startbtn.open,.startbtn:active{
+  box-shadow:inset -1px -1px 0 var(--face-white),inset 1px 1px 0 var(--face-dk),inset -2px -2px 0 var(--face-hi),inset 2px 2px 0 var(--face-lo);
+}
+.tasks{flex:1;display:flex;gap:5px;min-width:0;overflow:hidden}
+.task{
+  display:flex;align-items:center;gap:7px;height:30px;padding:0 10px;border:0;cursor:inherit;
+  background:var(--face);font-family:var(--font-px);font-size:10px;color:var(--ink);
+  flex:0 1 190px;min-width:36px;overflow:hidden;white-space:nowrap;
+  box-shadow:inset -1px -1px 0 var(--face-dk),inset 1px 1px 0 var(--face-white),inset -2px -2px 0 var(--face-lo),inset 2px 2px 0 var(--face-hi);
+}
+.task svg{width:15px;height:15px;flex:none;shape-rendering:crispEdges}
+.task .tt{overflow:hidden;text-overflow:ellipsis}
+.task.on{
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 2px,transparent 2px 4px),var(--face-hi);
+  box-shadow:inset -1px -1px 0 var(--face-white),inset 1px 1px 0 var(--face-dk),inset -2px -2px 0 var(--face-hi),inset 2px 2px 0 var(--face-lo);
+}
+.tray{
+  flex:none;display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;
+  box-shadow:inset -1px -1px 0 var(--face-white),inset 1px 1px 0 var(--face-lo);
+}
+.tray svg{width:15px;height:15px;shape-rendering:crispEdges}
+.clock{font-family:var(--font-big);font-size:19px;color:var(--ink);transform:translateY(1px)}
+
+/* ---------- miscelânea ---------- */
+.credit{
+  position:absolute;left:14px;bottom:10px;z-index:1;
+  font-family:var(--font-px);font-size:9px;color:rgba(61,18,32,.65);
+  text-shadow:0 1px 0 rgba(255,255,255,.6);user-select:none;
+}
+.blink{animation:blink 1.1s steps(2,start) infinite}
+@keyframes blink{50%{opacity:0}}
+.maxed{left:0!important;top:0!important;width:100%!important;height:100%!important;max-width:none!important}
+
+@media (prefers-reduced-motion:reduce){
+  .ticker .tk{animation:none}
+  .blink{animation:none}
+}
+
+/* ---------- celular ---------- */
+@media (max-width:820px){
+  body{overflow:auto}
+  .desktop{position:relative;inset:auto;overflow:visible;display:flex;flex-direction:column;gap:10px;padding:10px 8px 12px;min-height:calc(100svh - var(--taskbar-h));isolation:isolate}
+  .wall{position:fixed;inset:0;z-index:-1}
+  .desktop::after{position:fixed}
+  .icons{position:static;flex-direction:row;flex-wrap:wrap;gap:8px 4px;order:-1;justify-content:flex-start}
+  .icon{width:70px;gap:4px}
+  .icon .img{width:38px;height:38px}
+  .icon .img svg{width:34px;height:34px}
+  .window{position:static;width:100%!important;min-width:0;filter:drop-shadow(4px 5px 0 rgba(76,5,25,.16))}
+  .paper{padding:14px}
+  .credit{position:static;margin-top:4px}
+  .startmenu{width:calc(100vw - 8px);left:4px}
+  .task{flex:0 0 40px;padding:0;justify-content:center}
+  .task .tt{display:none}
+  .h1{font-size:clamp(30px,9vw,40px)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ ícones pixel (símbolos reutilizáveis) ══ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-heart" viewBox="0 0 7 6">
+      <path fill="#e11d48" d="M1 0h2v1H1zM4 0h2v1H4zM0 1h7v2H0zM1 3h5v1H1zM2 4h3v1H2zM3 5h1v1H3z"/>
+      <path fill="#fb7185" d="M1 1h1v1H1z"/>
+    </symbol>
+    <symbol id="i-env" viewBox="0 0 14 11">
+      <rect x="1" y="1" width="12" height="9" fill="#fff" stroke="#3a2a30"/>
+      <path d="M1 1l6 5 6-5" fill="none" stroke="#3a2a30"/>
+      <path d="M1 10l4-3.5M13 10l-4-3.5" fill="none" stroke="#8d7a82" stroke-width=".7"/>
+    </symbol>
+    <symbol id="i-envlove" viewBox="0 0 14 11">
+      <rect x="1" y="1" width="12" height="9" fill="#fff" stroke="#3a2a30"/>
+      <path d="M1 1l6 5 6-5" fill="none" stroke="#3a2a30"/>
+      <path d="M1 10l4-3.5M13 10l-4-3.5" fill="none" stroke="#8d7a82" stroke-width=".7"/>
+      <path fill="#e11d48" d="M8 5h1v1H8zM10 5h1v1h-1zM8 6h3v1H8zM9 7h1v1H9z"/>
+    </symbol>
+    <symbol id="i-pc" viewBox="0 0 14 13">
+      <rect x="1" y="1" width="12" height="9" fill="#c8c4bd" stroke="#3a2a30"/>
+      <rect x="3" y="3" width="8" height="5" fill="#a8d8ff"/>
+      <rect x="3" y="3" width="8" height="1" fill="#eaf7ff"/>
+      <rect x="5" y="10" width="4" height="1" fill="#868a8e"/>
+      <rect x="3" y="11" width="8" height="1" fill="#868a8e" stroke="#3a2a30" stroke-width=".5"/>
+    </symbol>
+    <symbol id="i-folder" viewBox="0 0 14 11">
+      <path d="M1 2h5l1 1.5h6V10H1z" fill="#ffd76a" stroke="#7a5b12"/>
+      <path d="M1 4.5h12" stroke="#caa53a" stroke-width=".7"/>
+    </symbol>
+    <symbol id="i-doc" viewBox="0 0 11 13">
+      <path d="M1 1h7l3 3v9H1z" fill="#fff" stroke="#3a2a30"/>
+      <path d="M8 1v3h3" fill="none" stroke="#3a2a30" stroke-width=".8"/>
+      <path d="M3 5h5M3 7h5M3 9h3" stroke="#b89aa4" stroke-width=".8"/>
+    </symbol>
+    <symbol id="i-bin" viewBox="0 0 12 13">
+      <path d="M3 3.5h6l-.8 8.5H3.8z" fill="#c8c4bd" stroke="#3a2a30"/>
+      <path d="M4.5 5v5M6 5v5M7.5 5v5" stroke="#868a8e" stroke-width=".7"/>
+      <rect x="1.5" y="1.5" width="9" height="2" fill="#dfdfdf" stroke="#3a2a30" stroke-width=".8"/>
+      <rect x="5" y=".5" width="2" height="1" fill="#3a2a30"/>
+    </symbol>
+    <symbol id="i-spk" viewBox="0 0 9 9">
+      <path fill="#3a2a30" d="M1 3h2v3H1zM3 2h1v5H3zM4 3l3-2v7L4 6z"/>
+    </symbol>
+    <symbol id="i-err" viewBox="0 0 12 12">
+      <circle cx="6" cy="6" r="5.5" fill="#e11d48" stroke="#7a0c2b"/>
+      <path d="M4 4l4 4M8 4l-4 4" stroke="#fff" stroke-width="1.4"/>
+    </symbol>
+    <symbol id="i-qst" viewBox="0 0 12 12">
+      <circle cx="6" cy="6" r="5.5" fill="#be123c" stroke="#7a0c2b"/>
+      <path fill="#fff" d="M4 3h4v1H4zM4 3h1v2H4zM7 3h1v2H7zM5 5h2v1H5zM5 6h1v1H5zM5 8h1v1.5H5z"/>
+    </symbol>
+    <symbol id="i-pwr" viewBox="0 0 10 10">
+      <path d="M4 1h2v4H4z" fill="#3a2a30"/>
+      <path d="M2.6 2.8A3.6 3.6 0 1 0 7.4 2.8L6.6 4a2.2 2.2 0 1 1-3.2 0z" fill="#3a2a30"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="desktop" id="desk">
+
+  <!-- papel de parede: bliss-claro (SVG, 100% inline) -->
+  <svg class="wall" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8ec8fb"/><stop offset=".55" stop-color="#cdeaff"/><stop offset="1" stop-color="#eaf7ff"/>
+      </linearGradient>
+      <linearGradient id="gr1" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#cdeeb0"/><stop offset="1" stop-color="#a5d97f"/>
+      </linearGradient>
+      <linearGradient id="gr2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#b9e39a"/><stop offset="1" stop-color="#8fcb6b"/>
+      </linearGradient>
+      <pattern id="dith" width="4" height="4" patternUnits="userSpaceOnUse">
+        <rect width="4" height="4" fill="none"/>
+        <rect x="0" y="0" width="1" height="1" fill="rgba(255,255,255,.14)"/>
+        <rect x="2" y="2" width="1" height="1" fill="rgba(255,255,255,.14)"/>
+      </pattern>
+    </defs>
+    <rect width="1000" height="700" fill="url(#sky)"/>
+    <circle cx="800" cy="110" r="52" fill="#fff8d6" opacity=".95"/>
+    <circle cx="800" cy="110" r="68" fill="#fff8d6" opacity=".3"/>
+    <!-- nuvens pixel -->
+    <g fill="#ffffff" opacity=".95">
+      <path d="M150 120h40v10h-40zM140 130h70v10h-70zM155 110h25v10h-25z"/>
+      <path d="M560 70h50v10h-50zM550 80h80v10h-80zM575 60h30v10h-30z"/>
+      <path d="M330 170h30v8h-30zM322 178h52v8h-52z"/>
+      <path d="M880 200h36v8h-36zM872 208h56v8h-56z"/>
+    </g>
+    <!-- colinas -->
+    <path d="M0 520 C 180 450 360 505 520 478 C 680 452 820 500 1000 470 L1000 700 L0 700 Z" fill="url(#gr1)"/>
+    <path d="M0 580 C 220 520 420 570 640 545 C 800 528 920 560 1000 545 L1000 700 L0 700 Z" fill="url(#gr2)"/>
+    <rect width="1000" height="700" fill="url(#dith)" opacity=".5"/>
+  </svg>
+
+  <!-- ícones -->
+  <div class="icons" id="icons">
+    <button class="icon" type="button"
+            data-sys-title="meu_computador"
+            data-sys-icon="#i-pc"
+            data-sys-msg="disco local (C:) — coração.&lt;br&gt;&lt;span class=&quot;b&quot;&gt;espaço usado: 100% saudade.&lt;/span&gt;&lt;br&gt;espaço livre: o suficiente pra uma carta."
+            data-sys-btn="verificado">
+      <span class="img"><svg><use href="#i-pc"/></svg></span>
+      <span class="lbl">meu_computador</span>
+    </button>
+    <button class="icon" type="button" data-open="w-hero">
+      <span class="img"><svg><use href="#i-envlove"/></svg></span>
+      <span class="lbl">correio_elegante.exe</span>
+    </button>
+    <button class="icon" type="button" data-open="w-moments">
+      <span class="img"><svg><use href="#i-folder"/></svg></span>
+      <span class="lbl">momentos</span>
+    </button>
+    <button class="icon" type="button" data-open="w-how">
+      <span class="img"><svg><use href="#i-doc"/></svg></span>
+      <span class="lbl">como_funciona.txt</span>
+    </button>
+    <button class="icon" type="button" data-open="w-leiame">
+      <span class="img"><svg><use href="#i-doc"/></svg></span>
+      <span class="lbl">leiame.txt</span>
+    </button>
+    <button class="icon" type="button"
+            data-sys-title="lixeira"
+            data-sys-icon="#i-bin"
+            data-sys-msg="a lixeira tá vazia.&lt;br&gt;&lt;span class=&quot;b&quot;&gt;aqui a gente não joga sentimento fora.&lt;/span&gt;"
+            data-sys-btn="faz sentido">
+      <span class="img"><svg><use href="#i-bin"/></svg></span>
+      <span class="lbl">lixeira</span>
+    </button>
+  </div>
+
+  <!-- ═══ janela principal (hero) ═══ -->
+  <section class="window active" id="w-hero" data-task="correio_elegante.exe" data-icon="#i-envlove"
+           style="--x:96px;--y:26px;--w:600px">
+    <header class="titlebar">
+      <svg class="ti"><use href="#i-envlove"/></svg>
+      <span class="t">correio_elegante.exe — executando</span>
+      <span class="tb-btns">
+        <button class="tb" data-act="min" aria-label="minimizar"><svg viewBox="0 0 10 10"><path class="f" d="M1 7h8v2H1z"/></svg></button>
+        <button class="tb" data-act="max" aria-label="maximizar"><svg viewBox="0 0 10 10"><path class="f" d="M1 1h8v2H1z"/><path d="M1 1h8v8H1z"/></svg></button>
+        <button class="tb" data-act="close" aria-label="fechar"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+      </span>
+    </header>
+    <nav class="menubar" aria-hidden="true">
+      <span class="mi"><u>A</u>rquivo</span><span class="mi"><u>E</u>ditar</span>
+      <span class="mi">E<u>x</u>ibir</span><span class="mi"><u>A</u>juda</span>
+    </nav>
+    <div class="client">
+      <div class="field ticker"><span class="tk">◆ +1.300 cartas entregues&nbsp;&nbsp;◆ 0 mensagens ficaram sem resposta&nbsp;&nbsp;◆ 92% responderam em menos de 1 hora&nbsp;&nbsp;◆ +1.300 cartas entregues&nbsp;&nbsp;◆ 0 mensagens ficaram sem resposta&nbsp;&nbsp;◆ 92% responderam em menos de 1 hora&nbsp;&nbsp;</span></div>
+      <div class="field paper">
+        <h1 class="h1">você escreve<br>como fala.<br>a gente transforma<br>em algo <span class="rose">inesquecível.</span></h1>
+        <p class="sub">o correio elegante pega a sua mensagem — bagunçada, tímida, com erro de digitação e tudo — e entrega uma página interativa que a pessoa vai guardar pra sempre. você manda o link. ela abre. pronto: nó na garganta.</p>
+        <ul class="checks">
+          <li><span class="chk"><svg viewBox="0 0 10 10"><path d="M1.5 5.5l2.5 2.5 4.5-5.5"/></svg></span>escreve em 5 minutos, direto do celular</li>
+          <li><span class="chk"><svg viewBox="0 0 10 10"><path d="M1.5 5.5l2.5 2.5 4.5-5.5"/></svg></span>a gente monta tudo: visual, música e animação</li>
+          <li><span class="chk"><svg viewBox="0 0 10 10"><path d="M1.5 5.5l2.5 2.5 4.5-5.5"/></svg></span>você recebe um link secreto. manda. chora junto.</li>
+        </ul>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" id="cta1" type="button">criar minha carta</button>
+        <button class="btn" id="cta2" type="button">ver os momentos</button>
+      </div>
+      <p class="fine">leva uns 5 minutos. custa menos que um lanche. o efeito dura anos.</p>
+    </div>
+    <footer class="status">
+      <span class="sc">pronto</span>
+      <span class="sc grow">memória: 100% saudade</span>
+      <span class="sc">visitantes: 001337</span>
+    </footer>
+  </section>
+
+  <!-- ═══ bloco de notas: como funciona ═══ -->
+  <section class="window" id="w-how" data-task="como_funciona.txt" data-icon="#i-doc"
+           style="--x:min(640px,54vw);--y:56px;--w:352px">
+    <header class="titlebar">
+      <svg class="ti"><use href="#i-doc"/></svg>
+      <span class="t">como_funciona.txt — Bloco de notas</span>
+      <span class="tb-btns">
+        <button class="tb" data-act="min" aria-label="minimizar"><svg viewBox="0 0 10 10"><path class="f" d="M1 7h8v2H1z"/></svg></button>
+        <button class="tb" data-act="close" aria-label="fechar"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+      </span>
+    </header>
+    <nav class="menubar" aria-hidden="true">
+      <span class="mi"><u>A</u>rquivo</span><span class="mi"><u>E</u>ditar</span>
+      <span class="mi"><u>F</u>ormatar</span><span class="mi"><u>A</u>juda</span>
+    </nav>
+    <div class="client">
+      <div class="field notes">COMO_FUNCIONA.TXT
+<span class="dim">──────────────────</span>
+<span class="hot">1)</span> você escreve como fala.
+   pode ser torto, tímido,
+   com erro de digitação.
+   é isso que faz ser seu.
+
+<span class="hot">2)</span> a gente transforma numa
+   página interativa: visual
+   de outro mundo, musiquinha,
+   os detalhes que só vocês
+   dois entendem.
+
+<span class="hot">3)</span> você recebe um link
+   secreto. manda pra
+   pessoa. espera o choro.
+
+<span class="dim">obs: leva uns 5 minutos.
+sem rima obrigatória.</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ pasta de momentos ═══ -->
+  <section class="window" id="w-moments" data-task="momentos\" data-icon="#i-folder"
+           style="--x:min(560px,46vw);--y:330px;--w:412px">
+    <header class="titlebar">
+      <svg class="ti"><use href="#i-folder"/></svg>
+      <span class="t">C:\correio_elegante\momentos</span>
+      <span class="tb-btns">
+        <button class="tb" data-act="min" aria-label="minimizar"><svg viewBox="0 0 10 10"><path class="f" d="M1 7h8v2H1z"/></svg></button>
+        <button class="tb" data-act="close" aria-label="fechar"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+      </span>
+    </header>
+    <nav class="menubar" aria-hidden="true">
+      <span class="mi"><u>A</u>rquivo</span><span class="mi"><u>E</u>ditar</span>
+      <span class="mi">E<u>x</u>ibir</span><span class="mi"><u>A</u>juda</span>
+    </nav>
+    <div class="client">
+      <div class="addr">
+        <span class="lab">Endereço</span>
+        <div class="field">
+          <svg><use href="#i-folder"/></svg>
+          <span class="p">C:\correio_elegante\momentos</span>
+          <span class="dd"><svg viewBox="0 0 8 8"><path d="M1 2h6l-3 4z"/></svg></span>
+        </div>
+      </div>
+      <div class="field grid">
+        <div class="fitem"><svg><use href="#i-envlove"/></svg><span class="n">crush_secreto.eml</span></div>
+        <div class="fitem"><svg><use href="#i-env"/></svg><span class="n">pedido_de_namoro.eml</span></div>
+        <div class="fitem"><svg><use href="#i-env"/></svg><span class="n">desculpa_de_verdade.eml</span></div>
+        <div class="fitem"><svg><use href="#i-env"/></svg><span class="n">aniversario.eml</span></div>
+        <div class="fitem"><svg><use href="#i-env"/></svg><span class="n">so_saudade.eml</span></div>
+        <div class="fitem"><svg><use href="#i-env"/></svg><span class="n">oi_sumida.eml</span></div>
+        <div class="fitem" data-sys-title="preco.txt" data-sys-icon="#i-doc"
+             data-sys-msg="&lt;span class=&quot;b&quot;&gt;R$ 9,90 por carta.&lt;/span&gt;&lt;br&gt;menos que um lanche. vale bem mais.&lt;br&gt;o link é seu pra sempre. sem mensalidade."
+             data-sys-btn="justo"><svg><use href="#i-doc"/></svg><span class="n">preco.txt</span></div>
+        <div class="fitem" data-sys-title="nao_abra_se_for_timido.txt" data-sys-icon="#i-heart"
+             data-sys-msg="você abriu mesmo.&lt;br&gt;&lt;span class=&quot;b&quot;&gt;corajoso(a). gostei.&lt;/span&gt;&lt;br&gt;agora vai lá e escreve aquela carta."
+             data-sys-btn="vou sim"><svg><use href="#i-doc"/></svg><span class="n">nao_abra_se_for_timido.txt</span></div>
+      </div>
+    </div>
+    <footer class="status">
+      <span class="sc">8 objeto(s)</span>
+      <span class="sc grow r">0 bytes (puro sentimento)</span>
+    </footer>
+  </section>
+
+  <!-- ═══ recados ═══ -->
+  <section class="window" id="w-quotes" data-task="recados.txt" data-icon="#i-doc"
+           style="--x:96px;--y:468px;--w:330px">
+    <header class="titlebar">
+      <svg class="ti"><use href="#i-doc"/></svg>
+      <span class="t">recados.txt — Bloco de notas</span>
+      <span class="tb-btns">
+        <button class="tb" data-act="min" aria-label="minimizar"><svg viewBox="0 0 10 10"><path class="f" d="M1 7h8v2H1z"/></svg></button>
+        <button class="tb" data-act="close" aria-label="fechar"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+      </span>
+    </header>
+    <div class="client">
+      <div class="field notes"><span class="dim">&gt;</span> "mandei pro crush. ele
+  respondeu em QUATRO
+  minutos." <span class="dim">— duda, 17</span>
+
+<span class="dim">&gt;</span> "fiz pra minha mãe. ela
+  imprimiu. IMPRIMIU."
+  <span class="dim">— rafa, 19</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ diálogo CTA ═══ -->
+  <section class="window dialog" id="w-cta" data-task="assistente" data-icon="#i-qst"
+           style="--x:min(520px,42vw);--y:516px;--w:336px">
+    <header class="titlebar">
+      <svg class="ti"><use href="#i-qst"/></svg>
+      <span class="t" id="cta-title">assistente de carta</span>
+      <span class="tb-btns">
+        <button class="tb" data-act="close" aria-label="fechar"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+      </span>
+    </header>
+    <div class="client">
+      <svg class="dicon"><use id="cta-icon" href="#i-qst"/></svg>
+      <p class="dmsg" id="cta-msg">quer transformar o que você sente em algo que a pessoa <span class="b">nunca vai esquecer</span>?</p>
+    </div>
+    <div class="client" id="cta-prog" hidden>
+      <div class="field prog"><div class="fill" id="cta-fill"></div></div>
+    </div>
+    <div class="drow" id="cta-btns">
+      <button class="btn primary" id="cta-yes" type="button">sim, quero criar</button>
+      <button class="btn" id="cta-no" type="button">deixa eu pensar</button>
+    </div>
+  </section>
+
+  <!-- ═══ leiame (escondido) ═══ -->
+  <section class="window dialog" id="w-leiame" hidden data-task="leiame.txt" data-icon="#i-doc"
+           style="--x:min(300px,26vw);--y:170px;--w:320px">
+    <header class="titlebar">
+      <svg class="ti"><use href="#i-doc"/></svg>
+      <span class="t">leiame.txt</span>
+      <span class="tb-btns">
+        <button class="tb" data-act="close" aria-label="fechar"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+      </span>
+    </header>
+    <div class="client">
+      <svg class="dicon"><use href="#i-heart"/></svg>
+      <p class="dmsg">correio elegante — prévia de design<br><span class="b">estilo: retro-os (win9x)</span><br>© 2025 · feito à mão, com carinho<br>e um pouco de medo também.</p>
+    </div>
+    <div class="drow"><button class="btn" data-act="close-parent" type="button">OK</button></div>
+  </section>
+
+  <!-- ═══ diálogo de sistema genérico (escondido) ═══ -->
+  <section class="window dialog" id="w-msg" hidden data-task="sistema" data-icon="#i-err"
+           style="--x:min(360px,32vw);--y:200px;--w:330px">
+    <header class="titlebar">
+      <svg class="ti"><use id="sys-icon-t" href="#i-err"/></svg>
+      <span class="t" id="sys-title">sistema</span>
+      <span class="tb-btns">
+        <button class="tb" data-act="close" aria-label="fechar"><svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6"/></svg></button>
+      </span>
+    </header>
+    <div class="client">
+      <svg class="dicon"><use id="sys-icon" href="#i-err"/></svg>
+      <p class="dmsg" id="sys-msg">…</p>
+    </div>
+    <div class="drow"><button class="btn primary" id="sys-ok" type="button">OK</button></div>
+  </section>
+
+  <p class="credit">correio elegante · prévia retro-os · © 2025</p>
+</div><!-- /desktop -->
+
+<!-- ═══ menu iniciar ═══ -->
+<div class="window startmenu" id="startmenu" hidden>
+  <div class="sm-band"><span>correio·elegante</span></div>
+  <div class="sm-items">
+    <button class="sm-item" data-open="w-hero"><svg><use href="#i-envlove"/></svg>correio_elegante.exe</button>
+    <button class="sm-item" data-open="w-how"><svg><use href="#i-doc"/></svg>como_funciona.txt</button>
+    <button class="sm-item" data-open="w-moments"><svg><use href="#i-folder"/></svg>momentos\</button>
+    <button class="sm-item" data-open="w-quotes"><svg><use href="#i-doc"/></svg>recados.txt</button>
+    <div class="sm-sep"></div>
+    <button class="sm-item" data-sys-title="erro do sistema" data-sys-icon="#i-err"
+            data-sys-msg="&lt;span class=&quot;b&quot;&gt;não foi possível desligar:&lt;/span&gt; ainda existe uma carta não escrita no seu coração."
+            data-sys-btn="ok, eu volto"><svg><use href="#i-pwr"/></svg>desligar…</button>
+  </div>
+</div>
+
+<!-- ═══ barra de tarefas ═══ -->
+<footer class="taskbar">
+  <button class="startbtn" id="startbtn" type="button"><svg><use href="#i-heart"/></svg>Iniciar</button>
+  <div class="tasks" id="tasks"></div>
+  <div class="tray">
+    <svg class="blink" title="mensagens esperando"><use href="#i-envlove"/></svg>
+    <svg><use href="#i-spk"/></svg>
+    <span class="clock" id="clock">00:00</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var desk=document.getElementById('desk'),
+    tasks=document.getElementById('tasks'),
+    startmenu=document.getElementById('startmenu'),
+    startbtn=document.getElementById('startbtn'),
+    desktopMQ=window.matchMedia('(min-width:821px)'),
+    topZ=20;
+
+/* ---------- relógio ---------- */
+var clock=document.getElementById('clock');
+function tick(){var d=new Date();clock.textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+tick();setInterval(tick,15000);
+
+/* ---------- janelas: foco, arrastar, botões ---------- */
+var wins=[].slice.call(document.querySelectorAll('.window[data-task]'));
+
+function front(w){
+  wins.forEach(function(o){o.classList.remove('active');});
+  w.classList.add('active');
+  w.style.zIndex=++topZ;
+  syncTasks();
+}
+function ensureTask(w){
+  if(tasks.querySelector('[data-for="'+w.id+'"]'))return;
+  var b=document.createElement('button');
+  b.className='task';b.type='button';b.dataset.for=w.id;
+  b.innerHTML='<svg><use href="'+w.dataset.icon+'"/></svg><span class="tt">'+w.dataset.task+'</span>';
+  b.addEventListener('click',function(){
+    if(w.hidden||!w.classList.contains('active')) openWin(w.id);
+    else closeWin(w,false);            /* minimiza pela barra de tarefas */
+  });
+  tasks.appendChild(b);
+}
+function openWin(id){
+  var w=document.getElementById(id); if(!w)return;
+  w.hidden=false;
+  ensureTask(w);
+  front(w);
+  if(!desktopMQ.matches) w.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeWin(w,remove){
+  w.hidden=true;w.classList.remove('active');
+  if(remove){var b=tasks.querySelector('[data-for="'+w.id+'"]');if(b)b.remove();}
+  syncTasks();
+}
+function syncTasks(){
+  wins.forEach(function(w){
+    var b=tasks.querySelector('[data-for="'+w.id+'"]');
+    if(b) b.classList.toggle('on',!w.hidden&&w.classList.contains('active'));
+  });
+}
+/* cria botões de tarefa p/ janelas abertas */
+wins.forEach(function(w){ if(!w.hidden) ensureTask(w); });
+
+/* arrastar pela barra de título (só desktop) */
+var tbH=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h'))||42;
+wins.forEach(function(w){
+  var bar=w.querySelector('.titlebar'); if(!bar)return;
+  bar.addEventListener('pointerdown',function(e){
+    if(e.target.closest('.tb'))return;
+    front(w);
+    if(!desktopMQ.matches||w.classList.contains('maxed'))return;
+    var r=w.getBoundingClientRect(),
+        dx=e.clientX-r.left, dy=e.clientY-r.top;
+    function mv(ev){
+      var x=Math.min(Math.max(ev.clientX-dx,4-r.width+90),window.innerWidth-80),
+          y=Math.min(Math.max(ev.clientY-dy,0),window.innerHeight-tbH-40);
+      w.style.setProperty('--x',x+'px');
+      w.style.setProperty('--y',Math.max(y,0)+'px');
+    }
+    function up(){window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);}
+    window.addEventListener('pointermove',mv);
+    window.addEventListener('pointerup',up);
+    e.preventDefault();
+  });
+  /* foco ao clicar em qualquer ponto da janela */
+  w.addEventListener('pointerdown',function(){front(w);});
+});
+
+/* botões min/max/close */
+document.querySelectorAll('.tb').forEach(function(b){
+  b.addEventListener('click',function(e){
+    e.stopPropagation();
+    var w=b.closest('.window'), act=b.dataset.act;
+    if(act==='min'){closeWin(w,false);}
+    else if(act==='close'){closeWin(w,true);}
+    else if(act==='max'){
+      w.classList.toggle('maxed');
+      w.classList.toggle('dialog-max');
+    }
+  });
+});
+document.querySelectorAll('[data-act="close-parent"]').forEach(function(b){
+  b.addEventListener('click',function(){closeWin(b.closest('.window'),true);});
+});
+
+/* ---------- diálogo de sistema genérico ---------- */
+var sysW=document.getElementById('w-msg'),
+    sysTitle=document.getElementById('sys-title'),
+    sysMsg=document.getElementById('sys-msg'),
+    sysIcon=document.getElementById('sys-icon'),
+    sysIconT=document.getElementById('sys-icon-t'),
+    sysOk=document.getElementById('sys-ok');
+function openSys(el){
+  sysTitle.textContent=el.dataset.sysTitle||'sistema';
+  sysMsg.innerHTML=el.dataset.sysMsg||'…';
+  sysIcon.setAttribute('href',el.dataset.sysIcon||'#i-err');
+  sysIconT.setAttribute('href',el.dataset.sysIcon||'#i-err');
+  sysOk.textContent=el.dataset.sysBtn||'OK';
+  sysW.dataset.task=(el.dataset.sysTitle||'sistema');
+  sysW.dataset.icon=el.dataset.sysIcon||'#i-err';
+  openWin('w-msg');
+  var tb=tasks.querySelector('[data-for="w-msg"]');
+  if(tb){tb.querySelector('.tt').textContent=sysW.dataset.task;
+         tb.querySelector('use').setAttribute('href',sysW.dataset.icon);}
+}
+sysOk.addEventListener('click',function(){closeWin(sysW,true);});
+/* sm-items e itens de pasta com diálogo próprio */
+document.querySelectorAll('.sm-item[data-sys-title]').forEach(function(el){
+  el.addEventListener('click',function(){toggleMenu(false);openSys(el);});
+});
+document.querySelectorAll('.fitem').forEach(function(f){
+  f.addEventListener('click',function(){
+    if(f.dataset.sysTitle){openSys(f);return;}
+    var name=f.querySelector('.n').textContent;
+    sysTitle.textContent=name;
+    sysMsg.innerHTML='na versão final, <span class="b">'+name+'</span> abriria um exemplo real de carta pra esse momento.';
+    sysIcon.setAttribute('href','#i-env');
+    sysIconT.setAttribute('href','#i-env');
+    sysOk.textContent='entendi';
+    openWin('w-msg');
+  });
+});
+
+/* ---------- ícones: selecionar / abrir ---------- */
+var icons=[].slice.call(document.querySelectorAll('.icon'));
+icons.forEach(function(ic){
+  ic.addEventListener('click',function(e){
+    e.stopPropagation();
+    var wasSel=ic.classList.contains('sel');
+    icons.forEach(function(o){o.classList.remove('sel');});
+    ic.classList.add('sel');
+    /* no celular, tocar num ícone já selecionado = abrir */
+    if(wasSel&&!desktopMQ.matches){
+      if(ic.dataset.sysTitle)openSys(ic);
+      else if(ic.dataset.open)openWin(ic.dataset.open);
+    }
+  });
+  ic.addEventListener('dblclick',function(){
+    if(ic.dataset.sysTitle){openSys(ic);return;}
+    if(ic.dataset.open) openWin(ic.dataset.open);
+  });
+});
+desk.addEventListener('pointerdown',function(e){
+  if(!e.target.closest('.icon'))
+    icons.forEach(function(o){o.classList.remove('sel');});
+});
+
+/* ---------- menu iniciar ---------- */
+function toggleMenu(force){
+  var open=typeof force==='boolean'?force:startmenu.hidden;
+  startmenu.hidden=!open;
+  startbtn.classList.toggle('open',open);
+}
+startbtn.addEventListener('click',function(e){e.stopPropagation();toggleMenu();});
+document.addEventListener('pointerdown',function(e){
+  if(!startmenu.hidden&&!e.target.closest('#startmenu')&&!e.target.closest('#startbtn')) toggleMenu(false);
+});
+document.querySelectorAll('.sm-item[data-open]').forEach(function(it){
+  it.addEventListener('click',function(){toggleMenu(false);openWin(it.dataset.open);});
+});
+
+/* ---------- CTAs ---------- */
+document.getElementById('cta2').addEventListener('click',function(){openWin('w-moments');});
+document.getElementById('cta1').addEventListener('click',function(){openWin('w-cta');});
+
+var ctaYes=document.getElementById('cta-yes'),
+    ctaNo=document.getElementById('cta-no'),
+    ctaMsg=document.getElementById('cta-msg'),
+    ctaBtns=document.getElementById('cta-btns'),
+    ctaProg=document.getElementById('cta-prog'),
+    ctaFill=document.getElementById('cta-fill'),
+    ctaTitle=document.getElementById('cta-title'),
+    busy=false;
+
+ctaNo.addEventListener('click',function(){
+  ctaMsg.innerHTML='sem pressa. essa janela fica aqui esperando — <span class="b">igual quem gosta de verdade.</span>';
+  ctaBtns.innerHTML='<button class="btn" type="button" id="cta-ok">entendi</button>';
+  document.getElementById('cta-ok').addEventListener('click',function(){closeWin(document.getElementById('w-cta'),true);});
+});
+ctaYes.addEventListener('click',function(){
+  if(busy)return; busy=true;
+  ctaTitle.textContent='criando sua carta…';
+  ctaMsg.innerHTML='escolhendo as palavras certas, ajustando os pixels, <span class="b">guardando segredo</span>…';
+  ctaBtns.innerHTML='';
+  ctaProg.hidden=false;
+  var p=0,iv=setInterval(function(){
+    p+=Math.random()*14+4;
+    if(p>=100){
+      p=100;clearInterval(iv);
+      setTimeout(function(){
+        ctaTitle.textContent='assistente de carta';
+        ctaMsg.innerHTML='<span class="b">pronto!</span> na versão de verdade, aqui apareceria o link da sua carta. (isto é só a prévia do design.)';
+        ctaBtns.innerHTML='<button class="btn primary" type="button" id="cta-ok2">entendi</button>';
+        document.getElementById('cta-ok2').addEventListener('click',function(){closeWin(document.getElementById('w-cta'),true);});
+      },420);
+    }
+    ctaFill.style.width=p+'%';
+  },160);
+});
+
+syncTasks();
+})();
+</script>
+</body>
+</html>

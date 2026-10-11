@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>para nina · correio elegante</title>
+<meta name="description" content="Você recebeu um correio elegante. Abra o aparelho e leia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CORREIO ELEGANTE · FLIP-PHONE-SMS PREVIEW
+   card — a página gerada: um celular de 2004 dentro do seu celular
+   ============================================================ */
+:root{
+  --blush-050:  #fff5f7;
+  --blush-100:  #ffe4ec;
+  --blush-200:  #fecdd3;
+  --rose-600:   #e11d48;
+  --rose-700:   #be123c;
+  --wine-900:   #4c0519;
+  --wine-700:   #701a35;
+
+  /* carcaça do aparelho — prata-perolada rosada */
+  --body-hi:    #fdf2f6;
+  --body:       #eed6e1;
+  --body-lo:    #d9b7c8;
+  --body-line:  #fbf0f5;
+
+  /* bezel e lcd monocromática */
+  --bezel:      #3a1420;
+  --bezel-hi:   #5b2436;
+  --lcd:        #dcead3;
+  --lcd-lo:     #c6dab9;
+  --lcd-ink:    #213320;
+  --lcd-dim:    #5a7455;
+  --lcd-hi:     #edf6e6;
+
+  /* teclas */
+  --key-hi:     #ffffff;
+  --key-lo:     #e9dce3;
+  --key-br:     #c5a8b8;
+  --key-tx:     #47132a;
+  --key-sub:    #9a6b7e;
+  --call-bg:    #d9efdc;
+  --call-tx:    #1c6b3f;
+  --end-bg:     #f8d3dc;
+  --end-tx:     #a21a3f;
+
+  --f-lcd:      "VT323", monospace;
+  --f-micro:    "Silkscreen", monospace;
+  --f-disp:     "DotGothic16", monospace;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  min-height:100vh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  font-family:var(--f-lcd);
+  color:var(--wine-900);
+  background:
+    radial-gradient(900px 620px at 50% -8%, #ffe9f1, transparent 70%),
+    linear-gradient(rgba(190,18,60,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(190,18,60,.045) 1px, transparent 1px),
+    var(--blush-050);
+  background-size:auto, 26px 26px, 26px 26px, auto;
+}
+
+/* ---------- palco ---------- */
+.stage{
+  width:100%;
+  min-height:100vh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:26px 10px;
+}
+.cap{
+  position:fixed;
+  font-family:var(--f-micro);
+  font-size:8px;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  color:#b07288;
+  z-index:1;
+}
+.cap-tl{ top:18px; left:20px; }
+.cap-tr{ top:18px; right:20px; text-align:right; }
+.cap-bl{ bottom:16px; left:20px; }
+.cap-br{ bottom:16px; right:20px; text-align:right; }
+.cap b{ color:var(--rose-700); font-weight:700; }
+@media (max-width:860px){ .cap{ display:none; } }
+
+/* ============================================================
+   O APARELHO
+   ============================================================ */
+.phone{
+  position:relative;
+  width:min(92vw, 380px);
+  height:min(94dvh, 830px);
+  min-height:620px;
+  display:flex;
+  flex-direction:column;
+  padding:16px 15px 12px;
+  border-radius:46px;
+  background:linear-gradient(163deg, var(--body-hi) 0%, var(--body) 46%, var(--body-lo) 100%);
+  border:1px solid var(--body-line);
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,.9),
+    inset 0 -8px 16px rgba(76,5,25,.14),
+    inset 2px 0 3px rgba(255,255,255,.5),
+    inset -2px 0 4px rgba(76,5,25,.08),
+    0 32px 60px -22px rgba(76,5,25,.45),
+    0 6px 0 rgba(76,5,25,.07);
+  user-select:none;
+  -webkit-user-select:none;
+}
+/* botões laterais (volume) */
+.phone::before,
+.phone::after{
+  content:"";
+  position:absolute;
+  width:3px; height:54px;
+  background:linear-gradient(90deg, #e2c3d2, #f7e6ee);
+  border:1px solid #cfa9bc;
+  border-radius:2px;
+  left:-4px; top:120px;
+  box-shadow:0 1px 2px rgba(76,5,25,.2);
+}
+.phone::after{ top:182px; height:34px; }
+
+/* topo: alto-falante + marca */
+.p-top{
+  display:flex; flex-direction:column; align-items:center;
+  gap:7px; padding:4px 0 10px;
+}
+.speaker{
+  display:flex; gap:6px;
+}
+.speaker i{
+  width:14px; height:4px; border-radius:2px;
+  background:linear-gradient(180deg, #7c4358, #4a1b2d);
+  box-shadow:inset 0 1px 1px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.55);
+}
+.p-brand{
+  font-family:var(--f-micro);
+  font-size:8px; font-weight:700;
+  letter-spacing:.34em;
+  color:#8a5a6d;
+  text-transform:uppercase;
+  padding-left:.34em;
+}
+
+/* bezel da tela */
+.bezel{
+  flex:1;
+  min-height:0;
+  background:linear-gradient(180deg, var(--bezel-hi), var(--bezel) 30%);
+  border-radius:20px;
+  padding:10px;
+  box-shadow:
+    inset 0 3px 10px rgba(0,0,0,.6),
+    0 1px 0 rgba(255,255,255,.55),
+    0 -1px 0 rgba(76,5,25,.2);
+}
+
+/* tela LCD */
+.screen{
+  position:relative;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  border-radius:9px;
+  overflow:hidden;
+  background:linear-gradient(180deg, #e6f1de 0%, var(--lcd) 34%, var(--lcd-lo) 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(33,51,32,.28),
+    inset 0 10px 18px rgba(33,51,32,.22),
+    inset 0 -6px 12px rgba(255,255,255,.22);
+  animation:power .7s ease-out;
+}
+@keyframes power{
+  0%{ filter:brightness(0); }
+  45%{ filter:brightness(1.5); }
+  60%{ filter:brightness(.85); }
+  100%{ filter:brightness(1); }
+}
+/* trama de pixel da LCD */
+.screen::after{
+  content:"";
+  position:absolute; inset:0; z-index:6;
+  pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(33,51,32,.05) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(33,51,32,.04) 0 1px, transparent 1px 3px);
+}
+/* reflexo do vidro */
+.screen::before{
+  content:"";
+  position:absolute; z-index:7;
+  top:-12%; left:-30%;
+  width:80%; height:55%;
+  transform:rotate(-14deg);
+  background:linear-gradient(180deg, rgba(255,255,255,.22), transparent 70%);
+  pointer-events:none;
+}
+
+/* barra de status */
+.status{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:4px 8px 3px;
+  border-bottom:1px dashed rgba(33,51,32,.45);
+  color:var(--lcd-ink);
+  font-family:var(--f-micro);
+  font-size:8px;
+  letter-spacing:.14em;
+  flex:none;
+  position:relative; z-index:2;
+  background:rgba(255,255,255,.12);
+}
+.status .st{ display:flex; align-items:center; gap:6px; }
+.status svg{ height:10px; width:auto; display:block; fill:currentColor; }
+.status .clock{ font-family:var(--f-micro); }
+
+/* área da LCD */
+.lcdwrap{ flex:1; min-height:0; position:relative; display:flex; flex-direction:column; }
+.lcd{
+  flex:1; min-height:0;
+  overflow-y:auto;
+  scrollbar-width:none;
+  padding:8px;
+  font-family:var(--f-lcd);
+  font-size:19px;
+  line-height:1.24;
+  color:var(--lcd-ink);
+  position:relative; z-index:2;
+}
+.lcd::-webkit-scrollbar{ display:none; }
+
+/* rótulos das softkeys (dentro da tela) */
+.softl{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:3px 12px 5px;
+  font-family:var(--f-micro);
+  font-size:8px; font-weight:700;
+  color:var(--lcd-ink);
+  letter-spacing:.08em;
+  flex:none; position:relative; z-index:2;
+  border-top:1px dashed rgba(33,51,32,.3);
+}
+.softl .dim{ color:var(--lcd-dim); }
+
+/* ---------- conteúdo da LCD ---------- */
+.fill{
+  height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; gap:10px;
+}
+.fill svg{ display:block; }
+.splash .lg{
+  font-family:var(--f-disp);
+  font-size:17px;
+  letter-spacing:.06em;
+}
+.splash .sub{
+  font-family:var(--f-micro); font-size:7px;
+  letter-spacing:.3em; color:var(--lcd-dim);
+  text-transform:uppercase;
+}
+.notify p{ font-size:21px; }
+.notify .n-from{ font-size:19px; color:var(--lcd-dim); }
+.fill .n-hint{
+  font-family:var(--f-micro); font-size:8px;
+  letter-spacing:.2em; text-transform:uppercase;
+  color:var(--lcd-dim);
+  animation:softblink 1.1s steps(2) infinite;
+}
+@keyframes softblink{ 50%{ opacity:.15; } }
+.env-float{ animation:envfloat 2.2s ease-in-out infinite; }
+@keyframes envfloat{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-4px);} }
+
+/* standby */
+.standby .bigclock{
+  font-family:var(--f-lcd);
+  font-size:64px;
+  line-height:1;
+}
+.standby .sdate{ font-size:20px; color:var(--lcd-dim); }
+.standby .sbrand{
+  font-family:var(--f-micro); font-size:8px; letter-spacing:.3em;
+  color:var(--lcd-dim); text-transform:uppercase; margin-top:10px;
+}
+
+/* cabeçalho do thread */
+.t-head{
+  position:sticky; top:-8px;
+  display:flex; justify-content:space-between; align-items:center;
+  margin:-8px -8px 8px;
+  padding:4px 8px;
+  background:var(--lcd-ink);
+  color:var(--lcd-hi);
+  font-family:var(--f-micro); font-size:8px; font-weight:700;
+  letter-spacing:.12em;
+  z-index:3;
+}
+.t-day{
+  text-align:center;
+  font-family:var(--f-micro); font-size:7px;
+  letter-spacing:.24em; color:var(--lcd-dim);
+  text-transform:uppercase;
+  margin:4px 0 8px;
+}
+
+/* mensagens */
+.msg{ margin:7px 0; animation:pop .16s steps(3) both; max-width:94%; }
+@keyframes pop{
+  0%{ opacity:0; transform:translateY(4px) scale(.96); }
+  100%{ opacity:1; transform:none; }
+}
+.msg .m-txt{
+  display:inline-block;
+  font-size:19px;
+  padding:4px 7px;
+  word-break:break-word;
+  white-space:pre-wrap;
+}
+.msg.in{ margin-right:auto; }
+.msg.in .m-txt{
+  background:rgba(255,255,255,.42);
+  border:1px solid rgba(33,51,32,.4);
+  border-left:3px solid var(--lcd-ink);
+}
+.msg.out{ margin-left:auto; text-align:right; }
+.msg.out .m-txt{
+  background:var(--lcd-ink);
+  color:var(--lcd-hi);
+}
+.m-meta{
+  display:flex; align-items:center; gap:4px;
+  font-family:var(--f-micro); font-size:7px;
+  color:var(--lcd-dim);
+  letter-spacing:.1em;
+  margin-top:3px;
+}
+.msg.out .m-meta{ justify-content:flex-end; }
+.m-meta svg{ width:12px; height:10px; fill:currentColor; }
+
+/* indicador de digitando */
+.typing{
+  display:flex; align-items:center; gap:7px;
+  font-family:var(--f-micro); font-size:7px;
+  letter-spacing:.12em; color:var(--lcd-dim);
+  margin:8px 0;
+}
+.typing .dots{ display:flex; gap:3px; }
+.typing .dots i{
+  width:5px; height:5px; background:var(--lcd-ink);
+  animation:tdot 1s steps(1) infinite;
+}
+.typing .dots i:nth-child(2){ animation-delay:.22s; }
+.typing .dots i:nth-child(3){ animation-delay:.44s; }
+@keyframes tdot{ 0%{ opacity:1;} 50%{ opacity:.15;} 100%{ opacity:1;} }
+
+/* menu de respostas (estilo lista Nokia) */
+.menu{
+  margin-top:10px;
+  border:2px solid var(--lcd-ink);
+  background:rgba(255,255,255,.35);
+  animation:pop .18s steps(3) both;
+}
+.m-title{
+  font-family:var(--f-micro); font-size:8px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase;
+  padding:5px 7px;
+  border-bottom:1px dashed rgba(33,51,32,.5);
+}
+.m-opt{
+  display:block; width:100%;
+  text-align:left;
+  font-family:var(--f-lcd); font-size:20px;
+  padding:5px 9px;
+  background:none; border:none;
+  color:var(--lcd-ink);
+  cursor:pointer;
+}
+.m-opt::before{ content:"· "; }
+.m-opt.sel{ background:var(--lcd-ink); color:var(--lcd-hi); }
+.m-opt.sel::before{ content:"> "; }
+
+/* composição de resposta */
+.compose{
+  margin-top:10px;
+  border:2px solid var(--lcd-ink);
+  background:rgba(255,255,255,.35);
+  animation:pop .18s steps(3) both;
+}
+.compose textarea{
+  display:block;
+  width:calc(100% - 14px);
+  margin:7px;
+  padding:6px;
+  font-family:var(--f-lcd); font-size:19px;
+  color:var(--lcd-ink);
+  background:rgba(255,255,255,.55);
+  border:1px dashed rgba(33,51,32,.55);
+  resize:none;
+  outline:none;
+  user-select:text;
+  -webkit-user-select:text;
+}
+.compose textarea:focus{ border-style:solid; }
+.c-row{
+  display:flex; justify-content:space-between;
+  padding:0 8px 6px;
+  font-family:var(--f-micro); font-size:7px;
+  letter-spacing:.12em; color:var(--lcd-dim);
+  text-transform:uppercase;
+}
+
+/* cartão final */
+.endcard{
+  position:absolute; inset:0; z-index:5;
+  display:none;
+  flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:9px;
+  text-align:center;
+  background:linear-gradient(180deg, #e6f1de, var(--lcd) 60%, var(--lcd-lo));
+  padding:18px;
+}
+.endcard.show{ display:flex; }
+.endcard .heart{ animation:beat 1.1s ease-in-out infinite; }
+@keyframes beat{
+  0%,100%{ transform:scale(1); }
+  18%{ transform:scale(1.12); }
+  32%{ transform:scale(.96); }
+  46%{ transform:scale(1.08); }
+}
+.endcard p{ font-size:20px; }
+.endcard .e-brand{
+  margin-top:8px;
+  font-family:var(--f-micro); font-size:8px; font-weight:700;
+  letter-spacing:.28em; text-transform:uppercase;
+  color:var(--lcd-dim);
+  border-top:1px dashed rgba(33,51,32,.45);
+  padding-top:8px;
+}
+.endcard .e-hint{
+  font-family:var(--f-micro); font-size:7px;
+  letter-spacing:.18em; text-transform:uppercase;
+  color:var(--lcd-dim);
+  animation:softblink 1.4s steps(2) infinite;
+}
+
+/* ============================================================
+   TECLAS
+   ============================================================ */
+.keys{ padding:12px 8px 4px; flex:none; }
+.navirow{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  grid-template-rows:24px 30px;
+  gap:6px 10px;
+  align-items:center;
+  margin-bottom:9px;
+}
+.key{
+  border:1px solid var(--key-br);
+  background:linear-gradient(180deg, var(--key-hi), var(--key-lo));
+  border-radius:10px;
+  box-shadow:
+    0 2px 0 rgba(120,60,85,.38),
+    inset 0 1px 0 #fff;
+  cursor:pointer;
+  color:var(--key-tx);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.key:active, .key.pressed{
+  transform:translateY(1px);
+  box-shadow:0 1px 0 rgba(120,60,85,.38), inset 0 2px 3px rgba(76,5,25,.18);
+  background:linear-gradient(180deg, var(--key-lo), var(--key-hi));
+}
+.softkey{ height:24px; border-radius:12px; }
+.sk-l{ grid-column:1; grid-row:1; }
+.sk-r{ grid-column:3; grid-row:1; }
+.callkey{
+  height:30px; border-radius:12px;
+  grid-row:2;
+  background:linear-gradient(180deg, #fff, var(--call-bg));
+}
+.callkey svg{ width:17px; height:17px; fill:var(--call-tx); }
+.ck-l{ grid-column:1; }
+.endkey{
+  height:30px; border-radius:12px;
+  grid-column:3; grid-row:2;
+  background:linear-gradient(180deg, #fff, var(--end-bg));
+}
+.endkey svg{ width:17px; height:17px; fill:var(--end-tx); transform:scaleX(-1); }
+
+/* navi-ring */
+.navi{
+  grid-column:2; grid-row:1 / span 2;
+  width:98px; height:98px;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows:1fr 1fr 1fr;
+  margin:auto;
+}
+.navi button{
+  border:1px solid var(--key-br);
+  background:linear-gradient(180deg, var(--key-hi), var(--key-lo));
+  cursor:pointer;
+  box-shadow:0 2px 0 rgba(120,60,85,.3), inset 0 1px 0 #fff;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.navi button:active{ transform:translateY(1px); box-shadow:inset 0 2px 3px rgba(76,5,25,.2); }
+.navi .nu{ grid-area:1 / 2; border-radius:10px 10px 3px 3px; border-bottom:none; }
+.navi .nd{ grid-area:3 / 2; border-radius:3px 3px 10px 10px; border-top:none; }
+.navi .nl{ grid-area:2 / 1; border-radius:10px 3px 3px 10px; border-right:none; }
+.navi .nr{ grid-area:2 / 3; border-radius:3px 10px 10px 3px; border-left:none; }
+.navi .nc{
+  grid-area:2 / 2;
+  border-radius:9px;
+  background:radial-gradient(circle at 40% 32%, #fff, #e3d4dd 78%);
+  box-shadow:inset 0 1px 0 #fff, 0 2px 0 rgba(120,60,85,.3);
+}
+.navi .nc:active{ box-shadow:inset 0 2px 4px rgba(76,5,25,.28); }
+
+/* teclado T9 */
+.pad{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+}
+.tk{ height:42px; border-radius:11px; }
+.tk b{
+  font-family:var(--f-lcd);
+  font-size:20px; font-weight:400;
+  line-height:1;
+}
+.tk i{
+  font-family:var(--f-micro);
+  font-style:normal;
+  font-size:6px;
+  letter-spacing:.2em;
+  color:var(--key-sub);
+  text-transform:uppercase;
+  padding-left:.2em;
+  display:flex; align-items:center; gap:2px;
+}
+.tk i svg{ width:11px; height:8px; fill:var(--key-sub); }
+
+/* rodapé do aparelho */
+.p-bottom{
+  flex:none;
+  display:flex; flex-direction:column; align-items:center;
+  gap:5px;
+  padding-top:9px;
+}
+.mic{
+  width:34px; height:4px; border-radius:2px;
+  background:linear-gradient(180deg, #9d7286, #6b3c50);
+  box-shadow:inset 0 1px 1px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.5);
+}
+.model{
+  font-family:var(--f-micro); font-size:6px;
+  letter-spacing:.3em; color:#a1768a;
+  text-transform:uppercase; padding-left:.3em;
+}
+
+/* ---------- responsivo: o celular vira a página ---------- */
+@media (max-width:520px){
+  .stage{ padding:0; }
+  .phone{
+    width:100vw;
+    height:100vh;
+    height:100dvh;
+    min-height:0;
+    max-height:none;
+    border-radius:0;
+    border:none;
+    padding:10px 10px 8px;
+    box-shadow:none;
+  }
+  .phone::before, .phone::after{ display:none; }
+}
+@media (max-height:700px){
+  .tk{ height:34px; }
+  .tk b{ font-size:17px; }
+  .navi{ width:84px; height:84px; }
+  .keys{ padding-top:8px; }
+  .p-top{ padding-bottom:6px; gap:5px; }
+  .p-bottom{ display:none; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001s !important; animation-iteration-count:1 !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <span class="cap cap-tl">correio elegante</span>
+  <span class="cap cap-tr">para: <b>nina</b></span>
+  <span class="cap cap-bl">de: <b>léo</b> · 1 mensagem nova</span>
+  <span class="cap cap-br">toque na tela ou nas teclas<br>para avançar</span>
+
+  <!-- ============ O APARELHO ============ -->
+  <div class="phone" id="phone">
+
+    <div class="p-top">
+      <div class="speaker"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="p-brand">correio</div>
+    </div>
+
+    <div class="bezel">
+      <div class="screen">
+        <!-- barra de status -->
+        <div class="status">
+          <span class="st">
+            <svg viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="8" width="3" height="4"/><rect x="4" y="6" width="3" height="6"/><rect x="8" y="3" width="3" height="9"/><rect x="12" y="0" width="3" height="12"/></svg>
+            <span>CORREIO</span>
+          </span>
+          <span class="st">
+            <span class="clock" id="clock">--:--</span>
+            <svg viewBox="0 0 18 10" aria-hidden="true"><rect x="0" y="0" width="15" height="1"/><rect x="0" y="9" width="15" height="1"/><rect x="0" y="1" width="1" height="8"/><rect x="14" y="1" width="1" height="8"/><rect x="15" y="3" width="2" height="4"/><rect x="2" y="2" width="3" height="6"/><rect x="6" y="2" width="3" height="6"/><rect x="10" y="2" width="3" height="6"/></svg>
+          </span>
+        </div>
+
+        <!-- LCD -->
+        <div class="lcdwrap">
+          <div class="lcd" id="lcd"></div>
+          <div class="endcard" id="endcard">
+            <svg class="heart" width="56" height="48" viewBox="0 0 7 6" aria-hidden="true" style="fill:var(--lcd-ink)">
+              <rect x="1" y="0" width="2" height="1"/><rect x="4" y="0" width="2" height="1"/>
+              <rect x="0" y="1" width="7" height="2"/><rect x="1" y="3" width="5" height="1"/>
+              <rect x="2" y="4" width="3" height="1"/><rect x="3" y="5" width="1" height="1"/>
+            </svg>
+            <p>resposta entregue.</p>
+            <p id="eline2">o léo já sabe :)</p>
+            <p id="eline3">boa sorte sábado, nina.</p>
+            <div class="e-brand">correio elegante</div>
+            <div class="e-hint">softkey esq. para rever</div>
+          </div>
+        </div>
+
+        <!-- rótulos das softkeys -->
+        <div class="softl">
+          <span id="skl">&nbsp;</span>
+          <span id="skr">&nbsp;</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- teclas -->
+    <div class="keys">
+      <div class="navirow">
+        <button class="key softkey sk-l" id="keyL" aria-label="softkey esquerda"></button>
+        <div class="navi">
+          <button class="nu" id="navU" aria-label="navegar para cima"></button>
+          <button class="nl" id="navL" aria-label="navegar para esquerda"></button>
+          <button class="nc" id="navC" aria-label="selecionar"></button>
+          <button class="nr" id="navR" aria-label="navegar para direita"></button>
+          <button class="nd" id="navD" aria-label="navegar para baixo"></button>
+        </div>
+        <button class="key softkey sk-r" id="keyR" aria-label="softkey direita"></button>
+        <button class="key callkey ck-l" aria-label="chamar">
+          <svg viewBox="0 0 8 8" aria-hidden="true"><rect x="0" y="0" width="3" height="2"/><rect x="0" y="1" width="4" height="2"/><rect x="1" y="3" width="4" height="1"/><rect x="2" y="4" width="4" height="1"/><rect x="4" y="5" width="4" height="2"/><rect x="5" y="6" width="3" height="2"/></svg>
+        </button>
+        <button class="key endkey" aria-label="encerrar">
+          <svg viewBox="0 0 8 8" aria-hidden="true"><rect x="0" y="0" width="3" height="2"/><rect x="0" y="1" width="4" height="2"/><rect x="1" y="3" width="4" height="1"/><rect x="2" y="4" width="4" height="1"/><rect x="4" y="5" width="4" height="2"/><rect x="5" y="6" width="3" height="2"/></svg>
+        </button>
+      </div>
+
+      <div class="pad" id="pad">
+        <button class="key tk" data-k="1"><b>1</b><i><svg viewBox="0 0 11 8" aria-hidden="true"><rect x="0" y="0" width="11" height="1"/><rect x="0" y="7" width="11" height="1"/><rect x="0" y="1" width="1" height="6"/><rect x="10" y="1" width="1" height="6"/><rect x="1" y="1" width="1" height="1"/><rect x="9" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="5" y="5" width="1" height="1"/></svg></i></button>
+        <button class="key tk" data-k="2"><b>2</b><i>abc</i></button>
+        <button class="key tk" data-k="3"><b>3</b><i>def</i></button>
+        <button class="key tk" data-k="4"><b>4</b><i>ghi</i></button>
+        <button class="key tk" data-k="5"><b>5</b><i>jkl</i></button>
+        <button class="key tk" data-k="6"><b>6</b><i>mno</i></button>
+        <button class="key tk" data-k="7"><b>7</b><i>pqrs</i></button>
+        <button class="key tk" data-k="8"><b>8</b><i>tuv</i></button>
+        <button class="key tk" data-k="9"><b>9</b><i>wxyz</i></button>
+        <button class="key tk" data-k="*"><b>*</b><i>+</i></button>
+        <button class="key tk" data-k="0"><b>0</b><i>esp</i></button>
+        <button class="key tk" data-k="#"><b>#</b><i>A/a</i></button>
+      </div>
+    </div>
+
+    <div class="p-bottom">
+      <div class="mic"></div>
+      <div class="model">CE-2004 · série rosa</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   MOTOR DO CORREIO — máquina de estados da telinha
+   ============================================================ */
+const $  = s => document.querySelector(s);
+const lcd = $('#lcd'), skl = $('#skl'), skr = $('#skr'), endcard = $('#endcard');
+
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const now = () => new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+/* ---------- roteiro ---------- */
+const MSGS = [
+  "oi nina",
+  "sou eu, o léo. do 3ºB",
+  "sei q a gnt quase nunca conversa de vdd",
+  "mas toda vez q vc passa no corredor eu fico sem fala",
+  "entao vou ser direto antes q a coragem acabe:",
+  "bora tomar um açaí cmg sábado?",
+  "aquele da esquina da sua rua, sabe?",
+  "e dps a gnt senta na pracinha e joga conversa fora",
+  "sem pressão. se nao rolar, td bem, juro",
+  "eai, aceita?"
+];
+const OUT_PRESET = ["simmm :) bora", "claro q sim <3"];
+const LEO_OK    = "sério?? melhor notícia do mês. sábado 16h eu passo aí. já to contando as horas <3";
+const LEO_OUTRO = "tranquilo! a gnt se acerta certinho. valeu por responder <3";
+const OUT_DEFAULT = "sab nao rola, pode ser dom?";
+
+/* ---------- estado ---------- */
+let state = 'boot';
+let idx = 0, selIdx = 0;
+let t1 = null, t2 = null;
+
+/* ---------- relógio ---------- */
+function tickClock(){ $('#clock').textContent = now(); const b=$('#sclock'); if(b) b.textContent = now(); }
+tickClock(); setInterval(tickClock, 10000);
+
+/* ---------- bip de tecla (só após gesto) ---------- */
+let AC = null;
+function beep(f){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'square'; o.frequency.value = f || 1400;
+    g.gain.setValueAtTime(.028, AC.currentTime);
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime + .05);
+  }catch(e){}
+}
+
+/* ---------- helpers de tela ---------- */
+function soft(l, r){
+  skl.innerHTML = l || '&nbsp;';
+  skr.innerHTML = r || '&nbsp;';
+}
+function scrollEnd(){ requestAnimationFrame(()=>{ lcd.scrollTop = lcd.scrollHeight; }); }
+function clearTimers(){ clearTimeout(t1); clearTimeout(t2); }
+
+/* ---------- telas ---------- */
+function splash(){
+  state = 'boot'; soft('', '');
+  lcd.innerHTML = `
+    <div class="fill splash">
+      <svg width="52" height="38" viewBox="0 0 11 8" style="fill:var(--lcd-ink)" aria-hidden="true">
+        <rect x="0" y="0" width="11" height="1"/><rect x="0" y="7" width="11" height="1"/>
+        <rect x="0" y="1" width="1" height="6"/><rect x="10" y="1" width="1" height="6"/>
+        <rect x="1" y="1" width="1" height="1"/><rect x="9" y="1" width="1" height="1"/>
+        <rect x="2" y="2" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/>
+        <rect x="3" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/>
+        <rect x="4" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/>
+        <rect x="5" y="5" width="1" height="1"/>
+      </svg>
+      <div class="lg">correio elegante</div>
+      <div class="sub">iniciando…</div>
+    </div>`;
+  t1 = setTimeout(notify, 1400);
+}
+
+function notify(){
+  state = 'notify'; soft('Ler', 'Sair');
+  lcd.innerHTML = `
+    <div class="fill notify">
+      <svg class="env-float" width="64" height="46" viewBox="0 0 11 8" style="fill:var(--lcd-ink)" aria-hidden="true">
+        <rect x="0" y="0" width="11" height="1"/><rect x="0" y="7" width="11" height="1"/>
+        <rect x="0" y="1" width="1" height="6"/><rect x="10" y="1" width="1" height="6"/>
+        <rect x="1" y="1" width="1" height="1"/><rect x="9" y="1" width="1" height="1"/>
+        <rect x="2" y="2" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/>
+        <rect x="3" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/>
+        <rect x="4" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/>
+        <rect x="5" y="5" width="1" height="1"/>
+      </svg>
+      <p>1 mensagem nova</p>
+      <p class="n-from">de: léo · (11) 9****-****</p>
+      <p class="n-hint">aperte LER</p>
+    </div>`;
+  t1 = setTimeout(openThread, 2400);
+}
+
+function standby(){
+  state = 'standby'; soft('Correio', '');
+  const d = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  lcd.innerHTML = `
+    <div class="fill standby">
+      <div class="bigclock" id="sclock">${now()}</div>
+      <div class="sdate">${d}</div>
+      <div class="sbrand">correio elegante</div>
+      <p class="n-hint">aperte qualquer tecla</p>
+    </div>`;
+}
+
+function openThread(){
+  clearTimers();
+  state = 'thread'; soft('Opções', 'Avançar');
+  lcd.innerHTML = `
+    <div class="t-head"><span>SMS · LÉO</span><span>1 nova</span></div>
+    <div class="t-day">hoje</div>
+    <div id="thread"></div>`;
+  idx = 0;
+  step();
+}
+
+function thread(){ return document.getElementById('thread'); }
+
+function showTyping(){
+  hideTyping();
+  const el = document.createElement('div');
+  el.className = 'typing'; el.id = 'typ';
+  el.innerHTML = `léo digitando <span class="dots"><i></i><i></i><i></i></span>`;
+  thread().appendChild(el); scrollEnd();
+}
+function hideTyping(){ const t = document.getElementById('typ'); if(t) t.remove(); }
+
+function addIn(txt){
+  const el = document.createElement('div');
+  el.className = 'msg in';
+  el.innerHTML = `<span class="m-txt">${esc(txt)}</span><div class="m-meta">léo · ${now()}</div>`;
+  thread().appendChild(el); scrollEnd();
+}
+function addOut(txt, status){
+  const el = document.createElement('div');
+  el.className = 'msg out';
+  el.innerHTML = `<span class="m-txt">${esc(txt)}</span><div class="m-meta"><span class="m-st">${esc(status)}</span></div>`;
+  thread().appendChild(el); scrollEnd();
+  return el;
+}
+
+/* ---------- avanço do roteiro ---------- */
+function step(){
+  if(idx >= MSGS.length){
+    state = 'await'; soft('Responder', '');
+    t2 = setTimeout(openMenu, 600);
+    return;
+  }
+  state = 'typing'; showTyping();
+  const dur = Math.min(2100, 650 + MSGS[idx].length * 22);
+  t1 = setTimeout(()=>{
+    hideTyping();
+    addIn(MSGS[idx]); idx++;
+    state = 'gap';
+    t2 = setTimeout(step, 720);
+  }, dur);
+}
+
+function advance(){
+  if(state === 'notify'){ clearTimers(); openThread(); }
+  else if(state === 'typing'){
+    clearTimeout(t1); hideTyping();
+    addIn(MSGS[idx]); idx++;
+    state = 'gap'; t2 = setTimeout(step, 620);
+  }
+  else if(state === 'gap'){ clearTimeout(t2); step(); }
+  else if(state === 'await'){ openMenu(); }
+  else if(state === 'standby'){ splash(); }
+  else if(state === 'boot'){ clearTimers(); notify(); }
+}
+
+/* ---------- menu de respostas ---------- */
+function openMenu(){
+  if(state === 'menu' || !thread()) return;
+  clearTimers();
+  state = 'menu'; selIdx = 0; soft('Selec.', 'Voltar');
+  const el = document.createElement('div');
+  el.className = 'menu'; el.id = 'menu';
+  el.innerHTML = `
+    <div class="m-title">Responder:</div>
+    <button class="m-opt sel" data-i="0">SIM</button>
+    <button class="m-opt" data-i="1">CLARO</button>
+    <button class="m-opt" data-i="2">OUTRO DIA</button>`;
+  lcd.appendChild(el); scrollEnd();
+  el.querySelectorAll('.m-opt').forEach(b=>{
+    b.addEventListener('pointerenter', ()=>menuSel(+b.dataset.i));
+    b.addEventListener('click', e=>{ e.stopPropagation(); beep(1500); confirmSel(+b.dataset.i); });
+  });
+}
+function closeMenu(){
+  const m = document.getElementById('menu'); if(m) m.remove();
+  state = 'await'; soft('Responder', '');
+}
+function menuSel(i){
+  selIdx = i;
+  document.querySelectorAll('.m-opt').forEach(b=>
+    b.classList.toggle('sel', +b.dataset.i === i));
+}
+function menuMove(d){
+  if(state !== 'menu') return;
+  menuSel((selIdx + d + 3) % 3);
+}
+function confirmSel(i){
+  if(i === undefined) i = selIdx;
+  const m = document.getElementById('menu'); if(m) m.remove();
+  if(i === 2){ openCompose(); }
+  else{ sendOut(OUT_PRESET[i], true); }
+}
+
+/* ---------- escrever outra resposta ---------- */
+function openCompose(){
+  state = 'compose'; soft('Enviar', 'Apagar');
+  const el = document.createElement('div');
+  el.className = 'compose'; el.id = 'compose';
+  el.innerHTML = `
+    <div class="m-title">Escreva sua msg:</div>
+    <textarea id="cin" rows="3" maxlength="160">${esc(OUT_DEFAULT)}</textarea>
+    <div class="c-row"><span id="ccount"></span><span>enter envia</span></div>`;
+  lcd.appendChild(el); scrollEnd();
+  const ta = el.querySelector('#cin');
+  const cc = el.querySelector('#ccount');
+  const upd = ()=> cc.textContent = ta.value.length + '/160';
+  ta.addEventListener('input', upd); upd();
+  ta.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); doSend(); }
+    e.stopPropagation();
+  });
+  ta.addEventListener('click', e=> e.stopPropagation());
+  setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 60);
+}
+function backspace(){
+  const ta = document.getElementById('cin');
+  if(ta){ ta.value = ta.value.slice(0, -1); ta.dispatchEvent(new Event('input')); ta.focus(); }
+}
+function doSend(){
+  const ta = document.getElementById('cin');
+  const v = (ta ? ta.value.trim() : '') || OUT_DEFAULT;
+  const c = document.getElementById('compose'); if(c) c.remove();
+  sendOut(v, false);
+}
+
+/* ---------- envio ---------- */
+function sendOut(txt, ok){
+  state = 'sent'; soft('Aguarde', '');
+  const m = addOut(txt, 'enviando…');
+  t1 = setTimeout(()=>{
+    const st = m.querySelector('.m-st');
+    st.innerHTML = `entregue <svg viewBox="0 0 7 6" style="width:10px;height:9px;fill:currentColor;vertical-align:-1px" aria-hidden="true"><rect x="0" y="2" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/></svg> ${now()}`;
+    scrollEnd();
+  }, 950);
+  t2 = setTimeout(()=>{
+    showTyping();
+    t1 = setTimeout(()=>{
+      hideTyping();
+      addIn(ok ? LEO_OK : LEO_OUTRO);
+      t1 = setTimeout(()=> showEnd(ok), 1500);
+    }, 1900);
+  }, 1900);
+}
+
+/* ---------- fim ---------- */
+function showEnd(ok){
+  state = 'end';
+  $('#eline3').textContent = ok ? 'boa sorte sábado, nina.' : 'boa sorte no papo, nina.';
+  endcard.classList.add('show');
+  soft('Rever', 'Fim');
+}
+function reset(){
+  clearTimers();
+  endcard.classList.remove('show');
+  splash();
+}
+
+/* ============================================================
+   ENTRADAS — softkeys, navi, teclado, toque
+   ============================================================ */
+function pressL(){
+  beep(1500);
+  switch(state){
+    case 'notify':  advance(); break;
+    case 'await':   openMenu(); break;
+    case 'menu':    confirmSel(); break;
+    case 'compose': doSend(); break;
+    case 'end':     reset(); break;
+    case 'standby': splash(); break;
+    default:        advance();
+  }
+}
+function pressR(){
+  beep(1200);
+  switch(state){
+    case 'notify':  clearTimers(); standby(); break;
+    case 'menu':    closeMenu(); break;
+    case 'compose': backspace(); break;
+    case 'end':     endcard.classList.remove('show'); standby(); break;
+    default:        advance();
+  }
+}
+function pressCenter(){
+  beep(1600);
+  if(state === 'menu') confirmSel();
+  else if(state === 'compose') doSend();
+  else advance();
+}
+function navDir(d){
+  beep(d < 0 ? 1650 : 1350);
+  if(state === 'menu') menuMove(d);
+  else lcd.scrollTop += d * 42;
+}
+
+/* teclas físicas */
+$('#keyL').addEventListener('click', pressL);
+$('#keyR').addEventListener('click', pressR);
+$('#navC').addEventListener('click', pressCenter);
+$('#navU').addEventListener('click', ()=>navDir(-1));
+$('#navD').addEventListener('click', ()=>navDir(+1));
+$('#navL').addEventListener('click', ()=>advance());
+$('#navR').addEventListener('click', ()=>advance());
+document.querySelectorAll('.tk').forEach(k=>{
+  k.addEventListener('click', ()=>{
+    beep(1150 + (k.dataset.k.charCodeAt(0) % 8) * 70);
+    if(state === 'compose') document.getElementById('cin').focus();
+    else advance();
+  });
+});
+document.querySelector('.callkey').addEventListener('click', ()=>{ beep(1700); advance(); });
+document.querySelector('.endkey').addEventListener('click', ()=>{ beep(900); pressR(); });
+
+/* toque na tela avança (sem atrapalhar menu/textarea) */
+lcd.addEventListener('click', e=>{
+  if(e.target.closest('.m-opt') || e.target.closest('textarea')) return;
+  if(state === 'menu') return;
+  advance();
+});
+
+/* teclado de verdade */
+document.addEventListener('keydown', e=>{
+  if(e.target.tagName === 'TEXTAREA') return;
+  if(e.key === 'ArrowUp'){ e.preventDefault(); navDir(-1); }
+  else if(e.key === 'ArrowDown'){ e.preventDefault(); navDir(+1); }
+  else if(e.key === 'Enter'){ pressCenter(); }
+  else if(e.key === ' '){ e.preventDefault(); advance(); }
+  else if(e.key === 'ArrowLeft'){ pressL(); }
+  else if(e.key === 'ArrowRight'){ pressR(); }
+});
+
+/* vamos lá */
+splash();
+</script>
+</body>
+</html>
