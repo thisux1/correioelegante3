@@ -549,6 +549,58 @@ describe('POST /api/pages', () => {
     expect(res.body.page.status).toBe('draft');
     expect(res.body.page.publishedAt).toBeNull();
   });
+
+  it('422 — status: published com conteudo bloqueado retorna PAGE_BLOCKED', async () => {
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          ...basePageShape.content,
+          blocks: [
+            {
+              id: 'block-1',
+              type: 'text',
+              version: 1,
+              props: { text: 'vou te matar' },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+        },
+        status: 'published',
+        visibility: 'public',
+      });
+
+    expect(res.status).toBe(422);
+    expect(res.body.code).toBe('PAGE_BLOCKED');
+    expect(prisma.page.create).not.toHaveBeenCalled();
+  });
+
+  it('201 — status: draft com o mesmo conteudo nao dispara moderacao', async () => {
+    vi.mocked(prisma.page.create).mockResolvedValue(makePage({ status: 'draft' }));
+
+    const res = await request(app)
+      .post('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`)
+      .send({
+        content: {
+          ...basePageShape.content,
+          blocks: [
+            {
+              id: 'block-1',
+              type: 'text',
+              version: 1,
+              props: { text: 'vou te matar' },
+              meta: { createdAt: Date.now(), updatedAt: Date.now() },
+            },
+          ],
+        },
+        status: 'draft',
+        visibility: 'private',
+      });
+
+    expect(res.status).toBe(201);
+  });
 });
 
 describe('PUT /api/pages/:id', () => {

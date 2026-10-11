@@ -43,4 +43,29 @@ describe('POST /api/generate', () => {
     const res = await request(app).post('/api/generate').send({});
     expect(res.status).toBe(400);
   });
+
+  it('blocks a brief containing threats (moderation L1)', async () => {
+    const res = await request(app)
+      .post('/api/generate')
+      .send({
+        brief: {
+          ...validBrief,
+          contexto: 'eu sei onde você mora e vou te encontrar',
+        },
+      });
+
+    expect(res.status).toBe(422);
+    expect(res.body.code).toBe('BRIEF_BLOCKED');
+  });
+
+  it('flags PII but still generates (flagged, not blocked)', async () => {
+    const res = await request(app)
+      .post('/api/generate')
+      .send({
+        brief: { ...validBrief, contexto: 'me liga: (11) 98765-4321' },
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.notes.join(' ')).toContain('moderation:flagged');
+  });
 });

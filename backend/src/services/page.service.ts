@@ -8,7 +8,34 @@ import {
 } from '../contracts/page.contract';
 import { sanitizePageContent } from './page.sanitizer';
 import { migratePage } from './page.migration';
+import { scanPageContent } from './moderation.service';
+import { logModerationEvent } from '../utils/observability';
 import { isUserSubscribed } from './subscription.service';
+
+/** Pré-publicação (§10.3): blocked recusa o publish; flagged segue e registra. */
+function enforcePublishModeration(params: {
+  status: string;
+  content: unknown;
+  userId: string;
+  pageId?: string;
+}) {
+  if (params.status !== 'published') return;
+  const scan = scanPageContent(params.content as { blocks?: Array<{ props?: unknown }> });
+  logModerationEvent({
+    event: 'moderation_scan',
+    userId: params.userId,
+    pageId: params.pageId,
+    verdict: scan.verdict,
+    flags: scan.flags,
+  });
+  if (scan.verdict === 'blocked') {
+    throw new AppError(
+      'A página contém conteúdo que não pode ser publicado.',
+      422,
+      'PAGE_BLOCKED',
+    );
+  }
+}
 
 interface CreatePageInput {
   content: unknown;
@@ -100,6 +127,7 @@ export async function createPage(userId: string, data: CreatePageInput) {
   });
 
   const sanitizedContent = sanitizePageContent(data.content);
+  enforcePublishModeration({ status: lifecycle.status, content: sanitizedContent, userId });
 
   const page = await prisma.page.create({
     data: {
@@ -158,6 +186,12 @@ export async function updatePage(pageId: string, userId: string, data: UpdatePag
   });
 
   const sanitizedContent = sanitizePageContent(data.content);
+  enforcePublishModeration({
+    status: lifecycle.status,
+    content: sanitizedContent,
+    userId,
+    pageId,
+  });
 
   const updated = await prisma.page.update({
     where: { id: pageId },

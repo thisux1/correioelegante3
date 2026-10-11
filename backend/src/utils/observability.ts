@@ -28,6 +28,34 @@ export function logPageEvent(payload: PageEventPayload): void {
   console.info(JSON.stringify(body));
 }
 
+interface ModerationEventPayload {
+  event: 'moderation_scan';
+  userId?: string;
+  pageId?: string;
+  verdict: 'pass' | 'flagged' | 'blocked';
+  flags: string[];
+}
+
+export function logModerationEvent(payload: ModerationEventPayload): void {
+  const body = {
+    event: payload.event,
+    userId: payload.userId,
+    pageId: payload.pageId,
+    verdict: payload.verdict,
+    flags: payload.flags,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (payload.verdict === 'blocked') {
+    console.error(JSON.stringify(body));
+    return;
+  }
+  if (payload.verdict === 'flagged') {
+    console.warn(JSON.stringify(body));
+    return;
+  }
+}
+
 interface AssetEventPayload {
   event:
     | 'upload_url_requested'

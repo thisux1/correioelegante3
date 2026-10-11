@@ -5,6 +5,7 @@ import { compilePageSpec } from '../generate/compile';
 import { resolveCopySlots } from '../generate/copy/resolve';
 import { getCopyBank } from '../generate/copy/banks';
 import { sanitizePageContent } from './page.sanitizer';
+import { scanBriefText } from './moderation.service';
 import type { PersistedPageContent } from './page.migration';
 import { AppError } from '../utils/AppError';
 
@@ -30,6 +31,29 @@ export function generateFromBrief(rawBrief: unknown): GenerateResult {
     );
   }
 
+  // L1 de moderação (§10.3): texto livre do brief é varrido antes de gerar.
+  // 'blocked' recusa; 'flagged' segue — PII pode ser legítimo (telefone do
+  // próprio remetente num convite) e falso-positivo é o pior modo de falha.
+  const scan = scanBriefText([
+    parsed.data.contexto,
+    parsed.data.nomes.destinatario,
+    parsed.data.nomes.remetente,
+    parsed.data.evento?.descricao,
+    parsed.data.evento?.lugar,
+    ...parsed.data.apelidos,
+    ...parsed.data.interesses,
+    ...parsed.data.memorias.flatMap((m) => [m.titulo, m.descricao, m.lugar]),
+    ...parsed.data.perguntasIntimidade.flatMap((p) => [p.pergunta, p.resposta, p.dica]),
+    parsed.data.midias?.musicaDedicatoria,
+  ]);
+  if (scan.verdict === 'blocked') {
+    throw new AppError(
+      'O conteúdo enviado não pode ser usado para gerar uma página.',
+      422,
+      'BRIEF_BLOCKED',
+    );
+  }
+
   const rawSpec = decide(parsed.data);
 
   const { spec, missingSlots } = resolveCopySlots(
@@ -47,9 +71,14 @@ export function generateFromBrief(rawBrief: unknown): GenerateResult {
 
   const { content, notes: compileNotes } = compilePageSpec(spec);
 
+  const notes2 = [...notes, ...compileNotes];
+  if (scan.verdict === 'flagged') {
+    notes2.push(`moderation:flagged → ${scan.flags.join(',')}`);
+  }
+
   return {
     spec,
     content: sanitizePageContent(content),
-    notes: [...notes, ...compileNotes],
+    notes: notes2,
   };
 }
