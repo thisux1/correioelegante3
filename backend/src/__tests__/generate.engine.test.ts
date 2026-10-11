@@ -5,6 +5,7 @@ import {
 } from '../contracts/generation.contract';
 import { decide } from '../generate/engine';
 import { compilePageSpec } from '../generate/compile';
+import { resolveFamily } from '../generate/templates/registry';
 import { migratePage } from '../services/page.migration';
 
 const brief = (overrides: Record<string, unknown> = {}) =>
@@ -79,9 +80,13 @@ describe('engine — decide()', () => {
     expect(hintsModule!.props.items).toEqual(['Duds']);
   });
 
-  it('falls back to crush_secreto family for unregistered momentos and logs it', () => {
-    const spec = decide(brief({ momento: 'so_porque_sim' }));
-    expect(spec.decisions.join(' ')).toContain('sem família própria');
+  it('resolveFamily falls back to crush_secreto for momentos without a family', () => {
+    // All MOMENTO_VALUES have families post-S8 — the fallback only fires for
+    // future momentos the enum gains before arcs land. Cast simulates that
+    // (decide() can't reach it: the brief schema rejects unknown momentos).
+    const { family, fallback } = resolveFamily('momento_futuro' as never);
+    expect(fallback).toBe(true);
+    expect(family.id).toBe('crush_secreto/misterio-leve');
   });
 });
 
