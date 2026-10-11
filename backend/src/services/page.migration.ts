@@ -409,6 +409,24 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         successMessage: asOptionalText(props.successMessage),
       };
     }
+    case 'ticketRsvp': {
+      const evento = asRecord(props.evento);
+      const data = asOptionalText(evento.data);
+      const lugar = asOptionalText(evento.lugar);
+      const descricao = asOptionalText(evento.descricao);
+      // responseToken é emitido pelo backend na leitura pública (S13) e pode
+      // chegar aqui pelo caminho de leitura — a escrita passa pelo sanitizer,
+      // que o descarta antes de persistir.
+      const responseToken = asOptionalText(props.responseToken);
+      return {
+        title: asOptionalText(props.title),
+        ...(data || lugar || descricao
+          ? { evento: { data, lugar, descricao } }
+          : {}),
+        allowText: typeof props.allowText === 'boolean' ? props.allowText : true,
+        ...(responseToken ? { responseToken: responseToken.slice(0, 200) } : {}),
+      };
+    }
     default:
       return { ...props };
   }

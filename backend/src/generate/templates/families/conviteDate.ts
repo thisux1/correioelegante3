@@ -5,9 +5,8 @@ import type { TemplateFamily } from '../../engine/scoring';
  *
  * O convite É o momento: data e lugar do brief viram ticket RSVP + contagem
  * regressiva quando existem (hasEvento). Sem evento, o convite ainda sai como
- * texto — porta aberta, nunca pressão. `ticketRsvp` ainda não é tipo
- * persistido: o compilador degrada para text{title} até o S14, com a decisão
- * registrada em decisions[].
+ * texto — porta aberta, nunca pressão. `ticketRsvp` é tipo persistido (S14):
+ * o bloco renderiza o convite e registra Aceito/Não posso/Outro dia.
  *
  * No slot `plano`, o texto de roteiro é o primary (base 7): carrega o "plano
  * concreto" que define o momento. O quiz "topa?" fica declarado como

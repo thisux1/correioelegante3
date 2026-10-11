@@ -37,6 +37,7 @@ const blockTypeLabels: Record<BlockType, string> = {
   bouquet: 'Buquê',
   hints: 'Dicas',
   intimacyGate: 'Pergunta Secreta',
+  ticketRsvp: 'Convite RSVP',
 }
 
 function BlockControlsComponent({

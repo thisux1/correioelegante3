@@ -209,6 +209,18 @@ model SupportTicketReply {
   @@index([ticketId, createdAt])
 }
 
+model PageResponse {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  pageId         String   @db.ObjectId
+  blockId        String
+  choice         String
+  text           String?
+  respondentName String?
+  createdAt      DateTime @default(now())
+  @@unique([pageId, blockId])
+  @@index([pageId])
+}
+
 model PageView {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   resourceId String   // ID da mensagem ou página visualizada

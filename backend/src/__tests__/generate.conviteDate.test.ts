@@ -6,11 +6,14 @@ import {
   type CreativeBrief,
   type ModuleType,
 } from '../contracts/generation.contract';
+import { decide } from '../generate/engine';
 import { extractFeatures } from '../generate/engine/features';
 import {
   selectModules,
   type ModuleContext,
 } from '../generate/engine/scoring';
+import { compilePageSpec } from '../generate/compile';
+import { migratePage } from '../services/page.migration';
 import {
   CONVITE_DATE_COPY,
   CONVITE_DATE_SLOT_LIMITS,
@@ -290,6 +293,22 @@ describe('família — convite_date', () => {
     expect(envelope).toBeDefined();
     expect(envelope!.props.senderName).toBeUndefined();
     expect(JSON.stringify(envelope!.props)).not.toContain('Enzo');
+  });
+
+  it('compila ticketRsvp como bloco persistido real — sem downgrade para text', () => {
+    const spec = decide(BRIEF_COM_EVENTO);
+    const { content, notes } = compilePageSpec(spec);
+    const migrated = migratePage(content);
+
+    const rsvp = migrated.blocks.find((b) => b.type === 'ticketRsvp');
+    expect(rsvp).toBeDefined();
+    expect(rsvp!.props.title).toBe('copySlot:rsvp.titulo');
+    expect(rsvp!.props.evento).toEqual(BRIEF_COM_EVENTO.evento);
+    expect(rsvp!.props.allowText).toBe(true);
+    // responseToken nunca é persistido — é injetado na leitura pública (S13)
+    expect(rsvp!.props.responseToken).toBeUndefined();
+    // Sem nota de downgrade "compile:ticketRsvp → text"
+    expect(notes.join(' ')).not.toContain('ticketRsvp →');
   });
 
   it('tema segue o spec do momento: pixel, expressivo, retro-os', () => {

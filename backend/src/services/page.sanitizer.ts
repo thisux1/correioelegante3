@@ -455,6 +455,27 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         successMessage: optionalShortText(props.successMessage, 400),
       };
     }
+    case 'ticketRsvp': {
+      // O token RSVP é derivado por leitura (HMAC) e nunca pode ser persistido:
+      // qualquer `responseToken` forjado no payload de escrita é descartado.
+      const eventoRaw =
+        typeof props.evento === 'object' && props.evento !== null && !Array.isArray(props.evento)
+          ? (props.evento as UnknownRecord)
+          : undefined;
+      const evento = eventoRaw
+        ? {
+            data: optionalShortText(eventoRaw.data, 80),
+            lugar: optionalShortText(eventoRaw.lugar, 160),
+            descricao: optionalShortText(eventoRaw.descricao, 400),
+          }
+        : undefined;
+      const hasEvento = Boolean(evento && (evento.data || evento.lugar || evento.descricao));
+      return {
+        title: optionalShortText(props.title, 160),
+        ...(hasEvento ? { evento } : {}),
+        allowText: typeof props.allowText === 'boolean' ? props.allowText : true,
+      };
+    }
     default:
       return { ...props };
   }

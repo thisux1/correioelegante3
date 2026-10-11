@@ -196,6 +196,16 @@ export const generateRequestSchema = z.object({
   brief: z.record(z.unknown()),
 });
 
+export const createPageResponseSchema = z.object({
+  blockId: z.string().min(1, 'blockId é obrigatório'),
+  choice: z.enum(['yes', 'no', 'other_day'], {
+    errorMap: () => ({ message: 'choice inválido. Use "yes", "no" ou "other_day".' }),
+  }),
+  text: z.string().max(300, 'text muito longo').optional(),
+  respondentName: z.string().max(80, 'respondentName muito longo').optional(),
+  token: z.string().min(1, 'token é obrigatório'),
+});
+
 export const assetUploadUrlSchema = z.object({
   kind: assetKindSchema,
   fileName: z.string().min(3, 'Nome de arquivo invalido').max(255, 'Nome de arquivo invalido'),
@@ -234,3 +244,4 @@ export type AssetUploadUrlInput = z.infer<typeof assetUploadUrlSchema>;
 export type AssetCompleteInput = z.infer<typeof assetCompleteSchema>;
 export type AssetReprocessInput = z.infer<typeof assetReprocessSchema>;
 export type AssetListQueryInput = z.infer<typeof assetListQuerySchema>;
+export type CreatePageResponseInput = z.infer<typeof createPageResponseSchema>;

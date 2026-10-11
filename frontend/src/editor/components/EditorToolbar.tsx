@@ -30,6 +30,7 @@ import {
   Flower2,
   Lightbulb,
   KeyRound,
+  Ticket,
 } from 'lucide-react'
 
 import { MAX_BLOCKS, type BlockType, type PageStatus } from '@/editor/types'
@@ -68,6 +69,7 @@ const addBlockOptions: AddBlockOption[] = [
   { type: 'bouquet', label: 'Buquê', icon: Flower2 },
   { type: 'hints', label: 'Dicas', icon: Lightbulb },
   { type: 'intimacyGate', label: 'Pergunta Secreta', icon: KeyRound },
+  { type: 'ticketRsvp', label: 'Convite RSVP', icon: Ticket },
 ]
 
 interface ToolbarControlsProps {

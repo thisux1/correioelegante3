@@ -70,6 +70,11 @@ const IntimacyGateBlock = lazy(async () => {
   return { default: module.IntimacyGateBlock }
 })
 
+const TicketRsvpBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/TicketRsvpBlock')
+  return { default: module.TicketRsvpBlock }
+})
+
 interface BlockRendererProps {
   block: Block
   mode: EditorMode
@@ -93,6 +98,7 @@ const blockMap: BlockMap = {
   bouquet: BouquetBlock,
   hints: HintsBlock,
   intimacyGate: IntimacyGateBlock,
+  ticketRsvp: TicketRsvpBlock,
 }
 
 function renderFallback(block: Block) {

@@ -503,4 +503,49 @@ describe('migratePage — S10 new block types', () => {
       expect('allowSkip' in gate.props).toBe(false)
     }
   })
+
+  it('normaliza ticketRsvp e preserva o responseToken injetado na leitura publica', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: 'r1',
+          type: 'ticketRsvp',
+          props: {
+            title: '  te convido:  ',
+            evento: { data: ' 14/03 ', lugar: '', descricao: 'sorvete', extra: 'x' },
+            allowText: 'yes',
+            responseToken: 'tok.abc',
+            lixo: true,
+          },
+          meta: {},
+        },
+      ],
+    })
+
+    const block = migrated.blocks[0]
+    expect(block.type).toBe('ticketRsvp')
+    if (block.type === 'ticketRsvp') {
+      expect(block.props.title).toBe('te convido:')
+      expect(block.props.evento).toEqual({ data: '14/03', lugar: undefined, descricao: 'sorvete' })
+      expect(block.props.allowText).toBe(true)
+      // Token vem da leitura pública (HMAC no backend) — não deve ser perdido aqui
+      expect(block.props.responseToken).toBe('tok.abc')
+      expect('lixo' in block.props).toBe(false)
+      expect(block.props.evento && 'extra' in block.props.evento).toBe(false)
+    }
+  })
+
+  it('ticketRsvp sem evento e sem token normaliza com allowText true', () => {
+    const migrated = migratePage({
+      blocks: [{ id: 'r2', type: 'ticketRsvp', props: {}, meta: {} }],
+    })
+
+    const block = migrated.blocks[0]
+    expect(block.type).toBe('ticketRsvp')
+    if (block.type === 'ticketRsvp') {
+      expect(block.props.allowText).toBe(true)
+      expect(block.props.evento).toBeUndefined()
+      expect(block.props.responseToken).toBeUndefined()
+    }
+  })
 })

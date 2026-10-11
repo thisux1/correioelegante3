@@ -38,6 +38,22 @@ export interface SavePageResult {
   page: PageSummary
 }
 
+export type RsvpChoice = 'yes' | 'no' | 'other_day'
+
+export interface SubmitRsvpInput {
+  blockId: string
+  choice: RsvpChoice
+  text?: string
+  respondentName?: string
+  token: string
+}
+
+export interface RsvpResponse {
+  id: string
+  choice: RsvpChoice
+  createdAt: string
+}
+
 function mapBackendPage(page: BackendPage): PageSummary {
   const migrated = migratePage(page.content)
   return {
@@ -99,5 +115,19 @@ export const pageService = {
 
   async deletePage(pageId: string): Promise<void> {
     await api.delete(`/pages/${pageId}`)
+  },
+
+  /**
+   * Resposta pública ao convite (ticketRsvp). Endpoint aberto — a identidade
+   * da destinatária é o `token` assinado injetado pelo backend na leitura,
+   * então nenhum auth header é necessário (o interceptor convive bem sem).
+   * Erros esperados: 403 token inválido, 409 já respondeu, 404 página/bloco.
+   */
+  async submitRsvpResponse(pageId: string, payload: SubmitRsvpInput): Promise<RsvpResponse> {
+    const response = await api.post<{ response: RsvpResponse }>(
+      `/pages/${pageId}/responses`,
+      payload,
+    )
+    return response.data.response
   },
 }

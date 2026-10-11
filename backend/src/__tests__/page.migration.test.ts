@@ -281,4 +281,76 @@ describe('S10 new block types', () => {
     expect(props.title).toBe('só vocês sabem');
     expect(props.allowSkip).toBeUndefined();
   });
+
+  it('ticketRsvp normalizes title/evento and defaults allowText to true', () => {
+    const result = migratePage({
+      blocks: [
+        {
+          id: 'r1',
+          type: 'ticketRsvp',
+          version: 1,
+          props: {
+            title: 'te convido:',
+            evento: { data: '14/03', lugar: 'praça', extra: 'lixo' },
+          },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+    });
+    const { props } = result.blocks[0];
+    expect(props.title).toBe('te convido:');
+    expect(props.evento).toEqual({ data: '14/03', lugar: 'praça', descricao: undefined });
+    expect(props.allowText).toBe(true);
+  });
+});
+
+describe('sanitizePageContent — ticketRsvp', () => {
+  it('bounds strings, keeps allowText and never persists responseToken', () => {
+    const saved = sanitizePageContent({
+      blocks: [
+        {
+          id: 'r1',
+          type: 'ticketRsvp',
+          version: 1,
+          props: {
+            title: `  ${'x'.repeat(200)}  `,
+            evento: { data: '14/03', lugar: 'praça', descricao: 'sorvete', extra: 'lixo' },
+            allowText: false,
+            responseToken: 'forjado-pelo-cliente',
+            lixo: 'fora',
+          },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+      sections: [{ id: 'main', layout: 'stack' }],
+      version: 1,
+    });
+
+    const { props } = saved.blocks[0];
+    expect(props.title).toBe('x'.repeat(160));
+    expect(props.evento).toEqual({ data: '14/03', lugar: 'praça', descricao: 'sorvete' });
+    expect(props.allowText).toBe(false);
+    expect(props.responseToken).toBeUndefined();
+    expect(props.lixo).toBeUndefined();
+  });
+
+  it('ticketRsvp without evento persists title + allowText default', () => {
+    const saved = sanitizePageContent({
+      blocks: [
+        {
+          id: 'r2',
+          type: 'ticketRsvp',
+          version: 1,
+          props: { title: 'topa?' },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+      version: 1,
+    });
+
+    const { props } = saved.blocks[0];
+    expect(props.title).toBe('topa?');
+    expect(props.evento).toBeUndefined();
+    expect(props.allowText).toBe(true);
+  });
 });

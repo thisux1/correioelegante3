@@ -23,6 +23,7 @@ export type BlockType =
   | 'bouquet'
   | 'hints'
   | 'intimacyGate'
+  | 'ticketRsvp'
 export type EditorMode = 'edit' | 'preview'
 
 export interface BlockMeta {
@@ -220,6 +221,23 @@ export interface IntimacyGateBlockProps {
   successMessage?: string
 }
 
+export interface TicketRsvpEvento {
+  data?: string
+  lugar?: string
+  descricao?: string
+}
+
+export interface TicketRsvpBlockProps {
+  title?: string
+  evento?: TicketRsvpEvento
+  allowText?: boolean
+  /**
+   * Injetado pelo backend na leitura pública da página — nunca editável no
+   * editor e nunca persistido a partir do cliente (o sanitizer descarta).
+   */
+  responseToken?: string
+}
+
 export type SectionLayout = 'stack' | 'columns' | 'overlap' | 'grid' | 'freezone' | 'fullbleed'
 
 export interface SectionRect {
@@ -253,6 +271,7 @@ export interface BlockPropsByType {
   bouquet: BouquetBlockProps
   hints: HintsBlockProps
   intimacyGate: IntimacyGateBlockProps
+  ticketRsvp: TicketRsvpBlockProps
 }
 
 interface BlockBase<TType extends BlockType> {

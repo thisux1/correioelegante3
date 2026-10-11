@@ -187,7 +187,12 @@ export function PageCard() {
       >
         <CardTilt3D intensity={6}>
           <div className="rounded-3xl border-2 border-border bg-gradient-to-br from-surface to-background p-6 shadow-2xl md:p-8">
-            <PageRenderer blocks={page.blocks} theme={page.theme} showAtmosphere={false} />
+            <PageRenderer
+              blocks={page.blocks}
+              theme={page.theme}
+              showAtmosphere={false}
+              pageId={page.id}
+            />
 
             <div className="mt-8 pt-6 border-t border-border/40 text-center">
               <p className="text-xs text-text-light mb-2.5">

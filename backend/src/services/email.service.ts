@@ -650,3 +650,91 @@ export async function sendTicketReplyEmail(params: SendTicketReplyParams): Promi
     return { success: false, error: err?.message || 'Falha de conexão com Resend' };
   }
 }
+
+export interface SendRsvpResponseEmailParams {
+  to: string;
+  choice: 'yes' | 'no' | 'other_day';
+  respondentName?: string;
+  text?: string;
+}
+
+const RSVP_CHOICE_LABELS: Record<SendRsvpResponseEmailParams['choice'], string> = {
+  yes: 'Aceitou',
+  no: 'Não pode',
+  other_day: 'Sugeriu outro dia',
+};
+
+export async function sendRsvpResponseEmail(params: SendRsvpResponseEmailParams): Promise<{ success: boolean; id?: string; error?: string }> {
+  const client = getResendClient();
+  const from = process.env.EMAIL_FROM || 'Correio Elegante <contato@correioelegante.studio>';
+
+  const subject = `${params.respondentName ?? 'Alguém'} respondeu seu convite`;
+  const choiceLabel = RSVP_CHOICE_LABELS[params.choice];
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(subject)} - Correio Elegante</title>
+  <style>${EMAIL_BASE_STYLES}</style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="envelope-card">
+      <div class="envelope-header">
+        <div class="wax-seal">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-top: 13px; display: inline-block;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-title">Correio Elegante</div>
+        <p class="brand-tagline">Resposta ao Convite</p>
+      </div>
+
+      <div class="envelope-body">
+        <h1>Chegou uma resposta para você</h1>
+        <p>${params.respondentName ? `<strong>${escapeHtml(params.respondentName)}</strong>` : 'Alguém'} respondeu ao convite que você enviou pelo Correio Elegante.</p>
+
+        <div class="highlight-card">
+          <div class="highlight-title">Resposta:</div>
+          <div class="highlight-content"><strong>${escapeHtml(choiceLabel)}</strong>${params.respondentName ? `\nDe: ${escapeHtml(params.respondentName)}` : ''}${params.text ? `\n\n${escapeHtml(params.text)}` : ''}</div>
+        </div>
+      </div>
+
+      <div class="envelope-footer">
+        <div class="stamp-mark">Convite Respondido</div>
+        <p>Notificação automática enviada quando alguém responde ao seu convite.</p>
+        <p class="footer-sub">&copy; ${new Date().getFullYear()} Correio Elegante &bull; correioelegante.studio</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  if (!client) {
+    console.warn(`[EmailService] RESEND_API_KEY não configurada. Notificação de RSVP simulada para: ${params.to}`);
+    return { success: true, id: 'simulated_no_key' };
+  }
+
+  try {
+    const { data, error } = await client.emails.send({
+      from,
+      to: params.to,
+      subject,
+      html: htmlContent,
+    });
+
+    if (error) {
+      console.error('[EmailService] Erro ao enviar notificação de RSVP via Resend:', error);
+      return { success: false, error: (error as any).message || JSON.stringify(error) };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err: any) {
+    console.error('[EmailService] Falha de conexão com Resend:', err);
+    return { success: false, error: err?.message || 'Falha de conexão com Resend' };
+  }
+}

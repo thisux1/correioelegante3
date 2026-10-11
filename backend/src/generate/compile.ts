@@ -29,6 +29,7 @@ const SUPPORTED = new Set<string>([
   'bouquet',
   'hints',
   'intimacyGate',
+  'ticketRsvp',
 ]);
 
 /**
@@ -48,6 +49,11 @@ const asStrings = (value: unknown): string[] =>
 const asText = (value: unknown): string =>
   typeof value === 'string' ? value : '';
 
+const asRecord = (value: unknown): Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
 const DOWNGRADE: Partial<Record<ModuleType, DowngradeRule>> = {
   togetherCounter: {
     to: 'timer',
@@ -63,10 +69,6 @@ const DOWNGRADE: Partial<Record<ModuleType, DowngradeRule>> = {
   hiddenNotes: {
     to: 'text',
     adapt: (p) => ({ text: asStrings(p.items).join('\n'), align: 'left' }),
-  },
-  ticketRsvp: {
-    to: 'text',
-    adapt: (p) => ({ text: asText(p.title), align: 'center' }),
   },
 };
 
@@ -90,6 +92,22 @@ const SPEC_PROPS_ADAPTER: Partial<
     hint: asText(p.hint) || undefined,
     successMessage: asText(p.successMessage) || undefined,
   }),
+  /**
+   * ticketRsvp (S14): spec emite {title, evento}; persistido ganha
+   * allowText:true. responseToken NUNCA entra no content — o backend injeta
+   * na leitura pública (HMAC por pageId+blockId, ver page.service).
+   */
+  ticketRsvp: (p) => {
+    const evento = asRecord(p.evento);
+    const data = asText(evento.data) || undefined;
+    const lugar = asText(evento.lugar) || undefined;
+    const descricao = asText(evento.descricao) || undefined;
+    return {
+      title: asText(p.title) || undefined,
+      ...(data || lugar || descricao ? { evento: { data, lugar, descricao } } : {}),
+      allowText: true,
+    };
+  },
 };
 
 export interface CompileResult {

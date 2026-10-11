@@ -74,8 +74,7 @@ export const CONVITE_DATE_COPY = {
 
   /**
    * Convite em texto — o fallback incondicional quando o brief não traz
-   * evento (e a camada que o compilador usa pra texto quando ticketRsvp
-   * degrada). Funciona sem data/lugar: nomeia o programa concreto sem
+   * evento. Funciona sem data/lugar: nomeia o programa concreto sem
    * depender de interpolação. Máx 200 chars.
    */
   'convite.detalhes': [

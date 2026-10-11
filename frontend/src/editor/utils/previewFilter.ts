@@ -29,6 +29,11 @@ export function shouldRenderPreviewBlock(block: Block): boolean {
       return Array.isArray(block.props.items) && block.props.items.length > 0
     case 'quiz':
       return hasContent(block.props.question)
+    case 'ticketRsvp':
+      return hasContent(block.props.title)
+        || hasContent(block.props.evento?.data)
+        || hasContent(block.props.evento?.lugar)
+        || hasContent(block.props.evento?.descricao)
     case 'polaroid':
       return Array.isArray(block.props.photos) && block.props.photos.length > 0
     default:

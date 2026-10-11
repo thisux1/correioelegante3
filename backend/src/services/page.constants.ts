@@ -21,6 +21,7 @@ export const BLOCK_TYPE_VALUES = [
   'bouquet',
   'hints',
   'intimacyGate',
+  'ticketRsvp',
 ] as const;
 
 export type SupportedBlockType = (typeof BLOCK_TYPE_VALUES)[number];

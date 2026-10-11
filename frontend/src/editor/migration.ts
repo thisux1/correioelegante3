@@ -102,6 +102,7 @@ function asBlockType(value: unknown): BlockType {
     'bouquet',
     'hints',
     'intimacyGate',
+    'ticketRsvp',
   ]
   if (typeof value === 'string' && supported.includes(value as BlockType)) {
     return value as BlockType
@@ -656,6 +657,29 @@ function migrateBlock(input: unknown, index: number): Block {
           successMessage: asOptionalText(props.successMessage),
         },
       }
+    case 'ticketRsvp': {
+      const evento = asRecord(props.evento)
+      const data = asOptionalText(evento.data)
+      const lugar = asOptionalText(evento.lugar)
+      const descricao = asOptionalText(evento.descricao)
+      const hasEvento = Boolean(data || lugar || descricao)
+
+      // responseToken chega injetado pelo backend na leitura pública — é
+      // preservado aqui (mapBackendPage migra o content recebido), mas nunca
+      // é editável no editor nem enviado de volta em saves.
+      const responseToken = asOptionalText(props.responseToken)
+
+      return {
+        ...base,
+        type: 'ticketRsvp',
+        props: {
+          title: asOptionalText(props.title),
+          ...(hasEvento ? { evento: { data, lugar, descricao } } : {}),
+          allowText: typeof props.allowText === 'boolean' ? props.allowText : true,
+          ...(responseToken ? { responseToken: responseToken.slice(0, 200) } : {}),
+        },
+      }
+    }
     default:
       return {
         ...base,

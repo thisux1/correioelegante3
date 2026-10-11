@@ -28,6 +28,7 @@ export function createBlock(type: 'photoBook'): Extract<Block, { type: 'photoBoo
 export function createBlock(type: 'bouquet'): Extract<Block, { type: 'bouquet' }>
 export function createBlock(type: 'hints'): Extract<Block, { type: 'hints' }>
 export function createBlock(type: 'intimacyGate'): Extract<Block, { type: 'intimacyGate' }>
+export function createBlock(type: 'ticketRsvp'): Extract<Block, { type: 'ticketRsvp' }>
 export function createBlock(type: BlockType): Block
 export function createBlock(type: BlockType): Block {
   const now = Date.now()
@@ -343,6 +344,20 @@ export function createBlock(type: BlockType): Block {
           answers: ['oi', 'oi, tudo bem'],
           hint: 'Começava com a palavra mais simples do mundo.',
           successMessage: 'Você lembra. É claro que lembra.',
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'ticketRsvp':
+      return {
+        id: generateBlockId(),
+        type: 'ticketRsvp',
+        version: BLOCK_VERSION,
+        props: {
+          title: 'te convido:',
+          allowText: true,
         },
         meta: {
           createdAt: now,

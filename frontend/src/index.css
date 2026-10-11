@@ -376,6 +376,15 @@ button.os-caption-btn::after {
   cursor: not-allowed;
 }
 
+/* Pressionado persistente (escolha marcada, ex.: RSVP) — mesmo bevel
+   invertido do :active, sem translate. */
+.os-btn[aria-pressed='true'] {
+  background: var(--os-light);
+  box-shadow:
+    inset 2px 2px 0 var(--os-shadow),
+    inset -2px -2px 0 var(--os-hilight);
+}
+
 .os-btn-primary {
   background: #e11d48;
   color: #fff;

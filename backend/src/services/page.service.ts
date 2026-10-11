@@ -11,6 +11,7 @@ import { migratePage } from './page.migration';
 import { scanPageContent } from './moderation.service';
 import { logModerationEvent } from '../utils/observability';
 import { isUserSubscribed } from './subscription.service';
+import { generateRsvpToken } from '../utils/rsvpToken';
 
 /** Pré-publicação (§10.3): blocked recusa o publish; flagged segue e registra. */
 function enforcePublishModeration(params: {
@@ -232,7 +233,16 @@ export async function getPageById(pageId: string, requesterUserId?: string) {
     throw new AppError('Pagina nao encontrada ou sem acesso', 404);
   }
 
-  return toPageResponse(page);
+  const response = toPageResponse(page);
+  // Blocos ticketRsvp recebem o token assinado por leitura (HMAC), nunca
+  // persistido: estável entre requests e não falsificável sem o secret.
+  for (const block of response.content.blocks) {
+    if (block.type === 'ticketRsvp') {
+      block.props.responseToken = generateRsvpToken(page.id, block.id);
+    }
+  }
+
+  return response;
 }
 
 export async function deletePage(pageId: string, userId: string) {
