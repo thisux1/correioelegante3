@@ -1,5 +1,5 @@
 import { prisma } from '../utils/prisma';
-import { Prisma } from '@prisma/client';
+import type { Request } from 'express';
 import { AppError } from '../utils/AppError';
 import {
   resolvePageLifecycle,
@@ -12,6 +12,7 @@ import { scanPageContent } from './moderation.service';
 import { logModerationEvent } from '../utils/observability';
 import { isUserSubscribed } from './subscription.service';
 import { generateRsvpToken } from '../utils/rsvpToken';
+import { recordResourceView } from './analytics.service';
 
 /** Pré-publicação (§10.3): blocked recusa o publish; flagged segue e registra. */
 function enforcePublishModeration(params: {
@@ -151,7 +152,18 @@ export async function getPagesByUser(userId: string) {
     orderBy: { updatedAt: 'desc' },
   });
 
-  return pages.map(toPageResponse);
+  const viewCounts =
+    (await prisma.pageView.groupBy({
+      by: ['resourceId'],
+      where: { resourceId: { in: pages.map((p) => p.id) } },
+      _count: { _all: true },
+    })) ?? [];
+  const countByPage = new Map(viewCounts.map((v) => [v.resourceId, v._count._all]));
+
+  return pages.map((page) => ({
+    ...toPageResponse(page),
+    viewCount: countByPage.get(page.id) ?? 0,
+  }));
 }
 
 export async function updatePage(pageId: string, userId: string, data: UpdatePageInput) {
@@ -209,7 +221,11 @@ export async function updatePage(pageId: string, userId: string, data: UpdatePag
   return toPageResponse(updated);
 }
 
-export async function getPageById(pageId: string, requesterUserId?: string) {
+export async function getPageById(
+  pageId: string,
+  requesterUserId?: string,
+  req?: Request,
+) {
   const page = await prisma.page.findUnique({ where: { id: pageId } });
 
   if (!page) {
@@ -240,6 +256,12 @@ export async function getPageById(pageId: string, requesterUserId?: string) {
     if (block.type === 'ticketRsvp') {
       block.props.responseToken = generateRsvpToken(page.id, block.id);
     }
+  }
+
+  // View pseudonimizada só conta quando não é o dono — preview do remetente
+  // não infla a métrica que ele acompanha na home.
+  if (req && !isOwner) {
+    void recordResourceView(page.id, req).catch(() => {});
   }
 
   return response;

@@ -102,7 +102,7 @@ export async function getPage(req: AuthRequest, res: Response): Promise<void> {
   const requesterId = req.userId ?? 'anonymous';
 
   try {
-    const page = await pageService.getPageById(req.params.id as string, req.userId);
+    const page = await pageService.getPageById(req.params.id as string, req.userId, req);
     logPageEvent({
       event: 'page_load',
       userId: requesterId,

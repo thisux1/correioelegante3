@@ -126,12 +126,18 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
 - `DELETE /:id`: Deletes message (Owner only).
 
 ### 4.3 Pages (`/api/pages`)
-- `GET /`: Lists all pages created by authenticated user.
+- `GET /`: Lists all pages created by authenticated user. Cada item inclui
+  `viewCount: number` — contagem de `PageView` agregada por `resourceId`
+  (`groupBy`), `0` quando a página nunca foi aberta publicamente.
 - `POST /`: Creates page. Body: `{ content, status?, visibility?, publishedAt? }`.
 - `GET /:id`: Retrieves page. Handles ownership bypass, unlisted access, and public lifecycle gating.
   - Blocos `ticketRsvp` ganham `props.responseToken` (HMAC-SHA256 de
     `pageId.blockId`, segredo `RSVP_TOKEN_SECRET ?? JWT_SECRET`) na leitura —
     nunca persistido, removido pelo sanitizer na escrita.
+  - Leituras por **não-dono** registram um `PageView` via `recordResourceView`
+    (hash SHA-256 de IP+UA+dia UTC, dedupe de 60min, fire-and-forget —
+    falha de analytics nunca quebra a entrega). Leituras do próprio dono
+    (preview) não contam.
 - `PUT /:id`: Updates page with optimistic concurrency check (`expectedVersion`).
 - `DELETE /:id`: Deletes page (Owner only).
 - `POST /:pageId/responses`: **Público** (sem auth), rate limit próprio

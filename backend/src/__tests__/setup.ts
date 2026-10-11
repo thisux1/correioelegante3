@@ -60,6 +60,12 @@ vi.mock('../utils/prisma', () => ({
             update: vi.fn(),
             count: vi.fn(),
         },
+        pageView: {
+            findFirst: vi.fn(),
+            findMany: vi.fn(),
+            create: vi.fn(),
+            groupBy: vi.fn(async () => []),
+        },
         asset: {
             findUnique: vi.fn(),
             findMany: vi.fn(),

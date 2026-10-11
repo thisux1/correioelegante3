@@ -18,11 +18,13 @@ interface BackendPage {
   version: number
   updatedAt: string
   createdAt: string
+  viewCount?: number
 }
 
 export interface PageSummary extends PageContract {
   createdAt: string
   paymentStatus?: 'pending' | 'paid' | string
+  viewCount?: number
 }
 
 export interface SavePageInput {
@@ -89,6 +91,7 @@ function mapBackendPage(page: BackendPage): PageSummary {
     version: page.version,
     updatedAt: page.updatedAt,
     createdAt: page.createdAt,
+    viewCount: page.viewCount ?? 0,
   }
 }
 

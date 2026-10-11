@@ -10,7 +10,7 @@ function block(type: Block['type'], props: Record<string, unknown>): Block {
     type,
     version: 1,
     props,
-    meta: { createdAt: new Date(0).toISOString(), updatedAt: new Date(0).toISOString() },
+    meta: { createdAt: 0, updatedAt: 0 },
   } as Block
 }
 

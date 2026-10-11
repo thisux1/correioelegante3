@@ -571,6 +571,14 @@ export function Profile() {
                           </span>
                           <span>•</span>
                           <span>{page.blocks.length} {page.blocks.length === 1 ? 'bloco' : 'blocos'}</span>
+                          {isPublished && (page.viewCount ?? 0) > 0 ? (
+                            <>
+                              <span>•</span>
+                              <span>
+                                aberta {page.viewCount} {page.viewCount === 1 ? 'vez' : 'vezes'}
+                              </span>
+                            </>
+                          ) : null}
                           {page.theme ? (
                             <>
                               <span>•</span>

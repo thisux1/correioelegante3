@@ -750,6 +750,41 @@ describe('GET /api/pages/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.page.id).toBe(pageId);
   });
+
+  it('registra view pseudonimizada em leitura pública de visitante', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'published',
+      visibility: 'public',
+      paymentStatus: 'paid',
+    }));
+    vi.mocked(prisma.pageView.findFirst).mockResolvedValue(null);
+
+    const res = await request(app)
+      .get(`/api/pages/${pageId}`);
+
+    expect(res.status).toBe(200);
+    await vi.waitFor(() => {
+      expect(prisma.pageView.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ resourceId: pageId }),
+      });
+    });
+  });
+
+  it('não registra view quando quem lê é o dono', async () => {
+    vi.mocked(prisma.page.findUnique).mockResolvedValue(makePage({
+      status: 'published',
+      visibility: 'public',
+      paymentStatus: 'paid',
+    }));
+
+    const res = await request(app)
+      .get(`/api/pages/${pageId}`)
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`);
+
+    expect(res.status).toBe(200);
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(prisma.pageView.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /api/pages', () => {
@@ -762,6 +797,31 @@ describe('GET /api/pages', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.pages).toHaveLength(1);
+  });
+
+  it('200 — inclui viewCount por página', async () => {
+    vi.mocked(prisma.page.findMany).mockResolvedValue([makePage()]);
+    vi.mocked(prisma.pageView.groupBy).mockResolvedValueOnce([
+      { resourceId: pageId, _count: { _all: 3 } },
+    ] as never);
+
+    const res = await request(app)
+      .get('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.pages[0].viewCount).toBe(3);
+  });
+
+  it('200 — viewCount zero quando não há views', async () => {
+    vi.mocked(prisma.page.findMany).mockResolvedValue([makePage()]);
+
+    const res = await request(app)
+      .get('/api/pages')
+      .set('Authorization', `Bearer ${makeToken(ownerUserId)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.pages[0].viewCount).toBe(0);
   });
 });
 
