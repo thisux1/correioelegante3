@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { generateService, type GenerateBriefInput } from '@/services/generateService'
 import { useEditorStore } from '@/editor/store/editorStore'
@@ -42,6 +42,99 @@ const CAMPOS_PADRAO: Required<Omit<MomentoCampos, 'anonimo'>> & { anonimo: true 
   musica: true,
 }
 
+const BRIEF_DRAFT_KEY = 'ce:brief:draft'
+
+interface BriefDraft {
+  momento: string | null
+  destinatario: string
+  remetente: string
+  apelidos: string
+  tom: string
+  contexto: string
+  memoria: string
+  intimidadePergunta: string
+  intimidadeResposta: string
+  musicaUrl: string
+  eventoData: string
+  eventoLugar: string
+  anonimo: boolean
+}
+
+function loadBriefDraft(): Partial<BriefDraft> {
+  try {
+    const raw = window.localStorage.getItem(BRIEF_DRAFT_KEY)
+    if (!raw) return {}
+    const parsed: unknown = JSON.parse(raw)
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      ? (parsed as Partial<BriefDraft>)
+      : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Exemplos alinhados à MOMENTO_CAMPOS — só preenchem campos ainda vazios. */
+const EXEMPLOS: Record<string, Partial<BriefDraft>> = {
+  crush_secreto: {
+    destinatario: 'Luiza',
+    apelidos: 'lu, lulu',
+    tom: 'misterioso',
+    memoria: 'o dia que o elevador travou e a gente ficou conversando no hall como se já se conhecesse há anos.',
+    intimidadePergunta: 'qual sabor você sempre pede na sorveteria?',
+    intimidadeResposta: 'pistache',
+    anonimo: true,
+  },
+  carta_amor: {
+    destinatario: 'Amor',
+    remetente: 'Seu amor',
+    tom: 'vulneravel',
+    memoria: 'a primeira viagem de ônibus juntos, você dormindo no meu ombro o caminho inteiro.',
+  },
+  convite_date: {
+    destinatario: 'Duda',
+    tom: 'leve',
+    eventoData: 'sábado, 19h',
+    eventoLugar: 'café Aurora',
+    contexto: 'quero chamar pra jantar sem parecer formal demais.',
+  },
+  pedido_namoro: {
+    destinatario: 'Bia',
+    apelidos: 'bia, binha',
+    tom: 'vulneravel',
+    memoria: 'o piquenique improvisado na varanda quando faltou luz no prédio.',
+    intimidadePergunta: 'qual filme a gente nunca terminou de ver?',
+    intimidadeResposta: 'sobre o tempo',
+    eventoData: 'domingo, 17h',
+    eventoLugar: 'nossa varanda',
+  },
+  data_especial: {
+    destinatario: 'Amor',
+    tom: 'cinematico',
+    memoria: 'o primeiro dia, quando você chegou de tênis vermelho.',
+    eventoData: '14 de junho',
+    eventoLugar: 'onde tudo começou',
+  },
+  desculpas: {
+    destinatario: 'Duda',
+    tom: 'vulneravel',
+    memoria: 'a nossa mania de fazer as pazes com café coado.',
+    contexto: 'briguei por bobagem e quero assumir, sem chantagem.',
+  },
+  anonimo: {
+    destinatario: 'Marina',
+    apelidos: 'nina',
+    tom: 'misterioso',
+    intimidadePergunta: 'em qual banco da praça você sempre senta?',
+    intimidadeResposta: 'o que fica embaixo da árvore grande',
+    anonimo: true,
+  },
+  so_porque_sim: {
+    destinatario: 'Vida',
+    tom: 'leve',
+    memoria: 'terça passada, você cantando no chuveiro sem saber que eu ouvia.',
+  },
+}
+
 function FieldLabel({ htmlFor, children, required }: { htmlFor?: string; children: React.ReactNode; required?: boolean }) {
   const className = 'font-pixel-ui block text-[16px] font-bold leading-snug text-[#4c0519]'
   const content = (
@@ -67,28 +160,92 @@ export function Generate() {
   const setDraftContext = useEditorStore((s) => s.setDraftContext)
 
   const [searchParams] = useSearchParams()
+  const [draft] = useState(loadBriefDraft)
   const [momento, setMomento] = useState<string | null>(() => {
     const m = searchParams.get('momento')
-    return MOMENTOS.some((x) => x.id === m && x.disponivel) ? m : null
+    if (MOMENTOS.some((x) => x.id === m && x.disponivel)) return m
+    return MOMENTOS.some((x) => x.id === draft.momento && x.disponivel)
+      ? draft.momento!
+      : null
   })
-  const [destinatario, setDestinatario] = useState('')
-  const [remetente, setRemetente] = useState('')
-  const [apelidos, setApelidos] = useState('')
-  const [tom, setTom] = useState<string>('leve')
-  const [contexto, setContexto] = useState('')
-  const [memoria, setMemoria] = useState('')
-  const [intimidadePergunta, setIntimidadePergunta] = useState('')
-  const [intimidadeResposta, setIntimidadeResposta] = useState('')
-  const [musicaUrl, setMusicaUrl] = useState('')
-  const [eventoData, setEventoData] = useState('')
-  const [eventoLugar, setEventoLugar] = useState('')
-  const [anonimo, setAnonimo] = useState(false)
+  const [destinatario, setDestinatario] = useState(draft.destinatario ?? '')
+  const [remetente, setRemetente] = useState(draft.remetente ?? '')
+  const [apelidos, setApelidos] = useState(draft.apelidos ?? '')
+  const [tom, setTom] = useState<string>(
+    TONS.some((t) => t.id === draft.tom) ? draft.tom! : 'leve',
+  )
+  const [contexto, setContexto] = useState(draft.contexto ?? '')
+  const [memoria, setMemoria] = useState(draft.memoria ?? '')
+  const [intimidadePergunta, setIntimidadePergunta] = useState(draft.intimidadePergunta ?? '')
+  const [intimidadeResposta, setIntimidadeResposta] = useState(draft.intimidadeResposta ?? '')
+  const [musicaUrl, setMusicaUrl] = useState(draft.musicaUrl ?? '')
+  const [eventoData, setEventoData] = useState(draft.eventoData ?? '')
+  const [eventoLugar, setEventoLugar] = useState(draft.eventoLugar ?? '')
+  const [anonimo, setAnonimo] = useState(draft.anonimo ?? false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Rascunho do brief: recarregar ou sair e voltar não perde o que foi escrito.
+  useEffect(() => {
+    const snapshot: BriefDraft = {
+      momento,
+      destinatario,
+      remetente,
+      apelidos,
+      tom,
+      contexto,
+      memoria,
+      intimidadePergunta,
+      intimidadeResposta,
+      musicaUrl,
+      eventoData,
+      eventoLugar,
+      anonimo,
+    }
+    try {
+      window.localStorage.setItem(BRIEF_DRAFT_KEY, JSON.stringify(snapshot))
+    } catch {
+      // storage indisponível — o brief vive só em memória
+    }
+  }, [
+    momento,
+    destinatario,
+    remetente,
+    apelidos,
+    tom,
+    contexto,
+    memoria,
+    intimidadePergunta,
+    intimidadeResposta,
+    musicaUrl,
+    eventoData,
+    eventoLugar,
+    anonimo,
+  ])
 
   const campos: MomentoCampos = momento ? (MOMENTO_CAMPOS[momento] ?? CAMPOS_PADRAO) : CAMPOS_PADRAO
   const anonimoEfetivo = campos.anonimo === 'forced' ? true : anonimo
   const canSubmit = momento !== null && destinatario.trim().length > 0 && !loading
+
+  // Preenche apenas campos ainda vazios — nunca sobrescreve o que a pessoa
+  // já escreveu. O exemplo respeita a matriz de campos do momento.
+  const handleExemplo = () => {
+    if (!momento) return
+    const ex = EXEMPLOS[momento]
+    if (!ex) return
+    if (!destinatario.trim() && ex.destinatario) setDestinatario(ex.destinatario)
+    if (!remetente.trim() && ex.remetente) setRemetente(ex.remetente)
+    if (!apelidos.trim() && ex.apelidos) setApelidos(ex.apelidos)
+    if (!contexto.trim() && ex.contexto) setContexto(ex.contexto)
+    if (!memoria.trim() && ex.memoria) setMemoria(ex.memoria)
+    if (!intimidadePergunta.trim() && ex.intimidadePergunta) setIntimidadePergunta(ex.intimidadePergunta)
+    if (!intimidadeResposta.trim() && ex.intimidadeResposta) setIntimidadeResposta(ex.intimidadeResposta)
+    if (!musicaUrl.trim() && ex.musicaUrl) setMusicaUrl(ex.musicaUrl)
+    if (!eventoData.trim() && ex.eventoData) setEventoData(ex.eventoData)
+    if (!eventoLugar.trim() && ex.eventoLugar) setEventoLugar(ex.eventoLugar)
+    if (ex.tom && TONS.some((t) => t.id === ex.tom)) setTom(ex.tom)
+    if (ex.anonimo !== undefined && campos.anonimo === true) setAnonimo(ex.anonimo)
+  }
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,6 +285,11 @@ export function Generate() {
         theme: result.content.theme,
       })
       setDraftContext(null)
+      try {
+        window.localStorage.removeItem(BRIEF_DRAFT_KEY)
+      } catch {
+        // ignora — rascunho antigo não é problema
+      }
       navigate('/editor')
     } catch (err) {
       const message =
@@ -216,6 +378,20 @@ export function Generate() {
                 <span className="mr-2 inline-block bg-[#e11d48] px-1.5 py-0.5 text-[#fff]">02</span>
                 o essencial
               </legend>
+              {EXEMPLOS[momento] && (
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <p className="font-pixel-body text-[20px] leading-tight text-[#9f3a58]">
+                    sem ideia de onde começar?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleExemplo}
+                    className="os-btn min-h-[44px] shrink-0 px-4 font-pixel-ui text-[14px]"
+                  >
+                    ver um exemplo
+                  </button>
+                </div>
+              )}
               <div className="space-y-6">
                 <div>
                   <FieldLabel htmlFor="dest" required>
