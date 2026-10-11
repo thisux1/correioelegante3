@@ -192,6 +192,10 @@ export const updatePageSchema = z.object({
 });
 
 
+export const generateRequestSchema = z.object({
+  brief: z.record(z.unknown()),
+});
+
 export const assetUploadUrlSchema = z.object({
   kind: assetKindSchema,
   fileName: z.string().min(3, 'Nome de arquivo invalido').max(255, 'Nome de arquivo invalido'),

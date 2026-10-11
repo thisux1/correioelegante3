@@ -12,6 +12,7 @@ import { pageRouter } from './routes/page.routes';
 import { assetRouter } from './routes/asset.routes';
 import { contactRouter } from './routes/contact.routes';
 import { adminAnalyticsRouter } from './routes/admin.routes';
+import { generateRouter } from './routes/generate.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { prisma } from './utils/prisma';
 
@@ -147,6 +148,7 @@ app.use('/api/messages', messageRouter);
 app.use('/api/payments', paymentRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/pages', pageRouter);
+app.use('/api/generate', generateRouter);
 app.use('/api/assets', assetRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/admin', adminAnalyticsRouter);
