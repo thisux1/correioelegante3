@@ -623,7 +623,7 @@ Pendências de implementação restantes:
 | 15.7 | ~~Estética marca vs tema~~ RESOLVIDO (D3): pixel/nostalgia-2000s = marca | pendente: tokens "romantic OS" (paleta+fontes) |
 | 15.10 | Paleta "romantic OS" + fontes pixel pt-BR (cobre ç/ã/õ?) | antes de S15 (LP) / refactor de front |
 | 15.8 | Laya vs serverless (onde hospeda o modelo de decisão) | Fatia 5 spike |
-| 15.9 | Normalizar zod 3.x (backend) vs 4.x (frontend) p/ schemas compartilhados | Fatia 1 |
+| 15.9 | ~~zod 3.x vs 4.x shared~~ RESOLVIDO (S1): backend canônico em `contracts/` (Zod v3); frontend espelha interfaces TS só quando consumir — sem pacote `shared/` | feito |
 
 ---
 
