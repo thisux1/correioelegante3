@@ -620,8 +620,8 @@ Pendências de implementação restantes:
 |---|---|---|
 | 15.3 | Onboarding WhatsApp Business API + opt-in checkbox no registro | iniciar cedo; opt-in desde já |
 | 15.6 | Conteúdo da demo real (qual(is) momento(s) showcase) | Fatia 8 |
-| 15.7 | ~~Estética marca vs tema~~ RESOLVIDO (D3): pixel/nostalgia-2000s = marca | pendente: tokens "romantic OS" (paleta+fontes) |
-| 15.10 | Paleta "romantic OS" + fontes pixel pt-BR (cobre ç/ã/õ?) | antes de S15 (LP) / refactor de front |
+| 15.7 | ~~Estética marca vs tema~~ RESOLVIDO (D3): pixel/nostalgia-2000s = marca | tokens "romantic OS" implementados (ver 15.10) |
+| ~~15.10~~ | Paleta "romantic OS" + fontes pixel pt-BR | RESOLVIDO (pós-S5): bevels Win98 recoloridos rose/vinho + stacks Pixelify Sans/Silkscreen/VT323/Press Start 2P implementados como camada `os-*` em `frontend/src/index.css` e aplicados em `/gerar`. VT323 ≥20px, Silkscreen múltiplos de 8 — cobertura ç/ã/õ verificada (S2b). Handjet `ELSH=16` (letras em pixels-coração) reservado pro logo | feito |
 | 15.8 | Laya vs serverless (onde hospeda o modelo de decisão) | Fatia 5 spike |
 | 15.9 | ~~zod 3.x vs 4.x shared~~ RESOLVIDO (S1): backend canônico em `contracts/` (Zod v3); frontend espelha interfaces TS só quando consumir — sem pacote `shared/` | feito |
 
@@ -686,6 +686,7 @@ orquestrador atualiza o plano/`stack-research.md` antes da próxima sessão.
 | ~~S3~~ ✅ | **Engine + compiler** (`generate/engine/`, `compile.ts`) | main | S1 | 8 testes de decisão verdes; `decisions[]` |
 | ~~S4~~ ✅ | **Copy bank** (`copy/crushSecreto.ts` + `voice-guide.md`) — aguarda **cura humana** | sub | S1, S3 | 12 slots, 7 testes; pendente review de copy |
 | ~~S5~~ ✅ | **Slice E2E crush**: `/gerar` → form → `POST /api/generate` → editor populado | main | S3, S4 | verificado E2E em dev (5175→3100) |
+| ~~S5b~~ ✅ | **Romantic OS chrome em `/gerar`**: camada `os-*` (bevels Win98 rose/vinho, fonts pixel), rota fora do Layout, audit UI com 12 achados corrigidos (contraste, VT323≥20px, controles mortos, form semântico, × 44px) | main + subagent review | S5 | renderizado e auditado nos 4 estados |
 | S6 | **Schema migration**: `blocks` plano → sections/placement; páginas legadas migram p/ stack implícita | main | S1, relatório editor (S2) | páginas antigas renderizam idênticas (regressão visual) |
 | S7 | **Grid editor**: drag+snap, resize limitado, freezone, collapse mobile (D12), touch | main | S6 | edição grid funciona em touch; 44px targets |
 | S8 | **Copy banks ×7** momentos restantes | sub paralelos | S4 aprovado (guia+formato) | bancos curados |
