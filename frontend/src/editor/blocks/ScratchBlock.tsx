@@ -2,6 +2,7 @@ import { memo, useRef, useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, RotateCcw, Image as ImageIcon, Type, Heart } from 'lucide-react'
 import type { BlockComponentProps, ScratchBlockProps } from '@/editor/types'
+import { useRecipientState } from '@/editor/hooks/useRecipientState'
 import { MediaField } from '@/editor/components/MediaField'
 import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 
@@ -233,19 +234,19 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         isRevealed: false,
       }
 
-  const [isRevealedLocal, setIsRevealedLocal] = useState(props.isRevealed ?? false)
+  const [isRevealedLocal, setIsRevealedLocal] = useRecipientState(block.id, 'revealed', props.isRevealed ?? false)
   const [showConfetti, setShowConfetti] = useState(false)
 
   const handleReveal = useCallback(() => {
     setIsRevealedLocal(true)
     setShowConfetti(true)
     setTimeout(() => setShowConfetti(false), 1400)
-  }, [])
+  }, [setIsRevealedLocal])
 
   const handleReset = useCallback(() => {
     setIsRevealedLocal(false)
     setShowConfetti(false)
-  }, [])
+  }, [setIsRevealedLocal])
 
   const updateProp = useCallback(
     <K extends keyof ScratchBlockProps>(key: K, value: ScratchBlockProps[K]) => {

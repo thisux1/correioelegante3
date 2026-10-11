@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from 'framer-motion'
 import { Check, Heart, KeyRound, Lightbulb, Lock, Plus, RotateCcw, Sparkles, X } from 'lucide-react'
 import type { BlockComponentProps, IntimacyGateBlockProps } from '@/editor/types'
+import { useRecipientState } from '@/editor/hooks/useRecipientState'
 
 const MAX_ANSWERS = 8
 
@@ -74,8 +75,8 @@ function IntimacyGateBlockComponent({ block, mode, onUpdate }: BlockComponentPro
   const hintRegionId = useId()
 
   const [answer, setAnswer] = useState('')
-  const [unlocked, setUnlocked] = useState(false)
-  const [skipped, setSkipped] = useState(false)
+  const [unlocked, setUnlocked] = useRecipientState(block.id, 'unlocked', false)
+  const [skipped, setSkipped] = useRecipientState(block.id, 'skipped', false)
   const [showHint, setShowHint] = useState(false)
   const [wrongAttempts, setWrongAttempts] = useState(0)
   const [feedback, setFeedback] = useState('')
@@ -123,7 +124,7 @@ function IntimacyGateBlockComponent({ block, mode, onUpdate }: BlockComponentPro
         ? 'Tudo bem. O presente se abriu mesmo assim.'
         : 'Resposta certa. O presente se abriu para você.',
     )
-  }, [])
+  }, [setSkipped, setUnlocked])
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()

@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import type { BlockComponentProps, PhotoBookBlockProps, PhotoBookPage } from '@/editor/types'
+import { useRecipientState } from '@/editor/hooks/useRecipientState'
 import { MediaField } from '@/editor/components/MediaField'
 import { EDITOR_FIELD_BASE_CLASS } from '@/editor/components/EditorInputSection'
 
@@ -473,8 +474,8 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
     [props.pages],
   )
 
-  const [isOpen, setIsOpen] = useState(false)
-  const [spread, setSpread] = useState(0)
+  const [isOpen, setIsOpen] = useRecipientState(block.id, 'opened', false)
+  const [spread, setSpread] = useRecipientState(block.id, 'spread', 0)
   const [turn, setTurn] = useState<TurnState | null>(null)
 
   const total = pages.length
@@ -559,7 +560,7 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
         back: pages[2 * current + 1],
       })
     }
-  }, [turn, displaySpread, maxSpread, shouldReduceMotion, pages])
+  }, [turn, displaySpread, maxSpread, shouldReduceMotion, pages, setSpread])
 
   const goPrev = useCallback(() => {
     if (turn || displaySpread <= 0) {
@@ -574,12 +575,12 @@ function PhotoBookBlockComponent({ block, mode, onUpdate }: BlockComponentProps)
         back: pages[2 * (current - 1) + 1],
       })
     }
-  }, [turn, displaySpread, shouldReduceMotion, pages])
+  }, [turn, displaySpread, shouldReduceMotion, pages, setSpread])
 
   const handleClose = useCallback(() => {
     setIsOpen(false)
     setTurn(null)
-  }, [])
+  }, [setIsOpen])
 
   // Teclado: setas folheiam, Esc fecha — somente no modo preview para não
   // roubar teclas dos campos de edição.

@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import type { Transition } from 'framer-motion'
 import {
@@ -13,6 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import type { BlockComponentProps, HintItem, HintsBlockProps } from '@/editor/types'
+import { useRecipientState } from '@/editor/hooks/useRecipientState'
 
 const MAX_HINTS = 12
 const DEFAULT_TITLE = 'Dicas sobre quem escreveu'
@@ -211,7 +212,7 @@ function HintsBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   const hints = isEditMode ? allHints : previewHints
 
-  const [revealedCount, setRevealedCount] = useState(0)
+  const [revealedCount, setRevealedCount] = useRecipientState(block.id, 'revealedCount', 0)
   const revealed = Math.min(revealedCount, hints.length)
   const total = hints.length
   const allRevealed = total > 0 && revealed === total
@@ -221,7 +222,7 @@ function HintsBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   // saindo de cena não conseguem pular a ordem das dicas.
   const handleRevealHint = useCallback((index: number) => {
     setRevealedCount((count) => (index + 1 > count ? index + 1 : count))
-  }, [])
+  }, [setRevealedCount])
 
   const updateProp = useCallback(
     <K extends keyof HintsBlockProps>(key: K, value: HintsBlockProps[K]) => {

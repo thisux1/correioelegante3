@@ -18,6 +18,7 @@ import type {
   TicketRsvpEvento,
 } from '@/editor/types'
 import { usePageRuntime } from '@/editor/context'
+import { useRecipientState } from '@/editor/hooks/useRecipientState'
 import { pageService, type RsvpChoice } from '@/services/pageService'
 
 const DEFAULT_RSVP_PROPS: TicketRsvpBlockProps = {
@@ -80,8 +81,14 @@ function TicketRsvpBlockComponent({ block, mode, onUpdate }: BlockComponentProps
   const [choice, setChoice] = useState<RsvpChoice | null>(null)
   const [text, setText] = useState('')
   const [respondentName, setRespondentName] = useState('')
-  const [status, setStatus] = useState<RsvpStatus>('idle')
-  const [sentChoice, setSentChoice] = useState<RsvpChoice | null>(null)
+  const [sentChoice, setSentChoice] = useRecipientState<RsvpChoice | null>(
+    block.id,
+    'sentChoice',
+    null,
+    (value): value is RsvpChoice | null =>
+      value === null || value === 'yes' || value === 'no' || value === 'other_day',
+  )
+  const [status, setStatus] = useState<RsvpStatus>(sentChoice ? 'sent' : 'idle')
   const [sentAsDemo, setSentAsDemo] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [liveMessage, setLiveMessage] = useState('')

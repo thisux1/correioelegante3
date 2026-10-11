@@ -2,6 +2,7 @@ import { memo, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, RotateCcw, Check, Sparkles } from 'lucide-react'
 import type { BlockComponentProps, QuizBlockProps } from '@/editor/types'
+import { useRecipientState } from '@/editor/hooks/useRecipientState'
 
 const PLAYFUL_REASONS = [
   'Tem certeza? Pense com calma.',
@@ -63,7 +64,7 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         isPlayfulNo: true,
       }
 
-  const [hasAnsweredYes, setHasAnsweredYes] = useState(false)
+  const [hasAnsweredYes, setHasAnsweredYes] = useRecipientState(block.id, 'answeredYes', false)
   const [noPosition, setNoPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [playfulMessageIndex, setPlayfulMessageIndex] = useState(0)
   const [showPlayfulTooltip, setShowPlayfulTooltip] = useState(false)
@@ -74,13 +75,13 @@ function QuizBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   const handleYes = useCallback(() => {
     setHasAnsweredYes(true)
-  }, [])
+  }, [setHasAnsweredYes])
 
   const handleReset = useCallback(() => {
     setHasAnsweredYes(false)
     setNoPosition({ x: 0, y: 0 })
     setShowPlayfulTooltip(false)
-  }, [])
+  }, [setHasAnsweredYes])
 
   const moveNoButton = useCallback(() => {
     if (!isPlayful) return

@@ -4,6 +4,7 @@ import { Sparkles, Heart, X, Check } from 'lucide-react'
 
 
 import type { BlockComponentProps, EnvelopeBlockProps } from '@/editor/types'
+import { useRecipientState } from '@/editor/hooks/useRecipientState'
 
 const WAX_COLORS = [
   { name: 'Rubi Romântico', value: '#e11d48' },
@@ -115,7 +116,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
         isOpen: false,
       }
 
-  const [isOpenLocal, setIsOpenLocal] = useState(props.isOpen ?? false)
+  const [isOpenLocal, setIsOpenLocal] = useRecipientState(block.id, 'opened', props.isOpen ?? false)
   const [showBurst, setShowBurst] = useState(false)
   const [showSealPopover, setShowSealPopover] = useState(false)
   const popoverRef = useRef<HTMLDivElement>(null)
@@ -129,7 +130,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
       setShowBurst(true)
       setTimeout(() => setShowBurst(false), 900)
     }
-  }, [isOpenLocal])
+  }, [isOpenLocal, setIsOpenLocal])
 
   const updateProp = useCallback(
     <K extends keyof EnvelopeBlockProps>(key: K, value: EnvelopeBlockProps[K]) => {
