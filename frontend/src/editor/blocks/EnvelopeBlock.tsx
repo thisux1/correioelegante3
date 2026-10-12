@@ -5,6 +5,7 @@ import { Sparkles, Heart, X, Check } from 'lucide-react'
 
 import type { BlockComponentProps, EnvelopeBlockProps } from '@/editor/types'
 import { useRecipientState } from '@/editor/hooks/useRecipientState'
+import { AiRewriteMenu } from '@/editor/components/AiRewriteMenu'
 
 const WAX_COLORS = [
   { name: 'Rubi Romântico', value: '#e11d48' },
@@ -236,7 +237,14 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
               {/* Corpo da Carta (Mensagem Secreta Revelada) */}
               <div className="my-2">
                 {isEditMode ? (
-                  <textarea
+                  <>
+                    <div className="mb-1.5">
+                      <AiRewriteMenu
+                        getText={() => props.messageSnippet ?? ''}
+                        onApply={(text) => updateProp('messageSnippet', text)}
+                      />
+                    </div>
+                    <textarea
                     rows={4}
                     value={props.messageSnippet ?? ''}
                     onChange={(e) => updateProp('messageSnippet', e.target.value)}
@@ -245,6 +253,7 @@ function EnvelopeBlockComponent({ block, mode, onUpdate }: BlockComponentProps) 
                     className="w-full resize-none rounded-xl bg-transparent font-cursive text-xl sm:text-2xl leading-relaxed text-text placeholder:text-text-light/40 border border-dashed border-transparent hover:border-primary/30 focus:border-primary/40 focus:bg-surface/40 focus:outline-none p-1.5 transition-colors"
                     aria-label="Mensagem interna da carta"
                   />
+                  </>
                 ) : (
                   <p className="font-cursive whitespace-pre-wrap text-xl sm:text-2xl leading-relaxed text-text">
                     {messageSnippet || 'Uma mensagem sincera guardada com todo carinho...'}

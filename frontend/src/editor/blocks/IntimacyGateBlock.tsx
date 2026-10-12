@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from 
 import { Check, Heart, KeyRound, Lightbulb, Lock, Plus, RotateCcw, Sparkles, X } from 'lucide-react'
 import type { BlockComponentProps, IntimacyGateBlockProps } from '@/editor/types'
 import { useRecipientState } from '@/editor/hooks/useRecipientState'
+import { AiRewriteMenu } from '@/editor/components/AiRewriteMenu'
 
 const MAX_ANSWERS = 8
 
@@ -295,15 +296,23 @@ function IntimacyGateBlockComponent({ block, mode, onUpdate }: BlockComponentPro
                 </p>
 
                 {isEditMode ? (
-                  <input
-                    type="text"
-                    value={props.question}
-                    onChange={(e) => updateProp('question', e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    placeholder="O que só vocês dois sabem?"
-                    className="w-full border-b border-dashed border-transparent bg-transparent px-2 py-1 text-center font-cursive text-2xl font-bold tracking-tight text-text transition-colors placeholder:text-text-light/40 hover:border-primary/30 focus:border-primary focus:outline-none sm:text-3xl"
-                    aria-label="Pergunta do portão"
-                  />
+                  <>
+                    <input
+                      type="text"
+                      value={props.question}
+                      onChange={(e) => updateProp('question', e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder="O que só vocês dois sabem?"
+                      className="w-full border-b border-dashed border-transparent bg-transparent px-2 py-1 text-center font-cursive text-2xl font-bold tracking-tight text-text transition-colors placeholder:text-text-light/40 hover:border-primary/30 focus:border-primary focus:outline-none sm:text-3xl"
+                      aria-label="Pergunta do portão"
+                    />
+                    <div className="mt-1.5 flex justify-center">
+                      <AiRewriteMenu
+                        getText={() => props.question ?? ''}
+                        onApply={(text) => updateProp('question', text)}
+                      />
+                    </div>
+                  </>
                 ) : (
                   <h3 className="font-cursive text-2xl font-bold tracking-tight text-text sm:text-3xl">
                     {question}

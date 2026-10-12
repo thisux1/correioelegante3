@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Sparkles, RotateCcw, Image as ImageIcon, Type, Heart } from 'lucide-react'
 import type { BlockComponentProps, ScratchBlockProps } from '@/editor/types'
 import { useRecipientState } from '@/editor/hooks/useRecipientState'
+import { AiRewriteMenu } from '@/editor/components/AiRewriteMenu'
 import { MediaField } from '@/editor/components/MediaField'
 import { EDITOR_FIELD_BASE_CLASS, EditorInputSection } from '@/editor/components/EditorInputSection'
 
@@ -406,6 +407,12 @@ function ScratchBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
               className={EDITOR_FIELD_BASE_CLASS}
               aria-label="Mensagem secreta"
             />
+            <div className="mt-2">
+              <AiRewriteMenu
+                getText={() => props.secretText ?? ''}
+                onApply={(text) => updateProp('secretText', text)}
+              />
+            </div>
           </EditorInputSection>
         ) : (
           <div className="space-y-3">
