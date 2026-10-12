@@ -4,6 +4,7 @@ import {
   PAGE_VERSION,
   type Block,
   type BlockType,
+  type BouquetArtStyle,
   type BouquetFlower,
   type BouquetWrap,
   type HiddenNoteItem,
@@ -289,6 +290,10 @@ function asBouquetFlowers(value: unknown): BouquetFlower[] {
 
 function asBouquetWrap(value: unknown): BouquetWrap {
   return value === 'juta' || value === 'celofane' ? value : 'papel'
+}
+
+function asBouquetArtStyle(value: unknown): BouquetArtStyle {
+  return value === 'svg' ? 'svg' : 'pixel'
 }
 
 function asHintItems(value: unknown): HintItem[] {
@@ -659,6 +664,7 @@ function migrateBlock(input: unknown, index: number): Block {
           wrap: asBouquetWrap(props.wrap),
           ribbonColor: asOptionalText(props.ribbonColor),
           message: asOptionalText(props.message),
+          style: asBouquetArtStyle(props.style),
         },
       }
     case 'hints':

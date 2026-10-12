@@ -198,12 +198,21 @@ export interface BouquetFlower {
 
 export type BouquetWrap = 'papel' | 'juta' | 'celofane'
 
+export type BouquetArtStyle = 'pixel' | 'svg'
+
+export const BOUQUET_ART_STYLE_VALUES: readonly BouquetArtStyle[] = [
+  'pixel',
+  'svg',
+]
+
 export interface BouquetBlockProps {
   seed: number
   flowers: BouquetFlower[]
   wrap?: BouquetWrap
   ribbonColor?: string
   message?: string
+  /** Render style — 'pixel' (default, legacy art) or 'svg' (vector, animated). */
+  style?: BouquetArtStyle
 }
 
 export interface HintItem {

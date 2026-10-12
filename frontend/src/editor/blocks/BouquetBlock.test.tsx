@@ -313,3 +313,122 @@ describe('BouquetBlock', () => {
     }
   })
 })
+
+/**
+ * Geometry signature of the vector variant: head transforms + every drawn
+ * shape's geometry attrs (gradient ids are skipped — they carry useId noise).
+ */
+function svgSignature(container: HTMLDivElement): string {
+  const svg = container.querySelector('svg[data-testid="bouquet-art"]')
+  expect(svg).not.toBeNull()
+  if (!svg) return ''
+  return [...svg.querySelectorAll('[data-flower-head], path, ellipse, circle')]
+    .map((el) =>
+      el.tagName === 'g'
+        ? `HEAD:${el.getAttribute('transform')}`
+        : `${el.tagName}:${el.getAttribute('d') ?? `${el.getAttribute('cx')},${el.getAttribute('cy')}`}`,
+    )
+    .join('\n')
+}
+
+describe('BouquetBlock — variante ilustrada (svg)', () => {
+  let container: HTMLDivElement
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+  })
+
+  afterEach(() => {
+    document.body.removeChild(container)
+  })
+
+  it('renderiza arte vetorial com hastes, folhas e cabeças por espécie', async () => {
+    await renderBlock(container, makeBlock({ style: 'svg' }), 'preview')
+
+    const svg = container.querySelector('svg[data-testid="bouquet-art"]')
+    expect(svg).not.toBeNull()
+    expect(svg?.getAttribute('data-art-style')).toBe('svg')
+    expect(svg?.getAttribute('shape-rendering')).toBeNull()
+
+    // 3 flores do makeBlock → 3 cabeças.
+    expect(container.querySelectorAll('[data-flower-head]').length).toBe(3)
+    // Hastes curvas + pétalas + embrulho + laço: geometria vetorial rica.
+    expect(svg?.querySelectorAll('path').length).toBeGreaterThan(40)
+    expect(svg?.querySelectorAll('linearGradient, radialGradient').length).toBeGreaterThan(4)
+    // Sem pixel rects (o laço usa um <rect> só — vetorial não pinta células).
+    expect(svg?.querySelectorAll('rect').length).toBeLessThan(5)
+
+    expect(container.textContent).toContain('Flores que não murcham nunca.')
+  })
+
+  it('mantém pixel art quando style é ausente ou explícito', async () => {
+    await renderBlock(container, makeBlock(), 'preview')
+    const svg = container.querySelector('svg[data-testid="bouquet-art"]')
+    expect(svg?.getAttribute('data-art-style')).toBe('pixel')
+    expect(svg?.getAttribute('shape-rendering')).toBe('crispEdges')
+    expect(svg?.querySelectorAll('rect').length).toBeGreaterThan(100)
+  })
+
+  it('o mesmo seed produz a mesma cena vetorial; seeds diferentes divergem', async () => {
+    const container2 = document.createElement('div')
+    const container3 = document.createElement('div')
+    document.body.appendChild(container2)
+    document.body.appendChild(container3)
+    try {
+      await renderBlock(container, makeBlock({ style: 'svg' }), 'preview')
+      await renderBlock(container2, makeBlock({ style: 'svg' }), 'preview')
+      expect(svgSignature(container)).toBe(svgSignature(container2))
+
+      await renderBlock(container3, makeBlock({ style: 'svg', seed: 43 }), 'preview')
+      expect(svgSignature(container)).not.toBe(svgSignature(container3))
+    } finally {
+      document.body.removeChild(container2)
+      document.body.removeChild(container3)
+    }
+  })
+
+  it('o select Estilo troca a variante via onUpdate', async () => {
+    let updatedBlock = makeBlock()
+    const onUpdate: NonNullable<BlockComponentProps['onUpdate']> = vi.fn(
+      (updater) => {
+        updatedBlock = updater(updatedBlock)
+      },
+    )
+    await renderBlock(container, updatedBlock, 'edit', onUpdate)
+
+    const select = container.querySelector(
+      'select[aria-label="Estilo da arte do buquê"]',
+    ) as HTMLSelectElement
+    expect(select).not.toBeNull()
+    expect(select.value).toBe('pixel')
+
+    await act(async () => {
+      select.value = 'svg'
+      select.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+
+    expect(onUpdate).toHaveBeenCalled()
+    expect((updatedBlock.props as BouquetBlockProps).style).toBe('svg')
+  })
+
+  it('a variante ilustrada também anima o crescimento fora do modo edição', async () => {
+    await renderBlock(container, makeBlock({ style: 'svg' }), 'preview')
+    // Em preview (sem reduced-motion no jsdom) os elementos nascem com
+    // animação — as cabeças carregam wrappers motion com escala inicial 0.
+    const head = container.querySelector('[data-flower-head] > g')
+    expect(head).not.toBeNull()
+
+    const container2 = document.createElement('div')
+    document.body.appendChild(container2)
+    try {
+      await renderBlock(container2, makeBlock({ style: 'svg' }), 'edit')
+      // Em edição a arte já nasce no estado final (sem bloom).
+      const editHead = container2.querySelector('[data-flower-head] > g')
+      expect(editHead).not.toBeNull()
+      expect(editHead?.getAttribute('style')).not.toContain('scale(0')
+    } finally {
+      document.body.removeChild(container2)
+    }
+  })
+})

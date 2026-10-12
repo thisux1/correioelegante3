@@ -304,6 +304,7 @@ export function createBlock(type: BlockType): Block {
           wrap: 'papel',
           ribbonColor: '#e11d48',
           message: 'Flores que não murcham nunca.',
+          style: 'svg',
         },
         meta: {
           createdAt: now,

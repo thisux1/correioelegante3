@@ -3,19 +3,27 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Flower2, Plus, RefreshCw, RotateCcw, Trash2 } from 'lucide-react'
 import type {
   BlockComponentProps,
+  BouquetArtStyle,
   BouquetBlockProps,
   BouquetFlower,
   BouquetSpecies,
   BouquetWrap,
 } from '@/editor/types'
-import { BOUQUET_SPECIES_VALUES } from '@/editor/types'
+import { BOUQUET_ART_STYLE_VALUES, BOUQUET_SPECIES_VALUES } from '@/editor/types'
 import { buildBouquetArt, MAX_FLOWERS } from './bouquet/layout'
+import { buildBouquetScene } from './bouquet/scene'
+import { SvgBouquet } from './bouquet/svg'
 import { SPECIES, SPECIES_LABELS, WRAP_LABELS } from './bouquet/sprites'
 import { normalizeHex } from './bouquet/color'
 import type { PixelRect } from './bouquet/pixels'
 
 const WRAP_VALUES: readonly BouquetWrap[] = ['papel', 'juta', 'celofane']
 const DEFAULT_RIBBON = '#e11d48'
+
+const ART_STYLE_LABELS: Record<BouquetArtStyle, string> = {
+  pixel: 'Pixel art',
+  svg: 'Ilustrado',
+}
 
 function Rects({ rects, prefix }: { rects: PixelRect[]; prefix: string }) {
   return (
@@ -34,9 +42,10 @@ function Rects({ rects, prefix }: { rects: PixelRect[]; prefix: string }) {
   )
 }
 
-function describeBouquet(flowers: BouquetFlower[]): string {
+function describeBouquet(flowers: BouquetFlower[], style: BouquetArtStyle): string {
+  const styleLabel = style === 'svg' ? 'ilustrado' : 'em pixel art'
   if (flowers.length === 0) {
-    return 'Embrulho de buquê em pixel art, ainda sem flores'
+    return `Embrulho de buquê ${styleLabel}, ainda sem flores`
   }
   const counts = new Map<BouquetSpecies, number>()
   for (const f of flowers) {
@@ -46,7 +55,7 @@ function describeBouquet(flowers: BouquetFlower[]): string {
     ([species, count]) =>
       `${count} ${SPECIES_LABELS[species]}${count > 1 ? 's' : ''}`,
   )
-  return `Buquê em pixel art com ${parts.join(', ')}`
+  return `Buquê ${styleLabel} com ${parts.join(', ')}`
 }
 
 function BouquetBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
@@ -57,21 +66,36 @@ function BouquetBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   const isEdit = mode === 'edit'
   const shouldReduceMotion = useReducedMotion()
+  const artStyle: BouquetArtStyle = props.style === 'svg' ? 'svg' : 'pixel'
 
   const art = useMemo(
     () =>
-      buildBouquetArt({
-        seed: props.seed,
-        flowers: props.flowers ?? [],
-        wrap: props.wrap,
-        ribbonColor: props.ribbonColor,
-      }),
-    [props.seed, props.flowers, props.wrap, props.ribbonColor],
+      artStyle === 'pixel'
+        ? buildBouquetArt({
+            seed: props.seed,
+            flowers: props.flowers ?? [],
+            wrap: props.wrap,
+            ribbonColor: props.ribbonColor,
+          })
+        : null,
+    [artStyle, props.seed, props.flowers, props.wrap, props.ribbonColor],
+  )
+  const scene = useMemo(
+    () =>
+      artStyle === 'svg'
+        ? buildBouquetScene({
+            seed: props.seed,
+            flowers: props.flowers ?? [],
+            wrap: props.wrap,
+            ribbonColor: props.ribbonColor,
+          })
+        : null,
+    [artStyle, props.seed, props.flowers, props.wrap, props.ribbonColor],
   )
   const flowers = props.flowers ?? []
   const wrap = props.wrap ?? 'papel'
   const ribbonColor = normalizeHex(props.ribbonColor ?? '') ?? DEFAULT_RIBBON
-  const ariaLabel = describeBouquet(flowers)
+  const ariaLabel = describeBouquet(flowers, artStyle)
   const bloom = !isEdit && !shouldReduceMotion
 
   const updateProp = useCallback(
@@ -155,50 +179,55 @@ function BouquetBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   return (
     <div className="mx-auto w-full max-w-lg px-2 py-3 text-center" data-mode={mode}>
       <figure className="m-0">
-        <motion.svg
-          viewBox={`0 0 ${art.width} ${art.height}`}
-          className="mx-auto h-auto w-full max-w-[300px] drop-shadow-sm"
-          role="img"
-          aria-label={ariaLabel}
-          shapeRendering="crispEdges"
-          style={{ imageRendering: 'pixelated' }}
-          animate={
-            bloom ? { scale: [1, 1.012, 1] } : undefined
-          }
-          transition={
-            bloom
-              ? { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
-              : undefined
-          }
-          data-testid="bouquet-art"
-        >
-          <Rects rects={art.backRects} prefix="b" />
-          <Rects rects={art.stemRects} prefix="s" />
-          {art.flowers.map((f, i) => (
-            <g key={`f${i}`} transform={f.transform} data-flower-head="">
-              {bloom ? (
-                <motion.g
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{
-                    delay: 0.15 + f.order * 0.09,
-                    type: 'spring',
-                    stiffness: 300,
-                    damping: 16,
-                  }}
-                  style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
-                >
-                  <Rects rects={f.rects} prefix={`f${i}`} />
-                </motion.g>
-              ) : (
-                <g>
-                  <Rects rects={f.rects} prefix={`f${i}`} />
-                </g>
-              )}
-            </g>
-          ))}
-          <Rects rects={art.frontRects} prefix="w" />
-        </motion.svg>
+        {scene ? (
+          <SvgBouquet scene={scene} bloom={bloom} ariaLabel={ariaLabel} />
+        ) : art ? (
+          <motion.svg
+            viewBox={`0 0 ${art.width} ${art.height}`}
+            className="mx-auto h-auto w-full max-w-[300px] drop-shadow-sm"
+            role="img"
+            aria-label={ariaLabel}
+            shapeRendering="crispEdges"
+            style={{ imageRendering: 'pixelated' }}
+            animate={
+              bloom ? { scale: [1, 1.012, 1] } : undefined
+            }
+            transition={
+              bloom
+                ? { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
+                : undefined
+            }
+            data-testid="bouquet-art"
+            data-art-style="pixel"
+          >
+            <Rects rects={art.backRects} prefix="b" />
+            <Rects rects={art.stemRects} prefix="s" />
+            {art.flowers.map((f, i) => (
+              <g key={`f${i}`} transform={f.transform} data-flower-head="">
+                {bloom ? (
+                  <motion.g
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                      delay: 0.15 + f.order * 0.09,
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 16,
+                    }}
+                    style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                  >
+                    <Rects rects={f.rects} prefix={`f${i}`} />
+                  </motion.g>
+                ) : (
+                  <g>
+                    <Rects rects={f.rects} prefix={`f${i}`} />
+                  </g>
+                )}
+              </g>
+            ))}
+            <Rects rects={art.frontRects} prefix="w" />
+          </motion.svg>
+        ) : null}
 
         {isEdit ? (
           <input
@@ -233,6 +262,22 @@ function BouquetBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             >
               <RefreshCw size={14} /> Gerar outro
             </button>
+
+            <label className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 font-medium text-text-light">
+              <span>Estilo</span>
+              <select
+                value={artStyle}
+                onChange={(e) => updateProp('style', e.target.value as BouquetArtStyle)}
+                aria-label="Estilo da arte do buquê"
+                className="min-h-11 cursor-pointer bg-transparent font-semibold text-text focus:outline-none"
+              >
+                {BOUQUET_ART_STYLE_VALUES.map((s) => (
+                  <option key={s} value={s}>
+                    {ART_STYLE_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <label className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 font-medium text-text-light">
               <span>Embrulho</span>

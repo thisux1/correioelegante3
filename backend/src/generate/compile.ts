@@ -113,6 +113,11 @@ const SPEC_PROPS_ADAPTER: Partial<
     startDate: asText(p.startDate) || asText(p.targetDate),
     label: asText(p.label) || undefined,
   }),
+  /**
+   * bouquet: páginas geradas saem na variante ilustrada (premium) — pixel art
+   * continua disponível no editor e quando a spec pede explicitamente.
+   */
+  bouquet: (p) => ({ ...p, style: asText(p.style) === 'pixel' ? 'pixel' : 'svg' }),
 };
 
 export interface CompileResult {

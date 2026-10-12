@@ -219,6 +219,7 @@ describe('S10 new block types', () => {
               'lixo',
             ],
             wrap: 'juta',
+            style: 'neon',
           },
           meta: { createdAt: 1, updatedAt: 1 },
         },
@@ -228,6 +229,7 @@ describe('S10 new block types', () => {
     expect(props.seed).toBe(42);
     expect(props.flowers).toEqual([{ species: 'rosa', color: '#e11d48' }]);
     expect(props.wrap).toBe('juta');
+    expect(props.style).toBe('pixel');
   });
 
   it('hints keeps only items with text and bounds the list', () => {
@@ -352,5 +354,30 @@ describe('sanitizePageContent — ticketRsvp', () => {
     expect(props.title).toBe('topa?');
     expect(props.evento).toBeUndefined();
     expect(props.allowText).toBe(true);
+  });
+
+  it('bouquet style: svg passa intacto e valores inválidos viram pixel', () => {
+    const saved = sanitizePageContent({
+      blocks: [
+        {
+          id: 'b1',
+          type: 'bouquet',
+          version: 1,
+          props: { seed: 5, flowers: [{ species: 'rosa' }], style: 'svg' },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+        {
+          id: 'b2',
+          type: 'bouquet',
+          version: 1,
+          props: { seed: 5, flowers: [{ species: 'rosa' }], style: 'neon' },
+          meta: { createdAt: 1, updatedAt: 1 },
+        },
+      ],
+      version: 1,
+    });
+
+    expect(saved.blocks[0].props.style).toBe('svg');
+    expect(saved.blocks[1].props.style).toBe('pixel');
   });
 });

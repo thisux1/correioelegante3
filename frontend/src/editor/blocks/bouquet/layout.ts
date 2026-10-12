@@ -1,15 +1,13 @@
 /**
- * Deterministic bouquet layout engine.
+ * Pixel-art painter for the bouquet.
  *
- * Pure function of `BouquetBlockProps`: same props → same art. The seed feeds
- * a mulberry32 stream that drives the fan arrangement, per-flower size/tilt
- * jitter, leaf placement, filler sprigs, wrap texture dithering and cellophane
- * sparkles. Nothing here reads Math.random().
+ * Pure function of `BouquetBlockProps`: same props → same art. All seeded
+ * placement lives in `scene.ts` (`buildBouquetScene`); this file only
+ * rasterizes the scene into pixel rects — fan arrangement, stems, leaves,
+ * filler sprigs, wrap texture dithering and cellophane sparkles.
  */
 
-import type { BouquetBlockProps, BouquetFlower, BouquetSpecies } from '@/editor/types'
-import { makeRng } from './rng'
-import { rampFromHex } from './color'
+import type { BouquetBlockProps } from '@/editor/types'
 import { PixelLayer, type PixelRect } from './pixels'
 import {
   SPECIES,
@@ -19,24 +17,15 @@ import {
   GREEN,
   WRAP_PALETTES,
 } from './sprites'
+import {
+  ART_W,
+  ART_H,
+  MAX_FLOWERS,
+  buildBouquetScene,
+  type BouquetScene,
+} from './scene'
 
-export const ART_W = 96
-export const ART_H = 124
-
-export const MAX_FLOWERS = 24
-
-/** Where the stems gather into the wrap. */
-const APEX = { x: 48, y: 86 }
-
-/** Visual weight per species — heavier blooms get central slots. */
-const SPECIES_RANK: Record<BouquetSpecies, number> = {
-  girassol: 3,
-  rosa: 2.4,
-  cravo: 2,
-  tulipa: 1.7,
-  margarida: 1.5,
-  lavanda: 1.2,
-}
+export { ART_W, ART_H, MAX_FLOWERS }
 
 export interface FlowerArt {
   /** <rect> run data in head-local coordinates (origin = sprite center). */
@@ -61,66 +50,15 @@ export interface BouquetArt {
   flowerCount: number
 }
 
-const r2 = (n: number) => Math.round(n * 100) / 100
-const r1 = (n: number) => Math.round(n * 10) / 10
-
-interface Slot {
-  t: number
-  tier: 0 | 1
-}
-
-/** Build fan slots: one arc for small bouquets, two tiers past 8 flowers. */
-function buildSlots(n: number): Slot[] {
-  if (n === 1) return [{ t: 0, tier: 1 }]
-  if (n <= 8) {
-    return Array.from({ length: n }, (_, i) => ({
-      t: (i / (n - 1)) * 2 - 1,
-      tier: 1 as const,
-    }))
-  }
-  // Two tiers: taller back arc (inner, narrower) + front arc (wider, lower).
-  const nBack = Math.ceil(n * 0.5)
-  const nFront = n - nBack
-  const slots: Slot[] = []
-  for (let i = 0; i < nBack; i++) {
-    slots.push({ t: nBack === 1 ? 0 : (i / (nBack - 1)) * 1.7 - 0.85, tier: 0 })
-  }
-  for (let i = 0; i < nFront; i++) {
-    slots.push({ t: nFront === 1 ? 0 : (i / (nFront - 1)) * 2 - 1, tier: 1 })
-  }
-  return slots
-}
-
 function spriteDims(sprite: readonly string[]) {
   const w = Math.max(...sprite.map((r) => r.length))
   return { w, h: sprite.length }
 }
 
-function bezierPoint(
-  p0: { x: number; y: number },
-  p1: { x: number; y: number },
-  p2: { x: number; y: number },
-  t: number,
-) {
-  const u = 1 - t
-  return {
-    x: u * u * p0.x + 2 * u * t * p1.x + t * t * p2.x,
-    y: u * u * p0.y + 2 * u * t * p1.y + t * t * p2.y,
-  }
-}
-
 export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
-  const seed = Number.isFinite(props.seed) ? Math.trunc(props.seed) : 1
-  const rng = makeRng(seed)
-
-  const flowers = (props.flowers ?? []).filter(
-    (f): f is BouquetFlower => !!f && typeof f === 'object' && f.species in SPECIES,
-  )
-  const n = Math.min(flowers.length, MAX_FLOWERS)
-  const wrap = props.wrap ?? 'papel'
-  const ribbon = rampFromHex(
-    props.ribbonColor && props.ribbonColor.trim() ? props.ribbonColor : '#e11d48',
-  )
+  const scene: BouquetScene = buildBouquetScene(props)
+  const wrap = scene.wrap
+  const ribbon = scene.ribbon
   const wrapPal = WRAP_PALETTES[wrap]
 
   const back = new PixelLayer()
@@ -128,121 +66,36 @@ export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
   const front = new PixelLayer()
 
   /* ---------------------------------------------------------------- *
-   * 1. Head slots — heaviest species claim the most central slots.    *
+   * 1. Stems + leaves (drawn before heads so heads sit on top).       *
    * ---------------------------------------------------------------- */
-  const slots = buildSlots(n || 1)
-  const orderByCenter = [...slots.keys()].sort(
-    (a, b) => Math.abs(slots[a].t) - Math.abs(slots[b].t),
-  )
-  const flowerOrder = flowers
-    .slice(0, n)
-    .map((f, i) => ({ f, i, rank: SPECIES_RANK[f.species] ?? 1 }))
-    .sort((a, b) => b.rank - a.rank || a.i - b.i)
-
-  interface Placed {
-    f: BouquetFlower
-    hx: number
-    hy: number
-    scale: number
-    tilt: number
-    flipX: boolean
-    slotIndex: number
-  }
-  const placed: Placed[] = []
-  for (let k = 0; k < n; k++) {
-    const { f } = flowerOrder[k]
-    const slotIndex = orderByCenter[k]
-    const slot = slots[slotIndex]
-    const { t, tier } = slot
-
-    const spread = tier === 0 ? 26 : 34
-    const topY = tier === 0 ? 13 : 21
-    const drop = tier === 0 ? 9 : 14
-
-    const hx = 48 + Math.sin((t * Math.PI) / 180 * 62) * spread + rng.range(-2.5, 2.5)
-    const hy = topY + Math.pow(Math.abs(t), 1.35) * drop + rng.range(-2, 2)
-
-    placed.push({
-      f,
-      hx: r2(hx),
-      hy: r2(hy),
-      scale: r2(rng.range(0.82, 1.14)),
-      tilt: r1(rng.range(-9, 9)),
-      flipX: rng.chance(0.5),
-      slotIndex,
-    })
-  }
-
-  /* ---------------------------------------------------------------- *
-   * 2. Stems + leaves (drawn before heads so heads sit on top).       *
-   * ---------------------------------------------------------------- */
-  for (const p of placed) {
-    const sprite = SPECIES[p.f.species].sprite
-    const { h } = spriteDims(sprite)
-    const start = {
-      x: p.hx,
-      y: p.hy + (h * p.scale) / 2 - 2,
-    }
-    const end = {
-      x: APEX.x + rng.range(-3, 3),
-      y: APEX.y + rng.range(-1, 2),
-    }
-    const outward = Math.sign(p.hx - 48) || (rng.chance(0.5) ? 1 : -1)
-    const ctrl = {
-      x: (start.x + end.x) / 2 + outward * rng.range(2, 8),
-      y: (start.y + end.y) / 2 + rng.range(-3, 3),
-    }
-    const thickness = p.f.species === 'lavanda' ? 1 : 2
-    const stemColor = rng.chance(0.25) ? GREEN.stemLight : GREEN.stem
-    stems.curve(start, ctrl, end, stemColor, thickness)
-
-    // Leaves along the stem — 0–2 per flower, alternating sides.
-    const leafCount = n > 14 ? rng.int(0, 1) : rng.int(0, 2)
-    for (let li = 0; li < leafCount; li++) {
-      const t = rng.range(0.35, 0.78)
-      const pt = bezierPoint(start, ctrl, end, t)
-      const sideRight = (li + p.slotIndex) % 2 === 0
-      const ox = Math.round(pt.x + (sideRight ? 0 : -LEAF_SPRITE[0].length))
-      const oy = Math.round(pt.y - 2)
-      stems.sprite(LEAF_SPRITE, ox, oy, LEAF_PALETTE, { flipX: sideRight })
+  for (const p of scene.flowers) {
+    stems.curve(p.stem.start, p.stem.ctrl, p.stem.end, p.stem.color, p.stem.thickness)
+    for (const leaf of p.leaves) {
+      const ox = Math.round(leaf.x + (leaf.right ? 0 : -LEAF_SPRITE[0].length))
+      const oy = Math.round(leaf.y - 2)
+      stems.sprite(LEAF_SPRITE, ox, oy, LEAF_PALETTE, { flipX: leaf.right })
     }
   }
 
   /* ---------------------------------------------------------------- *
-   * 3. Filler sprigs + baby's breath poking past the flower fan.      *
+   * 2. Filler sprigs + baby's breath poking past the flower fan.      *
    * ---------------------------------------------------------------- */
-  const sprigCount = Math.min(7, Math.max(3, Math.round(n * 0.45)))
-  for (let i = 0; i < sprigCount; i++) {
-    const dir = i % 2 === 0 ? -1 : 1
-    const tipX = 48 + dir * rng.range(27, 42)
-    const tipY = rng.range(9, 30)
-    const end = { x: APEX.x + rng.range(-4, 4), y: APEX.y }
-    const ctrl = {
-      x: (tipX + end.x) / 2 + dir * rng.range(3, 7),
-      y: (tipY + end.y) / 2,
+  for (const s of scene.sprigs) {
+    back.curve(s.tip, s.ctrl, s.end, GREEN.filler, 1)
+    for (const b of s.buds) {
+      back.set(b.x, b.y, b.color)
     }
-    back.curve({ x: tipX, y: tipY }, ctrl, end, GREEN.filler, 1)
-    // Bud cluster at the tip — tiny greens + baby's-breath white dots.
-    back.set(tipX, tipY, GREEN.filler)
-    back.set(tipX + dir, tipY - 1, GREEN.stemLight)
-    if (rng.chance(0.8)) back.set(tipX, tipY - 2, GREEN.breath)
-    if (rng.chance(0.6)) back.set(tipX + dir, tipY, GREEN.breath)
-    if (rng.chance(0.5)) back.set(tipX - dir, tipY + 1, GREEN.filler)
   }
   // Small green tuft peeking over the wrap opening.
-  for (let i = 0; i < 5; i++) {
-    const x = APEX.x + rng.range(-7, 7)
-    back.line(x, APEX.y - 1, x + rng.range(-3, 3), APEX.y - rng.range(4, 7), GREEN.filler, 1)
+  for (const t of scene.tuft) {
+    back.line(t.x1, t.y1, t.x2, t.y2, GREEN.filler, 1)
   }
 
   /* ---------------------------------------------------------------- *
-   * 4. Head sprites → per-flower rect groups (local coordinates).     *
+   * 3. Head sprites → per-flower rect groups (local coordinates).     *
    * ---------------------------------------------------------------- */
   const headArts: { art: FlowerArt; hy: number; seq: number }[] = []
-  const centerRank = new Map<number, number>() // slotIndex → stagger order
-  orderByCenter.forEach((slotIdx, rank) => centerRank.set(slotIdx, rank))
-
-  for (const p of placed) {
+  for (const p of scene.flowers) {
     const def = SPECIES[p.f.species]
     const { w, h } = spriteDims(def.sprite)
     const palette = flowerPalette(p.f.species, p.f.color)
@@ -254,7 +107,7 @@ export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
       art: {
         rects: layer.toRects(),
         transform: `translate(${p.hx} ${p.hy}) rotate(${p.tilt}) scale(${p.scale})`,
-        order: centerRank.get(p.slotIndex) ?? 0,
+        order: p.order,
       },
       hy: p.hy,
       seq: p.slotIndex,
@@ -263,7 +116,7 @@ export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
   headArts.sort((a, b) => a.hy - b.hy || a.seq - b.seq)
 
   /* ---------------------------------------------------------------- *
-   * 5. Wrap — paper cone with two folded flaps + texture.             *
+   * 4. Wrap — paper cone with two folded flaps + texture.             *
    * ---------------------------------------------------------------- */
   const sil = [
     { x: 27, y: 82 },
@@ -341,10 +194,8 @@ export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
     })
   } else {
     // Cellophane: scattered sparkle pixels + crinkle shine streaks.
-    for (let i = 0; i < 26; i++) {
-      const x = rng.int(28, 68)
-      const y = rng.int(84, 116)
-      if (front.has(x, y)) front.set(x, y, '#ffffff')
+    for (const sp of scene.sparkles) {
+      if (front.has(sp.x, sp.y)) front.set(sp.x, sp.y, '#ffffff')
     }
     front.line(33, 88, 38, 99, wrapPal.light)
     front.line(60, 90, 55, 102, wrapPal.light)
@@ -352,7 +203,7 @@ export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
   }
 
   /* ---------------------------------------------------------------- *
-   * 6. Ribbon — band, bow loops, knot and tails at the gather point.  *
+   * 5. Ribbon — band, bow loops, knot and tails at the gather point.  *
    * ---------------------------------------------------------------- */
   // Tails first (behind band + bow).
   front.line(46, 87, 42, 97, ribbon.d, 2)
@@ -395,6 +246,6 @@ export function buildBouquetArt(props: BouquetBlockProps): BouquetArt {
     stemRects: stems.toRects(),
     flowers: headArts.map((h) => h.art),
     frontRects: front.toRects(),
-    flowerCount: n,
+    flowerCount: scene.flowerCount,
   }
 }

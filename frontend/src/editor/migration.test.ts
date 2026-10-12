@@ -435,6 +435,7 @@ describe('migratePage — S10 new block types', () => {
             seed: 7.9,
             flowers: [{ species: 'rosa' }, { species: 'fake' }],
             wrap: 'celofane',
+            style: 'svg',
           },
           meta: {},
         },
@@ -461,6 +462,7 @@ describe('migratePage — S10 new block types', () => {
       expect(bq.props.seed).toBe(7)
       expect(bq.props.flowers).toEqual([{ species: 'rosa' }])
       expect(bq.props.wrap).toBe('celofane')
+      expect(bq.props.style).toBe('svg')
     }
   })
 

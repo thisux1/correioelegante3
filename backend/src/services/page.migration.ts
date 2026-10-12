@@ -374,6 +374,7 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         wrap: props.wrap === 'juta' || props.wrap === 'celofane' ? props.wrap : 'papel',
         ribbonColor: asOptionalText(props.ribbonColor),
         message: asOptionalText(props.message),
+        style: props.style === 'svg' ? 'svg' : 'pixel',
       };
     }
     case 'hints': {
