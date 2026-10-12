@@ -798,7 +798,7 @@ export function EditorCanvas() {
       <Modal isOpen={Boolean(pendingDeletionId)} onClose={cancelDelete} title="Remover bloco?">
         <div className="space-y-4">
           <p className="text-sm text-text-light">
-            Esta ação não pode ser desfeita.
+            O bloco sai da página, mas dá pra desfazer depois (Ctrl+Z).
           </p>
           <div className="flex justify-end gap-2">
             <button

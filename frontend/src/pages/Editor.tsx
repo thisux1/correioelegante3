@@ -461,6 +461,9 @@ export function Editor() {
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop')
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isReviewOpen, setIsReviewOpen] = useState(false)
+  const [handoffDismissed, setHandoffDismissed] = useState(
+    () => Boolean(window.localStorage.getItem('ce:editor:handoff-seen')),
+  )
   const handledTemplateKeyRef = useRef<string>('')
 
   useEffect(() => {
@@ -494,6 +497,9 @@ export function Editor() {
     window.addEventListener('keydown', handleHistoryKeys)
     return () => window.removeEventListener('keydown', handleHistoryKeys)
   }, [mode, undo, redo])
+
+  const showHandoffHint =
+    !handoffDismissed && mode === 'edit' && !isLoadingPage && blocks.length > 0
 
   const { recipientName, letterTitle } = useMemo(() => {
     let recName: string | undefined = undefined
@@ -947,6 +953,35 @@ export function Editor() {
             {saveState === 'saving' ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : saveState === 'saved' ? <CheckCircle2 size={14} aria-hidden="true" /> : saveState === 'error' ? <AlertTriangle size={14} aria-hidden="true" /> : <CheckCircle2 size={14} aria-hidden="true" className="text-text-muted" />}
             {saveState === 'saving' ? 'Salvando alterações...' : saveState === 'saved' ? 'Tudo salvo' : saveState === 'error' ? 'Erro ao salvar' : hasPageId ? 'Salvamento automático ativo' : 'Novo rascunho ainda não salvo'}
           </div>
+
+          <AnimatePresence initial={false}>
+            {showHandoffHint ? (
+              <motion.div
+                key="handoff-hint"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-text"
+                role="note"
+              >
+                <p className="leading-relaxed">
+                  Sua página já veio pronta. Toque num bloco para editar só ele — ou publique do jeito que está.
+                  Qualquer mudança dá pra desfazer (Ctrl+Z).
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.localStorage.setItem('ce:editor:handoff-seen', '1')
+                    setHandoffDismissed(true)
+                  }}
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                >
+                  Entendi
+                </button>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           <AnimatePresence initial={false}>
             {feedback ? (
