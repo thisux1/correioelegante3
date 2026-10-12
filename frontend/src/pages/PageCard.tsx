@@ -213,17 +213,34 @@ export function PageCard() {
         />
       )}
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 12, filter: 'blur(4px)' }}
-        animate={{
-          opacity: isEnvelopeOpened ? 1 : 0,
-          scale: isEnvelopeOpened ? 1 : 0.96,
-          y: isEnvelopeOpened ? 0 : 12,
-          filter: isEnvelopeOpened ? 'blur(0px)' : 'blur(4px)',
-        }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      {/* Anúncio da abertura para leitores de tela */}
+      <div aria-live="polite" role="status" className="sr-only">
+        {isEnvelopeOpened &&
+          (recipientName
+            ? `A carta para ${recipientName} abriu — a página interativa está pronta.`
+            : 'Sua página interativa abriu.')}
+      </div>
+
+      {/* Durante o ritual o conteúdo fica inerte: links invisíveis não
+          entram na ordem de tabulação nem na árvore de acessibilidade. */}
+      <div
         className="w-full max-w-3xl relative z-10"
+        inert={!isEnvelopeOpened}
+        aria-hidden={!isEnvelopeOpened}
       >
+        <h1 className="sr-only">
+          {recipientName ? `Uma página para ${recipientName}` : 'Sua página do Correio Elegante'}
+        </h1>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 12, filter: 'blur(4px)' }}
+          animate={{
+            opacity: isEnvelopeOpened ? 1 : 0,
+            scale: isEnvelopeOpened ? 1 : 0.96,
+            y: isEnvelopeOpened ? 0 : 12,
+            filter: isEnvelopeOpened ? 'blur(0px)' : 'blur(4px)',
+          }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
         {isGenerated ? (
           <div className="os-window">
             <div className="os-titlebar">
@@ -260,12 +277,13 @@ export function PageCard() {
           </CardTilt3D>
         )}
 
-        <ReportPageModal
-          isOpen={isReportOpen}
-          onClose={() => setIsReportOpen(false)}
-          pageId={page.id}
-        />
-      </motion.div>
+          <ReportPageModal
+            isOpen={isReportOpen}
+            onClose={() => setIsReportOpen(false)}
+            pageId={page.id}
+          />
+        </motion.div>
+      </div>
     </div>
   )
 }

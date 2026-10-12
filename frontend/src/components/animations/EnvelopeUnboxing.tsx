@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useReducedMotion } from 'framer-motion'
 import { Heart, Sparkles, ArrowRight, ArrowUp } from 'lucide-react'
 import { getThemeById } from '@/editor/themes'
 
@@ -107,7 +107,10 @@ function EnvelopeUnboxingComponent({
   theme,
   onOpenComplete,
 }: EnvelopeUnboxingProps) {
-  const [stage, setStage] = useState<InteractiveStage>('airplane-flight')
+  const reducedMotion = useReducedMotion() ?? false
+  const [stage, setStage] = useState<InteractiveStage>(
+    reducedMotion ? 'unfolded' : 'airplane-flight',
+  )
   const themeObj = getThemeById(theme)
   const vars = themeObj.variables
 
@@ -118,8 +121,11 @@ function EnvelopeUnboxingComponent({
   // Valor dinâmico do arrasto da carta
   const dragY = useMotionValue(0)
 
-  // 1. Avião voa em zigue-zague orgânico e pousa no envelope
+  // 1. Avião voa em zigue-zague orgânico e pousa no envelope —
+  // com prefers-reduced-motion o envelope já nasce pronto (mesmos gestos).
   useEffect(() => {
+    if (reducedMotion) return
+
     const tFlight = setTimeout(() => {
       setStage('impact')
       playChime(440)
@@ -133,7 +139,7 @@ function EnvelopeUnboxingComponent({
       clearTimeout(tFlight)
       clearTimeout(tUnfold)
     }
-  }, [])
+  }, [reducedMotion])
 
   // Gesto 1: Tocar no lacre para abrir
   const handleOpenSeal = useCallback(() => {
@@ -210,6 +216,18 @@ function EnvelopeUnboxingComponent({
           background: `radial-gradient(circle at center, ${primaryColor}22 0%, rgba(12, 8, 14, 0.96) 100%)`,
         }}
       >
+        {/* Narração do ritual para leitores de tela — os gestos visuais
+            (avião, lacre, puxar) viram texto anunciado por estágio. */}
+        <div aria-live="polite" role="status" className="sr-only">
+          {stage === 'airplane-flight' && 'Sua carta está chegando.'}
+          {(stage === 'impact' || stage === 'unfolded') &&
+            'O envelope chegou. Toque no lacre para abrir.'}
+          {(stage === 'opening-seal' || stage === 'ready-to-pull') &&
+            'Lacre aberto. Puxe a carta para cima para ler.'}
+          {(stage === 'paper-unfold' || stage === 'ink-reveal') &&
+            'Abrindo sua página.'}
+        </div>
+
         {/* Botão de Pular */}
         <div className="absolute top-6 right-6 z-50">
           <button
