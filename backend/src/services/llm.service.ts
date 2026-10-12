@@ -18,6 +18,8 @@ interface GenerateJsonOptions {
   prompt: string;
   /** JSON Schema (subset aceito pela API) do objeto esperado. */
   responseSchema: Record<string, unknown>;
+  /** Rótulo do endpoint para telemetria de custo (ex.: 'interpret', 'rewrite'). */
+  label?: string;
   temperature?: number;
   timeoutMs?: number;
 }
@@ -26,6 +28,11 @@ interface GeminiGenerateResponse {
   candidates?: Array<{
     content?: { parts?: Array<{ text?: string }> };
   }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
 }
 
 export async function generateJson<T>(options: GenerateJsonOptions): Promise<T> {
@@ -37,6 +44,7 @@ export async function generateJson<T>(options: GenerateJsonOptions): Promise<T> 
   const model = process.env.GEMINI_MODEL ?? DEFAULT_MODEL;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+  const startedAt = Date.now();
 
   try {
     const res = await fetch(`${GEMINI_BASE_URL}/${model}:generateContent`, {
@@ -62,6 +70,16 @@ export async function generateJson<T>(options: GenerateJsonOptions): Promise<T> 
     }
 
     const data = (await res.json()) as GeminiGenerateResponse;
+    const usage = data.usageMetadata;
+    console.info('[LLM] chamada concluída', {
+      label: options.label ?? 'unknown',
+      model,
+      promptTokens: usage?.promptTokenCount ?? null,
+      outputTokens: usage?.candidatesTokenCount ?? null,
+      totalTokens: usage?.totalTokenCount ?? null,
+      latencyMs: Date.now() - startedAt,
+    });
+
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (typeof text !== 'string' || text.length === 0) {
       throw new AppError('A interpretação por IA veio vazia. Tenta de novo.', 502, 'LLM_UNAVAILABLE');

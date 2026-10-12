@@ -197,6 +197,7 @@ export async function interpretFreeText(rawText: string): Promise<InterpretResul
       system: SYSTEM_PROMPT,
       prompt: `Texto da pessoa que quer criar a homenagem:\n\n"""${text}"""`,
       responseSchema: INTERPRET_SCHEMA,
+      label: 'interpret',
     });
     return {
       source: 'llm',

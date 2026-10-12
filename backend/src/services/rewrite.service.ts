@@ -29,6 +29,7 @@ Regras:
 - Mantenha a ideia central e a pessoa a quem se dirige.
 - Responda SOMENTE com JSON no formato {"text": "..."}.`,
     prompt: `Texto original:\n\n"""${text.slice(0, TEXT_MAX_IN)}"""`,
+    label: 'rewrite',
     responseSchema: {
       type: 'object',
       properties: { text: { type: 'string' } },
