@@ -548,7 +548,13 @@ O link chega por DM/WhatsApp → abre em **in-app browser** num Android médio:
 - Autoplay de áudio bloqueado → música precisa de gesto do usuário (design).
 - WebGL instável em devices fracos → fallbacks: 3D→canvas 2D→imagem estática;
   bouquet SVG é leve; motionIntensity adaptativo por device.
-- **Perf budget**: LCP alvo a definir; orçamento de JS por página gerada.
+- **Perf budget** (definido 2026-10-11): LCP < 2.5s em 4G mid-tier;
+  JS inicial da página pública ≤ 250 kB gzip. Baseline medido do build
+  atual: `/p/:id` carrega ~255 kB gz de JS (index 86.6 + vendor-animation
+  50.6 + vendor-ui 32 + schemas 36 + vendor-react 15.4 + PageRenderer 15 +
+  PageCard 4 + EnvelopeUnboxing 4.1 + chunks de blocos ~3–7 kB cada) +
+  CSS 26.8 kB gz. Estamos no teto — novas deps pesadas no bundle da página
+  pública exigem lazy-chunk ou compensação.
 - RSVP/scratch/quiz funcionam por toque sem teclado.
 - **Progresso resumável** (padrão deles): quem recebe pode parar e continuar
   depois — estado em storage local + "dá para parar e continuar depois" no

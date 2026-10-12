@@ -210,6 +210,7 @@ export function PageCard() {
           senderName={senderName}
           theme={page.theme}
           onOpenComplete={() => setIsEnvelopeOpened(true)}
+          resumable
         />
       )}
 

@@ -9,6 +9,8 @@ export interface EnvelopeUnboxingProps {
   title?: string
   theme?: string
   onOpenComplete?: () => void
+  /** Mostra o aviso de progresso resumável (só verdadeiro quando a página persiste estado por destinatário). */
+  resumable?: boolean
 }
 
 type InteractiveStage =
@@ -106,6 +108,7 @@ function EnvelopeUnboxingComponent({
   title,
   theme,
   onOpenComplete,
+  resumable = false,
 }: EnvelopeUnboxingProps) {
   const reducedMotion = useReducedMotion() ?? false
   const [stage, setStage] = useState<InteractiveStage>(
@@ -269,6 +272,11 @@ function EnvelopeUnboxingComponent({
           </h2>
           {title ? (
             <p className="text-xs text-white/80 font-serif italic">{title}</p>
+          ) : null}
+          {resumable ? (
+            <p className="text-[11px] text-white/60">
+              Dá pra parar e continuar depois — seu lugar fica guardado aqui.
+            </p>
           ) : null}
         </motion.div>
 
