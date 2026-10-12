@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reviewBlocks } from './reviewBlocks'
+import { reviewBlocks, reviewPage } from './reviewBlocks'
 import type { Block } from '@/editor/types'
 
 let seq = 0
@@ -81,5 +81,47 @@ describe('reviewBlocks', () => {
     const issues = reviewBlocks([b])
     expect(issues[0].blockId).toBe(b.id)
     expect(issues[0].blockLabel).toBe('Contagem regressiva')
+  })
+})
+
+describe('reviewPage — matriz de completude', () => {
+  it('returns one row per block, in page order', () => {
+    const blocks = [
+      block('envelope', {}),
+      block('text', { text: 'oi' }),
+      block('quiz', { question: 'topa?' }),
+    ]
+    const reviews = reviewPage(blocks)
+    expect(reviews).toHaveLength(3)
+    expect(reviews.map((r) => r.blockLabel)).toEqual([
+      'Envelope',
+      'Texto',
+      'Pergunta',
+    ])
+    expect(reviews.every((r) => r.problem === undefined)).toBe(true)
+  })
+
+  it('describes what the recipient does in each part', () => {
+    const reviews = reviewPage([
+      block('scratch', { secretText: 'segredo' }),
+      block('ticketRsvp', { evento: { data: 'sábado' } }),
+    ])
+    expect(reviews[0].experience).toBe('raspa pra revelar o segredo')
+    expect(reviews[1].experience).toBe('responde ao convite')
+  })
+
+  it('marks incomplete parts with their problem', () => {
+    const reviews = reviewPage([
+      block('text', { text: '' }),
+      block('bouquet', { flowers: [] }),
+    ])
+    expect(reviews[0].problem).toContain('vazio')
+    expect(reviews[1].problem).toBeUndefined()
+  })
+
+  it('falls back to generic label/experience for unknown blocks', () => {
+    const reviews = reviewPage([block('video' as Block['type'], { src: 'x.mp4' })])
+    expect(reviews[0].blockLabel).toBe('Vídeo')
+    expect(reviews[0].experience).toBe('assiste o vídeo')
   })
 })

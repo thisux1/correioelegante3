@@ -154,6 +154,15 @@ function FieldHint({ children }: { children: React.ReactNode }) {
   return <p className="font-pixel-body mt-1 text-[20px] leading-tight text-[#9f3a58]">{children}</p>
 }
 
+/** O que a página faz quando o campo fica vazio — transparência total sobre fallback. */
+function FieldFallback({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="font-pixel-body mt-1 text-[18px] leading-tight text-[#9f3a58]">
+      <span className="font-semibold">em branco:</span> {children}
+    </p>
+  )
+}
+
 export function Generate() {
   const navigate = useNavigate()
   const setPage = useEditorStore((s) => s.setPage)
@@ -442,7 +451,8 @@ export function Generate() {
                       autoCapitalize="words"
                       className="os-input mt-2 min-h-[44px]"
                     />
-                    <FieldHint>se ficar em branco, a página usa um texto neutro.</FieldHint>
+                    <FieldHint>aparece na assinatura da página.</FieldHint>
+                    <FieldFallback>a assinatura sai neutra, sem nome inventado.</FieldFallback>
                   </div>
                 )}
 
@@ -457,7 +467,8 @@ export function Generate() {
                       className="os-input mt-2 min-h-[44px]"
                       autoComplete="off"
                     />
-                    <FieldHint>separe por vírgula. vira pista no jogo de descoberta.</FieldHint>
+                    <FieldHint>separe por vírgula. viram pistas e detalhes na copy.</FieldHint>
+                    <FieldFallback>a página usa só o nome.</FieldFallback>
                   </div>
                 )}
 
@@ -469,6 +480,7 @@ export function Generate() {
                     <p className="font-pixel-body mt-1 text-[20px] leading-tight text-[#9f3a58]">
                       vira contagem regressiva e convite com lugar marcado.
                     </p>
+                    <FieldFallback>o convite sai sem data nem lugar — dá pra completar no editor depois.</FieldFallback>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div>
                         <label htmlFor="evt-data" className="sr-only">data do evento</label>
@@ -530,6 +542,7 @@ export function Generate() {
                       className="os-input mt-2"
                     />
                     <FieldHint>aparece na parte de lembranças da página.</FieldHint>
+                    <FieldFallback>a página sai sem a seção de lembranças.</FieldFallback>
                   </div>
                 )}
 
@@ -541,6 +554,7 @@ export function Generate() {
                   <p className="font-pixel-body mt-1 text-[20px] leading-tight text-[#9f3a58]">
                     trava a revelação atrás de uma resposta que só a pessoa certa tem.
                   </p>
+                  <FieldFallback>a revelação abre direto, sem trava secreta.</FieldFallback>
                   <label htmlFor="intim-pergunta" className="sr-only">pergunta de intimidade</label>
                   <input
                     id="intim-pergunta"
@@ -577,6 +591,8 @@ export function Generate() {
                       spellCheck={false}
                       className="os-input mt-2 min-h-[44px]"
                     />
+                    <FieldHint>vira a trilha da página.</FieldHint>
+                    <FieldFallback>sai sem música — dá pra adicionar depois no editor.</FieldFallback>
                   </div>
                 )}
 
@@ -590,6 +606,8 @@ export function Generate() {
                     rows={4}
                     className="os-input mt-2"
                   />
+                  <FieldHint>tudo que você contar vira tom e detalhe na página.</FieldHint>
+                  <FieldFallback>a gente monta só com o essencial mesmo.</FieldFallback>
                 </div>
               </div>
             </fieldset>

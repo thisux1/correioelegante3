@@ -32,110 +32,158 @@ const BLOCK_LABELS: Partial<Record<BlockType, string>> = {
   ticketRsvp: 'Convite RSVP',
 }
 
+/**
+ * O que quem recebe faz em cada parte — usado na matriz de completude da
+ * etapa "Testar" (mesmo modelo mental do meupresente.app).
+ */
+const BLOCK_EXPERIENCE: Partial<Record<BlockType, string>> = {
+  text: 'lê a mensagem',
+  image: 'vê a imagem',
+  polaroid: 'folheia as polaroids',
+  envelope: 'abre o envelope',
+  scratch: 'raspa pra revelar o segredo',
+  timeline: 'percorre a linha do tempo',
+  quiz: 'responde a pergunta',
+  timer: 'vê a contagem regressiva',
+  gallery: 'vê a galeria de fotos',
+  music: 'ouve a música',
+  video: 'assiste o vídeo',
+  youtube: 'assiste o vídeo do YouTube',
+  photoBook: 'abre o livro de fotos',
+  bouquet: 'vê o buquê',
+  hints: 'descobre as pistas',
+  intimacyGate: 'responde pra destravar',
+  ticketRsvp: 'responde ao convite',
+}
+
+/** Uma parte da página na matriz de completude. */
+export interface BlockReview {
+  blockId: string
+  blockLabel: string
+  /** O que quem recebe faz nesta parte. */
+  experience: string
+  /** Presente quando a parte está incompleta. */
+  problem?: string
+}
+
 function hasText(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
 }
 
+function blockProblems(block: Block): string[] {
+  const problems: string[] = []
+  const props = block.props as Record<string, unknown>
+  const push = (problem: string) => problems.push(problem)
+
+  switch (block.type) {
+    case 'text':
+      if (!hasText(props.text) && !hasText(props.html)) {
+        push('texto vazio — não aparece nada para quem recebe')
+      }
+      break
+    case 'image':
+      if (!hasText(props.src)) push('imagem sem arquivo nem link')
+      break
+    case 'polaroid': {
+      const photos = Array.isArray(props.photos) ? props.photos : []
+      if (photos.length === 0) push('polaroid sem fotos')
+      break
+    }
+    case 'scratch':
+      if (!hasText(props.secretText) && !hasText(props.secretImage)) {
+        push('raspadinha sem segredo embaixo')
+      }
+      break
+    case 'timeline': {
+      const items = Array.isArray(props.items) ? props.items : []
+      if (items.length === 0) push('linha do tempo sem marcos')
+      break
+    }
+    case 'quiz':
+      if (!hasText(props.question)) push('pergunta vazia')
+      break
+    case 'timer':
+      if (!hasText(props.targetDate)) {
+        push('contagem regressiva sem data marcada')
+      }
+      break
+    case 'gallery': {
+      const images = Array.isArray(props.images) ? props.images : []
+      const items = Array.isArray(props.items) ? props.items : []
+      if (images.length === 0 && items.length === 0) {
+        push('galeria sem fotos')
+      }
+      break
+    }
+    case 'music': {
+      const tracks = Array.isArray(props.tracks) ? props.tracks : []
+      if (!hasText(props.src) && tracks.length === 0) {
+        push('música sem arquivo nem faixa')
+      }
+      break
+    }
+    case 'video':
+      if (!hasText(props.src)) push('vídeo sem arquivo nem link')
+      break
+    case 'youtube':
+      if (!hasText(props.url)) push('vídeo do YouTube sem link')
+      break
+    case 'photoBook': {
+      const pages = Array.isArray(props.pages) ? props.pages : []
+      if (pages.length === 0) {
+        push('livro de fotos sem páginas')
+      } else if (pages.every((p) => !hasText((p as { src?: string }).src))) {
+        push('livro de fotos sem nenhuma foto')
+      }
+      break
+    }
+    case 'hints': {
+      const hints = Array.isArray(props.hints) ? props.hints : []
+      const filled = hints.filter((h) => hasText((h as { text?: string }).text))
+      if (filled.length === 0) push('jogo de pistas sem nenhuma dica')
+      break
+    }
+    case 'intimacyGate': {
+      const answers = Array.isArray(props.answers) ? props.answers : []
+      const filled = answers.filter((a) => hasText(a))
+      if (filled.length === 0) {
+        push('pergunta secreta sem resposta aceita — ninguém consegue abrir')
+      }
+      break
+    }
+    case 'ticketRsvp': {
+      const evento = props.evento as { data?: string; lugar?: string; descricao?: string } | undefined
+      if (!evento || (!hasText(evento.data) && !hasText(evento.lugar) && !hasText(evento.descricao))) {
+        push('convite sem data nem lugar — quem recebe não sabe quando e onde')
+      }
+      break
+    }
+    default:
+      break
+  }
+
+  return problems
+}
+
 export function reviewBlocks(blocks: Block[]): ReviewIssue[] {
-  const issues: ReviewIssue[] = []
-  const push = (block: Block, problem: string) => {
-    issues.push({
+  return blocks.flatMap((block) =>
+    blockProblems(block).map((problem) => ({
       blockId: block.id,
       blockLabel: BLOCK_LABELS[block.type] ?? 'Bloco',
       problem,
-    })
-  }
+    })),
+  )
+}
 
-  for (const block of blocks) {
-    const props = block.props as Record<string, unknown>
-
-    switch (block.type) {
-      case 'text':
-        if (!hasText(props.text) && !hasText(props.html)) {
-          push(block, 'texto vazio — não aparece nada para quem recebe')
-        }
-        break
-      case 'image':
-        if (!hasText(props.src)) push(block, 'imagem sem arquivo nem link')
-        break
-      case 'polaroid': {
-        const photos = Array.isArray(props.photos) ? props.photos : []
-        if (photos.length === 0) push(block, 'polaroid sem fotos')
-        break
-      }
-      case 'scratch':
-        if (!hasText(props.secretText) && !hasText(props.secretImage)) {
-          push(block, 'raspadinha sem segredo embaixo')
-        }
-        break
-      case 'timeline': {
-        const items = Array.isArray(props.items) ? props.items : []
-        if (items.length === 0) push(block, 'linha do tempo sem marcos')
-        break
-      }
-      case 'quiz':
-        if (!hasText(props.question)) push(block, 'pergunta vazia')
-        break
-      case 'timer':
-        if (!hasText(props.targetDate)) {
-          push(block, 'contagem regressiva sem data marcada')
-        }
-        break
-      case 'gallery': {
-        const images = Array.isArray(props.images) ? props.images : []
-        const items = Array.isArray(props.items) ? props.items : []
-        if (images.length === 0 && items.length === 0) {
-          push(block, 'galeria sem fotos')
-        }
-        break
-      }
-      case 'music': {
-        const tracks = Array.isArray(props.tracks) ? props.tracks : []
-        if (!hasText(props.src) && tracks.length === 0) {
-          push(block, 'música sem arquivo nem faixa')
-        }
-        break
-      }
-      case 'video':
-        if (!hasText(props.src)) push(block, 'vídeo sem arquivo nem link')
-        break
-      case 'youtube':
-        if (!hasText(props.url)) push(block, 'vídeo do YouTube sem link')
-        break
-      case 'photoBook': {
-        const pages = Array.isArray(props.pages) ? props.pages : []
-        if (pages.length === 0) {
-          push(block, 'livro de fotos sem páginas')
-        } else if (pages.every((p) => !hasText((p as { src?: string }).src))) {
-          push(block, 'livro de fotos sem nenhuma foto')
-        }
-        break
-      }
-      case 'hints': {
-        const hints = Array.isArray(props.hints) ? props.hints : []
-        const filled = hints.filter((h) => hasText((h as { text?: string }).text))
-        if (filled.length === 0) push(block, 'jogo de pistas sem nenhuma dica')
-        break
-      }
-      case 'intimacyGate': {
-        const answers = Array.isArray(props.answers) ? props.answers : []
-        const filled = answers.filter((a) => hasText(a))
-        if (filled.length === 0) {
-          push(block, 'pergunta secreta sem resposta aceita — ninguém consegue abrir')
-        }
-        break
-      }
-      case 'ticketRsvp': {
-        const evento = props.evento as { data?: string; lugar?: string; descricao?: string } | undefined
-        if (!evento || (!hasText(evento.data) && !hasText(evento.lugar) && !hasText(evento.descricao))) {
-          push(block, 'convite sem data nem lugar — quem recebe não sabe quando e onde')
-        }
-        break
-      }
-      default:
-        break
-    }
-  }
-
-  return issues
+/**
+ * Matriz de completude da etapa "Testar": uma linha por parte da página,
+ * na ordem em que quem recebe vai viver. `problem` ausente = parte pronta.
+ */
+export function reviewPage(blocks: Block[]): BlockReview[] {
+  return blocks.map((block) => ({
+    blockId: block.id,
+    blockLabel: BLOCK_LABELS[block.type] ?? 'Bloco',
+    experience: BLOCK_EXPERIENCE[block.type] ?? 'aparece na página',
+    problem: blockProblems(block)[0],
+  }))
 }

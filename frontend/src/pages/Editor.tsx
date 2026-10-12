@@ -19,7 +19,7 @@ import {
 import { Modal } from '@/components/ui/Modal'
 import { ShareLetterModal } from '@/components/modals/ShareLetterModal'
 import { PublishReviewModal } from '@/components/modals/PublishReviewModal'
-import { reviewBlocks } from '@/editor/utils/reviewBlocks'
+import { reviewPage } from '@/editor/utils/reviewBlocks'
 import { EditorSkeleton } from '@/components/ui/EditorSkeleton'
 import { EditorToolbar } from '@/editor/components/EditorToolbar'
 import { AtmosphereCanvas } from '@/components/animations/AtmosphereCanvas'
@@ -726,7 +726,7 @@ export function Editor() {
   })
 
   const userSubscribed = user?.isSubscribed || user?.subscriptionStatus === 'active'
-  const reviewIssues = useMemo(() => reviewBlocks(blocks), [blocks])
+  const pageReviews = useMemo(() => reviewPage(blocks), [blocks])
 
   const handlePublish = useCallback(async () => {
     if (isPublishingRef.current) return
@@ -1149,7 +1149,7 @@ export function Editor() {
 
       <PublishReviewModal
         isOpen={isReviewOpen}
-        issues={reviewIssues}
+        reviews={pageReviews}
         publishing={saveState === 'saving'}
         onClose={() => setIsReviewOpen(false)}
         onGoToBlock={(blockId) => {
@@ -1161,6 +1161,10 @@ export function Editor() {
               .querySelector(`[data-block-id="${blockId}"]`)
               ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }, 80)
+        }}
+        onPreview={() => {
+          setIsReviewOpen(false)
+          setMode('preview')
         }}
         onPublishAnyway={() => {
           setIsReviewOpen(false)
