@@ -14,6 +14,12 @@ import {
 } from '@/editor/types'
 import { DEFAULT_THEME_ID, resolveThemeId } from '@/editor/themes'
 
+interface PageSnapshot {
+  blocks: Block[]
+  sections: PageSection[]
+  theme: string
+}
+
 interface EditorStoreState {
   blocks: Block[]
   sections: PageSection[]
@@ -24,6 +30,9 @@ interface EditorStoreState {
   mode: EditorMode
   draftPageId: string | null
   draftUpdatedAt: string | null
+  /** Histórico em memória (não persistido) — undo/redo de conteúdo. */
+  past: PageSnapshot[]
+  future: PageSnapshot[]
 }
 
 interface EditorStoreActions {
@@ -47,6 +56,8 @@ interface EditorStoreActions {
   setMode: (mode: EditorMode) => void
   setDraftContext: (pageId: string | null, updatedAt?: string | null) => void
   resetEditor: () => void
+  undo: () => void
+  redo: () => void
 }
 
 export type EditorStore = EditorStoreState & EditorStoreActions
@@ -84,6 +95,8 @@ const initialEditorState: EditorStoreState = {
   mode: 'edit',
   draftPageId: null,
   draftUpdatedAt: null,
+  past: [],
+  future: [],
 }
 
 function pruneCollapsedById(collapsedById: Record<string, boolean>, blocks: Block[]) {
@@ -184,15 +197,64 @@ const persistStorage = createJSONStorage(() => {
   return createDebouncedStateStorage(PERSIST_DEBOUNCE_MS)
 })
 
+const HISTORY_LIMIT = 50
+const HISTORY_COALESCE_MS = 1200
+
+// Controle de coalescência: bursts da mesma ação no mesmo alvo (digitação,
+// drag) viram um único passo de undo — a janela se renova a cada mutação.
+let lastHistoryKey = ''
+let lastHistoryAt = 0
+
 export const useEditorStore = create<EditorStore>()(
   persist(
-    (set) => ({
-      ...initialEditorState,
-      addBlock: (block) =>
+    (set) => {
+      /**
+       * Aplica uma mutação de conteúdo com histórico: empilha o snapshot
+       * pré-mutação em `past` e limpa `future`. No-ops (mutação retorna o
+       * mesmo blocks/sections/theme) não geram entrada.
+       */
+      const commit = (
+        historyKey: string,
+        mutate: (state: EditorStore) => Partial<EditorStoreState>,
+      ) =>
         set((state) => {
-          if (state.blocks.length >= MAX_BLOCKS) {
+          const patch = mutate(state)
+          const sameItems = <T,>(next: T[] | undefined, prev: T[]) =>
+            next === undefined ||
+            next === prev ||
+            (next.length === prev.length && next.every((item, index) => item === prev[index]))
+          const unchanged =
+            sameItems(patch.blocks, state.blocks) &&
+            sameItems(patch.sections, state.sections) &&
+            (patch.theme === undefined || patch.theme === state.theme)
+          if (unchanged) {
             return state
           }
+
+          const now = Date.now()
+          const coalesce = historyKey === lastHistoryKey && now - lastHistoryAt < HISTORY_COALESCE_MS
+          lastHistoryKey = historyKey
+          lastHistoryAt = now
+          const snapshot: PageSnapshot = {
+            blocks: state.blocks,
+            sections: state.sections,
+            theme: state.theme,
+          }
+
+          return {
+            ...patch,
+            past: coalesce ? state.past : [...state.past.slice(-(HISTORY_LIMIT - 1)), snapshot],
+            future: [],
+          }
+        })
+
+      return {
+        ...initialEditorState,
+        addBlock: (block) =>
+          commit(`add:${block.id}`, (state) => {
+            if (state.blocks.length >= MAX_BLOCKS) {
+              return state
+            }
 
           // New blocks append to the last section so they keep a valid
           // placement when the page already carries explicit sections.
@@ -205,90 +267,91 @@ export const useEditorStore = create<EditorStore>()(
             blocks: [...state.blocks, placedBlock],
             draftUpdatedAt: nowIsoString(),
           }
-        }),
-      updateBlock: (id, updater) =>
-        set((state) => ({
-          blocks: state.blocks.map((block) => {
-            if (block.id !== id) {
-              return block
-            }
+          }),
+        updateBlock: (id, updater) =>
+          commit(`update:${id}`, (state) => ({
+            blocks: state.blocks.map((block) => {
+              if (block.id !== id) {
+                return block
+              }
 
-            const updatedBlock = updater(block)
+              const updatedBlock = updater(block)
+
+              return {
+                ...updatedBlock,
+                meta: {
+                  ...block.meta,
+                  ...updatedBlock.meta,
+                  updatedAt: Date.now(),
+                },
+              }
+            }),
+            draftUpdatedAt: nowIsoString(),
+          })),
+        removeBlock: (id) =>
+          commit(`remove:${id}`, (state) => {
+            const nextCollapsedById = { ...state.collapsedById }
+            delete nextCollapsedById[id]
 
             return {
-              ...updatedBlock,
-              meta: {
-                ...block.meta,
-                ...updatedBlock.meta,
-                updatedAt: Date.now(),
-              },
+              blocks: state.blocks.filter((block) => block.id !== id),
+              selectedBlockId: state.selectedBlockId === id ? null : state.selectedBlockId,
+              collapsedById: nextCollapsedById,
+              draftUpdatedAt: nowIsoString(),
             }
           }),
-          draftUpdatedAt: nowIsoString(),
-        })),
-      removeBlock: (id) =>
-        set((state) => {
-          const nextCollapsedById = { ...state.collapsedById }
-          delete nextCollapsedById[id]
+        moveBlockUp: (id) =>
+          commit(`move:${id}`, (state) => {
+            const nextBlocks = moveBlockByOffset(state.blocks, id, -1)
+            if (nextBlocks === state.blocks) {
+              return state
+            }
 
-          return {
-            blocks: state.blocks.filter((block) => block.id !== id),
-            selectedBlockId: state.selectedBlockId === id ? null : state.selectedBlockId,
-            collapsedById: nextCollapsedById,
-            draftUpdatedAt: nowIsoString(),
-          }
-        }),
-      moveBlockUp: (id) =>
-        set((state) => {
-          const nextBlocks = moveBlockByOffset(state.blocks, id, -1)
-          if (nextBlocks === state.blocks) {
-            return state
-          }
+            return {
+              blocks: nextBlocks,
+              draftUpdatedAt: nowIsoString(),
+            }
+          }),
+        moveBlockDown: (id) =>
+          commit(`move:${id}`, (state) => {
+            const nextBlocks = moveBlockByOffset(state.blocks, id, 1)
+            if (nextBlocks === state.blocks) {
+              return state
+            }
 
-          return {
-            blocks: nextBlocks,
+            return {
+              blocks: nextBlocks,
+              draftUpdatedAt: nowIsoString(),
+            }
+          }),
+        reorderBlocks: (blocks) =>
+          commit(`reorder:${Date.now()}`, () => ({ blocks, draftUpdatedAt: nowIsoString() })),
+        setBlocks: (blocks) =>
+          commit(`setBlocks:${Date.now()}`, (state) => ({
+            blocks,
+            selectedBlockId: null,
+            collapsedById: pruneCollapsedById(state.collapsedById, blocks),
             draftUpdatedAt: nowIsoString(),
-          }
-        }),
-      moveBlockDown: (id) =>
-        set((state) => {
-          const nextBlocks = moveBlockByOffset(state.blocks, id, 1)
-          if (nextBlocks === state.blocks) {
-            return state
-          }
+          })),
+        setTheme: (themeId) =>
+          commit('theme', (state) => {
+            const normalizedThemeId = resolveThemeId(themeId)
+            if (state.theme === normalizedThemeId) {
+              return state
+            }
 
-          return {
-            blocks: nextBlocks,
+            return {
+              theme: normalizedThemeId,
+              draftUpdatedAt: nowIsoString(),
+            }
+          }),
+        setSections: (sections) =>
+          commit(`sections:${Date.now()}`, () => ({
+            sections,
             draftUpdatedAt: nowIsoString(),
-          }
-        }),
-      reorderBlocks: (blocks) => set({ blocks, draftUpdatedAt: nowIsoString() }),
-      setBlocks: (blocks) =>
-        set((state) => ({
-          blocks,
-          selectedBlockId: null,
-          collapsedById: pruneCollapsedById(state.collapsedById, blocks),
-          draftUpdatedAt: nowIsoString(),
-        })),
-      setTheme: (themeId) =>
-        set((state) => {
-          const normalizedThemeId = resolveThemeId(themeId)
-          if (state.theme === normalizedThemeId) {
-            return state
-          }
-
-          return {
-            theme: normalizedThemeId,
-            draftUpdatedAt: nowIsoString(),
-          }
-        }),
-      setSections: (sections) =>
-        set({
-          sections,
-          draftUpdatedAt: nowIsoString(),
-        }),
-      addSection: () =>
-        set((state) => {
+          })),
+        addSection: () =>
+          commit(`section:add:${Date.now()}`, (state) => {
           const baseId = `secao-${state.sections.length + 1}`
           let id = baseId
           let counter = state.sections.length + 1
@@ -302,60 +365,60 @@ export const useEditorStore = create<EditorStore>()(
             draftUpdatedAt: nowIsoString(),
           }
         }),
-      setSectionLayout: (sectionId, layout) =>
-        set((state) => {
-          const section = state.sections.find((current) => current.id === sectionId)
-          if (!section || section.layout === layout) {
-            return state
-          }
-
-          const nextSections = state.sections.map((current) =>
-            current.id === sectionId ? { ...current, layout } : current,
-          )
-
-          // Switching to a placed layout auto-assigns rects to blocks that
-          // don't have one yet (full width, sequential rows); rects are kept
-          // when switching back to stack so nothing is lost.
-          const cols = section.grid?.cols ?? 12
-          const boundedW = Math.min(cols, 24)
-          let nextRow = 1
-          const blocks = state.blocks.map((block) => {
-            if (block.sectionId !== sectionId || block.rect) {
-              return block
+        setSectionLayout: (sectionId, layout) =>
+          commit(`section:layout:${sectionId}`, (state) => {
+            const section = state.sections.find((current) => current.id === sectionId)
+            if (!section || section.layout === layout) {
+              return state
             }
-            const rect = { col: 1, row: nextRow, w: boundedW, h: 4 }
-            nextRow += 4 + 1
-            return { ...block, rect }
-          })
 
-          return {
-            sections: nextSections,
-            blocks,
+            const nextSections = state.sections.map((current) =>
+              current.id === sectionId ? { ...current, layout } : current,
+            )
+
+            // Switching to a placed layout auto-assigns rects to blocks that
+            // don't have one yet (full width, sequential rows); rects are kept
+            // when switching back to stack so nothing is lost.
+            const cols = section.grid?.cols ?? 12
+            const boundedW = Math.min(cols, 24)
+            let nextRow = 1
+            const blocks = state.blocks.map((block) => {
+              if (block.sectionId !== sectionId || block.rect) {
+                return block
+              }
+              const rect = { col: 1, row: nextRow, w: boundedW, h: 4 }
+              nextRow += 4 + 1
+              return { ...block, rect }
+            })
+
+            return {
+              sections: nextSections,
+              blocks,
+              draftUpdatedAt: nowIsoString(),
+            }
+          }),
+        updateBlockRect: (id, rect) =>
+          commit(`rect:${id}`, (state) => ({
+            blocks: state.blocks.map((block) =>
+              block.id === id
+                ? {
+                    ...block,
+                    rect,
+                    meta: { ...block.meta, updatedAt: Date.now() },
+                  }
+                : block,
+            ),
             draftUpdatedAt: nowIsoString(),
-          }
-        }),
-      updateBlockRect: (id, rect) =>
-        set((state) => ({
-          blocks: state.blocks.map((block) =>
-            block.id === id
-              ? {
-                  ...block,
-                  rect,
-                  meta: { ...block.meta, updatedAt: Date.now() },
-                }
-              : block,
-          ),
-          draftUpdatedAt: nowIsoString(),
-        })),
-      setPage: (page) =>
-        set((state) => ({
-          blocks: page.blocks,
-          sections: page.sections ?? state.sections,
-          theme: resolveThemeId(page.theme),
-          selectedBlockId: null,
-          collapsedById: pruneCollapsedById(state.collapsedById, page.blocks),
-          draftUpdatedAt: nowIsoString(),
-        })),
+          })),
+        setPage: (page) =>
+          commit(`setPage:${Date.now()}`, (state) => ({
+            blocks: page.blocks,
+            sections: page.sections ?? state.sections,
+            theme: resolveThemeId(page.theme),
+            selectedBlockId: null,
+            collapsedById: pruneCollapsedById(state.collapsedById, page.blocks),
+            draftUpdatedAt: nowIsoString(),
+          })),
       selectBlock: (selectedBlockId) => set({ selectedBlockId }),
       toggleBlockCollapsed: (id) =>
         set((state) => {
@@ -411,8 +474,65 @@ export const useEditorStore = create<EditorStore>()(
           draftPageId,
           draftUpdatedAt: updatedAt ?? nowIsoString(),
         }),
-      resetEditor: () => set({ ...initialEditorState }),
-    }),
+      resetEditor: () => {
+        lastHistoryKey = ''
+        lastHistoryAt = 0
+        set({ ...initialEditorState })
+      },
+      undo: () =>
+        set((state) => {
+          const previous = state.past.at(-1)
+          if (!previous) {
+            return state
+          }
+
+          lastHistoryKey = ''
+          lastHistoryAt = 0
+          const snapshot: PageSnapshot = {
+            blocks: state.blocks,
+            sections: state.sections,
+            theme: state.theme,
+          }
+
+          return {
+            blocks: previous.blocks,
+            sections: previous.sections,
+            theme: previous.theme,
+            selectedBlockId: null,
+            collapsedById: pruneCollapsedById(state.collapsedById, previous.blocks),
+            past: state.past.slice(0, -1),
+            future: [...state.future, snapshot],
+            draftUpdatedAt: nowIsoString(),
+          }
+        }),
+      redo: () =>
+        set((state) => {
+          const next = state.future.at(-1)
+          if (!next) {
+            return state
+          }
+
+          lastHistoryKey = ''
+          lastHistoryAt = 0
+          const snapshot: PageSnapshot = {
+            blocks: state.blocks,
+            sections: state.sections,
+            theme: state.theme,
+          }
+
+          return {
+            blocks: next.blocks,
+            sections: next.sections,
+            theme: next.theme,
+            selectedBlockId: null,
+            collapsedById: pruneCollapsedById(state.collapsedById, next.blocks),
+            past: [...state.past, snapshot],
+            future: state.future.slice(0, -1),
+            draftUpdatedAt: nowIsoString(),
+          }
+        }),
+      }
+    },
     {
       name: 'editor-draft',
       storage: persistStorage,

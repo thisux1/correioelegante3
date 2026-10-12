@@ -13,7 +13,9 @@ import {
   Smartphone,
   Monitor,
   MailOpen,
+  Redo2,
   Share2,
+  Undo2,
 } from 'lucide-react'
 
 import { Modal } from '@/components/ui/Modal'
@@ -440,6 +442,10 @@ export function Editor() {
   const setPage = useEditorStore((state) => state.setPage)
   const setDraftContext = useEditorStore((state) => state.setDraftContext)
   const selectBlock = useEditorStore((state) => state.selectBlock)
+  const undo = useEditorStore((state) => state.undo)
+  const redo = useEditorStore((state) => state.redo)
+  const canUndo = useEditorStore((state) => state.past.length > 0)
+  const canRedo = useEditorStore((state) => state.future.length > 0)
   const user = useAuthStore((state) => state.user)
 
   const [isLoadingPage, setIsLoadingPage] = useState<boolean>(Boolean(pageIdFromRoute))
@@ -456,6 +462,38 @@ export function Editor() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isReviewOpen, setIsReviewOpen] = useState(false)
   const handledTemplateKeyRef = useRef<string>('')
+
+  useEffect(() => {
+    const handleHistoryKeys = (event: KeyboardEvent) => {
+      if (mode !== 'edit' || !(event.ctrlKey || event.metaKey)) {
+        return
+      }
+
+      const target = event.target
+      if (!(target instanceof Element)) {
+        return
+      }
+      if (target.closest('input, textarea, select, [contenteditable="true"]')) {
+        return
+      }
+
+      const key = event.key.toLowerCase()
+      if (key === 'z') {
+        event.preventDefault()
+        if (event.shiftKey) {
+          redo()
+        } else {
+          undo()
+        }
+      } else if (key === 'y') {
+        event.preventDefault()
+        redo()
+      }
+    }
+
+    window.addEventListener('keydown', handleHistoryKeys)
+    return () => window.removeEventListener('keydown', handleHistoryKeys)
+  }, [mode, undo, redo])
 
   const { recipientName, letterTitle } = useMemo(() => {
     let recName: string | undefined = undefined
@@ -851,6 +889,29 @@ export function Editor() {
 
           {/* Ações Imediatas no Topo */}
           <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-0.5 rounded-xl border border-border bg-surface p-1 shadow-xs" role="group" aria-label="Histórico de edição">
+              <button
+                type="button"
+                onClick={undo}
+                disabled={!canUndo || mode !== 'edit'}
+                aria-label="Desfazer (Ctrl+Z)"
+                title="Desfazer (Ctrl+Z)"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-text transition-colors hover:bg-surface-raised hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Undo2 size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={redo}
+                disabled={!canRedo || mode !== 'edit'}
+                aria-label="Refazer (Ctrl+Shift+Z)"
+                title="Refazer (Ctrl+Shift+Z)"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-text transition-colors hover:bg-surface-raised hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Redo2 size={16} />
+              </button>
+            </div>
+
             <Link
               to="/profile"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs sm:text-sm font-semibold text-text hover:bg-surface-raised hover:border-primary/30 transition-all shadow-xs"

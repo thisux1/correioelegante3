@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { MAX_BLOCKS } from '@/editor/types'
+import { MAX_BLOCKS, type Block } from '@/editor/types'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { createBlock } from '@/editor/utils/blockFactory'
 
@@ -49,7 +49,7 @@ describe('editorStore', () => {
 
   it('updateBlock atualiza meta.updatedAt', () => {
     const nowSpy = vi.spyOn(Date, 'now')
-    nowSpy.mockReturnValueOnce(1_000).mockReturnValueOnce(2_000)
+    nowSpy.mockReturnValueOnce(1_000).mockReturnValue(2_000)
 
     const block = createBlock('text')
     useEditorStore.getState().setBlocks([block])
@@ -167,5 +167,69 @@ describe('sections & placement', () => {
     const updated = useEditorStore.getState().blocks[0]
     expect(updated.rect).toEqual(rect)
     expect(updated.meta.updatedAt).toBeGreaterThanOrEqual(b1.meta.updatedAt)
+  })
+
+  describe('undo/redo', () => {
+    it('undo restaura estado anterior e redo reaplica', () => {
+      const block = createBlock('text')
+      useEditorStore.getState().addBlock(block)
+
+      useEditorStore.getState().undo()
+      expect(useEditorStore.getState().blocks).toHaveLength(0)
+
+      useEditorStore.getState().redo()
+      expect(useEditorStore.getState().blocks.map((b) => b.id)).toEqual([block.id])
+    })
+
+    it('undo restaura bloco removido', () => {
+      const block = createBlock('text')
+      useEditorStore.getState().setBlocks([block])
+      useEditorStore.getState().removeBlock(block.id)
+
+      useEditorStore.getState().undo()
+      expect(useEditorStore.getState().blocks.map((b) => b.id)).toEqual([block.id])
+    })
+
+    it('mutações no mesmo alvo dentro da janela colapsam num passo', () => {
+      const block = createBlock('text')
+      useEditorStore.getState().setBlocks([block])
+
+      useEditorStore.getState().updateBlock(block.id, (b) => ({ ...b, props: { ...b.props, html: 'v1' } }) as Block)
+      useEditorStore.getState().updateBlock(block.id, (b) => ({ ...b, props: { ...b.props, html: 'v2' } }) as Block)
+
+      expect(useEditorStore.getState().past).toHaveLength(2)
+
+      useEditorStore.getState().undo()
+      const current = useEditorStore.getState().blocks[0]
+      expect((current.props as { html?: string }).html).not.toBe('v1')
+      expect((current.props as { html?: string }).html).not.toBe('v2')
+    })
+
+    it('nova mutação limpa o futuro', () => {
+      const first = createBlock('text')
+      const second = createBlock('image')
+      useEditorStore.getState().addBlock(first)
+      useEditorStore.getState().undo()
+
+      useEditorStore.getState().addBlock(second)
+
+      expect(useEditorStore.getState().future).toHaveLength(0)
+      expect(useEditorStore.getState().blocks.map((b) => b.id)).toEqual([second.id])
+    })
+
+    it('no-op não gera entrada no histórico', () => {
+      const block = createBlock('text')
+      useEditorStore.getState().setBlocks([block])
+      const pastLength = useEditorStore.getState().past.length
+
+      useEditorStore.getState().moveBlockUp(block.id)
+
+      expect(useEditorStore.getState().past).toHaveLength(pastLength)
+    })
+
+    it('undo sem histórico é no-op', () => {
+      useEditorStore.getState().undo()
+      expect(useEditorStore.getState().blocks).toHaveLength(0)
+    })
   })
 })
