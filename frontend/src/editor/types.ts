@@ -24,6 +24,9 @@ export type BlockType =
   | 'hints'
   | 'intimacyGate'
   | 'ticketRsvp'
+  | 'memoryCard'
+  | 'hiddenNotes'
+  | 'togetherCounter'
 export type EditorMode = 'edit' | 'preview'
 
 export interface BlockMeta {
@@ -238,6 +241,31 @@ export interface TicketRsvpBlockProps {
   responseToken?: string
 }
 
+export interface MemoryCardBlockProps {
+  title?: string
+  date?: string
+  place?: string
+  imageSrc?: string
+  assetId?: string
+  caption?: string
+  text?: string
+}
+
+export interface HiddenNoteItem {
+  id: string
+  text: string
+}
+
+export interface HiddenNotesBlockProps {
+  title?: string
+  notes: HiddenNoteItem[]
+}
+
+export interface TogetherCounterBlockProps {
+  startDate: string
+  label?: string
+}
+
 export type SectionLayout = 'stack' | 'columns' | 'overlap' | 'grid' | 'freezone' | 'fullbleed'
 
 export interface SectionRect {
@@ -272,6 +300,9 @@ export interface BlockPropsByType {
   hints: HintsBlockProps
   intimacyGate: IntimacyGateBlockProps
   ticketRsvp: TicketRsvpBlockProps
+  memoryCard: MemoryCardBlockProps
+  hiddenNotes: HiddenNotesBlockProps
+  togetherCounter: TogetherCounterBlockProps
 }
 
 interface BlockBase<TType extends BlockType> {

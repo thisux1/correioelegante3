@@ -31,6 +31,9 @@ import {
   Lightbulb,
   KeyRound,
   Ticket,
+  Stamp,
+  StickyNote,
+  CalendarHeart,
 } from 'lucide-react'
 
 import { MAX_BLOCKS, type BlockType, type PageStatus } from '@/editor/types'
@@ -70,6 +73,9 @@ const addBlockOptions: AddBlockOption[] = [
   { type: 'hints', label: 'Dicas', icon: Lightbulb },
   { type: 'intimacyGate', label: 'Pergunta Secreta', icon: KeyRound },
   { type: 'ticketRsvp', label: 'Convite RSVP', icon: Ticket },
+  { type: 'memoryCard', label: 'Memória', icon: Stamp },
+  { type: 'hiddenNotes', label: 'Bilhetes Escondidos', icon: StickyNote },
+  { type: 'togetherCounter', label: 'Tempo Juntos', icon: CalendarHeart },
 ]
 
 interface ToolbarControlsProps {

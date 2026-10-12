@@ -115,6 +115,76 @@ describe('compilePageSpec()', () => {
     expect(notes.join(' ')).not.toContain('intimacyGate →');
   });
 
+  it('compila memoryCard, hiddenNotes e togetherCounter como blocos reais — sem downgrade', () => {
+    const spec = pageSpecSchema.parse({
+      version: 1,
+      templateFamily: 'test',
+      theme: { palette: [], typography: 'pixel', motionIntensity: 'sutil' },
+      sections: [
+        {
+          id: 's',
+          layout: 'stack',
+          modules: [
+            {
+              type: 'memoryCard',
+              props: {
+                titulo: 'Piquenique',
+                descricao: 'Aquele sábado.',
+                data: 'março/2020',
+                lugar: 'parque',
+                legenda: 'começo',
+              },
+            },
+            {
+              type: 'hiddenNotes',
+              props: { intro: 'Bilhetes', items: ['um', 'dois'] },
+            },
+            {
+              type: 'togetherCounter',
+              props: { startDate: '2020-03-14', label: 'Juntos há' },
+            },
+          ],
+        },
+      ],
+    });
+
+    const { content, notes } = compilePageSpec(spec);
+    const [mc, hn, tc] = content.blocks;
+
+    expect(mc.type).toBe('memoryCard');
+    expect(mc.props).toMatchObject({
+      title: 'Piquenique',
+      text: 'Aquele sábado.',
+      date: 'março/2020',
+      place: 'parque',
+      caption: 'começo',
+    });
+
+    expect(hn.type).toBe('hiddenNotes');
+    expect(hn.props.title).toBe('Bilhetes');
+    expect(hn.props.notes).toEqual([
+      { id: 'note-0', text: 'um' },
+      { id: 'note-1', text: 'dois' },
+    ]);
+
+    expect(tc.type).toBe('togetherCounter');
+    expect(tc.props).toMatchObject({ startDate: '2020-03-14', label: 'Juntos há' });
+
+    expect(notes.join(' ')).not.toContain('→ text');
+    expect(notes.join(' ')).not.toContain('→ timer');
+
+    // Round-trip pelo sanitizer de persistência: tipos e props sobrevivem.
+    const migrated = migratePage(content);
+    expect(migrated.blocks.map((block) => block.type)).toEqual([
+      'memoryCard',
+      'hiddenNotes',
+      'togetherCounter',
+    ]);
+    const migratedNotes = migrated.blocks[1];
+    expect(migratedNotes.type).toBe('hiddenNotes');
+    expect(migratedNotes.props.notes).toHaveLength(2);
+  });
+
   it('orders rect modules row-major inside their section', () => {
     const spec = pageSpecSchema.parse({
       version: 1,

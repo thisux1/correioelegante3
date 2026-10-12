@@ -82,6 +82,28 @@ describe('reviewBlocks', () => {
     expect(issues[0].blockId).toBe(b.id)
     expect(issues[0].blockLabel).toBe('Contagem regressiva')
   })
+
+  it('flags new block types when empty', () => {
+    const issues = reviewBlocks([
+      block('memoryCard', {}),
+      block('hiddenNotes', { notes: [{ id: '1', text: ' ' }] }),
+      block('togetherCounter', { startDate: '' }),
+    ])
+    expect(issues).toHaveLength(3)
+    expect(issues.map((i) => i.blockLabel)).toEqual([
+      'Memória',
+      'Bilhetes Escondidos',
+      'Tempo Juntos',
+    ])
+
+    expect(
+      reviewBlocks([
+        block('memoryCard', { text: 'uma história' }),
+        block('hiddenNotes', { notes: [{ id: '1', text: 'segredinho' }] }),
+        block('togetherCounter', { startDate: '2020-03-14' }),
+      ]),
+    ).toHaveLength(0)
+  })
 })
 
 describe('reviewPage — matriz de completude', () => {

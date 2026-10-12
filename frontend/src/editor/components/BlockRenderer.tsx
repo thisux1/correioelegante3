@@ -75,6 +75,21 @@ const TicketRsvpBlock = lazy(async () => {
   return { default: module.TicketRsvpBlock }
 })
 
+const MemoryCardBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/MemoryCardBlock')
+  return { default: module.MemoryCardBlock }
+})
+
+const HiddenNotesBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/HiddenNotesBlock')
+  return { default: module.HiddenNotesBlock }
+})
+
+const TogetherCounterBlock = lazy(async () => {
+  const module = await import('@/editor/blocks/TogetherCounterBlock')
+  return { default: module.TogetherCounterBlock }
+})
+
 interface BlockRendererProps {
   block: Block
   mode: EditorMode
@@ -99,6 +114,9 @@ const blockMap: BlockMap = {
   hints: HintsBlock,
   intimacyGate: IntimacyGateBlock,
   ticketRsvp: TicketRsvpBlock,
+  memoryCard: MemoryCardBlock,
+  hiddenNotes: HiddenNotesBlock,
+  togetherCounter: TogetherCounterBlock,
 }
 
 function renderFallback(block: Block) {

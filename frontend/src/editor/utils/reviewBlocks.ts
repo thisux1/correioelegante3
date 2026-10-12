@@ -30,6 +30,9 @@ const BLOCK_LABELS: Partial<Record<BlockType, string>> = {
   hints: 'Dicas',
   intimacyGate: 'Pergunta Secreta',
   ticketRsvp: 'Convite RSVP',
+  memoryCard: 'Memória',
+  hiddenNotes: 'Bilhetes Escondidos',
+  togetherCounter: 'Tempo Juntos',
 }
 
 /**
@@ -54,6 +57,9 @@ const BLOCK_EXPERIENCE: Partial<Record<BlockType, string>> = {
   hints: 'descobre as pistas',
   intimacyGate: 'responde pra destravar',
   ticketRsvp: 'responde ao convite',
+  memoryCard: 'vê a memória',
+  hiddenNotes: 'procura os bilhetes escondidos',
+  togetherCounter: 'vê o tempo de história juntos',
 }
 
 /** Uma parte da página na matriz de completude. */
@@ -158,6 +164,31 @@ function blockProblems(block: Block): string[] {
       }
       break
     }
+    case 'memoryCard': {
+      const hasContent =
+        hasText(props.title) ||
+        hasText(props.text) ||
+        hasText(props.imageSrc) ||
+        hasText(props.date) ||
+        hasText(props.place)
+      if (!hasContent) {
+        push('memória vazia — não aparece nada para quem recebe')
+      }
+      break
+    }
+    case 'hiddenNotes': {
+      const notes = Array.isArray(props.notes) ? props.notes : []
+      const filled = notes.filter((n) => hasText((n as { text?: string }).text))
+      if (filled.length === 0) {
+        push('bilhetes escondidos sem nenhum texto — não aparece nada')
+      }
+      break
+    }
+    case 'togetherCounter':
+      if (!hasText(props.startDate)) {
+        push('contador sem data de início — não aparece nada')
+      }
+      break
     default:
       break
   }

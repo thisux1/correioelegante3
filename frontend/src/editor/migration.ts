@@ -6,6 +6,7 @@ import {
   type BlockType,
   type BouquetFlower,
   type BouquetWrap,
+  type HiddenNoteItem,
   type HintItem,
   type PageContent,
   type PageSection,
@@ -103,6 +104,9 @@ function asBlockType(value: unknown): BlockType {
     'hints',
     'intimacyGate',
     'ticketRsvp',
+    'memoryCard',
+    'hiddenNotes',
+    'togetherCounter',
   ]
   if (typeof value === 'string' && supported.includes(value as BlockType)) {
     return value as BlockType
@@ -306,6 +310,27 @@ function asHintItems(value: unknown): HintItem[] {
 
     return accumulator
   }, []).slice(0, 12)
+}
+
+function asNoteItems(value: unknown): HiddenNoteItem[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.reduce<HiddenNoteItem[]>((accumulator, item, index) => {
+    const record = asRecord(item)
+    const text = asText(record.text)
+    if (!text) {
+      return accumulator
+    }
+
+    accumulator.push({
+      id: asOptionalText(record.id) || `note-${index}-${Math.random().toString(36).slice(2, 7)}`,
+      text,
+    })
+
+    return accumulator
+  }, []).slice(0, 8)
 }
 
 function asStringList(value: unknown, max: number): string[] {
@@ -680,6 +705,38 @@ function migrateBlock(input: unknown, index: number): Block {
         },
       }
     }
+    case 'memoryCard':
+      return {
+        ...base,
+        type: 'memoryCard',
+        props: {
+          title: asOptionalText(props.title),
+          date: asOptionalText(props.date),
+          place: asOptionalText(props.place),
+          imageSrc: asOptionalText(props.imageSrc),
+          assetId: asOptionalText(props.assetId),
+          caption: asOptionalText(props.caption),
+          text: asOptionalText(props.text),
+        },
+      }
+    case 'hiddenNotes':
+      return {
+        ...base,
+        type: 'hiddenNotes',
+        props: {
+          title: asOptionalText(props.title),
+          notes: asNoteItems(props.notes),
+        },
+      }
+    case 'togetherCounter':
+      return {
+        ...base,
+        type: 'togetherCounter',
+        props: {
+          startDate: asText(props.startDate),
+          label: asOptionalText(props.label),
+        },
+      }
     default:
       return {
         ...base,

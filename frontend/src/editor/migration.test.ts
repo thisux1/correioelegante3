@@ -548,4 +548,64 @@ describe('migratePage — S10 new block types', () => {
       expect(block.props.responseToken).toBeUndefined()
     }
   })
+
+  it('normaliza memoryCard, hiddenNotes e togetherCounter', () => {
+    const migrated = migratePage({
+      blocks: [
+        {
+          id: 'mc1',
+          type: 'memoryCard',
+          props: {
+            title: '  Piquenique  ',
+            date: 'março/2020',
+            place: 'parque',
+            imageSrc: 'https://x/f.jpg',
+            caption: 'começo',
+            text: 'história',
+            lixo: true,
+          },
+          meta: {},
+        },
+        {
+          id: 'hn1',
+          type: 'hiddenNotes',
+          props: {
+            title: 'Bilhetes',
+            notes: [{ text: 'um' }, { text: ' ' }, { id: 'n9', text: 'dois' }, 'lixo'],
+          },
+          meta: {},
+        },
+        {
+          id: 'tc1',
+          type: 'togetherCounter',
+          props: { startDate: '2020-03-14', label: 'Juntos há', extra: 1 },
+          meta: {},
+        },
+      ],
+    })
+
+    const [mc, hn, tc] = migrated.blocks
+
+    expect(mc.type).toBe('memoryCard')
+    if (mc.type === 'memoryCard') {
+      expect(mc.props.title).toBe('Piquenique')
+      expect(mc.props.date).toBe('março/2020')
+      expect(mc.props.imageSrc).toBe('https://x/f.jpg')
+      expect('lixo' in mc.props).toBe(false)
+    }
+
+    expect(hn.type).toBe('hiddenNotes')
+    if (hn.type === 'hiddenNotes') {
+      expect(hn.props.notes).toHaveLength(2)
+      expect(hn.props.notes[0].text).toBe('um')
+      expect(hn.props.notes[1].id).toBe('n9')
+    }
+
+    expect(tc.type).toBe('togetherCounter')
+    if (tc.type === 'togetherCounter') {
+      expect(tc.props.startDate).toBe('2020-03-14')
+      expect(tc.props.label).toBe('Juntos há')
+      expect('extra' in tc.props).toBe(false)
+    }
+  })
 })

@@ -29,6 +29,9 @@ export function createBlock(type: 'bouquet'): Extract<Block, { type: 'bouquet' }
 export function createBlock(type: 'hints'): Extract<Block, { type: 'hints' }>
 export function createBlock(type: 'intimacyGate'): Extract<Block, { type: 'intimacyGate' }>
 export function createBlock(type: 'ticketRsvp'): Extract<Block, { type: 'ticketRsvp' }>
+export function createBlock(type: 'memoryCard'): Extract<Block, { type: 'memoryCard' }>
+export function createBlock(type: 'hiddenNotes'): Extract<Block, { type: 'hiddenNotes' }>
+export function createBlock(type: 'togetherCounter'): Extract<Block, { type: 'togetherCounter' }>
 export function createBlock(type: BlockType): Block
 export function createBlock(type: BlockType): Block {
   const now = Date.now()
@@ -358,6 +361,54 @@ export function createBlock(type: BlockType): Block {
         props: {
           title: 'te convido:',
           allowText: true,
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'memoryCard':
+      return {
+        id: generateBlockId(),
+        type: 'memoryCard',
+        version: BLOCK_VERSION,
+        props: {
+          title: '',
+          caption: '',
+          text: '',
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'hiddenNotes':
+      return {
+        id: generateBlockId(),
+        type: 'hiddenNotes',
+        version: BLOCK_VERSION,
+        props: {
+          title: 'Bilhetes escondidos',
+          notes: [
+            {
+              id: generateBlockId(),
+              text: 'Se você achou esse, é porque presta atenção nos detalhes. Eu gosto disso em você.',
+            },
+          ],
+        },
+        meta: {
+          createdAt: now,
+          updatedAt: now,
+        },
+      }
+    case 'togetherCounter':
+      return {
+        id: generateBlockId(),
+        type: 'togetherCounter',
+        version: BLOCK_VERSION,
+        props: {
+          startDate: new Date(now - 365 * 86_400_000).toISOString().slice(0, 10),
+          label: 'Juntos há',
         },
         meta: {
           createdAt: now,

@@ -30,18 +30,10 @@ const SUPPORTED = new Set<string>([
   'hints',
   'intimacyGate',
   'ticketRsvp',
+  'memoryCard',
+  'hiddenNotes',
+  'togetherCounter',
 ]);
-
-/**
- * Planned block types that don't exist in the persisted schema yet get a
- * closest-fit downgrade instead of the migration's silent text fallback —
- * the downgrade is explicit in decisions[]. Each adapter reshapes props so
- * the target block isn't empty (text sanitizer keeps only {text, align}).
- */
-interface DowngradeRule {
-  to: SupportedBlockType;
-  adapt: (props: Record<string, unknown>) => Record<string, unknown>;
-}
 
 const asStrings = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
@@ -53,24 +45,6 @@ const asRecord = (value: unknown): Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
-
-const DOWNGRADE: Partial<Record<ModuleType, DowngradeRule>> = {
-  togetherCounter: {
-    to: 'timer',
-    adapt: (p) => ({ targetDate: asText(p.targetDate), label: asText(p.label) }),
-  },
-  memoryCard: {
-    to: 'text',
-    adapt: (p) => ({
-      text: [asText(p.titulo), asText(p.descricao)].filter(Boolean).join('\n'),
-      align: 'left',
-    }),
-  },
-  hiddenNotes: {
-    to: 'text',
-    adapt: (p) => ({ text: asStrings(p.items).join('\n'), align: 'left' }),
-  },
-};
 
 /**
  * Real persisted types whose spec-side props shape differs from the block
@@ -108,6 +82,37 @@ const SPEC_PROPS_ADAPTER: Partial<
       allowText: true,
     };
   },
+  /**
+   * memoryCard: spec ergonômica em pt (titulo/descricao/data/lugar/foto/
+   * legenda) → contrato persistido em en (title/text/date/place/imageSrc/
+   * caption), igual aos demais blocos.
+   */
+  memoryCard: (p) => ({
+    title: asText(p.titulo) || asText(p.title) || undefined,
+    text: asText(p.descricao) || asText(p.text) || undefined,
+    date: asText(p.data) || asText(p.date) || undefined,
+    place: asText(p.lugar) || asText(p.place) || undefined,
+    imageSrc: asText(p.foto) || asText(p.imageSrc) || undefined,
+    caption: asText(p.legenda) || asText(p.caption) || undefined,
+  }),
+  hiddenNotes: (p) => ({
+    title: asText(p.intro) || asText(p.title) || undefined,
+    notes: asStrings(p.items)
+      .map((text, index) => ({ id: `note-${index}`, text }))
+      .concat(
+        (Array.isArray(p.notes) ? p.notes : [])
+          .map((item, index) => {
+            const record = asRecord(item);
+            return { id: asText(record.id) || `note-extra-${index}`, text: asText(record.text) };
+          })
+          .filter((note) => note.text.length > 0),
+      )
+      .slice(0, 8),
+  }),
+  togetherCounter: (p) => ({
+    startDate: asText(p.startDate) || asText(p.targetDate),
+    label: asText(p.label) || undefined,
+  }),
 };
 
 export interface CompileResult {
@@ -130,11 +135,8 @@ function resolveTypeAndProps(
       props: adapt ? adapt(module.props) : module.props,
     };
   }
-  const rule = DOWNGRADE[module.type];
-  const to = rule?.to ?? 'text';
-  const props = rule ? rule.adapt(module.props) : module.props;
-  notes.push(`compile:${module.type} → ${to} (tipo ainda não persistido)`);
-  return { type: to, props };
+  notes.push(`compile:${module.type} → text (tipo não persistido)`);
+  return { type: 'text', props: module.props };
 }
 
 function orderModules(modules: SpecModule[]): SpecModule[] {

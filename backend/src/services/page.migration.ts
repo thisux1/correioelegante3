@@ -427,6 +427,41 @@ function sanitizePropsByType(type: SupportedBlockType, props: UnknownRecord): Un
         ...(responseToken ? { responseToken: responseToken.slice(0, 200) } : {}),
       };
     }
+    case 'memoryCard':
+      return {
+        title: asOptionalText(props.title),
+        date: asOptionalText(props.date)?.slice(0, 120),
+        place: asOptionalText(props.place)?.slice(0, 120),
+        imageSrc: asOptionalText(props.imageSrc),
+        assetId: asOptionalText(props.assetId),
+        caption: asOptionalText(props.caption)?.slice(0, 300),
+        text: asOptionalText(props.text)?.slice(0, 5_000),
+      };
+    case 'hiddenNotes': {
+      const notes = (Array.isArray(props.notes) ? props.notes : [])
+        .reduce<Array<{ id: string; text: string }>>((accumulator, item, index) => {
+          const record = asRecord(item);
+          const text = asText(record.text).slice(0, 500);
+          if (!text) {
+            return accumulator;
+          }
+          accumulator.push({
+            id: asOptionalText(record.id) ?? `note-${index}`,
+            text,
+          });
+          return accumulator;
+        }, [])
+        .slice(0, 8);
+      return {
+        title: asOptionalText(props.title),
+        notes,
+      };
+    }
+    case 'togetherCounter':
+      return {
+        startDate: asText(props.startDate).slice(0, 40),
+        label: asOptionalText(props.label)?.slice(0, 120),
+      };
     default:
       return { ...props };
   }

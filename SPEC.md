@@ -176,7 +176,9 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
   - Briefs flagged (PII, padrões suspeitos) seguem a geração e registram
     `moderation:flagged → ...` em `notes[]`.
   - Block types not yet persisted are downgraded with explicit adapters and
-    logged in `notes[]`; `ticketRsvp` persiste como bloco real desde S14.
+    logged in `notes[]`; `ticketRsvp`, `memoryCard`, `hiddenNotes` e
+    `togetherCounter` persistem como blocos reais (spec pt-BR → props en via
+    adapters do compile).
 - `POST /interpret`: Public, mesmo rate-limit + Turnstile. Interpreta texto
   livre em campos do `CreativeBrief` (camada L2 — Gemini; nunca decide
   estrutura).
@@ -259,7 +261,8 @@ mirror is `frontend/src/editor/types.ts`:
 type BlockType =
   | 'text' | 'image' | 'timer' | 'gallery' | 'music' | 'video'
   | 'envelope' | 'scratch' | 'timeline' | 'quiz' | 'polaroid'
-  | 'youtube' | 'photoBook' | 'bouquet' | 'hints' | 'intimacyGate';
+  | 'youtube' | 'photoBook' | 'bouquet' | 'hints' | 'intimacyGate'
+  | 'ticketRsvp' | 'memoryCard' | 'hiddenNotes' | 'togetherCounter';
 ```
 
 Every block's props shape is normalized on read (`page.migration.ts`) and

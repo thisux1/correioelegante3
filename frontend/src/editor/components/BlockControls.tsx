@@ -38,6 +38,9 @@ const blockTypeLabels: Record<BlockType, string> = {
   hints: 'Dicas',
   intimacyGate: 'Pergunta Secreta',
   ticketRsvp: 'Convite RSVP',
+  memoryCard: 'Memória',
+  hiddenNotes: 'Bilhetes Escondidos',
+  togetherCounter: 'Tempo Juntos',
 }
 
 function BlockControlsComponent({

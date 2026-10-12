@@ -22,6 +22,9 @@ export const BLOCK_TYPE_VALUES = [
   'hints',
   'intimacyGate',
   'ticketRsvp',
+  'memoryCard',
+  'hiddenNotes',
+  'togetherCounter',
 ] as const;
 
 export type SupportedBlockType = (typeof BLOCK_TYPE_VALUES)[number];
