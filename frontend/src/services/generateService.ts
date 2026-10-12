@@ -33,9 +33,34 @@ export interface GenerateBriefInput {
   restricoes?: string[]
 }
 
+export interface InterpretedBriefFields {
+  momento?: string
+  tom?: string
+  destinatario?: string
+  remetente?: string
+  apelidos?: string[]
+  contexto?: string
+  memorias?: Array<{ titulo: string; descricao?: string }>
+  perguntasIntimidade?: Array<{ pergunta: string; resposta: string; dica?: string }>
+  evento?: { data?: string; lugar?: string; descricao?: string }
+  musicaUrl?: string
+  anonimoParaDestinatario?: boolean
+}
+
+export interface InterpretResponse {
+  source: 'llm' | 'fallback'
+  fields: InterpretedBriefFields
+  notes: string[]
+}
+
 export const generateService = {
-  async generate(brief: GenerateBriefInput): Promise<GenerateResponse> {
-    const response = await api.post<GenerateResponse>('/generate', { brief })
+  async generate(brief: GenerateBriefInput, turnstileToken?: string): Promise<GenerateResponse> {
+    const response = await api.post<GenerateResponse>('/generate', { brief, turnstileToken })
+    return response.data
+  },
+
+  async interpret(texto: string, turnstileToken?: string): Promise<InterpretResponse> {
+    const response = await api.post<InterpretResponse>('/generate/interpret', { texto, turnstileToken })
     return response.data
   },
 }

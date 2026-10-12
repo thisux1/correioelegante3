@@ -28,8 +28,11 @@ import {
   ChevronDown,
   RotateCcw,
   Check,
+  Sparkles,
+  LoaderCircle,
 } from 'lucide-react'
 import { sanitizeHtml, stripHtml } from '@/editor/utils/htmlSanitizer'
+import { aiService, AI_ACTIONS, type AiAction } from '@/services/aiService'
 import type {
   BlockComponentProps,
   TextBlockAlign,
@@ -244,12 +247,17 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
   const fontDropdownRef = useRef<HTMLDivElement>(null)
   const sizeDropdownRef = useRef<HTMLDivElement>(null)
   const colorPickerRef = useRef<HTMLDivElement>(null)
+  const aiMenuRef = useRef<HTMLDivElement>(null)
 
   const [isFocused, setIsFocused] = useState(false)
   const [showFontDropdown, setShowFontDropdown] = useState(false)
   const [showSizeDropdown, setShowSizeDropdown] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showHighlightPicker, setShowHighlightPicker] = useState(false)
+  const [showAiMenu, setShowAiMenu] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiUndoHtml, setAiUndoHtml] = useState<string | null>(null)
   const [selectionPosition, setSelectionPosition] = useState<SelectionToolbarPosition | null>(null)
   const [activeFormats, setActiveFormats] = useState({
     bold: false,
@@ -291,7 +299,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
 
   // Click outside detection for all custom dropdowns
   useEffect(() => {
-    if (!showFontDropdown && !showSizeDropdown && !showColorPicker && !showHighlightPicker) {
+    if (!showFontDropdown && !showSizeDropdown && !showColorPicker && !showHighlightPicker && !showAiMenu) {
       return
     }
 
@@ -306,6 +314,9 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       if (colorPickerRef.current && !colorPickerRef.current.contains(target)) {
         setShowColorPicker(false)
       }
+      if (aiMenuRef.current && !aiMenuRef.current.contains(target)) {
+        setShowAiMenu(false)
+      }
     }
 
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -314,6 +325,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
         setShowSizeDropdown(false)
         setShowColorPicker(false)
         setShowHighlightPicker(false)
+        setShowAiMenu(false)
       }
     }
 
@@ -326,7 +338,7 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
       document.removeEventListener('touchstart', handlePointerDownOutside)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [showColorPicker, showFontDropdown, showHighlightPicker, showSizeDropdown])
+  }, [showColorPicker, showFontDropdown, showHighlightPicker, showSizeDropdown, showAiMenu])
 
   // Sync contentEditable with incoming props when not focused
   useEffect(() => {
@@ -558,6 +570,45 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
     },
     [executeFormat],
   )
+
+  // AI actions por bloco (S11): reescreve o texto inteiro por tom.
+  // Substituição nunca é silenciosa — guarda o html anterior p/ "desfazer".
+  const handleAiRewrite = useCallback(
+    async (action: AiAction) => {
+      const plain = stripHtml(displayHtml) || textContent
+      if (!plain.trim() || aiLoading) return
+
+      setShowAiMenu(false)
+      setAiError(null)
+      setAiLoading(true)
+      try {
+        const rewritten = await aiService.rewrite(plain.slice(0, 2000), action)
+        const escaped = rewritten
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br/>')
+        setAiUndoHtml(displayHtml)
+        commitUpdate(escaped)
+        triggerFeedback('Texto reescrito')
+      } catch (err) {
+        const msg =
+          (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+          'A IA não respondeu agora. Tenta de novo.'
+        setAiError(msg)
+      } finally {
+        setAiLoading(false)
+      }
+    },
+    [aiLoading, commitUpdate, displayHtml, textContent, triggerFeedback],
+  )
+
+  const handleAiUndo = useCallback(() => {
+    if (!aiUndoHtml) return
+    commitUpdate(aiUndoHtml)
+    setAiUndoHtml(null)
+    triggerFeedback('Reescrita desfeita')
+  }, [aiUndoHtml, commitUpdate, triggerFeedback])
 
   // Property updaters
   const handleCategoryChange = useCallback(
@@ -1100,7 +1151,85 @@ function TextBlockComponent({ block, mode, onUpdate }: BlockComponentProps) {
             <Underline size={13} />
           </button>
         </div>
+
+        {/* AI rewrite actions */}
+        <div ref={aiMenuRef} className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setShowAiMenu((prev) => !prev)
+              setShowFontDropdown(false)
+              setShowSizeDropdown(false)
+              setShowColorPicker(false)
+              setAiError(null)
+            }}
+            aria-haspopup="menu"
+            aria-expanded={showAiMenu}
+            aria-label="Reescrever texto com IA"
+            title="Reescrever com IA"
+            disabled={aiLoading || isEmpty}
+            className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+              showAiMenu
+                ? 'border-primary bg-primary/10 text-primary shadow-2xs'
+                : 'border-border bg-surface text-text hover:border-primary/40'
+            }`}
+          >
+            {aiLoading ? (
+              <LoaderCircle size={13} className="animate-spin text-primary" />
+            ) : (
+              <Sparkles size={13} className="text-primary" />
+            )}
+            <span>{aiLoading ? 'reescrevendo...' : 'IA'}</span>
+            <ChevronDown
+              size={11}
+              className={`text-text-muted transition-transform ${showAiMenu ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {showAiMenu && (
+            <div
+              role="menu"
+              aria-label="Ações de reescrita com IA"
+              className="absolute right-0 top-full z-[100] mt-2 w-44 rounded-2xl border border-border bg-surface p-1.5 shadow-2xl backdrop-blur-md"
+            >
+              <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-light/70">
+                deixar o texto
+              </p>
+              {AI_ACTIONS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleAiRewrite(a.id)}
+                  className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium text-text transition-colors hover:bg-primary/10 hover:text-primary"
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {(aiError || aiUndoHtml) && (
+        <div className="mb-2 flex flex-wrap items-center gap-2" role="status">
+          {aiError && (
+            <span className="rounded-lg border border-[#be123c]/30 bg-[#ffe4ec] px-2 py-0.5 text-xs text-[#881337]">
+              {aiError}
+            </span>
+          )}
+          {aiUndoHtml && (
+            <button
+              type="button"
+              onClick={handleAiUndo}
+              className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <RotateCcw size={11} />
+              desfazer reescrita
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Editable Container */}
       <div className="relative overflow-visible">

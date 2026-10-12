@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { generateService, type GenerateBriefInput } from '@/services/generateService'
+import { generateService, type GenerateBriefInput, type InterpretedBriefFields } from '@/services/generateService'
 import { useEditorStore } from '@/editor/store/editorStore'
 import { MOMENTOS } from '@/data/momentos'
 import { PixelHeart } from '@/components/ui/PixelHeart'
+import { Turnstile, type TurnstileRef } from '@/components/ui/Turnstile'
 
 const TONS = [
   { id: 'leve', nome: 'Leve e divertido' },
@@ -193,6 +194,11 @@ export function Generate() {
   const [anonimo, setAnonimo] = useState(draft.anonimo ?? false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [textoLivre, setTextoLivre] = useState('')
+  const [interpreting, setInterpreting] = useState(false)
+  const [interpretNote, setInterpretNote] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileRef>(null)
+  const turnstileTokenRef = useRef<string | null>(null)
 
   // Rascunho do brief: recarregar ou sair e voltar não perde o que foi escrito.
   useEffect(() => {
@@ -256,6 +262,59 @@ export function Generate() {
     if (ex.anonimo !== undefined && campos.anonimo === true) setAnonimo(ex.anonimo)
   }
 
+  /**
+   * Texto livre → brief interpretado (S11). Preenche só campos vazios e
+   * seleciona momento/tom quando o modelo tem confiança — nunca sobrescreve
+   * o que a pessoa já digitou. Fallback do backend vira `contexto`.
+   */
+  const applyInterpreted = (fields: InterpretedBriefFields) => {
+    if (!momento && fields.momento && MOMENTOS.some((m) => m.id === fields.momento && m.disponivel)) {
+      setMomento(fields.momento)
+    }
+    if (fields.tom && TONS.some((t) => t.id === fields.tom)) setTom(fields.tom)
+    if (!destinatario.trim() && fields.destinatario) setDestinatario(fields.destinatario)
+    if (!remetente.trim() && fields.remetente) setRemetente(fields.remetente)
+    if (!apelidos.trim() && fields.apelidos?.length) setApelidos(fields.apelidos.join(', '))
+    if (!contexto.trim() && fields.contexto) setContexto(fields.contexto)
+    const primeiraMemoria = fields.memorias?.[0]
+    if (!memoria.trim() && primeiraMemoria) {
+      setMemoria(primeiraMemoria.descricao ?? primeiraMemoria.titulo)
+    }
+    const primeiraPergunta = fields.perguntasIntimidade?.[0]
+    if (!intimidadePergunta.trim() && primeiraPergunta) setIntimidadePergunta(primeiraPergunta.pergunta)
+    if (!intimidadeResposta.trim() && primeiraPergunta) setIntimidadeResposta(primeiraPergunta.resposta)
+    if (!eventoData.trim() && fields.evento?.data) setEventoData(fields.evento.data)
+    if (!eventoLugar.trim() && fields.evento?.lugar) setEventoLugar(fields.evento.lugar)
+    if (!musicaUrl.trim() && fields.musicaUrl) setMusicaUrl(fields.musicaUrl)
+    if (fields.anonimoParaDestinatario === true) setAnonimo(true)
+  }
+
+  const handleInterpret = async () => {
+    const texto = textoLivre.trim()
+    if (texto.length < 10 || interpreting) return
+    setInterpreting(true)
+    setInterpretNote(null)
+    setError(null)
+    try {
+      const result = await generateService.interpret(texto, turnstileTokenRef.current ?? undefined)
+      applyInterpreted(result.fields)
+      setInterpretNote(
+        result.source === 'llm'
+          ? 'preenchi o que encontrei no seu texto — revisa embaixo antes de gerar.'
+          : 'não consegui interpretar agora — seu texto foi pro campo de contexto.',
+      )
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+        'Não consegui interpretar o texto. Tenta de novo.'
+      setError(message)
+    } finally {
+      turnstileRef.current?.reset()
+      turnstileTokenRef.current = null
+      setInterpreting(false)
+    }
+  }
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit || !momento) return
@@ -287,7 +346,7 @@ export function Generate() {
         midias: campos.musica && musicaUrl.trim() ? { fotos: [], musicaUrl: musicaUrl.trim() } : undefined,
         anonimoParaDestinatario: anonimoEfetivo,
       }
-      const result = await generateService.generate(brief)
+      const result = await generateService.generate(brief, turnstileTokenRef.current ?? undefined)
       setPage({
         blocks: result.content.blocks,
         sections: result.content.sections,
@@ -305,6 +364,8 @@ export function Generate() {
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
         'Não consegui gerar a página. Tenta de novo.'
       setError(message)
+      turnstileRef.current?.reset()
+      turnstileTokenRef.current = null
       setLoading(false)
     }
   }
@@ -339,6 +400,44 @@ export function Generate() {
           <p className="font-pixel-body mt-2 text-[22px] leading-tight text-[#701a35]">
             Responde umas perguntas, recebe uma página pronta e ajusta o que quiser.
           </p>
+
+          {/* Entrada alternativa — texto livre interpretado por IA */}
+          <fieldset className="os-sunken mt-8 p-4 sm:p-5">
+            <legend className="font-pixel-ui bg-[#fffdfa] px-2 text-[16px] font-bold text-[#4c0519]">
+              ou conta do seu jeito
+            </legend>
+            <p className="font-pixel-body text-[20px] leading-tight text-[#9f3a58]">
+              Escreve como se tivesse mandando um áudio: pra quem é, o que rolou entre
+              vocês, o que você quer sentir na página. Eu preencho o formulário por você.
+            </p>
+            <label htmlFor="texto-livre" className="sr-only">
+              Conta a história do seu jeito
+            </label>
+            <textarea
+              id="texto-livre"
+              value={textoLivre}
+              onChange={(e) => setTextoLivre(e.target.value)}
+              placeholder="tipo: quero fazer uma surpresa pra Marina, a gente se conheceu num ônibus e desde então..."
+              rows={4}
+              maxLength={4000}
+              className="os-input mt-3"
+            />
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleInterpret}
+                disabled={textoLivre.trim().length < 10 || interpreting || loading}
+                className="os-btn min-h-[44px] px-4 font-pixel-ui text-[14px]"
+              >
+                {interpreting ? 'entendendo...' : 'preencher por mim'}
+              </button>
+              {interpretNote && (
+                <p className="font-pixel-body text-[19px] leading-tight text-[#701a35]" role="status">
+                  {interpretNote}
+                </p>
+              )}
+            </div>
+          </fieldset>
 
           {/* Passo 1 — momento */}
           <fieldset className="mt-8">
@@ -622,6 +721,20 @@ export function Generate() {
           )}
 
           <div className="mt-8">
+            <Turnstile
+              ref={turnstileRef}
+              action="generate_page"
+              onSuccess={(token) => {
+                turnstileTokenRef.current = token
+              }}
+              onExpire={() => {
+                turnstileTokenRef.current = null
+              }}
+              onError={() => {
+                turnstileTokenRef.current = null
+              }}
+              className="mb-3 flex items-center justify-center min-h-[65px]"
+            />
             <button
               type="submit"
               disabled={!canSubmit}

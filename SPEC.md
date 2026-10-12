@@ -177,6 +177,26 @@ Base URL in development: `http://localhost:3000/api` (proxied by Vite to `/api`)
     `moderation:flagged → ...` em `notes[]`.
   - Block types not yet persisted are downgraded with explicit adapters and
     logged in `notes[]`; `ticketRsvp` persiste como bloco real desde S14.
+- `POST /interpret`: Public, mesmo rate-limit + Turnstile. Interpreta texto
+  livre em campos do `CreativeBrief` (camada L2 — Gemini; nunca decide
+  estrutura).
+  - Body: `{ texto: string }` (10–4000 chars).
+  - Response `200`: `{ source: 'llm' | 'fallback', fields: InterpretedFields, notes: string[] }`.
+    `fields` é parcial e normalizado (momento, tom, destinatario, remetente,
+    apelidos, contexto, memorias, perguntasIntimidade, evento, musicaUrl,
+    anonimoParaDestinatario) — o frontend pré-preenche o formulário e a
+    validação canônica do brief continua acontecendo no `POST /`.
+  - `source: 'fallback'` quando Gemini indisponível/timeout/JSON inválido:
+    `fields.contexto` recebe o texto original e o fluxo segue determinístico.
+  - Errors: `400` texto curto/long demais, `403 TURNSTILE_*`, `429`.
+
+### 4.3b AI actions (`/api/ai`)
+- `POST /rewrite`: Authenticated, rate-limited (30/15min/IP). Reescreve um
+  texto de bloco por tom, sem inventar conteúdo.
+  - Body: `{ text: string (1–2000), action: 'carinhoso' | 'curto' | 'engracado' | 'poetico' }`.
+  - Response `200`: `{ text: string }`.
+  - Errors: `400` payload inválido, `401` sem auth, `429`, `502 LLM_UNAVAILABLE`
+    (sem `GEMINI_API_KEY`, resposta vazia ou API fora), `504 LLM_TIMEOUT`.
 
 ### 4.4 Payments (`/api/payments`)
 - `POST /create`: Creates a PagBank Pix payment, PagBank transparent card payment, Stripe card session, or Mercado Pago fallback checkout.

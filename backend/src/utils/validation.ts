@@ -196,6 +196,13 @@ export const generateRequestSchema = z.object({
   brief: z.record(z.unknown()),
 });
 
+export const interpretRequestSchema = z.object({
+  texto: z
+    .string()
+    .min(10, 'Escreve um pouquinho mais pra eu entender.')
+    .max(4_000, 'Texto muito longo — resume em até 4000 caracteres.'),
+});
+
 export const createPageResponseSchema = z.object({
   blockId: z.string().min(1, 'blockId é obrigatório'),
   choice: z.enum(['yes', 'no', 'other_day'], {
