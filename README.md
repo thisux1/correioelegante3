@@ -23,6 +23,14 @@ O **Correio Elegante** é uma plataforma digital e interativa para envio de mens
 
 ---
 
+## Demonstração em vídeo
+
+[![Demo do Correio Elegante](docs/demo-poster.png)](docs/demo.mp4)
+
+▶ **[Assistir à demo](docs/demo.mp4)** — 30s: landing ao vivo → demo interativa do lacre de cera → criação e publicação com QR imprimível → ritual de abertura do destinatário (avião → lacre → raspadinha) → checkout Pix com copia-e-cola e expiração. Capturado do deploy em produção; as telas autenticadas usam respostas simuladas no cliente — nada foi escrito no banco nem cobrado.
+
+---
+
 ## Arquitetura de Fluxo de Dados
 
 A imagem abaixo ilustra a integração contínua do ecossistema desde a criação da carta pelo usuário até a entrega final por meio de webhooks de pagamento assíncronos:
