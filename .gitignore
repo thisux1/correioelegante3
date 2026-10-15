@@ -67,6 +67,7 @@ docs/*
 !docs/landing-hero-*.png
 !docs/demo.mp4
 !docs/demo-poster.png
+!docs/demo.webm
 INTERVIEW_PRESENTATION_SCRIPT.md
 *.report.html
 *.json
