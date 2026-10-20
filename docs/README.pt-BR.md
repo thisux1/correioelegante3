@@ -1,6 +1,6 @@
 <!-- BANNER ANIMADO -->
 <p align="center">
-  <img src="docs/banner.svg" alt="Correio Elegante Banner" width="100%" style="border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.15);" />
+  <img src="banner.svg" alt="Correio Elegante Banner" width="100%" style="border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.15);" />
 </p>
 
 <!-- TECH BADGES MINIMALISTAS -->
@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Stripe-Checkout-black?style=flat-square&logo=stripe&logoColor=635BFF&labelColor=050202" alt="Stripe" />
 </p>
 
-> 🇺🇸 **[English version → README.md](../../README.md)**
+> 🇺🇸 **[English version → README.md](../README.md)**
 
 ---
 
@@ -42,7 +42,7 @@ Tour de 27s pelo deploy no ar — landing, envelope interativo, planos e a revel
 A imagem abaixo ilustra a integração contínua do ecossistema desde a criação da carta pelo usuário até a entrega final por meio de webhooks de pagamento assíncronos:
 
 <p align="center">
-  <img src="docs/architecture.svg" alt="Arquitetura de Dados Correio Elegante" width="100%" style="border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.08);" />
+  <img src="architecture.svg" alt="Arquitetura de Dados Correio Elegante" width="100%" style="border-radius: 8px; border: 1px solid rgba(225, 29, 72, 0.08);" />
 </p>
 
 ### Ciclo de Vida da Carta Digital
@@ -169,7 +169,7 @@ correioelegante3/
 │   │   ├── middlewares/# Interceptadores de segurança, tokens e erros
 │   │   ├── routes/    # Mapeamento dos endpoints expostos da API
 │   │   └── services/  # Regras de negócio e adaptadores de gateways
-└── docs/              # Elementos gráficos da documentação
+└──               # Elementos gráficos da documentação
     ├── banner.svg     # Banner animado principal
     └── architecture.svg# Diagrama de fluxo e arquitetura
 ```
