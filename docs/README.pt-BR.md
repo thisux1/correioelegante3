@@ -169,7 +169,7 @@ correioelegante3/
 │   │   ├── middlewares/# Interceptadores de segurança, tokens e erros
 │   │   ├── routes/    # Mapeamento dos endpoints expostos da API
 │   │   └── services/  # Regras de negócio e adaptadores de gateways
-└──               # Elementos gráficos da documentação
+└── docs/             # Elementos gráficos da documentação
     ├── banner.svg     # Banner animado principal
     └── architecture.svg# Diagrama de fluxo e arquitetura
 ```
