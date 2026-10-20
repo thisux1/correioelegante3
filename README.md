@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/Stripe-Checkout-black?style=flat-square&logo=stripe&logoColor=635BFF&labelColor=050202" alt="Stripe" />
 </p>
 
-> 🇧🇷 **[Versão em português → README.pt-BR.md](README.pt-BR.md)**
+> 🇧🇷 **[Versão em português → README.pt-BR.md](docs/README.pt-BR.md)**
 
 ---
 
