@@ -29,18 +29,16 @@
 
 A 27s tour of the live deployment — landing, interactive envelope, plans, and the signature scratch-card reveal. Payment routes were mocked during capture; no real charge was created.
 
-<p align="center">
-  <video src="https://github.com/thisux1/thisux1/releases/download/demos/correioelegante3.webm" poster="docs/demo-poster.png" width="720" autoplay loop muted playsinline controls></video>
-</p>
+<p align="center"><a href="https://github.com/thisux1/thisux1/releases/download/demos/correioelegante3.webm"><img src="docs/demo.gif" width="720" alt="demo" /></a></p>
 
 **[▶ Watch the demo (webm)](https://github.com/thisux1/thisux1/releases/download/demos/correioelegante3.webm)**
 
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/01-landing.png" width="31%" />
-  <img src="docs/screenshots/02-landing-scroll.png" width="31%" />
-  <img src="docs/screenshots/03-mobile.png" width="31%" />
+  <img src="docs/screenshots/01-hero.png" width="31%" />
+  <img src="docs/screenshots/02-envelope.png" width="31%" />
+  <img src="docs/screenshots/03-planos.png" width="31%" />
 </p>
 
 ---

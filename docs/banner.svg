@@ -40,24 +40,21 @@
   </defs>
 
   <style>
-    /* Google Fonts Import for high-fidelity rendering */
-    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&amp;family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,700;1,400&amp;display=swap');
-
     .bg-main { fill: url(#grad-bg); }
     
     .font-title {
-      font-family: 'Playfair Display', Georgia, serif;
+      font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
       font-weight: 700;
     }
 
     .font-cursive {
-      font-family: 'Dancing Script', cursive;
+      font-family: 'Caveat', 'Dancing Script', 'Segoe Script', 'Comic Sans MS', cursive;
       font-size: 26px;
       fill: #d4a574;
     }
 
     .font-sans {
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
     }
 
     /* Keyframes for romantic elements */

@@ -29,18 +29,16 @@ O **Correio Elegante** é uma plataforma digital e interativa para envio de mens
 
 Tour de 27s pelo deploy no ar — landing, envelope interativo, planos e a revelação por raspadinha. Rotas de pagamento foram mockadas na captura; nenhuma cobrança real foi criada.
 
-<p align="center">
-  <video src="https://github.com/thisux1/thisux1/releases/download/demos/correioelegante3.webm" poster="demo-poster.png" width="720" autoplay loop muted playsinline controls></video>
-</p>
+<p align="center"><a href="https://github.com/thisux1/thisux1/releases/download/demos/correioelegante3.webm"><img src="demo.gif" width="720" alt="demo" /></a></p>
 
 **[▶ Assistir à demo (webm)](https://github.com/thisux1/thisux1/releases/download/demos/correioelegante3.webm)**
 
 ## Capturas de tela
 
 <p align="center">
-  <img src="screenshots/01-landing.png" width="31%" />
-  <img src="screenshots/02-landing-scroll.png" width="31%" />
-  <img src="screenshots/03-mobile.png" width="31%" />
+  <img src="screenshots/01-hero.png" width="31%" />
+  <img src="screenshots/02-envelope.png" width="31%" />
+  <img src="screenshots/03-planos.png" width="31%" />
 </p>
 
 ---
